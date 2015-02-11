@@ -1,6 +1,7 @@
 #include "shader.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
@@ -92,6 +93,19 @@ Program::~Program() {
 	}
 }
 
+
+const Shader &Program::LoadShader(GLenum type, const GLchar *src) {
+	shaders.emplace_back(type);
+	Shader &shader = shaders.back();
+	shader.Source(src);
+	shader.Compile();
+	if (!shader.Compiled()) {
+		shader.Log(std::cerr);
+		throw std::runtime_error("compile shader");
+	}
+	Attach(shader);
+	return shader;
+}
 
 void Program::Attach(Shader &shader) {
 	shader.AttachToProgram(handle);

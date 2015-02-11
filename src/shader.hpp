@@ -2,6 +2,7 @@
 #define BLANK_SHADER_HPP_
 
 #include <iosfwd>
+#include <list>
 #include <GL/glew.h>
 
 
@@ -41,6 +42,7 @@ public:
 	Program(const Program &) = delete;
 	Program &operator =(const Program &) = delete;
 
+	const Shader &LoadShader(GLenum type, const GLchar *src);
 	void Attach(Shader &);
 	void Link();
 	bool Linked() const;
@@ -52,6 +54,7 @@ public:
 
 private:
 	GLuint handle;
+	std::list<Shader> shaders;
 
 };
 
