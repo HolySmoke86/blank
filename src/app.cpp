@@ -18,6 +18,7 @@ namespace blank {
 
 Application::Application()
 : init_sdl()
+, init_img()
 , init_gl()
 , window()
 , ctx(window.CreateContext())

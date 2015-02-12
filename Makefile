@@ -1,7 +1,7 @@
 CXX = g++ --std=c++11
 LDXX = g++
 
-LIBS = sdl2 glew
+LIBS = sdl2 SDL2_image glew
 
 PKGFLAGS := $(shell pkg-config --cflags $(LIBS))
 PKGLIBS := $(shell pkg-config --libs $(LIBS))

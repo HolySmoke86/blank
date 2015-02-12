@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <SDL.h>
+#include <SDL_image.h>
 #include <stdexcept>
 #include <string>
 #include <GL/glew.h>
@@ -31,6 +32,17 @@ InitSDL::InitSDL() {
 
 InitSDL::~InitSDL() {
 	SDL_Quit();
+}
+
+
+InitIMG::InitIMG() {
+	if (IMG_Init(IMG_INIT_PNG) == 0) {
+		sdl_error("IMG_Init(IMG_INIT_PNG)");
+	}
+}
+
+InitIMG::~InitIMG() {
+	IMG_Quit();
 }
 
 

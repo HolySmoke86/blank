@@ -28,6 +28,7 @@ public:
 
 private:
 	InitSDL init_sdl;
+	InitIMG init_img;
 	InitGL init_gl;
 	Window window;
 	GLContext ctx;

@@ -21,6 +21,18 @@ public:
 };
 
 
+class InitIMG {
+
+public:
+	InitIMG();
+	~InitIMG();
+
+	InitIMG(const InitIMG &) = delete;
+	InitIMG &operator =(const InitIMG &) = delete;
+
+};
+
+
 class InitGL {
 
 public:
