@@ -18,8 +18,10 @@ public:
 	void Move(glm::vec3 delta) { position += delta; }
 
 	// all angles in radians (full circle = 2π)
+	float Pitch() const { return pitch; }
 	void Pitch(float p) { pitch = p; }
 	void RotatePitch(float delta) { pitch += delta; }
+	float Yaw() const { return yaw; }
 	void Yaw(float y) { yaw = y; }
 	void RotateYaw(float delta) { yaw += delta; }
 

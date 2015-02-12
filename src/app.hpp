@@ -36,6 +36,9 @@ private:
 	InitGLEW init_glew;
 	Program program;
 
+	float pitch_sensitivity;
+	float yaw_sensitivity;
+
 	Camera cam;
 	Model model;
 

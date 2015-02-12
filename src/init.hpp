@@ -54,6 +54,12 @@ public:
 	Window(const Window &) = delete;
 	Window &operator =(const Window &) = delete;
 
+	void GrabInput();
+	void ReleaseInput();
+
+	void GrabMouse();
+	void ReleaseMouse();
+
 	GLContext CreateContext();
 
 	void Flip();

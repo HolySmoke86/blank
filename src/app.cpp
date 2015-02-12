@@ -24,6 +24,8 @@ Application::Application()
 , ctx(window.CreateContext())
 , init_glew()
 , program()
+, pitch_sensitivity(-0.0025f)
+, yaw_sensitivity(-0.001f)
 , cam()
 , model()
 , vtx_buf(0)
@@ -63,6 +65,7 @@ Application::Application()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_coords), vtx_coords, GL_STATIC_DRAW);
 
 	model.Position(glm::vec3(0, 0, -4));
+	cam.Position(glm::vec3(0, 0, 4));
 
 	mvp_handle = program.UniformLocation("MVP");
 
@@ -77,6 +80,7 @@ Application::~Application() {
 void Application::Run() {
 	running = true;
 	Uint32 last = SDL_GetTicks();
+	window.GrabMouse();
 	while (running) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
@@ -95,6 +99,12 @@ void Application::HandleEvents() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
+			case SDL_MOUSEMOTION:
+				cam.RotateYaw(event.motion.xrel * yaw_sensitivity);
+				cam.RotatePitch(event.motion.yrel * pitch_sensitivity);
+				std::cout << "x: " << event.motion.xrel << ", y: " << event.motion.yrel
+						<< ", pitch: " << cam.Pitch() << ", yaw: " << cam.Yaw() << std::endl;
+				break;
 			case SDL_QUIT:
 				running = false;
 				break;

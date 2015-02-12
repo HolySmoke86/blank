@@ -3,6 +3,8 @@
 
 #include <glm/glm.hpp>
 
+#include "model.hpp"
+
 
 namespace blank {
 
@@ -25,10 +27,16 @@ public:
 	void Aspect(float w, float h);
 	void Clip(float near, float far);
 
-	void Position(glm::vec3 pos) { position = pos; UpdateView(); }
-	void Move(glm::vec3 delta) { position += delta; UpdateView(); }
+	void Position(glm::vec3 pos) { model.Position(pos); UpdateView(); }
+	void Move(glm::vec3 delta) { model.Move(delta); UpdateView(); }
 
-	void LookAt(glm::vec3 tgt) { target = tgt; UpdateView(); }
+	// all angles in radians (full circle = 2π)
+	float Pitch() const { return model.Pitch(); }
+	void Pitch(float p) { model.Pitch(p); UpdateView(); }
+	void RotatePitch(float delta) { model.RotatePitch(delta); UpdateView(); }
+	float Yaw() const { return model.Yaw(); }
+	void Yaw(float y) { model.Yaw(y); UpdateView(); }
+	void RotateYaw(float delta) { model.RotateYaw(delta); UpdateView(); }
 
 private:
 	void UpdateProjection();
@@ -40,9 +48,7 @@ private:
 	float near_clip;
 	float far_clip;
 
-	glm::vec3 position;
-	glm::vec3 target;
-	glm::vec3 up;
+	Model model;
 
 	glm::mat4 projection;
 	glm::mat4 view;

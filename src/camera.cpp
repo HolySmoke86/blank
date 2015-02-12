@@ -11,11 +11,9 @@ Camera::Camera()
 , aspect(1.0f)
 , near_clip(0.1f)
 , far_clip(100.0f)
-, position(0, 0, 0)
-, target(0, 0, -1)
-, up(0, 1, 0)
+, model()
 , projection(glm::perspective(fov, aspect, near_clip, far_clip))
-, view(glm::lookAt(position, target, up))
+, view(model.Transform())
 , vp(projection * view) {
 
 }
@@ -61,7 +59,7 @@ void Camera::UpdateProjection() {
 }
 
 void Camera::UpdateView() {
-	view = glm::lookAt(position, target, up);
+	view = glm::inverse(model.Transform());
 	vp = projection * view;
 }
 

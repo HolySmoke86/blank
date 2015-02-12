@@ -83,6 +83,26 @@ Window::~Window() {
 	SDL_DestroyWindow(handle);
 }
 
+void Window::GrabInput() {
+	SDL_SetWindowGrab(handle, SDL_TRUE);
+}
+
+void Window::ReleaseInput() {
+	SDL_SetWindowGrab(handle, SDL_FALSE);
+}
+
+void Window::GrabMouse() {
+	if (SDL_SetRelativeMouseMode(SDL_TRUE) != 0) {
+		sdl_error("SDL_SetRelativeMouseMode");
+	}
+}
+
+void Window::ReleaseMouse() {
+	if (SDL_SetRelativeMouseMode(SDL_FALSE) != 0) {
+		sdl_error("SDL_SetRelativeMouseMode");
+	}
+}
+
 GLContext Window::CreateContext() {
 	return GLContext(handle);
 }
