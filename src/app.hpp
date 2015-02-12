@@ -6,6 +6,7 @@
 
 #include "camera.hpp"
 #include "init.hpp"
+#include "model.hpp"
 #include "shader.hpp"
 
 
@@ -36,6 +37,7 @@ private:
 	Program program;
 
 	Camera cam;
+	Model model;
 
 	GLuint vtx_buf;
 	GLuint mvp_handle;

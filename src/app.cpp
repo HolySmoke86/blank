@@ -7,9 +7,9 @@
 namespace {
 
 constexpr GLfloat vtx_coords[] = {
-	-1.0f, -1.0f, -5.0f,
-	 1.0f, -1.0f, -5.0f,
-	 0.0f,  1.0f, -5.0f,
+	-1.0f, -1.0f, 0.0f,
+	 1.0f, -1.0f, 0.0f,
+	 0.0f,  1.0f, 0.0f,
 };
 
 }
@@ -25,6 +25,7 @@ Application::Application()
 , init_glew()
 , program()
 , cam()
+, model()
 , vtx_buf(0)
 , mvp_handle(0)
 , running(false) {
@@ -60,6 +61,8 @@ Application::Application()
 	glGenBuffers(1, &vtx_buf);
 	glBindBuffer(GL_ARRAY_BUFFER, vtx_buf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_coords), vtx_coords, GL_STATIC_DRAW);
+
+	model.Position(glm::vec3(0, 0, -4));
 
 	mvp_handle = program.UniformLocation("MVP");
 
@@ -115,8 +118,7 @@ void Application::Render() {
 
 	program.Use();
 
-	glm::mat4 model(1.0f); // identity: no transformation
-	glm::mat4 mvp(cam.MakeMVP(model));
+	glm::mat4 mvp(cam.MakeMVP(model.Transform()));
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 
 	glEnableVertexAttribArray(0);
