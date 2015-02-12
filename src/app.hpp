@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "camera.hpp"
 #include "init.hpp"
 #include "shader.hpp"
 
@@ -33,8 +34,9 @@ private:
 	InitGLEW init_glew;
 	Program program;
 
+	Camera cam;
+
 	GLuint vtx_buf;
-	glm::mat4 mvp;
 	GLuint mvp_handle;
 
 	bool running;

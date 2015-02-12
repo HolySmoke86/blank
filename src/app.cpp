@@ -7,9 +7,9 @@
 namespace {
 
 constexpr GLfloat vtx_coords[] = {
-	-1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-	 0.0f,  1.0f, -1.0f,
+	-1.0f, -1.0f, -5.0f,
+	 1.0f, -1.0f, -5.0f,
+	 0.0f,  1.0f, -5.0f,
 };
 
 }
@@ -23,8 +23,8 @@ Application::Application()
 , ctx(window.CreateContext())
 , init_glew()
 , program()
+, cam()
 , vtx_buf(0)
-, mvp()
 , mvp_handle(0)
 , running(false) {
 	GLContext::EnableVSync();
@@ -60,20 +60,6 @@ Application::Application()
 	glBindBuffer(GL_ARRAY_BUFFER, vtx_buf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_coords), vtx_coords, GL_STATIC_DRAW);
 
-	glm::mat4 projection = glm::perspective(
-		45.0f, // FOV in degrees
-		1.0f,  // aspect ratio
-		0.1f,  // near clip
-		100.0f // far clip
-	);
-	glm::mat4 view = glm::lookAt(
-		glm::vec3(0, 0,  0),  // observer
-		glm::vec3(0, 0, -1), // target
-		glm::vec3(0, 1,  0) // up
-	);
-	glm::mat4 model(1.0f); // identity: no transformation
-	mvp = projection * view * model;
-
 	mvp_handle = program.UniformLocation("MVP");
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -108,6 +94,15 @@ void Application::HandleEvents() {
 			case SDL_QUIT:
 				running = false;
 				break;
+			case SDL_WINDOWEVENT:
+				switch (event.window.event) {
+					case SDL_WINDOWEVENT_RESIZED:
+						cam.Viewport(event.window.data1, event.window.data2);
+						break;
+					default:
+						break;
+				}
+				break;
 			default:
 				break;
 		}
@@ -119,6 +114,8 @@ void Application::Render() {
 
 	program.Use();
 
+	glm::mat4 model(1.0f); // identity: no transformation
+	glm::mat4 mvp(cam.MakeMVP(model));
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 
 	glEnableVertexAttribArray(0);
