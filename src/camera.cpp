@@ -7,14 +7,13 @@
 namespace blank {
 
 Camera::Camera()
-: fov(45.0f)
+: Model()
+, fov(45.0f)
 , aspect(1.0f)
 , near_clip(0.1f)
 , far_clip(100.0f)
-, model()
 , projection(glm::perspective(fov, aspect, near_clip, far_clip))
-, view(model.Transform())
-, vp(projection * view) {
+, vp(projection) {
 
 }
 
@@ -53,14 +52,13 @@ void Camera::Clip(float near, float far) {
 }
 
 
-void Camera::UpdateProjection() {
-	projection = glm::perspective(fov, aspect, near_clip, far_clip);
-	vp = projection * view;
+void Camera::Update(int dt) {
+	Model::Update(dt);
+	vp = projection * glm::inverse(Transform());
 }
 
-void Camera::UpdateView() {
-	view = glm::inverse(model.Transform());
-	vp = projection * view;
+void Camera::UpdateProjection() {
+	projection = glm::perspective(fov, aspect, near_clip, far_clip);
 }
 
 }

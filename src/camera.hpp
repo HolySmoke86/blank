@@ -8,7 +8,8 @@
 
 namespace blank {
 
-class Camera {
+class Camera
+: public Model {
 
 public:
 	Camera();
@@ -27,20 +28,10 @@ public:
 	void Aspect(float w, float h);
 	void Clip(float near, float far);
 
-	void Position(glm::vec3 pos) { model.Position(pos); UpdateView(); }
-	void Move(glm::vec3 delta) { model.Move(delta); UpdateView(); }
-
-	// all angles in radians (full circle = 2π)
-	float Pitch() const { return model.Pitch(); }
-	void Pitch(float p) { model.Pitch(p); UpdateView(); }
-	void RotatePitch(float delta) { model.RotatePitch(delta); UpdateView(); }
-	float Yaw() const { return model.Yaw(); }
-	void Yaw(float y) { model.Yaw(y); UpdateView(); }
-	void RotateYaw(float delta) { model.RotateYaw(delta); UpdateView(); }
+	void Update(int dt);
 
 private:
 	void UpdateProjection();
-	void UpdateView();
 
 private:
 	float fov;
@@ -48,10 +39,7 @@ private:
 	float near_clip;
 	float far_clip;
 
-	Model model;
-
 	glm::mat4 projection;
-	glm::mat4 view;
 	glm::mat4 vp;
 
 };

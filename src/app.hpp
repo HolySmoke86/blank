@@ -25,6 +25,7 @@ public:
 	void Loop(int dt);
 
 	void HandleEvents();
+	void Update(int dt);
 	void Render();
 
 private:
@@ -36,6 +37,7 @@ private:
 	InitGLEW init_glew;
 	Program program;
 
+	float move_velocity;
 	float pitch_sensitivity;
 	float yaw_sensitivity;
 
@@ -46,6 +48,8 @@ private:
 	GLuint mvp_handle;
 
 	bool running;
+
+	bool front, back, left, right, up, down;
 
 };
 

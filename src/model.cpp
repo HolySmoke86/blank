@@ -8,7 +8,8 @@
 namespace blank {
 
 Model::Model()
-: position(0, 0, 0)
+: velocity(0, 0, 0)
+, position(0, 0, 0)
 , pitch(0)
 , yaw(0) {
 
@@ -21,6 +22,11 @@ Model::~Model() {
 
 glm::mat4 Model::Transform() const {
 	return glm::translate(position) * glm::eulerAngleYX(yaw, pitch);
+}
+
+
+void Model::Update(int dt) {
+	position += velocity * float(dt);
 }
 
 }

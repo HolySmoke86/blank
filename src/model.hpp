@@ -14,6 +14,7 @@ public:
 
 	glm::mat4 Transform() const;
 
+	void Velocity(glm::vec3 vel) { velocity = vel; }
 	void Position(glm::vec3 pos) { position = pos; }
 	void Move(glm::vec3 delta) { position += delta; }
 
@@ -25,7 +26,10 @@ public:
 	void Yaw(float y) { yaw = y; }
 	void RotateYaw(float delta) { yaw += delta; }
 
+	void Update(int dt);
+
 private:
+	glm::vec3 velocity;
 	glm::vec3 position;
 	float pitch;
 	float yaw;

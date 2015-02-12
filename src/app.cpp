@@ -24,13 +24,20 @@ Application::Application()
 , ctx(window.CreateContext())
 , init_glew()
 , program()
+, move_velocity(0.001f)
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
 , cam()
 , model()
 , vtx_buf(0)
 , mvp_handle(0)
-, running(false) {
+, running(false)
+, front(false)
+, back(false)
+, left(false)
+, right(false)
+, up(false)
+, down(false) {
 	GLContext::EnableVSync();
 	program.LoadShader(
 		GL_VERTEX_SHADER,
@@ -91,6 +98,7 @@ void Application::Run() {
 
 void Application::Loop(int dt) {
 	HandleEvents();
+	Update(dt);
 	Render();
 }
 
@@ -99,11 +107,32 @@ void Application::HandleEvents() {
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
+			case SDL_KEYDOWN:
+			case SDL_KEYUP:
+				switch (event.key.keysym.sym) {
+					case SDLK_w:
+						front = event.key.state == SDL_PRESSED;
+						break;
+					case SDLK_s:
+						back = event.key.state == SDL_PRESSED;
+						break;
+					case SDLK_a:
+						left = event.key.state == SDL_PRESSED;
+						break;
+					case SDLK_d:
+						right = event.key.state == SDL_PRESSED;
+						break;
+					case SDLK_q:
+						up = event.key.state == SDL_PRESSED;
+						break;
+					case SDLK_e:
+						down = event.key.state == SDL_PRESSED;
+						break;
+				}
+				break;
 			case SDL_MOUSEMOTION:
 				cam.RotateYaw(event.motion.xrel * yaw_sensitivity);
 				cam.RotatePitch(event.motion.yrel * pitch_sensitivity);
-				std::cout << "x: " << event.motion.xrel << ", y: " << event.motion.yrel
-						<< ", pitch: " << cam.Pitch() << ", yaw: " << cam.Yaw() << std::endl;
 				break;
 			case SDL_QUIT:
 				running = false;
@@ -121,6 +150,29 @@ void Application::HandleEvents() {
 				break;
 		}
 	}
+}
+
+void Application::Update(int dt) {
+	glm::vec3 vel;
+	if (right && !left) {
+		vel.x = move_velocity;
+	} else if (left && !right) {
+		vel.x = -move_velocity;
+	}
+	if (up && !down) {
+		vel.y = move_velocity;
+	} else if (down && !up) {
+		vel.y = -move_velocity;
+	}
+	if (back && !front) {
+		vel.z = move_velocity;
+	} else if (front && !back) {
+		vel.z = -move_velocity;
+	}
+	cam.Velocity(vel);
+
+	cam.Update(dt);
+	model.Update(dt);
 }
 
 void Application::Render() {
