@@ -7,7 +7,7 @@
 namespace blank {
 
 Camera::Camera()
-: Model()
+: FPSController()
 , fov(45.0f)
 , aspect(1.0f)
 , near_clip(0.1f)
@@ -53,7 +53,7 @@ void Camera::Clip(float near, float far) {
 
 
 void Camera::Update(int dt) {
-	Model::Update(dt);
+	FPSController::Update(dt);
 	vp = projection * glm::inverse(Transform());
 }
 

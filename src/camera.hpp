@@ -3,13 +3,13 @@
 
 #include <glm/glm.hpp>
 
-#include "model.hpp"
+#include "controller.hpp"
 
 
 namespace blank {
 
 class Camera
-: public Model {
+: public FPSController {
 
 public:
 	Camera();

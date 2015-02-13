@@ -5,8 +5,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "camera.hpp"
+#include "controller.hpp"
 #include "init.hpp"
-#include "model.hpp"
 #include "shader.hpp"
 
 
@@ -42,7 +42,7 @@ private:
 	float yaw_sensitivity;
 
 	Camera cam;
-	Model model;
+	FPSController model;
 
 	GLuint vtx_buf;
 	GLuint mvp_handle;

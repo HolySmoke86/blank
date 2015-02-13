@@ -1,4 +1,4 @@
-#include "model.hpp"
+#include "controller.hpp"
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -7,7 +7,7 @@
 
 namespace blank {
 
-Model::Model()
+FPSController::FPSController()
 : velocity(0, 0, 0)
 , position(0, 0, 0)
 , pitch(0)
@@ -15,17 +15,17 @@ Model::Model()
 
 }
 
-Model::~Model() {
+FPSController::~FPSController() {
 
 }
 
 
-glm::mat4 Model::Transform() const {
+glm::mat4 FPSController::Transform() const {
 	return glm::translate(position) * glm::eulerAngleYX(yaw, pitch);
 }
 
 
-void Model::Update(int dt) {
+void FPSController::Update(int dt) {
 	position += velocity * float(dt);
 }
 

@@ -1,16 +1,16 @@
-#ifndef BLANK_MODEL_HPP_
-#define BLANK_MODEL_HPP_
+#ifndef BLANK_CONTROLLER_HPP_
+#define BLANK_CONTROLLER_HPP_
 
 #include <glm/glm.hpp>
 
 
 namespace blank {
 
-class Model {
+class FPSController {
 
 public:
-	Model();
-	~Model();
+	FPSController();
+	~FPSController();
 
 	glm::mat4 Transform() const;
 
