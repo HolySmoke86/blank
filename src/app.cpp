@@ -39,6 +39,7 @@ Application::Application()
 , up(false)
 , down(false) {
 	GLContext::EnableVSync();
+	GLContext::EnableBackfaceCulling();
 	program.LoadShader(
 		GL_VERTEX_SHADER,
 		"#version 330 core\n"

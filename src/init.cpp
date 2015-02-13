@@ -142,6 +142,10 @@ void GLContext::EnableVSync() {
 	}
 }
 
+void GLContext::EnableBackfaceCulling() {
+	glEnable(GL_CULL_FACE);
+}
+
 
 InitGLEW::InitGLEW() {
 	glewExperimental = GL_TRUE;
