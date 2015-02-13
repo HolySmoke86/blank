@@ -4,16 +4,6 @@
 #include <stdexcept>
 
 
-namespace {
-
-constexpr GLfloat vtx_coords[] = {
-	-1.0f, -1.0f, 0.0f,
-	 1.0f, -1.0f, 0.0f,
-	 0.0f,  1.0f, 0.0f,
-};
-
-}
-
 namespace blank {
 
 Application::Application()
@@ -24,13 +14,136 @@ Application::Application()
 , ctx(window.CreateContext())
 , init_glew()
 , program()
-, move_velocity(0.001f)
+, move_velocity(0.003f)
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
 , cam()
-, model()
-, vtx_buf(0)
+, model({
+	// vertices
+	{  0.0f,  0.0f,  1.0f }, // front, red
+	{  1.0f,  0.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  1.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  0.0f,  0.0f,  0.0f }, // back, cyan
+	{  0.0f,  1.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f }, // top, green
+	{  0.0f,  1.0f,  1.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  1.0f,  1.0f,  1.0f },
+	{  0.0f,  0.0f,  0.0f }, // bottom, magenta
+	{  1.0f,  0.0f,  0.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  0.0f }, // left, blue
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  1.0f,  0.0f,  0.0f }, // right, yellow
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  1.0f },
+}, {
+	// colors
+	{  1.0f,  0.0f,  0.0f }, // front, red
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  0.0f,  1.0f,  1.0f }, // back, cyan
+	{  0.0f,  1.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  0.0f,  1.0f,  1.0f },
+	{  0.0f,  1.0f,  0.0f }, // top, green
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  1.0f,  0.0f,  1.0f }, // bottom, magenta
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  1.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f }, // left, blue
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  1.0f,  1.0f,  0.0f }, // right, yellow
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  0.0f },
+	{  1.0f,  1.0f,  0.0f },
+}, {
+	// normals
+	{  0.0f,  0.0f,  1.0f }, // front, red
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f,  1.0f },
+	{  0.0f,  0.0f, -1.0f }, // back, cyan
+	{  0.0f,  0.0f, -1.0f },
+	{  0.0f,  0.0f, -1.0f },
+	{  0.0f,  0.0f, -1.0f },
+	{  0.0f,  0.0f, -1.0f },
+	{  0.0f,  0.0f, -1.0f },
+	{  0.0f,  1.0f,  0.0f }, // top, green
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f,  1.0f,  0.0f },
+	{  0.0f, -1.0f,  0.0f }, // bottom, magenta
+	{  0.0f, -1.0f,  0.0f },
+	{  0.0f, -1.0f,  0.0f },
+	{  0.0f, -1.0f,  0.0f },
+	{  0.0f, -1.0f,  0.0f },
+	{  0.0f, -1.0f,  0.0f },
+	{ -1.0f,  0.0f,  0.0f }, // left, blue
+	{ -1.0f,  0.0f,  0.0f },
+	{ -1.0f,  0.0f,  0.0f },
+	{ -1.0f,  0.0f,  0.0f },
+	{ -1.0f,  0.0f,  0.0f },
+	{ -1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f }, // right, yellow
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+	{  1.0f,  0.0f,  0.0f },
+})
+, modelCtrl()
+, light_position(5.0f, 5.0f, 5.0f)
+, light_color(1.0f, 1.0f, 1.0f)
+, light_power(50.0f)
+, m_handle(0)
+, v_handle(0)
+, mv_handle(0)
 , mvp_handle(0)
+, light_position_handle(0)
+, light_color_handle(0)
+, light_power_handle(0)
 , running(false)
 , front(false)
 , back(false)
@@ -43,19 +156,56 @@ Application::Application()
 	program.LoadShader(
 		GL_VERTEX_SHADER,
 		"#version 330 core\n"
-		"layout(location = 0) in vec3 vertexPosition_modelspace;\n"
+		"layout(location = 0) in vec3 vtx_position;\n"
+		"layout(location = 1) in vec3 vtx_color;\n"
+		"layout(location = 2) in vec3 vtx_normal;\n"
+		"uniform mat4 M;\n"
+		"uniform mat4 V;\n"
 		"uniform mat4 MVP;\n"
+		"uniform vec3 light_position;\n"
+		"out vec3 frag_color;\n"
+		"out vec3 vtx_world;\n"
+		"out vec3 normal;\n"
+		"out vec3 eye;\n"
+		"out vec3 light_direction;\n"
 		"void main() {\n"
-			"vec4 v = vec4(vertexPosition_modelspace, 1);\n"
+			"vec4 v = vec4(vtx_position, 1);\n"
 			"gl_Position = MVP * v;\n"
+			"vtx_world = (M * v).xyz;\n"
+			"vec3 vtx_camera = (V * M * v).xyz;\n"
+			"eye = vec3(0, 0, 0) - vtx_camera;\n"
+			"vec3 light_camera = (V * v).xyz;\n"
+			"light_direction = light_position + eye;\n"
+			"normal = (V * M * vec4(vtx_normal, 0)).xyz;\n"
+			"frag_color = vtx_color;\n"
 		"}\n"
 	);
 	program.LoadShader(
 		GL_FRAGMENT_SHADER,
 		"#version 330 core\n"
+		"in vec3 frag_color;\n"
+		"in vec3 vtx_world;\n"
+		"in vec3 normal;\n"
+		"in vec3 eye;\n"
+		"in vec3 light_direction;\n"
+		"uniform mat4 MV;\n"
+		"uniform vec3 light_position;\n"
+		"uniform vec3 light_color;\n"
+		"uniform float light_power;\n"
 		"out vec3 color;\n"
 		"void main() {\n"
-			"color = vec3(1, 1, 1);\n"
+			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
+			"vec3 specular = vec3(0.3, 0.3, 0.3);\n"
+			"float distance = length(light_position - vtx_world);\n"
+			"vec3 n = normalize(normal);\n"
+			"vec3 l = normalize(light_direction);\n"
+			"float cos_theta = clamp(dot(n, l), 0, 1);\n"
+			"vec3 E = normalize(eye);\n"
+			"vec3 R = reflect(-l, n);\n"
+			"float cos_alpha = clamp(dot(E, R), 0, 1);\n"
+			"color = ambient"
+				" + frag_color * light_color * light_power * cos_theta / (distance * distance)"
+				" + specular * light_color * light_power * pow(cos_alpha, 5) / (distance * distance);\n"
 		"}\n"
 	);
 	program.Link();
@@ -68,14 +218,16 @@ Application::Application()
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	glGenBuffers(1, &vtx_buf);
-	glBindBuffer(GL_ARRAY_BUFFER, vtx_buf);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vtx_coords), vtx_coords, GL_STATIC_DRAW);
-
-	model.Position(glm::vec3(0, 0, -4));
+	modelCtrl.Position(glm::vec3(0, 0, -4));
 	cam.Position(glm::vec3(0, 0, 4));
 
+	m_handle = program.UniformLocation("M");
+	v_handle = program.UniformLocation("V");
+	mv_handle = program.UniformLocation("MV");
 	mvp_handle = program.UniformLocation("MVP");
+	light_position_handle = program.UniformLocation("light_position");
+	light_color_handle = program.UniformLocation("light_color");
+	light_power_handle = program.UniformLocation("light_power");
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
@@ -173,7 +325,7 @@ void Application::Update(int dt) {
 	cam.Velocity(vel);
 
 	cam.Update(dt);
-	model.Update(dt);
+	modelCtrl.Update(dt);
 }
 
 void Application::Render() {
@@ -181,25 +333,18 @@ void Application::Render() {
 
 	program.Use();
 
-	glm::mat4 mvp(cam.MakeMVP(model.Transform()));
+	glm::mat4 m(modelCtrl.Transform());
+	glm::mat4 mv(cam.View() * m);
+	glm::mat4 mvp(cam.MakeMVP(m));
+	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
+	glUniformMatrix4fv(v_handle, 1, GL_FALSE, &cam.View()[0][0]);
+	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+	glUniform3f(light_position_handle, light_position.x, light_position.y, light_position.z);
+	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
+	glUniform1f(light_power_handle, light_power);
 
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vtx_buf);
-	glVertexAttribPointer(
-		0,        // attribute 0 (for shader)
-		3,        // size
-		GL_FLOAT, // type
-		GL_FALSE, // normalized
-		0,        // stride
-		nullptr   // offset
-	);
-	glDrawArrays(
-		GL_TRIANGLES, // how
-		0,            // start
-		3             // len
-	);
-	glDisableVertexAttribArray(0);
+	model.Draw();
 
 	window.Flip();
 }

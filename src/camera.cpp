@@ -13,6 +13,7 @@ Camera::Camera()
 , near_clip(0.1f)
 , far_clip(100.0f)
 , projection(glm::perspective(fov, aspect, near_clip, far_clip))
+, view(glm::inverse(Transform()))
 , vp(projection) {
 
 }
@@ -54,7 +55,8 @@ void Camera::Clip(float near, float far) {
 
 void Camera::Update(int dt) {
 	FPSController::Update(dt);
-	vp = projection * glm::inverse(Transform());
+	view = glm::inverse(Transform());
+	vp = projection * view;
 }
 
 void Camera::UpdateProjection() {

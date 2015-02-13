@@ -28,6 +28,9 @@ public:
 	void Aspect(float w, float h);
 	void Clip(float near, float far);
 
+	const glm::mat4 &Projection() { return projection; }
+	const glm::mat4 &View() { return view; }
+
 	void Update(int dt);
 
 private:
@@ -40,6 +43,7 @@ private:
 	float far_clip;
 
 	glm::mat4 projection;
+	glm::mat4 view;
 	glm::mat4 vp;
 
 };

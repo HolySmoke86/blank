@@ -7,6 +7,7 @@
 #include "camera.hpp"
 #include "controller.hpp"
 #include "init.hpp"
+#include "model.hpp"
 #include "shader.hpp"
 
 
@@ -42,10 +43,20 @@ private:
 	float yaw_sensitivity;
 
 	Camera cam;
-	FPSController model;
+	Model model;
+	FPSController modelCtrl;
 
-	GLuint vtx_buf;
+	glm::vec3 light_position;
+	glm::vec3 light_color;
+	float light_power;
+
+	GLuint m_handle;
+	GLuint v_handle;
+	GLuint mv_handle;
 	GLuint mvp_handle;
+	GLuint light_position_handle;
+	GLuint light_color_handle;
+	GLuint light_power_handle;
 
 	bool running;
 
