@@ -15,6 +15,7 @@ public:
 	glm::mat4 Transform() const;
 
 	void Velocity(glm::vec3 vel) { velocity = vel; }
+	void OrientationVelocity(const glm::vec3 &vel);
 	void Position(glm::vec3 pos) { position = pos; }
 	void Move(glm::vec3 delta) { position += delta; }
 

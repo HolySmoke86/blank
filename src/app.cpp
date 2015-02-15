@@ -322,7 +322,7 @@ void Application::Update(int dt) {
 	} else if (front && !back) {
 		vel.z = -move_velocity;
 	}
-	cam.Velocity(vel);
+	cam.OrientationVelocity(vel);
 
 	cam.Update(dt);
 	modelCtrl.Update(dt);

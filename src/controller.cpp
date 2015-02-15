@@ -2,6 +2,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 
 
@@ -22,6 +23,11 @@ FPSController::~FPSController() {
 
 glm::mat4 FPSController::Transform() const {
 	return glm::translate(position) * glm::eulerAngleYX(yaw, pitch);
+}
+
+
+void FPSController::OrientationVelocity(const glm::vec3 &vel) {
+	velocity = glm::rotateY(vel, yaw);
 }
 
 
