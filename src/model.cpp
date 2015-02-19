@@ -3,17 +3,35 @@
 
 namespace blank {
 
-Model::Model(
-	std::vector<glm::vec3> &&vtx,
-	std::vector<glm::vec3> &&col,
-	std::vector<glm::vec3> &&norm
-)
-: vertices(vtx)
-, colors(col)
-, normals(norm)
-, handle{} {
+Model::Model()
+: vertices()
+, colors()
+, normals()
+, handle{}
+, dirty(false) {
 	glGenBuffers(ATTRIB_COUNT, handle);
+}
 
+Model::~Model() {
+	glDeleteBuffers(ATTRIB_COUNT, handle);
+}
+
+
+void Model::Clear() {
+	vertices.clear();
+	colors.clear();
+	normals.clear();
+	Invalidate();
+}
+
+void Model::Reserve(int s) {
+	vertices.reserve(s);
+	colors.reserve(s);
+	normals.reserve(s);
+}
+
+
+void Model::Update() {
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
 
@@ -22,14 +40,16 @@ Model::Model(
 
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_NORMAL]);
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
-}
 
-Model::~Model() {
-	glDeleteBuffers(ATTRIB_COUNT, handle);
+	dirty = false;
 }
 
 
 void Model::Draw() {
+	if (dirty) {
+		Update();
+	}
+
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
 	glVertexAttribPointer(

@@ -7,8 +7,8 @@
 #include "camera.hpp"
 #include "controller.hpp"
 #include "init.hpp"
-#include "model.hpp"
 #include "shader.hpp"
+#include "world.hpp"
 
 
 namespace blank {
@@ -42,9 +42,10 @@ private:
 	float pitch_sensitivity;
 	float yaw_sensitivity;
 
+	BlockType testBlockType;
+
 	Camera cam;
-	Model model;
-	FPSController modelCtrl;
+	Chunk chunk;
 
 	glm::vec3 light_position;
 	glm::vec3 light_color;

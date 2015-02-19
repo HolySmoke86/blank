@@ -17,126 +17,12 @@ Application::Application()
 , move_velocity(0.003f)
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
+, testBlockType(true)
 , cam()
-, model({
-	// vertices
-	{  0.0f,  0.0f,  1.0f }, // front, red
-	{  1.0f,  0.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  1.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  0.0f,  0.0f,  0.0f }, // back, cyan
-	{  0.0f,  1.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f }, // top, green
-	{  0.0f,  1.0f,  1.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  1.0f,  1.0f,  1.0f },
-	{  0.0f,  0.0f,  0.0f }, // bottom, magenta
-	{  1.0f,  0.0f,  0.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  0.0f }, // left, blue
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  1.0f,  0.0f,  0.0f }, // right, yellow
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  1.0f },
-}, {
-	// colors
-	{  1.0f,  0.0f,  0.0f }, // front, red
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  0.0f,  1.0f,  1.0f }, // back, cyan
-	{  0.0f,  1.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  0.0f,  1.0f,  1.0f },
-	{  0.0f,  1.0f,  0.0f }, // top, green
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  1.0f,  0.0f,  1.0f }, // bottom, magenta
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  1.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f }, // left, blue
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  1.0f,  1.0f,  0.0f }, // right, yellow
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  0.0f },
-	{  1.0f,  1.0f,  0.0f },
-}, {
-	// normals
-	{  0.0f,  0.0f,  1.0f }, // front, red
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f,  1.0f },
-	{  0.0f,  0.0f, -1.0f }, // back, cyan
-	{  0.0f,  0.0f, -1.0f },
-	{  0.0f,  0.0f, -1.0f },
-	{  0.0f,  0.0f, -1.0f },
-	{  0.0f,  0.0f, -1.0f },
-	{  0.0f,  0.0f, -1.0f },
-	{  0.0f,  1.0f,  0.0f }, // top, green
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f,  1.0f,  0.0f },
-	{  0.0f, -1.0f,  0.0f }, // bottom, magenta
-	{  0.0f, -1.0f,  0.0f },
-	{  0.0f, -1.0f,  0.0f },
-	{  0.0f, -1.0f,  0.0f },
-	{  0.0f, -1.0f,  0.0f },
-	{  0.0f, -1.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f }, // left, blue
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{ -1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f }, // right, yellow
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-	{  1.0f,  0.0f,  0.0f },
-})
-, modelCtrl()
-, light_position(5.0f, 5.0f, 5.0f)
+, chunk()
+, light_position(17.0f, 17.0f, 17.0f)
 , light_color(1.0f, 1.0f, 1.0f)
-, light_power(50.0f)
+, light_power(100.0f)
 , m_handle(0)
 , v_handle(0)
 , mv_handle(0)
@@ -152,6 +38,7 @@ Application::Application()
 , up(false)
 , down(false) {
 	GLContext::EnableVSync();
+	GLContext::EnableDepthTest();
 	GLContext::EnableBackfaceCulling();
 	program.LoadShader(
 		GL_VERTEX_SHADER,
@@ -218,8 +105,15 @@ Application::Application()
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	modelCtrl.Position(glm::vec3(0, 0, -4));
-	cam.Position(glm::vec3(0, 0, 4));
+	cam.Position(glm::vec3(0, 4, 4));
+
+	chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(&testBlockType);
+	chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(&testBlockType);
+	chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(&testBlockType);
+	chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(&testBlockType);
+	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(&testBlockType);
+	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(&testBlockType);
+	chunk.Invalidate();
 
 	m_handle = program.UniformLocation("M");
 	v_handle = program.UniformLocation("V");
@@ -325,15 +219,14 @@ void Application::Update(int dt) {
 	cam.OrientationVelocity(vel);
 
 	cam.Update(dt);
-	modelCtrl.Update(dt);
 }
 
 void Application::Render() {
-	glClear(GL_COLOR_BUFFER_BIT);
+	GLContext::Clear();
 
 	program.Use();
 
-	glm::mat4 m(modelCtrl.Transform());
+	glm::mat4 m(1.0f);
 	glm::mat4 mv(cam.View() * m);
 	glm::mat4 mvp(cam.MakeMVP(m));
 	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
@@ -344,7 +237,7 @@ void Application::Render() {
 	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
 	glUniform1f(light_power_handle, light_power);
 
-	model.Draw();
+	chunk.Draw();
 
 	window.Flip();
 }

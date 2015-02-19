@@ -83,7 +83,10 @@ public:
 	GLContext &operator =(const GLContext &) = delete;
 
 	static void EnableVSync();
+	static void EnableDepthTest();
 	static void EnableBackfaceCulling();
+
+	static void Clear();
 
 private:
 	SDL_GLContext handle;

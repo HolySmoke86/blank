@@ -11,6 +11,28 @@ namespace blank {
 class Model {
 
 public:
+	std::vector<glm::vec3> vertices;
+	std::vector<glm::vec3> colors;
+	std::vector<glm::vec3> normals;
+
+public:
+	Model();
+	~Model();
+
+	Model(const Model &) = delete;
+	Model &operator =(const Model &) = delete;
+
+	void Invalidate() { dirty = true; }
+
+	void Clear();
+	void Reserve(int);
+
+	void Draw();
+
+private:
+	void Update();
+
+private:
 	enum Attribute {
 		ATTRIB_VERTEX,
 		ATTRIB_COLOR,
@@ -18,20 +40,8 @@ public:
 		ATTRIB_COUNT,
 	};
 
-public:
-	explicit Model(
-		std::vector<glm::vec3> &&vertices,
-		std::vector<glm::vec3> &&colors,
-		std::vector<glm::vec3> &&normals);
-	~Model();
-
-	void Draw();
-
-private:
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec3> colors;
-	std::vector<glm::vec3> normals;
 	GLuint handle[ATTRIB_COUNT];
+	bool dirty;
 
 };
 

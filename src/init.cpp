@@ -142,8 +142,17 @@ void GLContext::EnableVSync() {
 	}
 }
 
+void GLContext::EnableDepthTest() {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+}
+
 void GLContext::EnableBackfaceCulling() {
 	glEnable(GL_CULL_FACE);
+}
+
+void GLContext::Clear() {
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 
