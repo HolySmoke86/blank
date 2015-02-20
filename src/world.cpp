@@ -48,12 +48,7 @@ void BlockType::FillVBO(
 	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z    );
 	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z + 1);
 
-	colors.insert(colors.end(), 6, glm::vec3(1.0f, 1.0f, 1.0f)); // front
-	colors.insert(colors.end(), 6, glm::vec3(1.0f, 1.0f, 1.0f)); // back
-	colors.insert(colors.end(), 6, glm::vec3(1.0f, 1.0f, 1.0f)); // top
-	colors.insert(colors.end(), 6, glm::vec3(1.0f, 1.0f, 1.0f)); // bottom
-	colors.insert(colors.end(), 6, glm::vec3(1.0f, 1.0f, 1.0f)); // left
-	colors.insert(colors.end(), 6, glm::vec3(1.0f, 1.0f, 1.0f)); // right
+	colors.insert(colors.end(), 6 * 6, color);
 
 	normals.insert(normals.end(), 6, glm::vec3( 0.0f,  0.0f,  1.0f)); // front
 	normals.insert(normals.end(), 6, glm::vec3( 0.0f,  0.0f, -1.0f)); // back
@@ -61,6 +56,18 @@ void BlockType::FillVBO(
 	normals.insert(normals.end(), 6, glm::vec3( 0.0f, -1.0f,  0.0f)); // bottom
 	normals.insert(normals.end(), 6, glm::vec3(-1.0f,  0.0f,  0.0f)); // left
 	normals.insert(normals.end(), 6, glm::vec3( 1.0f,  0.0f,  0.0f)); // right
+}
+
+
+BlockTypeRegistry::BlockTypeRegistry() {
+	Add(BlockType::DEFAULT);
+}
+
+int BlockTypeRegistry::Add(const BlockType &t) {
+	int id = types.size();
+	types.push_back(t);
+	types.back().id = id;
+	return id;
 }
 
 

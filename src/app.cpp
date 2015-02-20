@@ -17,12 +17,12 @@ Application::Application()
 , move_velocity(0.003f)
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
-, testBlockType(true)
+, blockType()
 , cam()
 , chunk()
 , light_position(17.0f, 17.0f, 17.0f)
 , light_color(1.0f, 1.0f, 1.0f)
-, light_power(100.0f)
+, light_power(250.0f)
 , m_handle(0)
 , v_handle(0)
 , mv_handle(0)
@@ -107,12 +107,27 @@ Application::Application()
 
 	cam.Position(glm::vec3(0, 4, 4));
 
-	chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(&testBlockType);
-	chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(&testBlockType);
-	chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(&testBlockType);
-	chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(&testBlockType);
-	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(&testBlockType);
-	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(&testBlockType);
+	blockType.Add(BlockType(true, glm::vec3(1, 1, 1)));
+	blockType.Add(BlockType(true, glm::vec3(1, 0, 0)));
+	blockType.Add(BlockType(true, glm::vec3(0, 1, 0)));
+	blockType.Add(BlockType(true, glm::vec3(0, 0, 1)));
+
+	chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(0, 0, 1)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(blockType[2]);
+	chunk.BlockAt(glm::vec3(1, 0, 1)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(2, 0, 0)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(2, 0, 1)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(3, 0, 0)) = Block(blockType[2]);
+	chunk.BlockAt(glm::vec3(3, 0, 1)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(2, 0, 2)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(2, 0, 3)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(3, 0, 2)) = Block(blockType[2]);
+	chunk.BlockAt(glm::vec3(3, 0, 3)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
 	chunk.Invalidate();
 
 	m_handle = program.UniformLocation("M");

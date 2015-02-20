@@ -13,10 +13,15 @@ namespace blank {
 /// attributes of a type of block
 struct BlockType {
 
-	bool visible;
+	int id;
 
-	constexpr explicit BlockType(bool v = false)
-	: visible(v) { }
+	bool visible;
+	glm::vec3 color;
+
+	constexpr explicit BlockType(
+		bool v = false,
+		const glm::vec3 &color = { 1, 1, 1 })
+	: id(-1), visible(v), color(color) { }
 
 	static const BlockType DEFAULT;
 
@@ -31,6 +36,23 @@ struct BlockType {
 	void FillModel(const glm::vec3 &pos, Model &m) const {
 		FillVBO(pos, m.vertices, m.colors, m.normals);
 	}
+
+};
+
+
+class BlockTypeRegistry {
+
+public:
+	BlockTypeRegistry();
+
+public:
+	int Add(const BlockType &);
+
+	BlockType *operator [](int id) { return &types[id]; }
+	const BlockType *Get(int id) const { return &types[id]; }
+
+private:
+	std::vector<BlockType> types;
 
 };
 

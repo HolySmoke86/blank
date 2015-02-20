@@ -42,7 +42,7 @@ private:
 	float pitch_sensitivity;
 	float yaw_sensitivity;
 
-	BlockType testBlockType;
+	BlockTypeRegistry blockType;
 
 	Camera cam;
 	Chunk chunk;
