@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 
 #include "controller.hpp"
+#include "geometry.hpp"
 
 
 namespace blank {
@@ -27,6 +28,8 @@ public:
 	void Aspect(float r);
 	void Aspect(float w, float h);
 	void Clip(float near, float far);
+
+	Ray Aim() const;
 
 	const glm::mat4 &Projection() { return projection; }
 	const glm::mat4 &View() { return view; }

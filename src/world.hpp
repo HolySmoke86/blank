@@ -2,6 +2,7 @@
 #define BLANK_WORLD_HPP_
 
 #include "model.hpp"
+#include "geometry.hpp"
 
 #include <vector>
 #include <GL/glew.h>
@@ -94,6 +95,8 @@ public:
 
 	Block &BlockAt(const glm::vec3 &pos) { return blocks[ToIndex(pos)]; }
 	const Block &BlockAt(const glm::vec3 &pos) const { return blocks[ToIndex(pos)]; }
+
+	bool Intersection(const Ray &, const glm::mat4 &M, int *blkid = nullptr, float *dist = nullptr) const;
 
 	void Draw();
 

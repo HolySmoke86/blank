@@ -1,5 +1,7 @@
 #include "app.hpp"
 
+#include "geometry.hpp"
+
 #include <iostream>
 #include <stdexcept>
 
@@ -234,6 +236,17 @@ void Application::Update(int dt) {
 	cam.OrientationVelocity(vel);
 
 	cam.Update(dt);
+
+	Ray aim = cam.Aim();
+	int blkid;
+	float dist;
+	if (chunk.Intersection(aim, glm::mat4(1.0f), &blkid, &dist)) {
+		glm::vec3 pos = Chunk::ToCoords(blkid);
+		std::cout << "pointing at: <" << pos.x << ", " << pos.y << ", " << pos.z << ">, "
+			"distance: " << dist << std::endl;
+	} else {
+		std::cout << "pointing at: nothing" << std::endl;
+	}
 }
 
 void Application::Render() {

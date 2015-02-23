@@ -52,6 +52,15 @@ void Camera::Clip(float near, float far) {
 	UpdateProjection();
 }
 
+Ray Camera::Aim() const {
+	const glm::mat4 inv_vp(glm::inverse(vp));
+	glm::vec4 from = inv_vp * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+	from /= from.w;
+	glm::vec4 to = inv_vp * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+	to /= to.w;
+	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
+}
+
 
 void Camera::Update(int dt) {
 	FPSController::Update(dt);
