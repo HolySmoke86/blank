@@ -7,6 +7,7 @@
 #include "camera.hpp"
 #include "controller.hpp"
 #include "init.hpp"
+#include "model.hpp"
 #include "shader.hpp"
 #include "world.hpp"
 
@@ -46,6 +47,10 @@ private:
 
 	Camera cam;
 	Chunk chunk;
+	OutlineModel outline;
+
+	bool outline_visible;
+	glm::mat4 outline_transform;
 
 	glm::vec3 light_position;
 	glm::vec3 light_color;

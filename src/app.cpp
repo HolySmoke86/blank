@@ -22,6 +22,9 @@ Application::Application()
 , blockType()
 , cam()
 , chunk()
+, outline()
+, outline_visible(false)
+, outline_transform(1.0f)
 , light_position(17.0f, 17.0f, 17.0f)
 , light_color(1.0f, 1.0f, 1.0f)
 , light_power(250.0f)
@@ -131,6 +134,23 @@ Application::Application()
 	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
 	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
 	chunk.Invalidate();
+
+	outline.vertices = std::vector<glm::vec3>({
+		{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f },
+		{ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 1.0f },
+		{ 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f },
+		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f },
+		{ 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f },
+		{ 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f },
+		{ 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f },
+		{ 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f },
+	});
+	outline.colors.resize(24, { -1, -1, -1 });
+	outline.Invalidate();
 
 	m_handle = program.UniformLocation("M");
 	v_handle = program.UniformLocation("V");
@@ -242,10 +262,10 @@ void Application::Update(int dt) {
 	float dist;
 	if (chunk.Intersection(aim, glm::mat4(1.0f), &blkid, &dist)) {
 		glm::vec3 pos = Chunk::ToCoords(blkid);
-		std::cout << "pointing at: <" << pos.x << ", " << pos.y << ", " << pos.z << ">, "
-			"distance: " << dist << std::endl;
+		outline_visible = true;
+		outline_transform = glm::translate(glm::mat4(1.0f), pos);
 	} else {
-		std::cout << "pointing at: nothing" << std::endl;
+		outline_visible = false;
 	}
 }
 
@@ -266,6 +286,14 @@ void Application::Render() {
 	glUniform1f(light_power_handle, light_power);
 
 	chunk.Draw();
+	if (outline_visible) {
+		mv = cam.View() * outline_transform;
+		mvp = cam.MakeMVP(outline_transform);
+		glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
+		glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
+		glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+		outline.Draw();
+	}
 
 	window.Flip();
 }

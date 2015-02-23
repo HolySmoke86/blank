@@ -13,6 +13,12 @@ CXXFLAGS += -Wall
 LDXXFLAGS ?=
 LDXXFLAGS += $(PKGLIBS)
 
+# debug
+CXXFLAGS += -g3 -O0
+
+# release
+#CPPFLAGS += -DNDEBUG
+
 SRC = $(wildcard src/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 DEP = $(SRC:.cpp=.d)
