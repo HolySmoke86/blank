@@ -14,7 +14,6 @@ class Camera
 
 public:
 	Camera();
-	~Camera();
 
 	Camera(const Camera &) = delete;
 	Camera &operator =(const Camera &) = delete;

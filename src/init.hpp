@@ -37,7 +37,6 @@ class InitGL {
 
 public:
 	InitGL();
-	~InitGL();
 
 	InitGL(const InitGL &) = delete;
 	InitGL &operator =(const InitGL &) = delete;
@@ -98,7 +97,6 @@ class InitGLEW {
 
 public:
 	InitGLEW();
-	~InitGLEW();
 
 	InitGLEW(const InitGLEW &) = delete;
 	InitGLEW &operator =(const InitGLEW &) = delete;

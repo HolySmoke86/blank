@@ -16,10 +16,6 @@ FPSController::FPSController()
 
 }
 
-FPSController::~FPSController() {
-
-}
-
 
 glm::mat4 FPSController::Transform() const {
 	return glm::translate(position) * glm::eulerAngleYX(yaw, pitch);

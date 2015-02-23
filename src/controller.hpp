@@ -10,7 +10,6 @@ class FPSController {
 
 public:
 	FPSController();
-	~FPSController();
 
 	glm::mat4 Transform() const;
 

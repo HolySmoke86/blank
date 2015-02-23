@@ -62,10 +62,6 @@ InitGL::InitGL() {
 	}
 }
 
-InitGL::~InitGL() {
-
-}
-
 
 Window::Window()
 : handle(SDL_CreateWindow(
@@ -169,10 +165,6 @@ InitGLEW::InitGLEW() {
 		msg.append(errBegin, errEnd);
 		throw std::runtime_error(msg);
 	}
-}
-
-InitGLEW::~InitGLEW() {
-
 }
 
 }

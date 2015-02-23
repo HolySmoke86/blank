@@ -18,10 +18,6 @@ Camera::Camera()
 
 }
 
-Camera::~Camera() {
-
-}
-
 
 void Camera::Viewport(int width, int height) {
 	Viewport(0, 0, width, height);

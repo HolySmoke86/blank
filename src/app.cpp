@@ -163,10 +163,6 @@ Application::Application()
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
-Application::~Application() {
-
-}
-
 
 void Application::Run() {
 	running = true;
