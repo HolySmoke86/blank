@@ -93,10 +93,17 @@ public:
 
 	void Invalidate() { dirty = true; }
 
-	Block &BlockAt(const glm::vec3 &pos) { return blocks[ToIndex(pos)]; }
-	const Block &BlockAt(const glm::vec3 &pos) const { return blocks[ToIndex(pos)]; }
+	Block &BlockAt(int index) { return blocks[index]; }
+	const Block &BlockAt(int index) const { return blocks[index]; }
+	Block &BlockAt(const glm::vec3 &pos) { return BlockAt(ToIndex(pos)); }
+	const Block &BlockAt(const glm::vec3 &pos) const { return BlockAt(ToIndex(pos)); }
 
-	bool Intersection(const Ray &, const glm::mat4 &M, int *blkid = nullptr, float *dist = nullptr) const;
+	bool Intersection(
+		const Ray &,
+		const glm::mat4 &M,
+		int *blkid = nullptr,
+		float *dist = nullptr,
+		glm::vec3 *normal = nullptr) const;
 
 	void Draw();
 

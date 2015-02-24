@@ -23,7 +23,12 @@ struct Ray {
 	glm::vec3 dir;
 };
 
-bool Intersection(const Ray &, const AABB &, const glm::mat4 &M, float *dist = nullptr);
+bool Intersection(
+	const Ray &,
+	const AABB &,
+	const glm::mat4 &M,
+	float *dist = nullptr,
+	glm::vec3 *normal = nullptr);
 
 }
 

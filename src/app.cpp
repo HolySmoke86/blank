@@ -41,7 +41,12 @@ Application::Application()
 , left(false)
 , right(false)
 , up(false)
-, down(false) {
+, down(false)
+, place(false)
+, remove(false)
+, pick(false)
+, remove_id(0)
+, place_id(1) {
 	GLContext::EnableVSync();
 	GLContext::EnableDepthTest();
 	GLContext::EnableBackfaceCulling();
@@ -210,6 +215,18 @@ void Application::HandleEvents() {
 						break;
 				}
 				break;
+			case SDL_MOUSEBUTTONDOWN:
+				if (event.button.button == 1) {
+					// left
+					remove = true;
+				} else if (event.button.button == 2) {
+					// middle
+					pick = true;
+				} else if (event.button.button == 3) {
+					// right
+					place = true;
+				}
+				break;
 			case SDL_MOUSEMOTION:
 				cam.RotateYaw(event.motion.xrel * yaw_sensitivity);
 				cam.RotatePitch(event.motion.yrel * pitch_sensitivity);
@@ -256,12 +273,35 @@ void Application::Update(int dt) {
 	Ray aim = cam.Aim();
 	int blkid;
 	float dist;
-	if (chunk.Intersection(aim, glm::mat4(1.0f), &blkid, &dist)) {
+	glm::vec3 normal;
+	if (chunk.Intersection(aim, glm::mat4(1.0f), &blkid, &dist, &normal)) {
 		glm::vec3 pos = Chunk::ToCoords(blkid);
 		outline_visible = true;
 		outline_transform = glm::translate(glm::mat4(1.0f), pos);
 	} else {
 		outline_visible = false;
+	}
+
+	if (pick) {
+		if (outline_visible) {
+			place_id = chunk.BlockAt(blkid).type->id;
+		}
+		pick = false;
+	}
+	if (remove) {
+		chunk.BlockAt(blkid).type = blockType[remove_id];
+		chunk.Invalidate();
+		remove = false;
+	}
+	if (place) {
+		if (outline_visible) {
+			int next_blkid = Chunk::ToIndex(Chunk::ToCoords(blkid) + normal);
+			if (next_blkid >= 0 && next_blkid < Chunk::Size()) {
+				chunk.BlockAt(next_blkid).type = blockType[place_id];
+				chunk.Invalidate();
+			}
+		}
+		place = false;
 	}
 }
 

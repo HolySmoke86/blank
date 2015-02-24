@@ -89,7 +89,12 @@ void Chunk::Draw() {
 }
 
 
-bool Chunk::Intersection(const Ray &ray, const glm::mat4 &M, int *blkid, float *dist) const {
+bool Chunk::Intersection(
+	const Ray &ray,
+	const glm::mat4 &M,
+	int *blkid,
+	float *dist,
+	glm::vec3 *normal) const {
 	{ // rough check
 		const AABB bb{{0, 0, 0}, {Width(), Height(), Depth()}};
 		if (!blank::Intersection(ray, bb, M)) {
@@ -97,7 +102,7 @@ bool Chunk::Intersection(const Ray &ray, const glm::mat4 &M, int *blkid, float *
 		}
 	}
 
-	if (!blkid && !dist) {
+	if (!blkid && !dist && !normal) {
 		return true;
 	}
 
@@ -105,6 +110,7 @@ bool Chunk::Intersection(const Ray &ray, const glm::mat4 &M, int *blkid, float *
 	int id = 0;
 	int closest_id = -1;
 	float closest_dist = std::numeric_limits<float>::infinity();
+	glm::vec3 closest_normal(0, 1, 0);
 	for (int z = 0; z < Depth(); ++z) {
 		for (int y = 0; y < Height(); ++y) {
 			for (int x = 0; x < Width(); ++x, ++id) {
@@ -113,10 +119,12 @@ bool Chunk::Intersection(const Ray &ray, const glm::mat4 &M, int *blkid, float *
 				}
 				const AABB bb{{x, y, z}, {x+1, y+1, z+1}};
 				float cur_dist;
-				if (blank::Intersection(ray, bb, M, &cur_dist)) {
+				glm::vec3 cur_norm;
+				if (blank::Intersection(ray, bb, M, &cur_dist, &cur_norm)) {
 					if (cur_dist < closest_dist) {
 						closest_id = id;
 						closest_dist = cur_dist;
+						closest_normal = cur_norm;
 					}
 				}
 			}
@@ -132,6 +140,9 @@ bool Chunk::Intersection(const Ray &ray, const glm::mat4 &M, int *blkid, float *
 	}
 	if (dist) {
 		*dist = closest_dist;
+	}
+	if (normal) {
+		*normal = closest_normal;
 	}
 	return true;
 }

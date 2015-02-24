@@ -66,6 +66,10 @@ private:
 	bool running;
 
 	bool front, back, left, right, up, down;
+	bool place, remove, pick;
+
+	int remove_id;
+	int place_id;
 
 };
 
