@@ -1,6 +1,7 @@
 #include "world.hpp"
 
 #include <limits>
+#include <glm/gtx/transform.hpp>
 
 
 namespace blank {
@@ -76,8 +77,25 @@ int BlockTypeRegistry::Add(const BlockType &t) {
 Chunk::Chunk()
 : blocks(Size())
 , model()
+, transform(1.0f)
 , dirty(false) {
 
+}
+
+Chunk::Chunk(Chunk &&other)
+: blocks(std::move(other.blocks))
+, model(std::move(other.model))
+, transform(other.transform)
+, dirty(other.dirty) {
+
+}
+
+Chunk &Chunk::operator =(Chunk &&other) {
+	blocks = std::move(other.blocks);
+	model = std::move(other.model);
+	transform = other.transform;
+	dirty = other.dirty;
+	return *this;
 }
 
 
@@ -147,6 +165,11 @@ bool Chunk::Intersection(
 	return true;
 }
 
+void Chunk::Position(const glm::vec3 &pos) {
+	position = pos;
+	transform = glm::translate(pos * Extent());
+}
+
 
 int Chunk::VertexCount() const {
 	// TODO: query blocks as soon as type shapes are implemented
@@ -165,6 +188,103 @@ void Chunk::Update() {
 
 	model.Invalidate();
 	dirty = false;
+}
+
+
+World::World()
+: blockType()
+, chunks() {
+	blockType.Add(BlockType(true, glm::vec3(1, 1, 1)));
+	blockType.Add(BlockType(true, glm::vec3(1, 0, 0)));
+	blockType.Add(BlockType(true, glm::vec3(0, 1, 0)));
+	blockType.Add(BlockType(true, glm::vec3(0, 0, 1)));
+}
+
+
+void World::Generate() {
+	for (int z = -1; z < 2; ++z) {
+		for (int y = -1; y < 2; ++y) {
+			for (int x = -1; x < 2; ++x) {
+				Generate(glm::vec3(x, y, z));
+			}
+		}
+	}
+}
+
+Chunk &World::Generate(const glm::vec3 &pos) {
+	chunks.emplace_back();
+	Chunk &chunk = chunks.back();
+	chunk.Position(pos);
+	chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(0, 0, 1)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(blockType[2]);
+	chunk.BlockAt(glm::vec3(1, 0, 1)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(2, 0, 0)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(2, 0, 1)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(3, 0, 0)) = Block(blockType[2]);
+	chunk.BlockAt(glm::vec3(3, 0, 1)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(2, 0, 2)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(2, 0, 3)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(3, 0, 2)) = Block(blockType[2]);
+	chunk.BlockAt(glm::vec3(3, 0, 3)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(blockType[1]);
+	chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(blockType[4]);
+	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
+	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
+	chunk.Invalidate();
+	return chunk;
+}
+
+bool World::Intersection(
+		const Ray &ray,
+		const glm::mat4 &M,
+		Chunk **chunk,
+		int *blkid,
+		float *dist,
+		glm::vec3 *normal) {
+	Chunk *closest_chunk = nullptr;
+	int closest_blkid = -1;
+	float closest_dist = std::numeric_limits<float>::infinity();
+	glm::vec3 closest_normal;
+
+	for (Chunk &cur_chunk : chunks) {
+		int cur_blkid;
+		float cur_dist;
+		glm::vec3 cur_normal;
+		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(), &cur_blkid, &cur_dist, &cur_normal)) {
+			if (cur_dist < closest_dist) {
+				closest_chunk = &cur_chunk;
+				closest_blkid = cur_blkid;
+				closest_dist = cur_dist;
+				closest_normal = cur_normal;
+			}
+		}
+	}
+
+	if (chunk) {
+		*chunk = closest_chunk;
+	}
+	if (blkid) {
+		*blkid = closest_blkid;
+	}
+	if (dist) {
+		*dist = closest_dist;
+	}
+	if (normal) {
+		*normal = closest_normal;
+	}
+	return closest_chunk;
+}
+
+
+Chunk &World::Next(const Chunk &to, const glm::vec3 &dir) {
+	const glm::vec3 tgt_pos = to.Position() + dir;
+	for (Chunk &chunk : chunks) {
+		if (chunk.Position() == tgt_pos) {
+			return chunk;
+		}
+	}
+	return Generate(tgt_pos);
 }
 
 }

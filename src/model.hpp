@@ -22,6 +22,9 @@ public:
 	Model(const Model &) = delete;
 	Model &operator =(const Model &) = delete;
 
+	Model(Model &&);
+	Model &operator =(Model &&);
+
 	void Invalidate() { dirty = true; }
 
 	void Clear();

@@ -42,10 +42,8 @@ private:
 	float pitch_sensitivity;
 	float yaw_sensitivity;
 
-	BlockTypeRegistry blockType;
-
 	Camera cam;
-	Chunk chunk;
+	World world;
 	OutlineModel outline;
 
 	bool outline_visible;

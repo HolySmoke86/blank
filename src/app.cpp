@@ -19,9 +19,8 @@ Application::Application()
 , move_velocity(0.003f)
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
-, blockType()
 , cam()
-, chunk()
+, world()
 , outline()
 , outline_visible(false)
 , outline_transform(1.0f)
@@ -58,6 +57,7 @@ Application::Application()
 		"layout(location = 2) in vec3 vtx_normal;\n"
 		"uniform mat4 M;\n"
 		"uniform mat4 V;\n"
+		"uniform mat4 MV;\n"
 		"uniform mat4 MVP;\n"
 		"uniform vec3 light_position;\n"
 		"out vec3 frag_color;\n"
@@ -69,11 +69,11 @@ Application::Application()
 			"vec4 v = vec4(vtx_position, 1);\n"
 			"gl_Position = MVP * v;\n"
 			"vtx_world = (M * v).xyz;\n"
-			"vec3 vtx_camera = (V * M * v).xyz;\n"
+			"vec3 vtx_camera = (MV * v).xyz;\n"
 			"eye = vec3(0, 0, 0) - vtx_camera;\n"
 			"vec3 light_camera = (V * v).xyz;\n"
 			"light_direction = light_position + eye;\n"
-			"normal = (V * M * vec4(vtx_normal, 0)).xyz;\n"
+			"normal = (MV * vec4(vtx_normal, 0)).xyz;\n"
 			"frag_color = vtx_color;\n"
 		"}\n"
 	);
@@ -117,28 +117,7 @@ Application::Application()
 
 	cam.Position(glm::vec3(0, 4, 4));
 
-	blockType.Add(BlockType(true, glm::vec3(1, 1, 1)));
-	blockType.Add(BlockType(true, glm::vec3(1, 0, 0)));
-	blockType.Add(BlockType(true, glm::vec3(0, 1, 0)));
-	blockType.Add(BlockType(true, glm::vec3(0, 0, 1)));
-
-	chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(0, 0, 1)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(blockType[2]);
-	chunk.BlockAt(glm::vec3(1, 0, 1)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(2, 0, 0)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(2, 0, 1)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(3, 0, 0)) = Block(blockType[2]);
-	chunk.BlockAt(glm::vec3(3, 0, 1)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(2, 0, 2)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(2, 0, 3)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(3, 0, 2)) = Block(blockType[2]);
-	chunk.BlockAt(glm::vec3(3, 0, 3)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
-	chunk.Invalidate();
+	world.Generate();
 
 	outline.vertices = std::vector<glm::vec3>({
 		{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f },
@@ -271,35 +250,41 @@ void Application::Update(int dt) {
 	cam.Update(dt);
 
 	Ray aim = cam.Aim();
+	Chunk *chunk;
 	int blkid;
 	float dist;
 	glm::vec3 normal;
-	if (chunk.Intersection(aim, glm::mat4(1.0f), &blkid, &dist, &normal)) {
+	if (world.Intersection(aim, glm::mat4(1.0f), &chunk, &blkid, &dist, &normal)) {
 		glm::vec3 pos = Chunk::ToCoords(blkid);
 		outline_visible = true;
-		outline_transform = glm::translate(glm::mat4(1.0f), pos);
+		outline_transform = glm::translate(chunk->Transform(), pos);
 	} else {
 		outline_visible = false;
 	}
 
 	if (pick) {
-		if (outline_visible) {
-			place_id = chunk.BlockAt(blkid).type->id;
+		if (chunk) {
+			place_id = chunk->BlockAt(blkid).type->id;
 		}
 		pick = false;
 	}
 	if (remove) {
-		chunk.BlockAt(blkid).type = blockType[remove_id];
-		chunk.Invalidate();
+		if (chunk) {
+			chunk->BlockAt(blkid).type = world.BlockTypes()[remove_id];
+			chunk->Invalidate();
+		}
 		remove = false;
 	}
 	if (place) {
-		if (outline_visible) {
-			int next_blkid = Chunk::ToIndex(Chunk::ToCoords(blkid) + normal);
-			if (next_blkid >= 0 && next_blkid < Chunk::Size()) {
-				chunk.BlockAt(next_blkid).type = blockType[place_id];
-				chunk.Invalidate();
+		if (chunk) {
+			Chunk *mod_chunk = chunk;
+			glm::vec3 next_pos = Chunk::ToCoords(blkid) + normal;
+			if (!Chunk::InBounds(next_pos)) {
+				mod_chunk = &world.Next(*chunk, normal);
+				next_pos -= normal * Chunk::Extent();
 			}
+			mod_chunk->BlockAt(next_pos).type = world.BlockTypes()[place_id];
+			mod_chunk->Invalidate();
 		}
 		place = false;
 	}
@@ -310,21 +295,25 @@ void Application::Render() {
 
 	program.Use();
 
-	glm::mat4 m(1.0f);
-	glm::mat4 mv(cam.View() * m);
-	glm::mat4 mvp(cam.MakeMVP(m));
-	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
 	glUniformMatrix4fv(v_handle, 1, GL_FALSE, &cam.View()[0][0]);
-	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
-	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 	glUniform3f(light_position_handle, light_position.x, light_position.y, light_position.z);
 	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
 	glUniform1f(light_power_handle, light_power);
 
-	chunk.Draw();
+	for (Chunk &chunk : world.LoadedChunks()) {
+		glm::mat4 m(chunk.Transform());
+		glm::mat4 mv(cam.View() * m);
+		glm::mat4 mvp(cam.MakeMVP(m));
+		glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
+		glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
+		glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+		chunk.Draw();
+	}
+
 	if (outline_visible) {
-		mv = cam.View() * outline_transform;
-		mvp = cam.MakeMVP(outline_transform);
+		glm::mat4 m(outline_transform);
+		glm::mat4 mv(cam.View() * outline_transform);
+		glm::mat4 mvp(cam.MakeMVP(outline_transform));
 		glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
 		glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
 		glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);

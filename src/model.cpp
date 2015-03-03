@@ -18,6 +18,28 @@ Model::~Model() {
 	glDeleteBuffers(ATTRIB_COUNT, handle);
 }
 
+Model::Model(Model &&other)
+: vertices(std::move(other.vertices))
+, colors(std::move(other.colors))
+, normals(std::move(other.normals))
+, dirty(other.dirty) {
+	for (int i = 0; i < ATTRIB_COUNT; ++i) {
+		handle[i] = other.handle[i];
+		other.handle[i] = 0;
+	}
+}
+
+Model &Model::operator =(Model &&other) {
+	vertices = std::move(other.vertices);
+	colors = std::move(other.colors);
+	normals = std::move(other.normals);
+	for (int i = 0; i < ATTRIB_COUNT; ++i) {
+		std::swap(handle[i], other.handle[i]);
+	}
+	dirty = other.dirty;
+	return *this;
+}
+
 
 void Model::Clear() {
 	vertices.clear();
