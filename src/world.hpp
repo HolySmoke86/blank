@@ -19,11 +19,13 @@ struct BlockType {
 
 	bool visible;
 	glm::vec3 color;
+	glm::vec3 outline_color;
 
 	constexpr explicit BlockType(
 		bool v = false,
-		const glm::vec3 &color = { 1, 1, 1 })
-	: id(-1), visible(v), color(color) { }
+		const glm::vec3 &color = { 1, 1, 1 },
+		const glm::vec3 &outline_color = { -1, -1, -1 })
+	: id(-1), visible(v), color(color), outline_color(outline_color) { }
 
 	static const BlockType DEFAULT;
 
@@ -37,6 +39,18 @@ struct BlockType {
 
 	void FillModel(const glm::vec3 &pos, Model &m) const {
 		FillVBO(pos, m.vertices, m.colors, m.normals);
+		m.Invalidate();
+	}
+
+
+	void FillOutlineVBO(
+		std::vector<glm::vec3> &vertices,
+		std::vector<glm::vec3> &colors
+	) const;
+
+	void FillOutlineModel(OutlineModel &m) const {
+		FillOutlineVBO(m.vertices, m.colors);
+		m.Invalidate();
 	}
 
 };

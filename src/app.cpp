@@ -46,23 +46,6 @@ Application::Application()
 
 	world.Generate();
 
-	outline.vertices = std::vector<glm::vec3>({
-		{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f },
-		{ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f },
-		{ 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f },
-		{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f },
-		{ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 1.0f },
-		{ 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f },
-		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f },
-		{ 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f },
-		{ 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f },
-		{ 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f },
-		{ 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f },
-	});
-	outline.colors.resize(24, { -1, -1, -1 });
-	outline.Invalidate();
-
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
@@ -176,6 +159,7 @@ void Application::Update(int dt) {
 	if (world.Intersection(aim, glm::mat4(1.0f), &chunk, &blkid, &dist, &normal)) {
 		glm::vec3 pos = Chunk::ToCoords(blkid);
 		outline_visible = true;
+		chunk->BlockAt(blkid).type->FillOutlineModel(outline);
 		outline_transform = glm::translate(chunk->Transform(), pos);
 	} else {
 		outline_visible = false;
