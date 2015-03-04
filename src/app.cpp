@@ -24,16 +24,6 @@ Application::Application()
 , outline()
 , outline_visible(false)
 , outline_transform(1.0f)
-, light_position(17.0f, 17.0f, 17.0f)
-, light_color(1.0f, 1.0f, 1.0f)
-, light_power(250.0f)
-, m_handle(0)
-, v_handle(0)
-, mv_handle(0)
-, mvp_handle(0)
-, light_position_handle(0)
-, light_color_handle(0)
-, light_power_handle(0)
 , running(false)
 , front(false)
 , back(false)
@@ -47,69 +37,6 @@ Application::Application()
 , remove_id(0)
 , place_id(1) {
 	GLContext::EnableVSync();
-	GLContext::EnableDepthTest();
-	GLContext::EnableBackfaceCulling();
-	program.LoadShader(
-		GL_VERTEX_SHADER,
-		"#version 330 core\n"
-		"layout(location = 0) in vec3 vtx_position;\n"
-		"layout(location = 1) in vec3 vtx_color;\n"
-		"layout(location = 2) in vec3 vtx_normal;\n"
-		"uniform mat4 M;\n"
-		"uniform mat4 V;\n"
-		"uniform mat4 MV;\n"
-		"uniform mat4 MVP;\n"
-		"uniform vec3 light_position;\n"
-		"out vec3 frag_color;\n"
-		"out vec3 vtx_world;\n"
-		"out vec3 normal;\n"
-		"out vec3 eye;\n"
-		"out vec3 light_direction;\n"
-		"void main() {\n"
-			"vec4 v = vec4(vtx_position, 1);\n"
-			"gl_Position = MVP * v;\n"
-			"vtx_world = (M * v).xyz;\n"
-			"vec3 vtx_camera = (MV * v).xyz;\n"
-			"eye = vec3(0, 0, 0) - vtx_camera;\n"
-			"vec3 light_camera = (V * v).xyz;\n"
-			"light_direction = light_position + eye;\n"
-			"normal = (MV * vec4(vtx_normal, 0)).xyz;\n"
-			"frag_color = vtx_color;\n"
-		"}\n"
-	);
-	program.LoadShader(
-		GL_FRAGMENT_SHADER,
-		"#version 330 core\n"
-		"in vec3 frag_color;\n"
-		"in vec3 vtx_world;\n"
-		"in vec3 normal;\n"
-		"in vec3 eye;\n"
-		"in vec3 light_direction;\n"
-		"uniform mat4 MV;\n"
-		"uniform vec3 light_position;\n"
-		"uniform vec3 light_color;\n"
-		"uniform float light_power;\n"
-		"out vec3 color;\n"
-		"void main() {\n"
-			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
-			"vec3 specular = vec3(0.3, 0.3, 0.3);\n"
-			"float distance = length(light_position - vtx_world);\n"
-			"vec3 n = normalize(normal);\n"
-			"vec3 l = normalize(light_direction);\n"
-			"float cos_theta = clamp(dot(n, l), 0, 1);\n"
-			"vec3 E = normalize(eye);\n"
-			"vec3 R = reflect(-l, n);\n"
-			"float cos_alpha = clamp(dot(E, R), 0, 1);\n"
-			"color = ambient"
-				" + frag_color * light_color * light_power * cos_theta / (distance * distance)"
-				" + specular * light_color * light_power * pow(cos_alpha, 5) / (distance * distance);\n"
-		"}\n"
-	);
-	program.Link();
-	if (!program.Linked()) {
-		program.Log(std::cerr);
-		throw std::runtime_error("link program");
-	}
 
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
@@ -135,14 +62,6 @@ Application::Application()
 	});
 	outline.colors.resize(24, { -1, -1, -1 });
 	outline.Invalidate();
-
-	m_handle = program.UniformLocation("M");
-	v_handle = program.UniformLocation("V");
-	mv_handle = program.UniformLocation("MV");
-	mvp_handle = program.UniformLocation("MVP");
-	light_position_handle = program.UniformLocation("light_position");
-	light_color_handle = program.UniformLocation("light_color");
-	light_power_handle = program.UniformLocation("light_power");
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
@@ -293,30 +212,17 @@ void Application::Update(int dt) {
 void Application::Render() {
 	GLContext::Clear();
 
-	program.Use();
+	program.Activate();
 
-	glUniformMatrix4fv(v_handle, 1, GL_FALSE, &cam.View()[0][0]);
-	glUniform3f(light_position_handle, light_position.x, light_position.y, light_position.z);
-	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
-	glUniform1f(light_power_handle, light_power);
+	program.SetVP(cam.View(), cam.Projection());
 
 	for (Chunk &chunk : world.LoadedChunks()) {
-		glm::mat4 m(chunk.Transform());
-		glm::mat4 mv(cam.View() * m);
-		glm::mat4 mvp(cam.MakeMVP(m));
-		glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
-		glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
-		glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+		program.SetM(chunk.Transform());
 		chunk.Draw();
 	}
 
 	if (outline_visible) {
-		glm::mat4 m(outline_transform);
-		glm::mat4 mv(cam.View() * outline_transform);
-		glm::mat4 mvp(cam.MakeMVP(outline_transform));
-		glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
-		glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
-		glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+		program.SetM(outline_transform);
 		outline.Draw();
 	}
 

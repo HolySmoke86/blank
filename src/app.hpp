@@ -36,7 +36,7 @@ private:
 	Window window;
 	GLContext ctx;
 	InitGLEW init_glew;
-	Program program;
+	DirectionalLighting program;
 
 	float move_velocity;
 	float pitch_sensitivity;
@@ -48,18 +48,6 @@ private:
 
 	bool outline_visible;
 	glm::mat4 outline_transform;
-
-	glm::vec3 light_position;
-	glm::vec3 light_color;
-	float light_power;
-
-	GLuint m_handle;
-	GLuint v_handle;
-	GLuint mv_handle;
-	GLuint mvp_handle;
-	GLuint light_position_handle;
-	GLuint light_color_handle;
-	GLuint light_power_handle;
 
 	bool running;
 

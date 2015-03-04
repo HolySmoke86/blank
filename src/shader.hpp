@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include <list>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -55,6 +56,33 @@ public:
 private:
 	GLuint handle;
 	std::list<Shader> shaders;
+
+};
+
+
+class DirectionalLighting {
+
+public:
+	DirectionalLighting();
+
+	void Activate();
+
+	void SetM(const glm::mat4 &m);
+	void SetVP(const glm::mat4 &v, const glm::mat4 &p);
+	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p);
+
+private:
+	Program program;
+
+	glm::vec3 light_direction;
+	glm::vec3 light_color;
+
+	glm::mat4 vp;
+
+	GLuint m_handle;
+	GLuint mvp_handle;
+	GLuint light_direction_handle;
+	GLuint light_color_handle;
 
 };
 

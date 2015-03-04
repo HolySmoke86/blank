@@ -1,5 +1,7 @@
 #include "shader.hpp"
 
+#include "init.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <memory>
@@ -132,6 +134,85 @@ void Program::Log(std::ostream &out) const {
 
 GLint Program::UniformLocation(const GLchar *name) const {
 	return glGetUniformLocation(handle, name);
+}
+
+
+DirectionalLighting::DirectionalLighting()
+: program()
+, light_direction(1.0f, 3.0f, 2.0f)
+, light_color(0.9f, 0.9f, 0.9f)
+, vp(1.0f)
+, m_handle(0)
+, mvp_handle(0)
+, light_direction_handle(0)
+, light_color_handle(0) {
+	program.LoadShader(
+		GL_VERTEX_SHADER,
+		"#version 330 core\n"
+		"layout(location = 0) in vec3 vtx_position;\n"
+		"layout(location = 1) in vec3 vtx_color;\n"
+		"layout(location = 2) in vec3 vtx_normal;\n"
+		"uniform mat4 M;\n"
+		"uniform mat4 MVP;\n"
+		"out vec3 frag_color;\n"
+		"out vec3 normal;\n"
+		"void main() {\n"
+			"gl_Position = MVP * vec4(vtx_position, 1);\n"
+			"normal = (M * vec4(vtx_normal, 0)).xyz;\n"
+			"frag_color = vtx_color;\n"
+		"}\n"
+	);
+	program.LoadShader(
+		GL_FRAGMENT_SHADER,
+		"#version 330 core\n"
+		"in vec3 frag_color;\n"
+		"in vec3 normal;\n"
+		"uniform vec3 light_direction;\n"
+		"uniform vec3 light_color;\n"
+		"out vec3 color;\n"
+		"void main() {\n"
+			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
+			"vec3 n = normalize(normal);\n"
+			"vec3 l = normalize(light_direction);\n"
+			"float cos_theta = clamp(dot(n, l), 0, 1);\n"
+			"color = ambient + frag_color * light_color * cos_theta;\n"
+		"}\n"
+	);
+	program.Link();
+	if (!program.Linked()) {
+		program.Log(std::cerr);
+		throw std::runtime_error("link program");
+	}
+
+	m_handle = program.UniformLocation("M");
+	mvp_handle = program.UniformLocation("MVP");
+	light_direction_handle = program.UniformLocation("light_direction");
+	light_color_handle = program.UniformLocation("light_color");
+}
+
+
+void DirectionalLighting::Activate() {
+	GLContext::EnableDepthTest();
+	GLContext::EnableBackfaceCulling();
+	program.Use();
+
+	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
+	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
+}
+
+void DirectionalLighting::SetM(const glm::mat4 &m) {
+	glm::mat4 mvp(vp * m);
+	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
+	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+}
+
+void DirectionalLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) {
+	vp = p * v;
+}
+
+void DirectionalLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) {
+	SetVP(v, p);
+	SetM(m);
 }
 
 }
