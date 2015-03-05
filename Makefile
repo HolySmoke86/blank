@@ -19,22 +19,33 @@ CXXFLAGS += -g3 -O0
 # release
 #CPPFLAGS += -DNDEBUG
 
-SRC = $(wildcard src/*.cpp)
-OBJ = $(SRC:.cpp=.o)
-DEP = $(SRC:.cpp=.d)
+SOURCE_DIR := src
+BUILD_DIR := build
+
+SRC = $(wildcard $(SOURCE_DIR)/*.cpp)
+OBJ = $(patsubst $(SOURCE_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC))
+DEP = $(OBJ:.o=.d)
 BIN = blank
 
 all: $(BIN)
 
 clean:
-	rm -f $(BIN) $(OBJ) $(DEP)
+	rm -df $(OBJ) $(DEP) $(BUILD_DIR)
 
-.PHONY: all clean
+distclean: clean
+	rm -f $(BIN)
+
+.PHONY: all clean distclean
 
 -include $(DEP)
 
 $(BIN): $(OBJ)
-	$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $^
+	@echo link: $@
+	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $^
 
-%.o: %.cpp
-	$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ -MMD -MP -MF"$*".d -MT"$@" $<
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(BUILD_DIR)
+	@echo compile: $@
+	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
+
+$(BUILD_DIR):
+	mkdir "$@"

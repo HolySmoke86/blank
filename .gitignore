@@ -1,5 +1,4 @@
-*.d
-*.o
 *.swp
 *.swo
 blank
+build
