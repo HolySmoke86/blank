@@ -1,8 +1,9 @@
 #ifndef BLANK_WORLD_HPP_
 #define BLANK_WORLD_HPP_
 
-#include "model.hpp"
 #include "geometry.hpp"
+#include "model.hpp"
+#include "shape.hpp"
 
 #include <list>
 #include <vector>
@@ -18,16 +19,20 @@ struct BlockType {
 	int id;
 
 	bool visible;
+
+	const Shape *shape;
 	glm::vec3 color;
 	glm::vec3 outline_color;
 
-	constexpr explicit BlockType(
+	explicit BlockType(
 		bool v = false,
 		const glm::vec3 &color = { 1, 1, 1 },
+		const Shape *shape = &DEFAULT_SHAPE,
 		const glm::vec3 &outline_color = { -1, -1, -1 })
-	: id(-1), visible(v), color(color), outline_color(outline_color) { }
+	: id(-1), visible(v), shape(shape), color(color), outline_color(outline_color) { }
 
 	static const BlockType DEFAULT;
+	static const CuboidShape DEFAULT_SHAPE;
 
 
 	void FillVBO(
@@ -178,6 +183,9 @@ private:
 
 private:
 	BlockTypeRegistry blockType;
+	CuboidShape blockShape;
+	CuboidShape slabShape;
+
 	std::list<Chunk> chunks;
 
 };

@@ -7,6 +7,7 @@
 namespace blank {
 
 const BlockType BlockType::DEFAULT;
+const CuboidShape BlockType::DEFAULT_SHAPE({{ 0, 0, 0 }, { 1, 1, 1 }});
 
 void BlockType::FillVBO(
 	const glm::vec3 &pos,
@@ -14,72 +15,17 @@ void BlockType::FillVBO(
 	std::vector<glm::vec3> &colors,
 	std::vector<glm::vec3> &normals
 ) const {
-	vertices.emplace_back(pos.x    , pos.y    , pos.z + 1); // front
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y    , pos.z    ); // back
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z    );
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z    ); // top
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y    , pos.z    ); // bottom
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z    );
-	vertices.emplace_back(pos.x    , pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y    , pos.z    ); // left
-	vertices.emplace_back(pos.x    , pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x    , pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x    , pos.y + 1, pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z    ); // right
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y    , pos.z + 1);
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z    );
-	vertices.emplace_back(pos.x + 1, pos.y + 1, pos.z + 1);
-
-	colors.insert(colors.end(), 6 * 6, color);
-
-	normals.insert(normals.end(), 6, glm::vec3( 0.0f,  0.0f,  1.0f)); // front
-	normals.insert(normals.end(), 6, glm::vec3( 0.0f,  0.0f, -1.0f)); // back
-	normals.insert(normals.end(), 6, glm::vec3( 0.0f,  1.0f,  0.0f)); // top
-	normals.insert(normals.end(), 6, glm::vec3( 0.0f, -1.0f,  0.0f)); // bottom
-	normals.insert(normals.end(), 6, glm::vec3(-1.0f,  0.0f,  0.0f)); // left
-	normals.insert(normals.end(), 6, glm::vec3( 1.0f,  0.0f,  0.0f)); // right
+	shape->Vertices(vertices, pos);
+	colors.insert(colors.end(), shape->VertexCount(), color);
+	shape->Normals(normals);
 }
 
 void BlockType::FillOutlineVBO(
 	std::vector<glm::vec3> &vertices,
 	std::vector<glm::vec3> &colors
 ) const {
-	vertices = std::vector<glm::vec3>({
-		{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f },
-		{ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f },
-		{ 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 0.0f },
-		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 0.0f },
-		{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f },
-		{ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 1.0f },
-		{ 1.0f, 1.0f, 0.0f }, { 1.0f, 1.0f, 1.0f },
-		{ 0.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f },
-		{ 0.0f, 0.0f, 1.0f }, { 1.0f, 0.0f, 1.0f },
-		{ 1.0f, 0.0f, 1.0f }, { 1.0f, 1.0f, 1.0f },
-		{ 1.0f, 1.0f, 1.0f }, { 0.0f, 1.0f, 1.0f },
-		{ 0.0f, 1.0f, 1.0f }, { 0.0f, 0.0f, 1.0f },
-	});
-	colors.resize(24, outline_color);
+	shape->Outline(vertices);
+	colors.insert(colors.end(), shape->OutlineCount(), outline_color);
 }
 
 
@@ -156,10 +102,9 @@ bool Chunk::Intersection(
 				if (!blocks[id].type->visible) {
 					continue;
 				}
-				const AABB bb{{x, y, z}, {x+1, y+1, z+1}};
 				float cur_dist;
 				glm::vec3 cur_norm;
-				if (blank::Intersection(ray, bb, M, &cur_dist, &cur_norm)) {
+				if (blocks[id].type->shape->Intersects(ray, glm::translate(M, glm::vec3(x, y, z)), cur_dist, cur_norm)) {
 					if (cur_dist < closest_dist) {
 						closest_id = id;
 						closest_dist = cur_dist;
@@ -194,7 +139,11 @@ void Chunk::Position(const glm::vec3 &pos) {
 
 int Chunk::VertexCount() const {
 	// TODO: query blocks as soon as type shapes are implemented
-	return Size() * 6 * 6;
+	int count = 0;
+	for (const auto &block : blocks) {
+		count += block.type->shape->VertexCount();
+	}
+	return count;
 }
 
 void Chunk::Update() {
@@ -214,11 +163,17 @@ void Chunk::Update() {
 
 World::World()
 : blockType()
+, blockShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }})
+, slabShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.5f, 1.0f }})
 , chunks() {
-	blockType.Add(BlockType(true, glm::vec3(1, 1, 1)));
-	blockType.Add(BlockType(true, glm::vec3(1, 0, 0)));
-	blockType.Add(BlockType(true, glm::vec3(0, 1, 0)));
-	blockType.Add(BlockType(true, glm::vec3(0, 0, 1)));
+	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
+	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &slabShape }); // white slab
+	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &blockShape }); // red block
+	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &slabShape }); // red slab
+	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &blockShape }); // green block
+	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &slabShape }); // green slab
+	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &blockShape }); // blue block
+	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &slabShape }); // blue slab
 }
 
 
@@ -236,22 +191,29 @@ Chunk &World::Generate(const glm::vec3 &pos) {
 	chunks.emplace_back();
 	Chunk &chunk = chunks.back();
 	chunk.Position(pos);
-	chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(0, 0, 1)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(blockType[2]);
-	chunk.BlockAt(glm::vec3(1, 0, 1)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(2, 0, 0)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(2, 0, 1)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(3, 0, 0)) = Block(blockType[2]);
-	chunk.BlockAt(glm::vec3(3, 0, 1)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(2, 0, 2)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(2, 0, 3)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(3, 0, 2)) = Block(blockType[2]);
-	chunk.BlockAt(glm::vec3(3, 0, 3)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(blockType[1]);
-	chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(blockType[4]);
-	chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
-	chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
+	for (int i = 1; i < 9; ++i) {
+		chunk.BlockAt(i) = Block(blockType[i]);
+		chunk.BlockAt(i + 257) = Block(blockType[i]);
+		chunk.BlockAt(i + 514) = Block(blockType[i]);
+	}
+	if (false) {
+		chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(blockType[4]);
+		chunk.BlockAt(glm::vec3(0, 0, 1)) = Block(blockType[1]);
+		chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(blockType[5]);
+		chunk.BlockAt(glm::vec3(1, 0, 1)) = Block(blockType[3]);
+		chunk.BlockAt(glm::vec3(2, 0, 0)) = Block(blockType[4]);
+		chunk.BlockAt(glm::vec3(2, 0, 1)) = Block(blockType[1]);
+		chunk.BlockAt(glm::vec3(3, 0, 0)) = Block(blockType[2]);
+		chunk.BlockAt(glm::vec3(3, 0, 1)) = Block(blockType[5]);
+		chunk.BlockAt(glm::vec3(2, 0, 2)) = Block(blockType[4]);
+		chunk.BlockAt(glm::vec3(2, 0, 3)) = Block(blockType[1]);
+		chunk.BlockAt(glm::vec3(3, 0, 2)) = Block(blockType[2]);
+		chunk.BlockAt(glm::vec3(3, 0, 3)) = Block(blockType[5]);
+		chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(blockType[5]);
+		chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(blockType[4]);
+		chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
+		chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
+	}
 	chunk.Invalidate();
 	return chunk;
 }

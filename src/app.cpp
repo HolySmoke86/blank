@@ -159,6 +159,7 @@ void Application::Update(int dt) {
 	if (world.Intersection(aim, glm::mat4(1.0f), &chunk, &blkid, &dist, &normal)) {
 		glm::vec3 pos = Chunk::ToCoords(blkid);
 		outline_visible = true;
+		outline.Clear();
 		chunk->BlockAt(blkid).type->FillOutlineModel(outline);
 		outline_transform = glm::translate(chunk->Transform(), pos);
 	} else {
