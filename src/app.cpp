@@ -89,9 +89,11 @@ void Application::HandleEvents() {
 						right = event.key.state == SDL_PRESSED;
 						break;
 					case SDLK_q:
+					case SDLK_SPACE:
 						up = event.key.state == SDL_PRESSED;
 						break;
 					case SDLK_e:
+					case SDLK_LSHIFT:
 						down = event.key.state == SDL_PRESSED;
 						break;
 				}
