@@ -6,6 +6,7 @@
 
 #include "camera.hpp"
 #include "controller.hpp"
+#include "hud.hpp"
 #include "init.hpp"
 #include "model.hpp"
 #include "shader.hpp"
@@ -43,6 +44,7 @@ private:
 	float yaw_sensitivity;
 
 	Camera cam;
+	HUD hud;
 	World world;
 	OutlineModel outline;
 

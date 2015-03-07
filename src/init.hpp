@@ -86,6 +86,7 @@ public:
 	static void EnableBackfaceCulling();
 
 	static void Clear();
+	static void ClearDepthBuffer();
 
 private:
 	SDL_GLContext handle;

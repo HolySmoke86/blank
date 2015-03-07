@@ -18,8 +18,6 @@ public:
 	Camera(const Camera &) = delete;
 	Camera &operator =(const Camera &) = delete;
 
-	glm::mat4 MakeMVP(const glm::mat4 &m) const { return vp * m; }
-
 	void Viewport(int width, int height);
 	void Viewport(int x, int y, int width, int height);
 
@@ -46,7 +44,6 @@ private:
 
 	glm::mat4 projection;
 	glm::mat4 view;
-	glm::mat4 vp;
 
 };
 

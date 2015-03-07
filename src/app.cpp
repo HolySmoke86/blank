@@ -20,6 +20,7 @@ Application::Application()
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
 , cam()
+, hud()
 , world()
 , outline()
 , outline_visible(false)
@@ -42,9 +43,11 @@ Application::Application()
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	cam.Position(glm::vec3(0, 4, 4));
-
 	world.Generate();
+
+	cam.Position(glm::vec3(0, 4, 4));
+	hud.Viewport(960, 600);
+	hud.Display(*world.BlockTypes()[place_id]);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
@@ -121,6 +124,7 @@ void Application::HandleEvents() {
 				switch (event.window.event) {
 					case SDL_WINDOWEVENT_RESIZED:
 						cam.Viewport(event.window.data1, event.window.data2);
+						hud.Viewport(event.window.data1, event.window.data2);
 						break;
 					default:
 						break;
@@ -171,6 +175,7 @@ void Application::Update(int dt) {
 	if (pick) {
 		if (chunk) {
 			place_id = chunk->BlockAt(blkid).type->id;
+			hud.Display(*world.BlockTypes()[place_id]);
 		}
 		pick = false;
 	}
@@ -201,6 +206,7 @@ void Application::Render() {
 
 	program.Activate();
 
+	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
 	program.SetVP(cam.View(), cam.Projection());
 
 	for (Chunk &chunk : world.LoadedChunks()) {
@@ -212,6 +218,8 @@ void Application::Render() {
 		program.SetM(outline_transform);
 		outline.Draw();
 	}
+
+	hud.Render(program);
 
 	window.Flip();
 }

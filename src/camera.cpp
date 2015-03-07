@@ -13,8 +13,7 @@ Camera::Camera()
 , near_clip(0.1f)
 , far_clip(100.0f)
 , projection(glm::perspective(fov, aspect, near_clip, far_clip))
-, view(glm::inverse(Transform()))
-, vp(projection) {
+, view(glm::inverse(Transform())) {
 
 }
 
@@ -49,7 +48,7 @@ void Camera::Clip(float near, float far) {
 }
 
 Ray Camera::Aim() const {
-	const glm::mat4 inv_vp(glm::inverse(vp));
+	const glm::mat4 inv_vp(glm::inverse(projection * view));
 	glm::vec4 from = inv_vp * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
 	from /= from.w;
 	glm::vec4 to = inv_vp * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
@@ -61,7 +60,6 @@ Ray Camera::Aim() const {
 void Camera::Update(int dt) {
 	FPSController::Update(dt);
 	view = glm::inverse(Transform());
-	vp = projection * view;
 }
 
 void Camera::UpdateProjection() {

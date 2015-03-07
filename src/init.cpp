@@ -151,6 +151,10 @@ void GLContext::Clear() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
+void GLContext::ClearDepthBuffer() {
+	glClear(GL_DEPTH_BUFFER_BIT);
+}
+
 
 InitGLEW::InitGLEW() {
 	glewExperimental = GL_TRUE;

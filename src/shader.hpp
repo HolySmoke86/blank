@@ -67,6 +67,8 @@ public:
 
 	void Activate();
 
+	void SetLightDirection(const glm::vec3 &);
+
 	void SetM(const glm::mat4 &m);
 	void SetVP(const glm::mat4 &v, const glm::mat4 &p);
 	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p);
