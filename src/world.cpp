@@ -13,6 +13,7 @@ World::World()
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
 , blockNoise(0)
 , colorNoise(1)
+, player()
 , loaded()
 , to_generate() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block

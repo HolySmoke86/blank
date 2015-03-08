@@ -42,6 +42,7 @@ private:
 	Camera cam;
 	HUD hud;
 	World world;
+	FPSController controller;
 
 	OutlineModel outline;
 	bool outline_visible;

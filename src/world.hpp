@@ -3,7 +3,7 @@
 
 #include "block.hpp"
 #include "chunk.hpp"
-#include "controller.hpp"
+#include "entity.hpp"
 #include "noise.hpp"
 #include "shader.hpp"
 #include "shape.hpp"
@@ -32,7 +32,7 @@ public:
 	BlockTypeRegistry &BlockTypes() { return blockType; }
 	std::list<Chunk> &LoadedChunks() { return loaded; }
 
-	FPSController &Controller() { return player; }
+	Entity &Player() { return player; }
 
 	Chunk &Next(const Chunk &, const glm::vec3 &dir);
 
@@ -52,7 +52,7 @@ private:
 	SimplexNoise blockNoise;
 	SimplexNoise colorNoise;
 
-	FPSController player;
+	Entity player;
 
 	std::list<Chunk> loaded;
 	std::list<Chunk> to_generate;

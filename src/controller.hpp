@@ -1,6 +1,7 @@
 #ifndef BLANK_CONTROLLER_HPP_
 #define BLANK_CONTROLLER_HPP_
 
+#include "entity.hpp"
 #include "geometry.hpp"
 
 #include <SDL.h>
@@ -12,15 +13,9 @@ namespace blank {
 class FPSController {
 
 public:
-	FPSController();
+	explicit FPSController(Entity &);
 
-	const glm::mat4 &Transform() const;
-	Ray Aim() const;
-
-	void Velocity(glm::vec3 vel) { velocity = vel; dirty = true; }
-	void OrientationVelocity(const glm::vec3 &vel);
-	void Position(glm::vec3 pos) { position = pos; dirty = true; }
-	void Move(glm::vec3 delta) { Position(position + delta); }
+	Ray Aim() const { return entity.Aim(); }
 
 	// all angles in radians (full circle = 2π)
 	float Pitch() const { return pitch; }
@@ -36,13 +31,10 @@ public:
 	void Update(int dt);
 
 private:
-	glm::vec3 velocity;
-	glm::vec3 position;
+	Entity &entity;
+
 	float pitch;
 	float yaw;
-
-	mutable glm::mat4 transform;
-	mutable bool dirty;
 
 	float move_velocity;
 	float pitch_sensitivity;

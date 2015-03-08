@@ -19,6 +19,7 @@ Application::Application()
 , cam()
 , hud()
 , world()
+, controller(world.Player())
 , outline()
 , outline_visible(false)
 , outline_transform(1.0f)
@@ -68,7 +69,7 @@ void Application::HandleEvents() {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
-				world.Controller().HandleKeyboard(event.key);
+				controller.HandleKeyboard(event.key);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == 1) {
@@ -83,7 +84,7 @@ void Application::HandleEvents() {
 				}
 				break;
 			case SDL_MOUSEMOTION:
-				world.Controller().HandleMouse(event.motion);
+				controller.HandleMouse(event.motion);
 				break;
 			case SDL_QUIT:
 				running = false;
@@ -105,9 +106,10 @@ void Application::HandleEvents() {
 }
 
 void Application::Update(int dt) {
+	controller.Update(dt);
 	world.Update(dt);
 
-	Ray aim = world.Controller().Aim();
+	Ray aim = controller.Aim();
 	Chunk *chunk;
 	int blkid;
 	float dist;

@@ -1,20 +1,15 @@
 #include "controller.hpp"
 
-#include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/rotate_vector.hpp>
-#include <glm/gtx/transform.hpp>
 
 
 namespace blank {
 
-FPSController::FPSController()
-: velocity(0, 0, 0)
-, position(0, 0, 0)
+FPSController::FPSController(Entity &entity)
+: entity(entity)
 , pitch(0)
 , yaw(0)
-, transform(1.0f)
-, dirty(true)
 , move_velocity(0.003f)
 , pitch_sensitivity(-0.0025f)
 , yaw_sensitivity(-0.001f)
@@ -28,28 +23,6 @@ FPSController::FPSController()
 }
 
 
-const glm::mat4 &FPSController::Transform() const {
-	if (dirty) {
-		transform = glm::translate(position) * glm::eulerAngleYX(yaw, pitch);
-		dirty = false;
-	}
-	return transform;
-}
-
-Ray FPSController::Aim() const {
-	glm::vec4 from = Transform() * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
-	from /= from.w;
-	glm::vec4 to = Transform() * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
-	to /= to.w;
-	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
-}
-
-
-void FPSController::OrientationVelocity(const glm::vec3 &vel) {
-	Velocity(glm::rotateY(vel, yaw));
-}
-
-
 void FPSController::Pitch(float p) {
 	pitch = p;
 	if (pitch > PI / 2) {
@@ -57,7 +30,6 @@ void FPSController::Pitch(float p) {
 	} else if (pitch < -PI / 2) {
 		pitch = -PI / 2;
 	}
-	dirty = true;
 }
 
 void FPSController::RotatePitch(float delta) {
@@ -71,7 +43,6 @@ void FPSController::Yaw(float y) {
 	} else if (yaw < -PI) {
 		yaw += PI * 2;
 	}
-	dirty = true;
 }
 
 void FPSController::RotateYaw(float delta) {
@@ -127,9 +98,8 @@ void FPSController::Update(int dt) {
 	} else if (front && !back) {
 		vel.z = -move_velocity;
 	}
-	OrientationVelocity(vel);
-
-	Move(velocity * float(dt));
+	entity.Rotation(glm::eulerAngleYX(yaw, pitch));
+	entity.Velocity(glm::rotateY(vel, yaw));
 }
 
 }
