@@ -113,16 +113,16 @@ public:
 			pos.z >= 0 && pos.z < Depth();
 	}
 	static constexpr int ToIndex(const glm::vec3 &pos) {
-		return pos.x + pos.y * Width() + pos.z * Width() * Height();
+		return int(pos.x) + int(pos.y) * Width() + int(pos.z) * Width() * Height();
 	}
 	static constexpr bool InBounds(int idx) {
 		return idx >= 0 && idx < Size();
 	}
 	static glm::vec3 ToCoords(int idx) {
 		return glm::vec3(
-			idx % Width(),
-			(idx / Width()) % Height(),
-			idx / (Width() * Height())
+			0.5f + idx % Width(),
+			0.5f + (idx / Width()) % Height(),
+			0.5f + idx / (Width() * Height())
 		);
 	}
 

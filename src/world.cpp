@@ -104,7 +104,8 @@ bool Chunk::Intersection(
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
-				if (blocks[id].type->shape->Intersects(ray, glm::translate(M, glm::vec3(x, y, z)), cur_dist, cur_norm)) {
+				glm::vec3 pos(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f);
+				if (blocks[id].type->shape->Intersects(ray, glm::translate(M, pos), cur_dist, cur_norm)) {
 					if (cur_dist < closest_dist) {
 						closest_id = id;
 						closest_dist = cur_dist;
@@ -160,9 +161,9 @@ void Chunk::Update() {
 
 World::World()
 : blockType()
-, blockShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }})
-, stairShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }}, { 0.5f, 0.5f })
-, slabShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.5f, 1.0f }})
+, blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
+, stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
+, slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
 , chunks() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &stairShape }); // white stair
