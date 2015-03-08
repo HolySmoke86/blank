@@ -168,6 +168,7 @@ void Application::Update(int dt) {
 		outline.Clear();
 		chunk->BlockAt(blkid).type->FillOutlineModel(outline);
 		outline_transform = glm::translate(chunk->Transform(), pos);
+		outline_transform = glm::scale(outline_transform, glm::vec3(1.0001f));
 	} else {
 		outline_visible = false;
 	}
