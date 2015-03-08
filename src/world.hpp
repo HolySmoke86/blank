@@ -168,7 +168,7 @@ class World {
 public:
 	World();
 
-	void Generate();
+	void Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to);
 
 	bool Intersection(
 		const Ray &,
@@ -179,7 +179,7 @@ public:
 		glm::vec3 *normal = nullptr);
 
 	BlockTypeRegistry &BlockTypes() { return blockType; }
-	std::list<Chunk> &LoadedChunks() { return chunks; }
+	std::list<Chunk> &LoadedChunks() { return loaded; }
 
 	FPSController &Controller() { return player; }
 
@@ -190,7 +190,7 @@ public:
 	void Render(DirectionalLighting &);
 
 private:
-	Chunk &Generate(const glm::vec3 &);
+	void Generate(Chunk &);
 
 private:
 	BlockTypeRegistry blockType;
@@ -203,7 +203,8 @@ private:
 
 	FPSController player;
 
-	std::list<Chunk> chunks;
+	std::list<Chunk> loaded;
+	std::list<Chunk> to_generate;
 
 };
 

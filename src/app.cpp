@@ -34,7 +34,7 @@ Application::Application()
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	world.Generate();
+	world.Generate({ -4, -4, -4 }, { 5, 5, 5});
 
 	hud.Viewport(960, 600);
 	hud.Display(*world.BlockTypes()[place_id]);

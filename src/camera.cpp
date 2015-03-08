@@ -10,7 +10,7 @@ Camera::Camera()
 : fov(45.0f)
 , aspect(1.0f)
 , near_clip(0.1f)
-, far_clip(100.0f)
+, far_clip(256.0f)
 , projection(glm::perspective(fov, aspect, near_clip, far_clip)) {
 
 }

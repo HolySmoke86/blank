@@ -166,7 +166,8 @@ World::World()
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
 , blockNoise(0)
 , colorNoise(1)
-, chunks() {
+, loaded()
+, to_generate() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &stairShape }); // white stair
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &slabShape }); // white slab
@@ -184,20 +185,35 @@ World::World()
 }
 
 
-void World::Generate() {
-	for (int z = -2; z < 3; ++z) {
-		for (int y = -2; y < 3; ++y) {
-			for (int x = -2; x < 3; ++x) {
-				Generate(glm::vec3(x, y, z));
+namespace {
+
+bool ChunkLess(const Chunk &a, const Chunk &b) {
+	return dot(a.Position(), a.Position()) < dot(b.Position(), b.Position());
+}
+
+}
+
+void World::Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to) {
+	for (int z = from.z; z < to.z; ++z) {
+		for (int y = from.y; y < to.y; ++y) {
+			for (int x = from.x; x < to.x; ++x) {
+				glm::vec3 pos{float(x), float(y), float(z)};
+				if (x == 0 && y == 0 && z == 0) {
+					loaded.emplace_back();
+					loaded.back().Position(pos);
+					Generate(loaded.back());
+				} else {
+					to_generate.emplace_back();
+					to_generate.back().Position(pos);
+				}
 			}
 		}
 	}
+	to_generate.sort(ChunkLess);
 }
 
-Chunk &World::Generate(const glm::vec3 &pos) {
-	chunks.emplace_back();
-	Chunk &chunk = chunks.back();
-	chunk.Position(pos);
+void World::Generate(Chunk &chunk) {
+	glm::vec3 pos(chunk.Position());
 	if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
 		for (size_t i = 1; i < blockType.Size(); ++i) {
 			chunk.BlockAt(i) = Block(blockType[i]);
@@ -220,7 +236,6 @@ Chunk &World::Generate(const glm::vec3 &pos) {
 		}
 	}
 	chunk.Invalidate();
-	return chunk;
 }
 
 bool World::Intersection(
@@ -235,7 +250,7 @@ bool World::Intersection(
 	float closest_dist = std::numeric_limits<float>::infinity();
 	glm::vec3 closest_normal;
 
-	for (Chunk &cur_chunk : chunks) {
+	for (Chunk &cur_chunk : loaded) {
 		int cur_blkid;
 		float cur_dist;
 		glm::vec3 cur_normal;
@@ -267,17 +282,31 @@ bool World::Intersection(
 
 Chunk &World::Next(const Chunk &to, const glm::vec3 &dir) {
 	const glm::vec3 tgt_pos = to.Position() + dir;
-	for (Chunk &chunk : chunks) {
+	for (Chunk &chunk : LoadedChunks()) {
 		if (chunk.Position() == tgt_pos) {
 			return chunk;
 		}
 	}
-	return Generate(tgt_pos);
+	for (Chunk &chunk : to_generate) {
+		if (chunk.Position() == tgt_pos) {
+			Generate(chunk);
+			return chunk;
+		}
+	}
+	loaded.emplace_back();
+	loaded.back().Position(tgt_pos);
+	Generate(loaded.back());
+	return loaded.back();
 }
 
 
 void World::Update(int dt) {
 	player.Update(dt);
+
+	if (!to_generate.empty()) {
+		Generate(to_generate.front());
+		loaded.splice(loaded.end(), to_generate, to_generate.begin());
+	}
 }
 
 
