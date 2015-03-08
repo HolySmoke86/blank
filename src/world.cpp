@@ -164,6 +164,8 @@ World::World()
 , blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
 , stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
+, blockNoise(0)
+, colorNoise(1)
 , chunks() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &stairShape }); // white stair
@@ -181,9 +183,9 @@ World::World()
 
 
 void World::Generate() {
-	for (int z = -1; z < 2; ++z) {
-		for (int y = -1; y < 2; ++y) {
-			for (int x = -1; x < 2; ++x) {
+	for (int z = -2; z < 3; ++z) {
+		for (int y = -2; y < 3; ++y) {
+			for (int x = -2; x < 3; ++x) {
 				Generate(glm::vec3(x, y, z));
 			}
 		}
@@ -194,28 +196,26 @@ Chunk &World::Generate(const glm::vec3 &pos) {
 	chunks.emplace_back();
 	Chunk &chunk = chunks.back();
 	chunk.Position(pos);
-	for (size_t i = 1; i < blockType.Size(); ++i) {
-		chunk.BlockAt(i) = Block(blockType[i]);
-		chunk.BlockAt(i + 257) = Block(blockType[i]);
-		chunk.BlockAt(i + 514) = Block(blockType[i]);
-	}
-	if (false) {
-		chunk.BlockAt(glm::vec3(0, 0, 0)) = Block(blockType[4]);
-		chunk.BlockAt(glm::vec3(0, 0, 1)) = Block(blockType[1]);
-		chunk.BlockAt(glm::vec3(1, 0, 0)) = Block(blockType[5]);
-		chunk.BlockAt(glm::vec3(1, 0, 1)) = Block(blockType[3]);
-		chunk.BlockAt(glm::vec3(2, 0, 0)) = Block(blockType[4]);
-		chunk.BlockAt(glm::vec3(2, 0, 1)) = Block(blockType[1]);
-		chunk.BlockAt(glm::vec3(3, 0, 0)) = Block(blockType[2]);
-		chunk.BlockAt(glm::vec3(3, 0, 1)) = Block(blockType[5]);
-		chunk.BlockAt(glm::vec3(2, 0, 2)) = Block(blockType[4]);
-		chunk.BlockAt(glm::vec3(2, 0, 3)) = Block(blockType[1]);
-		chunk.BlockAt(glm::vec3(3, 0, 2)) = Block(blockType[2]);
-		chunk.BlockAt(glm::vec3(3, 0, 3)) = Block(blockType[5]);
-		chunk.BlockAt(glm::vec3(1, 1, 0)) = Block(blockType[5]);
-		chunk.BlockAt(glm::vec3(1, 1, 1)) = Block(blockType[4]);
-		chunk.BlockAt(glm::vec3(2, 1, 1)) = Block(blockType[3]);
-		chunk.BlockAt(glm::vec3(2, 2, 1)) = Block(blockType[2]);
+	if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
+		for (size_t i = 1; i < blockType.Size(); ++i) {
+			chunk.BlockAt(i) = Block(blockType[i]);
+			chunk.BlockAt(i + 257) = Block(blockType[i]);
+			chunk.BlockAt(i + 514) = Block(blockType[i]);
+		}
+	} else {
+		for (int z = 0; z < Chunk::Depth(); ++z) {
+			for (int y = 0; y < Chunk::Height(); ++y) {
+				for (int x = 0; x < Chunk::Width(); ++x) {
+					glm::vec3 block_pos{float(x), float(y), float(z)};
+					glm::vec3 gen_pos = (pos * Chunk::Extent() + block_pos) / 64.0f;
+					float val = blockNoise(gen_pos);
+					if (val > 0.8f) {
+						int col_val = int((colorNoise(gen_pos) + 1.0f) * 2.0f) % 4;
+						chunk.BlockAt(block_pos) = Block(blockType[col_val * 3 + 1]);
+					}
+				}
+			}
+		}
 	}
 	chunk.Invalidate();
 	return chunk;

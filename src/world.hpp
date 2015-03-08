@@ -3,6 +3,7 @@
 
 #include "geometry.hpp"
 #include "model.hpp"
+#include "noise.hpp"
 #include "shape.hpp"
 
 #include <list>
@@ -188,6 +189,9 @@ private:
 	CuboidShape blockShape;
 	StairShape stairShape;
 	CuboidShape slabShape;
+
+	SimplexNoise blockNoise;
+	SimplexNoise colorNoise;
 
 	std::list<Chunk> chunks;
 
