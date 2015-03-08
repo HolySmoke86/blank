@@ -18,7 +18,7 @@ HUD::HUD()
 , far(-100.0f)
 , projection(glm::ortho(0.0f, 1.0f, 1.0f, 0.0f, near, far))
 , view(glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, -0.5f, 0))) {
-	block_transform = glm::translate(block_transform, glm::vec3(35.0f, 80.0f, 0.0f));
+	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
 	block_transform = glm::scale(block_transform, glm::vec3(50.0f));
 	block_transform = glm::rotate(block_transform, 3.5f, glm::vec3(1.0f, 0.0f, 0.0f));
 	block_transform = glm::rotate(block_transform, 0.85f, glm::vec3(0.0f, 1.0f, 0.0f));
