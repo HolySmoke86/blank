@@ -3,20 +3,13 @@
 
 #include <glm/glm.hpp>
 
-#include "controller.hpp"
-#include "geometry.hpp"
-
 
 namespace blank {
 
-class Camera
-: public FPSController {
+class Camera {
 
 public:
 	Camera();
-
-	Camera(const Camera &) = delete;
-	Camera &operator =(const Camera &) = delete;
 
 	void Viewport(int width, int height);
 	void Viewport(int x, int y, int width, int height);
@@ -26,12 +19,7 @@ public:
 	void Aspect(float w, float h);
 	void Clip(float near, float far);
 
-	Ray Aim() const;
-
 	const glm::mat4 &Projection() { return projection; }
-	const glm::mat4 &View() { return view; }
-
-	void Update(int dt);
 
 private:
 	void UpdateProjection();
@@ -43,7 +31,6 @@ private:
 	float far_clip;
 
 	glm::mat4 projection;
-	glm::mat4 view;
 
 };
 

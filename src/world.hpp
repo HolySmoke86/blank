@@ -1,9 +1,11 @@
 #ifndef BLANK_WORLD_HPP_
 #define BLANK_WORLD_HPP_
 
+#include "controller.hpp"
 #include "geometry.hpp"
 #include "model.hpp"
 #include "noise.hpp"
+#include "shader.hpp"
 #include "shape.hpp"
 
 #include <list>
@@ -179,7 +181,13 @@ public:
 	BlockTypeRegistry &BlockTypes() { return blockType; }
 	std::list<Chunk> &LoadedChunks() { return chunks; }
 
+	FPSController &Controller() { return player; }
+
 	Chunk &Next(const Chunk &, const glm::vec3 &dir);
+
+	void Update(int dt);
+
+	void Render(DirectionalLighting &);
 
 private:
 	Chunk &Generate(const glm::vec3 &);
@@ -192,6 +200,8 @@ private:
 
 	SimplexNoise blockNoise;
 	SimplexNoise colorNoise;
+
+	FPSController player;
 
 	std::list<Chunk> chunks;
 

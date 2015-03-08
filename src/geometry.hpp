@@ -7,6 +7,8 @@
 
 namespace blank {
 
+constexpr float PI = 3.141592653589793238462643383279502884;
+
 struct AABB {
 	glm::vec3 min;
 	glm::vec3 max;

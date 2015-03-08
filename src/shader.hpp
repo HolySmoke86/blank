@@ -70,6 +70,8 @@ public:
 	void SetLightDirection(const glm::vec3 &);
 
 	void SetM(const glm::mat4 &m);
+	void SetProjection(const glm::mat4 &p);
+	void SetView(const glm::mat4 &v);
 	void SetVP(const glm::mat4 &v, const glm::mat4 &p);
 	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p);
 
@@ -79,6 +81,8 @@ private:
 	glm::vec3 light_direction;
 	glm::vec3 light_color;
 
+	glm::mat4 projection;
+	glm::mat4 view;
 	glm::mat4 vp;
 
 	GLuint m_handle;

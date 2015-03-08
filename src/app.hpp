@@ -39,21 +39,16 @@ private:
 	InitGLEW init_glew;
 	DirectionalLighting program;
 
-	float move_velocity;
-	float pitch_sensitivity;
-	float yaw_sensitivity;
-
 	Camera cam;
 	HUD hud;
 	World world;
-	OutlineModel outline;
 
+	OutlineModel outline;
 	bool outline_visible;
 	glm::mat4 outline_transform;
 
 	bool running;
 
-	bool front, back, left, right, up, down;
 	bool place, remove, pick;
 
 	int remove_id;

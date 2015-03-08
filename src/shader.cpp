@@ -211,7 +211,19 @@ void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) {
 	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
 }
 
+void DirectionalLighting::SetProjection(const glm::mat4 &p) {
+	projection = p;
+	vp = p * view;
+}
+
+void DirectionalLighting::SetView(const glm::mat4 &v) {
+	view = v;
+	vp = projection * v;
+}
+
 void DirectionalLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) {
+	projection = p;
+	view = v;
 	vp = p * v;
 }
 

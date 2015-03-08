@@ -179,6 +179,8 @@ World::World()
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &blockShape }); // blue block
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &stairShape }); // blue stair
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &slabShape }); // blue slab
+
+	player.Position({ 4.0f, 4.0f, 4.0f });
 }
 
 
@@ -271,6 +273,22 @@ Chunk &World::Next(const Chunk &to, const glm::vec3 &dir) {
 		}
 	}
 	return Generate(tgt_pos);
+}
+
+
+void World::Update(int dt) {
+	player.Update(dt);
+}
+
+
+void World::Render(DirectionalLighting &program) {
+	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
+	program.SetView(glm::inverse(player.Transform()));
+
+	for (Chunk &chunk : LoadedChunks()) {
+		program.SetM(chunk.Transform());
+		chunk.Draw();
+	}
 }
 
 }

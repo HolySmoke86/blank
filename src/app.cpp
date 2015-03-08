@@ -16,9 +16,6 @@ Application::Application()
 , ctx(window.CreateContext())
 , init_glew()
 , program()
-, move_velocity(0.003f)
-, pitch_sensitivity(-0.0025f)
-, yaw_sensitivity(-0.001f)
 , cam()
 , hud()
 , world()
@@ -26,12 +23,6 @@ Application::Application()
 , outline_visible(false)
 , outline_transform(1.0f)
 , running(false)
-, front(false)
-, back(false)
-, left(false)
-, right(false)
-, up(false)
-, down(false)
 , place(false)
 , remove(false)
 , pick(false)
@@ -45,7 +36,6 @@ Application::Application()
 
 	world.Generate();
 
-	cam.Position(glm::vec3(0, 4, 4));
 	hud.Viewport(960, 600);
 	hud.Display(*world.BlockTypes()[place_id]);
 
@@ -78,28 +68,7 @@ void Application::HandleEvents() {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
-				switch (event.key.keysym.sym) {
-					case SDLK_w:
-						front = event.key.state == SDL_PRESSED;
-						break;
-					case SDLK_s:
-						back = event.key.state == SDL_PRESSED;
-						break;
-					case SDLK_a:
-						left = event.key.state == SDL_PRESSED;
-						break;
-					case SDLK_d:
-						right = event.key.state == SDL_PRESSED;
-						break;
-					case SDLK_q:
-					case SDLK_SPACE:
-						up = event.key.state == SDL_PRESSED;
-						break;
-					case SDLK_e:
-					case SDLK_LSHIFT:
-						down = event.key.state == SDL_PRESSED;
-						break;
-				}
+				world.Controller().HandleKeyboard(event.key);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				if (event.button.button == 1) {
@@ -114,8 +83,7 @@ void Application::HandleEvents() {
 				}
 				break;
 			case SDL_MOUSEMOTION:
-				cam.RotateYaw(event.motion.xrel * yaw_sensitivity);
-				cam.RotatePitch(event.motion.yrel * pitch_sensitivity);
+				world.Controller().HandleMouse(event.motion);
 				break;
 			case SDL_QUIT:
 				running = false;
@@ -137,27 +105,9 @@ void Application::HandleEvents() {
 }
 
 void Application::Update(int dt) {
-	glm::vec3 vel;
-	if (right && !left) {
-		vel.x = move_velocity;
-	} else if (left && !right) {
-		vel.x = -move_velocity;
-	}
-	if (up && !down) {
-		vel.y = move_velocity;
-	} else if (down && !up) {
-		vel.y = -move_velocity;
-	}
-	if (back && !front) {
-		vel.z = move_velocity;
-	} else if (front && !back) {
-		vel.z = -move_velocity;
-	}
-	cam.OrientationVelocity(vel);
+	world.Update(dt);
 
-	cam.Update(dt);
-
-	Ray aim = cam.Aim();
+	Ray aim = world.Controller().Aim();
 	Chunk *chunk;
 	int blkid;
 	float dist;
@@ -207,13 +157,8 @@ void Application::Render() {
 
 	program.Activate();
 
-	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
-	program.SetVP(cam.View(), cam.Projection());
-
-	for (Chunk &chunk : world.LoadedChunks()) {
-		program.SetM(chunk.Transform());
-		chunk.Draw();
-	}
+	program.SetProjection(cam.Projection());
+	world.Render(program);
 
 	if (outline_visible) {
 		program.SetM(outline_transform);
