@@ -3,6 +3,31 @@
 
 namespace blank {
 
+size_t NullShape::VertexCount() const {
+	return 0;
+}
+
+void NullShape::Vertices(std::vector<glm::vec3> &out, const glm::vec3 &pos) const {
+
+}
+
+void NullShape::Normals(std::vector<glm::vec3> &out) const {
+
+}
+
+size_t NullShape::OutlineCount() const {
+	return 0;
+}
+
+void NullShape::Outline(std::vector<glm::vec3> &out, const glm::vec3 &pos) const {
+
+}
+
+bool NullShape::Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const {
+	return false;
+}
+
+
 CuboidShape::CuboidShape(const AABB &b)
 : Shape()
 , bb(b) {

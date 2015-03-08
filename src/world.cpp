@@ -7,7 +7,7 @@
 namespace blank {
 
 const BlockType BlockType::DEFAULT;
-const CuboidShape BlockType::DEFAULT_SHAPE({{ 0, 0, 0 }, { 1, 1, 1 }});
+const NullShape BlockType::DEFAULT_SHAPE;
 
 void BlockType::FillVBO(
 	const glm::vec3 &pos,
@@ -138,7 +138,6 @@ void Chunk::Position(const glm::vec3 &pos) {
 
 
 int Chunk::VertexCount() const {
-	// TODO: query blocks as soon as type shapes are implemented
 	int count = 0;
 	for (const auto &block : blocks) {
 		count += block.type->shape->VertexCount();
@@ -151,9 +150,7 @@ void Chunk::Update() {
 	model.Reserve(VertexCount());
 
 	for (size_t i = 0; i < Size(); ++i) {
-		if (blocks[i].type->visible) {
-			blocks[i].type->FillModel(ToCoords(i), model);
-		}
+		blocks[i].type->FillModel(ToCoords(i), model);
 	}
 
 	model.Invalidate();

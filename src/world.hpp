@@ -32,7 +32,7 @@ struct BlockType {
 	: id(-1), visible(v), shape(shape), color(color), outline_color(outline_color) { }
 
 	static const BlockType DEFAULT;
-	static const CuboidShape DEFAULT_SHAPE;
+	static const NullShape DEFAULT_SHAPE;
 
 
 	void FillVBO(

@@ -23,6 +23,22 @@ struct Shape {
 };
 
 
+class NullShape
+: public Shape {
+
+public:
+	size_t VertexCount() const override;
+	void Vertices(std::vector<glm::vec3> &, const glm::vec3 &) const override;
+	void Normals(std::vector<glm::vec3> &) const override;
+
+	size_t OutlineCount() const override;
+	void Outline(std::vector<glm::vec3> &, const glm::vec3 &) const override;
+
+	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
+
+};
+
+
 class CuboidShape
 : public Shape {
 
