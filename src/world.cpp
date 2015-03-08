@@ -150,7 +150,7 @@ void Chunk::Update() {
 	model.Clear();
 	model.Reserve(VertexCount());
 
-	for (int i = 0; i < Size(); ++i) {
+	for (size_t i = 0; i < Size(); ++i) {
 		if (blocks[i].type->visible) {
 			blocks[i].type->FillModel(ToCoords(i), model);
 		}
@@ -164,15 +164,20 @@ void Chunk::Update() {
 World::World()
 : blockType()
 , blockShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }})
+, stairShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 1.0f }}, { 0.5f, 0.5f })
 , slabShape({{ 0.0f, 0.0f, 0.0f }, { 1.0f, 0.5f, 1.0f }})
 , chunks() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
+	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &stairShape }); // white stair
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &slabShape }); // white slab
 	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &blockShape }); // red block
+	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &stairShape }); // red stair
 	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &slabShape }); // red slab
 	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &blockShape }); // green block
+	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &stairShape }); // green stair
 	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &slabShape }); // green slab
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &blockShape }); // blue block
+	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &stairShape }); // blue stair
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &slabShape }); // blue slab
 }
 
@@ -191,7 +196,7 @@ Chunk &World::Generate(const glm::vec3 &pos) {
 	chunks.emplace_back();
 	Chunk &chunk = chunks.back();
 	chunk.Position(pos);
-	for (int i = 1; i < 9; ++i) {
+	for (size_t i = 1; i < blockType.Size(); ++i) {
 		chunk.BlockAt(i) = Block(blockType[i]);
 		chunk.BlockAt(i + 257) = Block(blockType[i]);
 		chunk.BlockAt(i + 514) = Block(blockType[i]);

@@ -69,6 +69,8 @@ public:
 public:
 	int Add(const BlockType &);
 
+	size_t Size() const { return types.size(); }
+
 	BlockType *operator [](int id) { return &types[id]; }
 	const BlockType *Get(int id) const { return &types[id]; }
 
@@ -184,6 +186,7 @@ private:
 private:
 	BlockTypeRegistry blockType;
 	CuboidShape blockShape;
+	StairShape stairShape;
 	CuboidShape slabShape;
 
 	std::list<Chunk> chunks;
