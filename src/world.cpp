@@ -14,6 +14,7 @@ World::World()
 , blockNoise(0)
 , colorNoise(1)
 , player()
+, player_chunk(0, 0, 0)
 , loaded()
 , to_generate() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
@@ -46,7 +47,9 @@ void World::Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to) {
 		for (int y = from.y; y < to.y; ++y) {
 			for (int x = from.x; x < to.x; ++x) {
 				glm::vec3 pos{float(x), float(y), float(z)};
-				if (x == 0 && y == 0 && z == 0) {
+				if (ChunkAvailable(pos)) {
+					continue;
+				} else if (x == 0 && y == 0 && z == 0) {
 					loaded.emplace_back();
 					loaded.back().Position(pos);
 					Generate(loaded.back());
@@ -128,19 +131,45 @@ bool World::Intersection(
 }
 
 
+Chunk *World::ChunkLoaded(const glm::tvec3<int> &pos) {
+	for (Chunk &chunk : loaded) {
+		if (glm::tvec3<int>(chunk.Position()) == pos) {
+			return &chunk;
+		}
+	}
+	return nullptr;
+}
+
+Chunk *World::ChunkQueued(const glm::tvec3<int> &pos) {
+	for (Chunk &chunk : to_generate) {
+		if (glm::tvec3<int>(chunk.Position()) == pos) {
+			return &chunk;
+		}
+	}
+	return nullptr;
+}
+
+Chunk *World::ChunkAvailable(const glm::tvec3<int> &pos) {
+	Chunk *chunk = ChunkLoaded(pos);
+	if (chunk) return chunk;
+
+	return ChunkQueued(pos);
+}
+
 Chunk &World::Next(const Chunk &to, const glm::vec3 &dir) {
 	const glm::vec3 tgt_pos = to.Position() + dir;
-	for (Chunk &chunk : LoadedChunks()) {
-		if (chunk.Position() == tgt_pos) {
-			return chunk;
-		}
+
+	Chunk *chunk = ChunkLoaded(tgt_pos);
+	if (chunk) {
+		return *chunk;
 	}
-	for (Chunk &chunk : to_generate) {
-		if (chunk.Position() == tgt_pos) {
-			Generate(chunk);
-			return chunk;
-		}
+
+	chunk = ChunkQueued(tgt_pos);
+	if (chunk) {
+		Generate(*chunk);
+		return *chunk;
 	}
+
 	loaded.emplace_back();
 	loaded.back().Position(tgt_pos);
 	Generate(loaded.back());
@@ -150,6 +179,39 @@ Chunk &World::Next(const Chunk &to, const glm::vec3 &dir) {
 
 void World::Update(int dt) {
 	player.Update(dt);
+
+	CheckChunkGeneration();
+}
+
+void World::CheckChunkGeneration() {
+	if (player.ChunkCoords() != player_chunk) {
+		player_chunk = player.ChunkCoords();
+
+		constexpr int max_dist = 8;
+		// unload far away chunks
+		for (auto iter(loaded.begin()), end(loaded.end()); iter != end;) {
+			if (std::abs(player_chunk.x - iter->Position().x) > max_dist
+					|| std::abs(player_chunk.y - iter->Position().y) > max_dist
+					|| std::abs(player_chunk.z - iter->Position().z) > max_dist) {
+				iter = loaded.erase(iter);
+			} else {
+				++iter;
+			}
+		}
+		// abort far away queued chunks
+		for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end;) {
+			if (std::abs(player_chunk.x - iter->Position().x) > max_dist
+					|| std::abs(player_chunk.y - iter->Position().y) > max_dist
+					|| std::abs(player_chunk.z - iter->Position().z) > max_dist) {
+				iter = to_generate.erase(iter);
+			} else {
+				++iter;
+			}
+		}
+		// add missing new chunks
+		glm::tvec3<int> offset(max_dist, max_dist, max_dist);
+		Generate(player_chunk - offset, player_chunk + offset);
+	}
 
 	if (!to_generate.empty()) {
 		Generate(to_generate.front());

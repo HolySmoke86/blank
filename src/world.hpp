@@ -34,9 +34,13 @@ public:
 
 	Entity &Player() { return player; }
 
+	Chunk *ChunkLoaded(const glm::tvec3<int> &);
+	Chunk *ChunkQueued(const glm::tvec3<int> &);
+	Chunk *ChunkAvailable(const glm::tvec3<int> &);
 	Chunk &Next(const Chunk &, const glm::vec3 &dir);
 
 	void Update(int dt);
+	void CheckChunkGeneration();
 
 	void Render(DirectionalLighting &);
 
@@ -53,6 +57,7 @@ private:
 	SimplexNoise colorNoise;
 
 	Entity player;
+	glm::tvec3<int> player_chunk;
 
 	std::list<Chunk> loaded;
 	std::list<Chunk> to_generate;
