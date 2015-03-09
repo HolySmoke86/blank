@@ -11,9 +11,13 @@ namespace blank {
 class Model {
 
 public:
+	using Index = unsigned int;
+
+public:
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> colors;
 	std::vector<glm::vec3> normals;
+	std::vector<Index> indices;
 
 public:
 	Model();
@@ -28,7 +32,7 @@ public:
 	void Invalidate() { dirty = true; }
 
 	void Clear();
-	void Reserve(int);
+	void Reserve(int vtx_count, int idx_count);
 
 	void Draw();
 
@@ -40,6 +44,7 @@ private:
 		ATTRIB_VERTEX,
 		ATTRIB_COLOR,
 		ATTRIB_NORMAL,
+		ATTRIB_INDEX,
 		ATTRIB_COUNT,
 	};
 
@@ -52,8 +57,12 @@ private:
 class OutlineModel {
 
 public:
+	using Index = unsigned short;
+
+public:
 	std::vector<glm::vec3> vertices;
 	std::vector<glm::vec3> colors;
+	std::vector<Index> indices;
 
 public:
 	OutlineModel();
@@ -65,7 +74,7 @@ public:
 	void Invalidate() { dirty = true; }
 
 	void Clear();
-	void Reserve(int);
+	void Reserve(int vtx_count, int idx_count);
 
 	void Draw();
 
@@ -76,6 +85,7 @@ private:
 	enum Attribute {
 		ATTRIB_VERTEX,
 		ATTRIB_COLOR,
+		ATTRIB_INDEX,
 		ATTRIB_COUNT,
 	};
 

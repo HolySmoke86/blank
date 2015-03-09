@@ -33,6 +33,7 @@ Model &Model::operator =(Model &&other) {
 	vertices = std::move(other.vertices);
 	colors = std::move(other.colors);
 	normals = std::move(other.normals);
+	indices = std::move(other.indices);
 	for (int i = 0; i < ATTRIB_COUNT; ++i) {
 		std::swap(handle[i], other.handle[i]);
 	}
@@ -45,13 +46,15 @@ void Model::Clear() {
 	vertices.clear();
 	colors.clear();
 	normals.clear();
+	indices.clear();
 	Invalidate();
 }
 
-void Model::Reserve(int s) {
-	vertices.reserve(s);
-	colors.reserve(s);
-	normals.reserve(s);
+void Model::Reserve(int v, int i) {
+	vertices.reserve(v);
+	colors.reserve(v);
+	normals.reserve(v);
+	indices.reserve(i);
 }
 
 
@@ -76,6 +79,9 @@ void Model::Update() {
 #endif
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_NORMAL]);
 	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index), indices.data(), GL_STATIC_DRAW);
 
 	dirty = false;
 }
@@ -119,10 +125,12 @@ void Model::Draw() {
 		nullptr        // offset
 	);
 
-	glDrawArrays(
-		GL_TRIANGLES,   // how
-		0,              // start
-		vertices.size() // len
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
+	glDrawElements(
+		GL_TRIANGLES,      // how
+		indices.size(),    // count
+		GL_UNSIGNED_INT, // type
+		nullptr            // offset
 	);
 
 	glDisableVertexAttribArray(ATTRIB_NORMAL);
@@ -134,6 +142,7 @@ void Model::Draw() {
 OutlineModel::OutlineModel()
 : vertices()
 , colors()
+, indices()
 , handle{}
 , dirty(false) {
 	glGenBuffers(ATTRIB_COUNT, handle);
@@ -147,12 +156,14 @@ OutlineModel::~OutlineModel() {
 void OutlineModel::Clear() {
 	vertices.clear();
 	colors.clear();
+	indices.clear();
 	Invalidate();
 }
 
-void OutlineModel::Reserve(int s) {
-	vertices.reserve(s);
-	colors.reserve(s);
+void OutlineModel::Reserve(int v, int i) {
+	vertices.reserve(v);
+	colors.reserve(v);
+	indices.reserve(i);
 }
 
 
@@ -168,6 +179,9 @@ void OutlineModel::Update() {
 #endif
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_COLOR]);
 	glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), colors.data(), GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index), indices.data(), GL_STATIC_DRAW);
 
 	dirty = false;
 }
@@ -203,10 +217,12 @@ void OutlineModel::Draw() {
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 
-	glDrawArrays(
-		GL_LINES,       // how
-		0,              // start
-		vertices.size() // len
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
+	glDrawElements(
+		GL_LINES,          // how
+		indices.size(),    // count
+		GL_UNSIGNED_SHORT, // type
+		nullptr            // offset
 	);
 
 	glDisableVertexAttribArray(ATTRIB_COLOR);

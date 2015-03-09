@@ -5,23 +5,22 @@ namespace blank {
 
 const NullShape BlockType::DEFAULT_SHAPE;
 
-void BlockType::FillVBO(
-	const glm::vec3 &pos,
-	std::vector<glm::vec3> &vertices,
-	std::vector<glm::vec3> &colors,
-	std::vector<glm::vec3> &normals
+void BlockType::FillModel(
+	Model &model,
+	const glm::vec3 &pos_offset,
+	Model::Index idx_offset
 ) const {
-	shape->Vertices(vertices, pos);
-	colors.insert(colors.end(), shape->VertexCount(), color);
-	shape->Normals(normals);
+	shape->Vertices(model.vertices, model.normals, model.indices, pos_offset, idx_offset);
+	model.colors.insert(model.colors.end(), shape->VertexCount(), color);
 }
 
-void BlockType::FillOutlineVBO(
-	std::vector<glm::vec3> &vertices,
-	std::vector<glm::vec3> &colors
+void BlockType::FillOutlineModel(
+	OutlineModel &model,
+	const glm::vec3 &pos_offset,
+	OutlineModel::Index idx_offset
 ) const {
-	shape->Outline(vertices);
-	colors.insert(colors.end(), shape->OutlineCount(), outline_color);
+	shape->Outline(model.vertices, model.indices, pos_offset, idx_offset);
+	model.colors.insert(model.colors.end(), shape->OutlineCount(), outline_color);
 }
 
 

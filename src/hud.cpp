@@ -27,6 +27,9 @@ HUD::HUD()
 		{ -10.0f,   0.0f, 0.0f }, { 10.0f,  0.0f, 0.0f },
 		{   0.0f, -10.0f, 0.0f }, {  0.0f, 10.0f, 0.0f },
 	});
+	crosshair.indices = std::vector<OutlineModel::Index>({
+		0, 1, 2, 3
+	});
 	crosshair.colors.resize(4, { 10.0f, 10.0f, 10.0f });
 	crosshair.Invalidate();
 }
@@ -44,7 +47,7 @@ void HUD::Viewport(float x, float y, float width, float height) {
 
 void HUD::Display(const BlockType &type) {
 	block.Clear();
-	type.FillModel({ 0.0f, 0.0f, 0.0f }, block);
+	type.FillModel(block);
 	block_visible = type.visible;
 }
 

@@ -111,20 +111,21 @@ glm::mat4 Chunk::Transform(const Pos &offset) const {
 }
 
 
-int Chunk::VertexCount() const {
-	int count = 0;
-	for (const auto &block : blocks) {
-		count += Type(block).shape->VertexCount();
-	}
-	return count;
-}
-
 void Chunk::Update() {
+	int vtx_count = 0, idx_count = 0;
+	for (const auto &block : blocks) {
+		const Shape *shape = Type(block).shape;
+		vtx_count += shape->VertexCount();
+		idx_count += shape->VertexIndexCount();
+	}
 	model.Clear();
-	model.Reserve(VertexCount());
+	model.Reserve(vtx_count, idx_count);
 
+	Model::Index vtx_counter = 0;
 	for (size_t i = 0; i < Size(); ++i) {
-		Type(blocks[i]).FillModel(ToCoords(i), model);
+		const BlockType &type = Type(blocks[i]);
+		type.FillModel(model, ToCoords(i), vtx_counter);
+		vtx_counter += type.shape->VertexCount();
 	}
 
 	model.Invalidate();

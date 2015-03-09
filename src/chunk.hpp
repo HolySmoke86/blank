@@ -75,7 +75,6 @@ public:
 	void Draw();
 
 private:
-	int VertexCount() const;
 	void Update();
 
 private:

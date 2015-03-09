@@ -32,28 +32,16 @@ struct BlockType {
 	static const NullShape DEFAULT_SHAPE;
 
 
-	void FillVBO(
-		const glm::vec3 &pos,
-		std::vector<glm::vec3> &vertices,
-		std::vector<glm::vec3> &colors,
-		std::vector<glm::vec3> &normals
+	void FillModel(
+		Model &m,
+		const glm::vec3 &pos_offset = { 0, 0, 0 },
+		Model::Index idx_offset = 0
 	) const;
-
-	void FillModel(const glm::vec3 &pos, Model &m) const {
-		FillVBO(pos, m.vertices, m.colors, m.normals);
-		m.Invalidate();
-	}
-
-
-	void FillOutlineVBO(
-		std::vector<glm::vec3> &vertices,
-		std::vector<glm::vec3> &colors
+	void FillOutlineModel(
+		OutlineModel &m,
+		const glm::vec3 &pos_offset = { 0, 0, 0 },
+		OutlineModel::Index idx_offset = 0
 	) const;
-
-	void FillOutlineModel(OutlineModel &m) const {
-		FillOutlineVBO(m.vertices, m.colors);
-		m.Invalidate();
-	}
 
 };
 
