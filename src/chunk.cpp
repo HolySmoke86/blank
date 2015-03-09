@@ -71,7 +71,7 @@ bool Chunk::Intersection(
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
-				glm::vec3 pos(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f);
+				Block::Pos pos(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f);
 				if (blocks[id].type->shape->Intersects(ray, glm::translate(M, pos), cur_dist, cur_norm)) {
 					if (cur_dist < closest_dist) {
 						closest_id = id;
@@ -99,11 +99,11 @@ bool Chunk::Intersection(
 	return true;
 }
 
-void Chunk::Position(const glm::tvec3<int> &pos) {
+void Chunk::Position(const Pos &pos) {
 	position = pos;
 }
 
-glm::mat4 Chunk::Transform(const glm::tvec3<int> &offset) const {
+glm::mat4 Chunk::Transform(const Pos &offset) const {
 	return glm::translate((position - offset) * Extent());
 }
 

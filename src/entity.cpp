@@ -20,7 +20,7 @@ void Entity::Velocity(const glm::vec3 &vel) {
 	velocity = vel;
 }
 
-void Entity::Position(const glm::vec3 &pos) {
+void Entity::Position(const Block::Pos &pos) {
 	position = pos;
 	while (position.x >= Chunk::Width()) {
 		position.x -= Chunk::Width();
@@ -56,12 +56,12 @@ void Entity::Rotation(const glm::mat4 &rot) {
 	rotation = rot;
 }
 
-glm::mat4 Entity::Transform(const glm::tvec3<int> &chunk_offset) const {
+glm::mat4 Entity::Transform(const Chunk::Pos &chunk_offset) const {
 	const glm::vec3 chunk_pos = (chunk - chunk_offset) * Chunk::Extent();
 	return glm::translate(position + chunk_pos) * rotation;
 }
 
-Ray Entity::Aim(const glm::tvec3<int> &chunk_offset) const {
+Ray Entity::Aim(const Chunk::Pos &chunk_offset) const {
 	glm::mat4 transform = Transform(chunk_offset);
 	glm::vec4 from = transform * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
 	from /= from.w;

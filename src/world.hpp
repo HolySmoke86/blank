@@ -19,7 +19,7 @@ class World {
 public:
 	World();
 
-	void Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to);
+	void Generate(const Chunk::Pos &from, const Chunk::Pos &to);
 
 	bool Intersection(
 		const Ray &,
@@ -34,9 +34,9 @@ public:
 
 	Entity &Player() { return player; }
 
-	Chunk *ChunkLoaded(const glm::tvec3<int> &);
-	Chunk *ChunkQueued(const glm::tvec3<int> &);
-	Chunk *ChunkAvailable(const glm::tvec3<int> &);
+	Chunk *ChunkLoaded(const Chunk::Pos &);
+	Chunk *ChunkQueued(const Chunk::Pos &);
+	Chunk *ChunkAvailable(const Chunk::Pos &);
 	Chunk &Next(const Chunk &, const glm::tvec3<int> &dir);
 
 	void Update(int dt);
@@ -57,7 +57,7 @@ private:
 	SimplexNoise colorNoise;
 
 	Entity player;
-	glm::tvec3<int> player_chunk;
+	Chunk::Pos player_chunk;
 
 	std::list<Chunk> loaded;
 	std::list<Chunk> to_generate;

@@ -49,11 +49,11 @@ bool ChunkLess(const Chunk &a, const Chunk &b) {
 
 }
 
-void World::Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to) {
+void World::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 	for (int z = from.z; z < to.z; ++z) {
 		for (int y = from.y; y < to.y; ++y) {
 			for (int x = from.x; x < to.x; ++x) {
-				glm::vec3 pos{float(x), float(y), float(z)};
+				Block::Pos pos{float(x), float(y), float(z)};
 				if (ChunkAvailable(pos)) {
 					continue;
 				} else if (x == 0 && y == 0 && z == 0) {
@@ -72,7 +72,8 @@ void World::Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to) {
 
 void World::Generate(Chunk &chunk) {
 	chunk.Allocate();
-	glm::vec3 pos(chunk.Position());
+	Chunk::Pos pos(chunk.Position());
+	glm::vec3 coords(pos * Chunk::Extent());
 	if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
 		for (size_t i = 1; i < blockType.Size(); ++i) {
 			chunk.BlockAt(i) = Block(blockType[i]);
@@ -83,8 +84,8 @@ void World::Generate(Chunk &chunk) {
 		for (int z = 0; z < Chunk::Depth(); ++z) {
 			for (int y = 0; y < Chunk::Height(); ++y) {
 				for (int x = 0; x < Chunk::Width(); ++x) {
-					glm::vec3 block_pos{float(x), float(y), float(z)};
-					glm::vec3 gen_pos = (pos * glm::vec3(Chunk::Extent()) + block_pos) / 64.0f;
+					Block::Pos block_pos{float(x), float(y), float(z)};
+					glm::vec3 gen_pos = (coords + block_pos) / 64.0f;
 					float val = blockNoise(gen_pos);
 					if (val > 0.8f) {
 						int col_val = int((colorNoise(gen_pos) + 1.0f) * 2.0f) % 4;
@@ -139,25 +140,25 @@ bool World::Intersection(
 }
 
 
-Chunk *World::ChunkLoaded(const glm::tvec3<int> &pos) {
+Chunk *World::ChunkLoaded(const Chunk::Pos &pos) {
 	for (Chunk &chunk : loaded) {
-		if (glm::tvec3<int>(chunk.Position()) == pos) {
+		if (chunk.Position() == pos) {
 			return &chunk;
 		}
 	}
 	return nullptr;
 }
 
-Chunk *World::ChunkQueued(const glm::tvec3<int> &pos) {
+Chunk *World::ChunkQueued(const Chunk::Pos &pos) {
 	for (Chunk &chunk : to_generate) {
-		if (glm::tvec3<int>(chunk.Position()) == pos) {
+		if (chunk.Position() == pos) {
 			return &chunk;
 		}
 	}
 	return nullptr;
 }
 
-Chunk *World::ChunkAvailable(const glm::tvec3<int> &pos) {
+Chunk *World::ChunkAvailable(const Chunk::Pos &pos) {
 	Chunk *chunk = ChunkLoaded(pos);
 	if (chunk) return chunk;
 
@@ -165,7 +166,7 @@ Chunk *World::ChunkAvailable(const glm::tvec3<int> &pos) {
 }
 
 Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
-	const glm::tvec3<int> tgt_pos = to.Position() + dir;
+	const Chunk::Pos tgt_pos = to.Position() + dir;
 
 	Chunk *chunk = ChunkLoaded(tgt_pos);
 	if (chunk) {
@@ -219,7 +220,7 @@ void World::CheckChunkGeneration() {
 			}
 		}
 		// add missing new chunks
-		glm::tvec3<int> offset(max_dist, max_dist, max_dist);
+		const Chunk::Pos offset(max_dist, max_dist, max_dist);
 		Generate(player_chunk - offset, player_chunk + offset);
 	}
 

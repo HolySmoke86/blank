@@ -15,6 +15,9 @@ namespace blank {
 class Chunk {
 
 public:
+	using Pos = glm::tvec3<int>;
+
+public:
 	Chunk();
 
 	Chunk(Chunk &&);
@@ -23,7 +26,7 @@ public:
 	static constexpr int Width() { return 16; }
 	static constexpr int Height() { return 16; }
 	static constexpr int Depth() { return 16; }
-	static glm::tvec3<int> Extent() { return { Width(), Height(), Depth() }; }
+	static Pos Extent() { return { Width(), Height(), Depth() }; }
 	static constexpr int Size() { return Width() * Height() * Depth(); }
 
 	static AABB Bounds() { return AABB{ { 0, 0, 0 }, Extent() }; }
@@ -40,11 +43,11 @@ public:
 	static constexpr bool InBounds(int idx) {
 		return idx >= 0 && idx < Size();
 	}
-	static glm::vec3 ToCoords(int idx) {
-		return glm::vec3(
-			0.5f + idx % Width(),
-			0.5f + (idx / Width()) % Height(),
-			0.5f + idx / (Width() * Height())
+	static Block::Pos ToCoords(int idx) {
+		return Block::Pos(
+			0.5f + (idx % Width()),
+			0.5f + ((idx / Width()) % Height()),
+			0.5f + (idx / (Width() * Height()))
 		);
 	}
 
@@ -53,8 +56,8 @@ public:
 
 	Block &BlockAt(int index) { return blocks[index]; }
 	const Block &BlockAt(int index) const { return blocks[index]; }
-	Block &BlockAt(const glm::vec3 &pos) { return BlockAt(ToIndex(pos)); }
-	const Block &BlockAt(const glm::vec3 &pos) const { return BlockAt(ToIndex(pos)); }
+	Block &BlockAt(const Block::Pos &pos) { return BlockAt(ToIndex(pos)); }
+	const Block &BlockAt(const Block::Pos &pos) const { return BlockAt(ToIndex(pos)); }
 
 	bool Intersection(
 		const Ray &,
@@ -63,9 +66,9 @@ public:
 		float *dist = nullptr,
 		glm::vec3 *normal = nullptr) const;
 
-	void Position(const glm::tvec3<int> &);
-	const glm::tvec3<int> &Position() const { return position; }
-	glm::mat4 Transform(const glm::tvec3<int> &offset) const;
+	void Position(const Pos &);
+	const Pos &Position() const { return position; }
+	glm::mat4 Transform(const Pos &offset) const;
 
 	void Draw();
 
@@ -76,7 +79,7 @@ private:
 private:
 	std::vector<Block> blocks;
 	Model model;
-	glm::tvec3<int> position;
+	Pos position;
 	bool dirty;
 
 };

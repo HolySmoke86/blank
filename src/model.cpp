@@ -200,6 +200,7 @@ void OutlineModel::Draw() {
 		nullptr        // offset
 	);
 
+	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 
 	glDrawArrays(

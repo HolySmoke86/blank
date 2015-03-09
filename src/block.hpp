@@ -81,6 +81,8 @@ private:
 /// single 1x1x1 cube
 struct Block {
 
+	using Pos = glm::vec3;
+
 	const BlockType *type;
 
 	constexpr explicit Block(const BlockType *t = &BlockType::DEFAULT)
