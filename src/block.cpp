@@ -3,7 +3,6 @@
 
 namespace blank {
 
-const BlockType BlockType::DEFAULT;
 const NullShape BlockType::DEFAULT_SHAPE;
 
 void BlockType::FillVBO(
@@ -27,7 +26,7 @@ void BlockType::FillOutlineVBO(
 
 
 BlockTypeRegistry::BlockTypeRegistry() {
-	Add(BlockType::DEFAULT);
+	Add(BlockType());
 }
 
 int BlockTypeRegistry::Add(const BlockType &t) {

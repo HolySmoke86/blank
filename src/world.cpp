@@ -57,11 +57,11 @@ void World::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 				if (ChunkAvailable(pos)) {
 					continue;
 				} else if (x == 0 && y == 0 && z == 0) {
-					loaded.emplace_back();
+					loaded.emplace_back(blockType);
 					loaded.back().Position(pos);
 					Generate(loaded.back());
 				} else {
-					to_generate.emplace_back();
+					to_generate.emplace_back(blockType);
 					to_generate.back().Position(pos);
 				}
 			}
@@ -76,9 +76,9 @@ void World::Generate(Chunk &chunk) {
 	glm::vec3 coords(pos * Chunk::Extent());
 	if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
 		for (size_t i = 1; i < blockType.Size(); ++i) {
-			chunk.BlockAt(i) = Block(blockType[i]);
-			chunk.BlockAt(i + 257) = Block(blockType[i]);
-			chunk.BlockAt(i + 514) = Block(blockType[i]);
+			chunk.BlockAt(i) = Block(i);
+			chunk.BlockAt(i + 257) = Block(i);
+			chunk.BlockAt(i + 514) = Block(i);
 		}
 	} else {
 		for (int z = 0; z < Chunk::Depth(); ++z) {
@@ -89,7 +89,7 @@ void World::Generate(Chunk &chunk) {
 					float val = blockNoise(gen_pos);
 					if (val > 0.8f) {
 						int col_val = int((colorNoise(gen_pos) + 1.0f) * 2.0f) % 4;
-						chunk.BlockAt(block_pos) = Block(blockType[col_val * 3 + 1]);
+						chunk.BlockAt(block_pos) = Block(col_val * 3 + 1);
 					}
 				}
 			}
@@ -179,7 +179,7 @@ Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
 		return *chunk;
 	}
 
-	loaded.emplace_back();
+	loaded.emplace_back(blockType);
 	loaded.back().Position(tgt_pos);
 	Generate(loaded.back());
 	return loaded.back();

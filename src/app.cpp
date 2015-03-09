@@ -118,7 +118,7 @@ void Application::Update(int dt) {
 		glm::vec3 pos = Chunk::ToCoords(blkid);
 		outline_visible = true;
 		outline.Clear();
-		chunk->BlockAt(blkid).type->FillOutlineModel(outline);
+		chunk->Type(chunk->BlockAt(blkid)).FillOutlineModel(outline);
 		outline_transform = glm::translate(chunk->Transform(world.Player().ChunkCoords()), pos);
 		outline_transform = glm::scale(outline_transform, glm::vec3(1.0001f));
 	} else {
@@ -127,14 +127,14 @@ void Application::Update(int dt) {
 
 	if (pick) {
 		if (chunk) {
-			place_id = chunk->BlockAt(blkid).type->id;
+			place_id = chunk->BlockAt(blkid).type;
 			hud.Display(*world.BlockTypes()[place_id]);
 		}
 		pick = false;
 	}
 	if (remove) {
 		if (chunk) {
-			chunk->BlockAt(blkid).type = world.BlockTypes()[remove_id];
+			chunk->BlockAt(blkid).type = remove_id;
 			chunk->Invalidate();
 		}
 		remove = false;
@@ -147,7 +147,7 @@ void Application::Update(int dt) {
 				mod_chunk = &world.Next(*chunk, normal);
 				next_pos -= normal * glm::vec3(Chunk::Extent());
 			}
-			mod_chunk->BlockAt(next_pos).type = world.BlockTypes()[place_id];
+			mod_chunk->BlockAt(next_pos).type = place_id;
 			mod_chunk->Invalidate();
 		}
 		place = false;

@@ -6,8 +6,9 @@
 
 namespace blank {
 
-Chunk::Chunk()
-: blocks()
+Chunk::Chunk(const BlockTypeRegistry &types)
+: types(&types)
+, blocks()
 , model()
 , position(0, 0, 0)
 , dirty(false) {
@@ -15,13 +16,15 @@ Chunk::Chunk()
 }
 
 Chunk::Chunk(Chunk &&other)
-: blocks(std::move(other.blocks))
+: types(other.types)
+, blocks(std::move(other.blocks))
 , model(std::move(other.model))
 , dirty(other.dirty) {
 
 }
 
 Chunk &Chunk::operator =(Chunk &&other) {
+	types = other.types;
 	blocks = std::move(other.blocks);
 	model = std::move(other.model);
 	dirty = other.dirty;
@@ -66,13 +69,13 @@ bool Chunk::Intersection(
 	for (int z = 0; z < Depth(); ++z) {
 		for (int y = 0; y < Height(); ++y) {
 			for (int x = 0; x < Width(); ++x, ++id) {
-				if (!blocks[id].type->visible) {
+				if (!Type(blocks[id]).visible) {
 					continue;
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
 				Block::Pos pos(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f);
-				if (blocks[id].type->shape->Intersects(ray, glm::translate(M, pos), cur_dist, cur_norm)) {
+				if (Type(blocks[id]).shape->Intersects(ray, glm::translate(M, pos), cur_dist, cur_norm)) {
 					if (cur_dist < closest_dist) {
 						closest_id = id;
 						closest_dist = cur_dist;
@@ -111,7 +114,7 @@ glm::mat4 Chunk::Transform(const Pos &offset) const {
 int Chunk::VertexCount() const {
 	int count = 0;
 	for (const auto &block : blocks) {
-		count += block.type->shape->VertexCount();
+		count += Type(block).shape->VertexCount();
 	}
 	return count;
 }
@@ -121,7 +124,7 @@ void Chunk::Update() {
 	model.Reserve(VertexCount());
 
 	for (size_t i = 0; i < Size(); ++i) {
-		blocks[i].type->FillModel(ToCoords(i), model);
+		Type(blocks[i]).FillModel(ToCoords(i), model);
 	}
 
 	model.Invalidate();

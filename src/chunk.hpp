@@ -18,7 +18,7 @@ public:
 	using Pos = glm::tvec3<int>;
 
 public:
-	Chunk();
+	explicit Chunk(const BlockTypeRegistry &);
 
 	Chunk(Chunk &&);
 	Chunk &operator =(Chunk &&);
@@ -59,6 +59,8 @@ public:
 	Block &BlockAt(const Block::Pos &pos) { return BlockAt(ToIndex(pos)); }
 	const Block &BlockAt(const Block::Pos &pos) const { return BlockAt(ToIndex(pos)); }
 
+	const BlockType &Type(const Block &b) const { return *types->Get(b.type); }
+
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
@@ -77,6 +79,7 @@ private:
 	void Update();
 
 private:
+	const BlockTypeRegistry *types;
 	std::vector<Block> blocks;
 	Model model;
 	Pos position;

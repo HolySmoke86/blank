@@ -29,7 +29,6 @@ struct BlockType {
 		const glm::vec3 &outline_color = { -1, -1, -1 })
 	: id(-1), visible(v), shape(shape), color(color), outline_color(outline_color) { }
 
-	static const BlockType DEFAULT;
 	static const NullShape DEFAULT_SHAPE;
 
 
@@ -83,10 +82,10 @@ struct Block {
 
 	using Pos = glm::vec3;
 
-	const BlockType *type;
+	int type;
 
-	constexpr explicit Block(const BlockType *t = &BlockType::DEFAULT)
-	: type(t) { }
+	constexpr explicit Block(int type = 0)
+	: type(type) { }
 
 };
 
