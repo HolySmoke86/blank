@@ -102,7 +102,7 @@ bool World::Intersection(
 		int cur_blkid;
 		float cur_dist;
 		glm::vec3 cur_normal;
-		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(), &cur_blkid, &cur_dist, &cur_normal)) {
+		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(player.ChunkCoords()), &cur_blkid, &cur_dist, &cur_normal)) {
 			if (cur_dist < closest_dist) {
 				closest_chunk = &cur_chunk;
 				closest_blkid = cur_blkid;
@@ -160,10 +160,10 @@ void World::Update(int dt) {
 
 void World::Render(DirectionalLighting &program) {
 	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
-	program.SetView(glm::inverse(player.Transform()));
+	program.SetView(glm::inverse(player.Transform(player.ChunkCoords())));
 
 	for (Chunk &chunk : LoadedChunks()) {
-		program.SetM(chunk.Transform());
+		program.SetM(chunk.Transform(player.ChunkCoords()));
 		chunk.Draw();
 	}
 }

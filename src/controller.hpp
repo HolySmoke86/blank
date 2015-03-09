@@ -15,7 +15,7 @@ class FPSController {
 public:
 	explicit FPSController(Entity &);
 
-	Ray Aim() const { return entity.Aim(); }
+	Ray Aim() const { return entity.Aim(entity.ChunkCoords()); }
 
 	// all angles in radians (full circle = 2π)
 	float Pitch() const { return pitch; }

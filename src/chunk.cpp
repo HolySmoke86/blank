@@ -9,7 +9,6 @@ namespace blank {
 Chunk::Chunk()
 : blocks(Size())
 , model()
-, transform(1.0f)
 , dirty(false) {
 
 }
@@ -17,7 +16,6 @@ Chunk::Chunk()
 Chunk::Chunk(Chunk &&other)
 : blocks(std::move(other.blocks))
 , model(std::move(other.model))
-, transform(other.transform)
 , dirty(other.dirty) {
 
 }
@@ -25,7 +23,6 @@ Chunk::Chunk(Chunk &&other)
 Chunk &Chunk::operator =(Chunk &&other) {
 	blocks = std::move(other.blocks);
 	model = std::move(other.model);
-	transform = other.transform;
 	dirty = other.dirty;
 	return *this;
 }
@@ -99,7 +96,10 @@ bool Chunk::Intersection(
 
 void Chunk::Position(const glm::vec3 &pos) {
 	position = pos;
-	transform = glm::translate(pos * Extent());
+}
+
+glm::mat4 Chunk::Transform(const glm::vec3 &offset) const {
+	return glm::translate((position - offset) * Extent());
 }
 
 

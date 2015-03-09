@@ -62,7 +62,7 @@ public:
 
 	void Position(const glm::vec3 &);
 	const glm::vec3 &Position() const { return position; }
-	const glm::mat4 &Transform() const { return transform; }
+	glm::mat4 Transform(const glm::vec3 &offset) const;
 
 	void Draw();
 
@@ -74,7 +74,6 @@ private:
 	std::vector<Block> blocks;
 	Model model;
 	glm::vec3 position;
-	glm::mat4 transform;
 	bool dirty;
 
 };
