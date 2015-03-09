@@ -145,7 +145,7 @@ void Application::Update(int dt) {
 			glm::vec3 next_pos = Chunk::ToCoords(blkid) + normal;
 			if (!Chunk::InBounds(next_pos)) {
 				mod_chunk = &world.Next(*chunk, normal);
-				next_pos -= normal * Chunk::Extent();
+				next_pos -= normal * glm::vec3(Chunk::Extent());
 			}
 			mod_chunk->BlockAt(next_pos).type = world.BlockTypes()[place_id];
 			mod_chunk->Invalidate();

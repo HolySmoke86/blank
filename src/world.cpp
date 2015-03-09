@@ -16,7 +16,8 @@ World::World()
 , player()
 , player_chunk(0, 0, 0)
 , loaded()
-, to_generate() {
+, to_generate()
+, to_free() {
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &stairShape }); // white stair
 	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &slabShape }); // white slab
@@ -37,7 +38,13 @@ World::World()
 namespace {
 
 bool ChunkLess(const Chunk &a, const Chunk &b) {
-	return dot(a.Position(), a.Position()) < dot(b.Position(), b.Position());
+	return
+		a.Position().x * a.Position().x +
+		a.Position().y * a.Position().y +
+		a.Position().z * a.Position().z <
+		b.Position().x * b.Position().x +
+		b.Position().y * b.Position().y +
+		b.Position().z * b.Position().z;
 }
 
 }
@@ -64,6 +71,7 @@ void World::Generate(const glm::tvec3<int> &from, const glm::tvec3<int> &to) {
 }
 
 void World::Generate(Chunk &chunk) {
+	chunk.Allocate();
 	glm::vec3 pos(chunk.Position());
 	if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
 		for (size_t i = 1; i < blockType.Size(); ++i) {
@@ -76,7 +84,7 @@ void World::Generate(Chunk &chunk) {
 			for (int y = 0; y < Chunk::Height(); ++y) {
 				for (int x = 0; x < Chunk::Width(); ++x) {
 					glm::vec3 block_pos{float(x), float(y), float(z)};
-					glm::vec3 gen_pos = (pos * Chunk::Extent() + block_pos) / 64.0f;
+					glm::vec3 gen_pos = (pos * glm::vec3(Chunk::Extent()) + block_pos) / 64.0f;
 					float val = blockNoise(gen_pos);
 					if (val > 0.8f) {
 						int col_val = int((colorNoise(gen_pos) + 1.0f) * 2.0f) % 4;
@@ -156,8 +164,8 @@ Chunk *World::ChunkAvailable(const glm::tvec3<int> &pos) {
 	return ChunkQueued(pos);
 }
 
-Chunk &World::Next(const Chunk &to, const glm::vec3 &dir) {
-	const glm::vec3 tgt_pos = to.Position() + dir;
+Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
+	const glm::tvec3<int> tgt_pos = to.Position() + dir;
 
 	Chunk *chunk = ChunkLoaded(tgt_pos);
 	if (chunk) {
@@ -193,7 +201,9 @@ void World::CheckChunkGeneration() {
 			if (std::abs(player_chunk.x - iter->Position().x) > max_dist
 					|| std::abs(player_chunk.y - iter->Position().y) > max_dist
 					|| std::abs(player_chunk.z - iter->Position().z) > max_dist) {
-				iter = loaded.erase(iter);
+				auto saved = iter;
+				++iter;
+				to_free.splice(to_free.end(), loaded, saved);
 			} else {
 				++iter;
 			}
@@ -216,6 +226,10 @@ void World::CheckChunkGeneration() {
 	if (!to_generate.empty()) {
 		Generate(to_generate.front());
 		loaded.splice(loaded.end(), to_generate, to_generate.begin());
+	}
+
+	if (!to_free.empty()) {
+		to_free.pop_front();
 	}
 }
 

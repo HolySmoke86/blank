@@ -23,10 +23,10 @@ public:
 	static constexpr int Width() { return 16; }
 	static constexpr int Height() { return 16; }
 	static constexpr int Depth() { return 16; }
-	static glm::vec3 Extent() { return glm::vec3(Width(), Height(), Depth()); }
+	static glm::tvec3<int> Extent() { return { Width(), Height(), Depth() }; }
 	static constexpr int Size() { return Width() * Height() * Depth(); }
 
-	static AABB Bounds() { return AABB{ { 0, 0, 0 }, { Width(), Height(), Depth() } }; }
+	static AABB Bounds() { return AABB{ { 0, 0, 0 }, Extent() }; }
 
 	static constexpr bool InBounds(const glm::vec3 &pos) {
 		return
@@ -48,6 +48,7 @@ public:
 		);
 	}
 
+	void Allocate();
 	void Invalidate() { dirty = true; }
 
 	Block &BlockAt(int index) { return blocks[index]; }
@@ -62,9 +63,9 @@ public:
 		float *dist = nullptr,
 		glm::vec3 *normal = nullptr) const;
 
-	void Position(const glm::vec3 &);
-	const glm::vec3 &Position() const { return position; }
-	glm::mat4 Transform(const glm::vec3 &offset) const;
+	void Position(const glm::tvec3<int> &);
+	const glm::tvec3<int> &Position() const { return position; }
+	glm::mat4 Transform(const glm::tvec3<int> &offset) const;
 
 	void Draw();
 
@@ -75,7 +76,7 @@ private:
 private:
 	std::vector<Block> blocks;
 	Model model;
-	glm::vec3 position;
+	glm::tvec3<int> position;
 	bool dirty;
 
 };

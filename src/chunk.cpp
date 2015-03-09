@@ -7,8 +7,9 @@
 namespace blank {
 
 Chunk::Chunk()
-: blocks(Size())
+: blocks()
 , model()
+, position(0, 0, 0)
 , dirty(false) {
 
 }
@@ -25,6 +26,11 @@ Chunk &Chunk::operator =(Chunk &&other) {
 	model = std::move(other.model);
 	dirty = other.dirty;
 	return *this;
+}
+
+
+void Chunk::Allocate() {
+	blocks.resize(Size());
 }
 
 
@@ -93,11 +99,11 @@ bool Chunk::Intersection(
 	return true;
 }
 
-void Chunk::Position(const glm::vec3 &pos) {
+void Chunk::Position(const glm::tvec3<int> &pos) {
 	position = pos;
 }
 
-glm::mat4 Chunk::Transform(const glm::vec3 &offset) const {
+glm::mat4 Chunk::Transform(const glm::tvec3<int> &offset) const {
 	return glm::translate((position - offset) * Extent());
 }
 

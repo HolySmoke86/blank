@@ -37,7 +37,7 @@ public:
 	Chunk *ChunkLoaded(const glm::tvec3<int> &);
 	Chunk *ChunkQueued(const glm::tvec3<int> &);
 	Chunk *ChunkAvailable(const glm::tvec3<int> &);
-	Chunk &Next(const Chunk &, const glm::vec3 &dir);
+	Chunk &Next(const Chunk &, const glm::tvec3<int> &dir);
 
 	void Update(int dt);
 	void CheckChunkGeneration();
@@ -61,6 +61,7 @@ private:
 
 	std::list<Chunk> loaded;
 	std::list<Chunk> to_generate;
+	std::list<Chunk> to_free;
 
 };
 

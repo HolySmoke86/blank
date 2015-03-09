@@ -57,7 +57,7 @@ void Entity::Rotation(const glm::mat4 &rot) {
 }
 
 glm::mat4 Entity::Transform(const glm::tvec3<int> &chunk_offset) const {
-	const glm::vec3 chunk_pos = glm::vec3(chunk - chunk_offset) * Chunk::Extent();
+	const glm::vec3 chunk_pos = (chunk - chunk_offset) * Chunk::Extent();
 	return glm::translate(position + chunk_pos) * rotation;
 }
 
