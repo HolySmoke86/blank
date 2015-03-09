@@ -32,6 +32,8 @@ bool Intersection(
 	float *dist = nullptr,
 	glm::vec3 *normal = nullptr);
 
+bool CullTest(const AABB &box, const glm::mat4 &MVP);
+
 }
 
 #endif

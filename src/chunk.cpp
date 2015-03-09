@@ -43,8 +43,7 @@ bool Chunk::Intersection(
 	float *dist,
 	glm::vec3 *normal) const {
 	{ // rough check
-		const AABB bb{{0, 0, 0}, {Width(), Height(), Depth()}};
-		if (!blank::Intersection(ray, bb, M)) {
+		if (!blank::Intersection(ray, Bounds(), M)) {
 			return false;
 		}
 	}

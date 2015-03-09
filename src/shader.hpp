@@ -75,6 +75,10 @@ public:
 	void SetVP(const glm::mat4 &v, const glm::mat4 &p);
 	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p);
 
+	const glm::mat4 &Projection() const { return projection; }
+	const glm::mat4 &View() const { return view; }
+	const glm::mat4 &GetVP() const { return vp; }
+
 private:
 	Program program;
 

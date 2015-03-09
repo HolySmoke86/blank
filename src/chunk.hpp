@@ -26,6 +26,8 @@ public:
 	static glm::vec3 Extent() { return glm::vec3(Width(), Height(), Depth()); }
 	static constexpr int Size() { return Width() * Height() * Depth(); }
 
+	static AABB Bounds() { return AABB{ { 0, 0, 0 }, { Width(), Height(), Depth() } }; }
+
 	static constexpr bool InBounds(const glm::vec3 &pos) {
 		return
 			pos.x >= 0 && pos.x < Width() &&

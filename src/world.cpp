@@ -163,8 +163,12 @@ void World::Render(DirectionalLighting &program) {
 	program.SetView(glm::inverse(player.Transform(player.ChunkCoords())));
 
 	for (Chunk &chunk : LoadedChunks()) {
-		program.SetM(chunk.Transform(player.ChunkCoords()));
-		chunk.Draw();
+		glm::mat4 m(chunk.Transform(player.ChunkCoords()));
+		program.SetM(m);
+		glm::mat4 mvp(program.GetVP() * m);
+		if (!CullTest(Chunk::Bounds(), mvp)) {
+			chunk.Draw();
+		}
 	}
 }
 

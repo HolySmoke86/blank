@@ -126,4 +126,42 @@ bool Intersection(
 	return true;
 }
 
+bool CullTest(const AABB &box, const glm::mat4 &MVP) {
+	// transform corners into clip space
+	glm::vec4 corners[8] = {
+		{ box.min.x, box.min.y, box.min.z, 1.0f },
+		{ box.min.x, box.min.y, box.max.z, 1.0f },
+		{ box.min.x, box.max.y, box.min.z, 1.0f },
+		{ box.min.x, box.max.y, box.max.z, 1.0f },
+		{ box.max.x, box.min.y, box.min.z, 1.0f },
+		{ box.max.x, box.min.y, box.max.z, 1.0f },
+		{ box.max.x, box.max.y, box.min.z, 1.0f },
+		{ box.max.x, box.max.y, box.max.z, 1.0f },
+	};
+	for (glm::vec4 &corner : corners) {
+		corner = MVP * corner;
+		corner /= corner.w;
+	}
+
+	int hits[6] = { 0, 0, 0, 0, 0, 0 };
+
+	// check how many corners lie outside
+	for (const glm::vec4 &corner : corners) {
+		if (corner.x >  1.0f) ++hits[0];
+		if (corner.x < -1.0f) ++hits[1];
+		if (corner.y >  1.0f) ++hits[2];
+		if (corner.y < -1.0f) ++hits[3];
+		if (corner.z >  1.0f) ++hits[4];
+		if (corner.z < -1.0f) ++hits[5];
+	}
+
+	// if all corners are outside any given clip plane, the test is true
+	for (int hit : hits) {
+		if (hit == 8) return true;
+	}
+
+	// otherwise the box might still get culled completely, but can't say for sure ;)
+	return false;
+}
+
 }
