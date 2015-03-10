@@ -28,7 +28,7 @@ BlockTypeRegistry::BlockTypeRegistry() {
 	Add(BlockType());
 }
 
-int BlockTypeRegistry::Add(const BlockType &t) {
+Block::Type BlockTypeRegistry::Add(const BlockType &t) {
 	int id = types.size();
 	types.push_back(t);
 	types.back().id = id;

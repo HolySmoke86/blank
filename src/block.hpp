@@ -11,10 +11,24 @@
 
 namespace blank {
 
+/// single 1x1x1 cube
+struct Block {
+
+	using Type = unsigned short;
+	using Pos = glm::vec3;
+
+	Type type;
+
+	constexpr explicit Block(Type type = 0)
+	: type(type) { }
+
+};
+
+
 /// attributes of a type of block
 struct BlockType {
 
-	int id;
+	Block::Type id;
 
 	bool visible;
 
@@ -27,7 +41,7 @@ struct BlockType {
 		const glm::vec3 &color = { 1, 1, 1 },
 		const Shape *shape = &DEFAULT_SHAPE,
 		const glm::vec3 &outline_color = { -1, -1, -1 })
-	: id(-1), visible(v), shape(shape), color(color), outline_color(outline_color) { }
+	: id(0), visible(v), shape(shape), color(color), outline_color(outline_color) { }
 
 	static const NullShape DEFAULT_SHAPE;
 
@@ -52,28 +66,15 @@ public:
 	BlockTypeRegistry();
 
 public:
-	int Add(const BlockType &);
+	Block::Type Add(const BlockType &);
 
 	size_t Size() const { return types.size(); }
 
-	BlockType *operator [](int id) { return &types[id]; }
-	const BlockType *Get(int id) const { return &types[id]; }
+	BlockType *operator [](Block::Type id) { return &types[id]; }
+	const BlockType *Get(Block::Type id) const { return &types[id]; }
 
 private:
 	std::vector<BlockType> types;
-
-};
-
-
-/// single 1x1x1 cube
-struct Block {
-
-	using Pos = glm::vec3;
-
-	int type;
-
-	constexpr explicit Block(int type = 0)
-	: type(type) { }
 
 };
 
