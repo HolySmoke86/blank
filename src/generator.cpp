@@ -33,6 +33,7 @@ void Generator::operator ()(Chunk &chunk) const {
 		}
 	}
 	chunk.Invalidate();
+	chunk.CheckUpdate();
 }
 
 }

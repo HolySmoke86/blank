@@ -31,10 +31,6 @@ Application::Application()
 , place_id(1) {
 	GLContext::EnableVSync();
 
-	GLuint VertexArrayID;
-	glGenVertexArrays(1, &VertexArrayID);
-	glBindVertexArray(VertexArrayID);
-
 	world.Generate({ -4, -4, -4 }, { 5, 5, 5});
 
 	hud.Viewport(960, 600);

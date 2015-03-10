@@ -72,6 +72,7 @@ public:
 	const Pos &Position() const { return position; }
 	glm::mat4 Transform(const Pos &offset) const;
 
+	void CheckUpdate();
 	void Draw();
 
 private:

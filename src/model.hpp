@@ -34,6 +34,7 @@ public:
 	void Clear();
 	void Reserve(int vtx_count, int idx_count);
 
+	void CheckUpdate();
 	void Draw();
 
 private:
@@ -48,6 +49,7 @@ private:
 		ATTRIB_COUNT,
 	};
 
+	GLuint va;
 	GLuint handle[ATTRIB_COUNT];
 	bool dirty;
 
@@ -89,6 +91,7 @@ private:
 		ATTRIB_COUNT,
 	};
 
+	GLuint va;
 	GLuint handle[ATTRIB_COUNT];
 	bool dirty;
 

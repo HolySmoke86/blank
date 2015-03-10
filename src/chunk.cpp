@@ -111,6 +111,13 @@ glm::mat4 Chunk::Transform(const Pos &offset) const {
 }
 
 
+void Chunk::CheckUpdate() {
+	if (dirty) {
+		Update();
+	}
+	model.CheckUpdate();
+}
+
 void Chunk::Update() {
 	int vtx_count = 0, idx_count = 0;
 	for (const auto &block : blocks) {
