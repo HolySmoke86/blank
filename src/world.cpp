@@ -11,8 +11,7 @@ World::World()
 , blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
 , stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
-, blockNoise(0)
-, colorNoise(1)
+, generate(0)
 , player()
 , player_chunk(0, 0, 0)
 , loaded()
@@ -30,6 +29,8 @@ World::World()
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &blockShape }); // blue block
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &stairShape }); // blue stair
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &slabShape }); // blue slab
+
+	generate.Solids({ 1, 4, 7, 10 });
 
 	player.Position({ 4.0f, 4.0f, 4.0f });
 }
@@ -59,7 +60,7 @@ void World::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 				} else if (x == 0 && y == 0 && z == 0) {
 					loaded.emplace_back(blockType);
 					loaded.back().Position(pos);
-					Generate(loaded.back());
+					generate(loaded.back());
 				} else {
 					to_generate.emplace_back(blockType);
 					to_generate.back().Position(pos);
@@ -68,34 +69,6 @@ void World::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 		}
 	}
 	to_generate.sort(ChunkLess);
-}
-
-void World::Generate(Chunk &chunk) {
-	chunk.Allocate();
-	Chunk::Pos pos(chunk.Position());
-	glm::vec3 coords(pos * Chunk::Extent());
-	if (pos.x == 0 && pos.y == 0 && pos.z == 0) {
-		for (size_t i = 1; i < blockType.Size(); ++i) {
-			chunk.BlockAt(i) = Block(i);
-			chunk.BlockAt(i + 257) = Block(i);
-			chunk.BlockAt(i + 514) = Block(i);
-		}
-	} else {
-		for (int z = 0; z < Chunk::Depth(); ++z) {
-			for (int y = 0; y < Chunk::Height(); ++y) {
-				for (int x = 0; x < Chunk::Width(); ++x) {
-					Block::Pos block_pos{float(x), float(y), float(z)};
-					glm::vec3 gen_pos = (coords + block_pos) / 64.0f;
-					float val = blockNoise(gen_pos);
-					if (val > 0.8f) {
-						int col_val = int((colorNoise(gen_pos) + 1.0f) * 2.0f) % 4;
-						chunk.BlockAt(block_pos) = Block(col_val * 3 + 1);
-					}
-				}
-			}
-		}
-	}
-	chunk.Invalidate();
 }
 
 bool World::Intersection(
@@ -175,13 +148,13 @@ Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
 
 	chunk = ChunkQueued(tgt_pos);
 	if (chunk) {
-		Generate(*chunk);
+		generate(*chunk);
 		return *chunk;
 	}
 
 	loaded.emplace_back(blockType);
 	loaded.back().Position(tgt_pos);
-	Generate(loaded.back());
+	generate(loaded.back());
 	return loaded.back();
 }
 
@@ -225,7 +198,7 @@ void World::CheckChunkGeneration() {
 	}
 
 	if (!to_generate.empty()) {
-		Generate(to_generate.front());
+		generate(to_generate.front());
 		loaded.splice(loaded.end(), to_generate, to_generate.begin());
 	}
 

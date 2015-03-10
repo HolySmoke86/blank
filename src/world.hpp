@@ -4,7 +4,7 @@
 #include "block.hpp"
 #include "chunk.hpp"
 #include "entity.hpp"
-#include "noise.hpp"
+#include "generator.hpp"
 #include "shader.hpp"
 #include "shape.hpp"
 
@@ -45,16 +45,12 @@ public:
 	void Render(DirectionalLighting &);
 
 private:
-	void Generate(Chunk &);
-
-private:
 	BlockTypeRegistry blockType;
 	CuboidShape blockShape;
 	StairShape stairShape;
 	CuboidShape slabShape;
 
-	SimplexNoise blockNoise;
-	SimplexNoise colorNoise;
+	Generator generate;
 
 	Entity player;
 	Chunk::Pos player_chunk;
