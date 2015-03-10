@@ -13,39 +13,62 @@ CXXFLAGS += -Wall
 LDXXFLAGS ?=
 LDXXFLAGS += $(PKGLIBS)
 
-# debug
-CXXFLAGS += -g3 -O0
-
-# release
-#CPPFLAGS += -DNDEBUG
+DEBUG_FLAGS = -g3 -O0
+RELEASE_FLAGS = -DNDEBUG -O2
 
 SOURCE_DIR := src
-BUILD_DIR := build
+DEBUG_DIR := build/debug
+RELEASE_DIR := build/release
+DIR := $(RELEASE_DIR) $(DEBUG_DIR) build
 
-SRC = $(wildcard $(SOURCE_DIR)/*.cpp)
-OBJ = $(patsubst $(SOURCE_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC))
-DEP = $(OBJ:.o=.d)
-BIN = blank
+SRC := $(wildcard $(SOURCE_DIR)/*.cpp)
+RELEASE_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(RELEASE_DIR)/%.o, $(SRC))
+DEBUG_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(SRC))
+RELEASE_DEP := $(RELEASE_OBJ:.o=.d)
+DEBUG_DEP := $(DEBUG_OBJ:.o=.d)
+RELEASE_BIN := blank
+DEBUG_BIN := blank.debug
+OBJ := $(RELEASE_OBJ) $(DEBUG_OBJ)
+DEP := $(RELEASE_DEP) $(DEBUG_DEP)
+BIN := $(RELEASE_BIN) $(DEBUG_BIN)
 
 all: $(BIN)
 
+release: $(RELEASE_BIN)
+
+debug: $(DEBUG_BIN)
+
+run: blank
+	./blank
+
+gdb: blank.debug
+	gdb ./blank.debug
+
 clean:
-	rm -df $(OBJ) $(DEP) $(BUILD_DIR)
+	rm -df $(OBJ) $(DEP) $(DIR)
 
 distclean: clean
 	rm -f $(BIN)
 
-.PHONY: all clean distclean
+.PHONY: all release debug run gdb clean distclean
 
 -include $(DEP)
 
-$(BIN): $(OBJ)
+$(RELEASE_BIN): $(RELEASE_OBJ)
 	@echo link: $@
-	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $^
+	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(RELEASE_FLAGS) $^
 
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(BUILD_DIR)
+$(DEBUG_BIN): $(DEBUG_OBJ)
+	@echo link: $@
+	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(DEBUG_FLAGS) $^
+
+$(RELEASE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(RELEASE_DIR)
 	@echo compile: $@
-	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
+	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
 
-$(BUILD_DIR):
-	mkdir "$@"
+$(DEBUG_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(DEBUG_DIR)
+	@echo compile: $@
+	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(DEBUG_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
+
+$(DIR):
+	@mkdir -p "$@"
