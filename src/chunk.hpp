@@ -101,8 +101,8 @@ public:
 	std::list<Chunk> &Loaded() { return loaded; }
 
 	Chunk *Loaded(const Chunk::Pos &);
-	Chunk *Queued(const Chunk::Pos &);
-	Chunk *Known(const Chunk::Pos &);
+	bool Queued(const Chunk::Pos &);
+	bool Known(const Chunk::Pos &);
 	Chunk &ForceLoad(const Chunk::Pos &);
 
 	void Rebase(const Chunk::Pos &);
@@ -115,7 +115,7 @@ private:
 	const Generator &gen;
 
 	std::list<Chunk> loaded;
-	std::list<Chunk> to_generate;
+	std::list<Chunk::Pos> to_generate;
 	std::list<Chunk> to_free;
 
 	int load_dist;

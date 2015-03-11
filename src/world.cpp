@@ -27,6 +27,7 @@ World::World()
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &stairShape }); // blue stair
 	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &slabShape }); // blue slab
 
+	generate.Space(0);
 	generate.Solids({ 1, 4, 7, 10 });
 
 	player.Position({ 4.0f, 4.0f, 4.0f });

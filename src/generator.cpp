@@ -10,6 +10,7 @@ Generator::Generator(unsigned int seed)
 , typeNoise(seed + 1)
 , stretch(64.0f)
 , solid_threshold(0.8f)
+, space(0)
 , solids() {
 
 }
@@ -28,6 +29,8 @@ void Generator::operator ()(Chunk &chunk) const {
 				if (val > solid_threshold) {
 					int type_val = int((typeNoise(gen_pos) + 1.0f) * solids.size()) % solids.size();
 					chunk.BlockAt(block_pos) = Block(solids[type_val]);
+				} else {
+					chunk.BlockAt(block_pos) = Block(space);
 				}
 			}
 		}

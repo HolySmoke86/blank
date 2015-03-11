@@ -17,6 +17,7 @@ public:
 
 	void operator ()(Chunk &) const;
 
+	void Space(Block::Type t) { space = t; }
 	void Solids(const std::vector<Block::Type> &s) { solids = s; }
 
 private:
@@ -26,6 +27,7 @@ private:
 	float stretch;
 	float solid_threshold;
 
+	Block::Type space;
 	std::vector<Block::Type> solids;
 
 };

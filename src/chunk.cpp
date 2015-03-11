@@ -161,9 +161,9 @@ struct ChunkLess {
 	explicit ChunkLess(const Chunk::Pos &base)
 	: base(base) { }
 
-	bool operator ()(const Chunk &a, const Chunk &b) const {
-		Chunk::Pos da(base - a.Position());
-		Chunk::Pos db(base - b.Position());
+	bool operator ()(const Chunk::Pos &a, const Chunk::Pos &b) const {
+		Chunk::Pos da(base - a);
+		Chunk::Pos db(base - b);
 		return
 			da.x * da.x + da.y * da.y + da.z * da.z <
 			db.x * db.x + db.y * db.y + db.z * db.z;
@@ -187,8 +187,7 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 					loaded.back().Position(pos);
 					gen(loaded.back());
 				} else {
-					to_generate.emplace_back(reg);
-					to_generate.back().Position(pos);
+					to_generate.emplace_back(pos);
 				}
 			}
 		}
@@ -205,19 +204,17 @@ Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) {
 	return nullptr;
 }
 
-Chunk *ChunkLoader::Queued(const Chunk::Pos &pos) {
-	for (Chunk &chunk : to_generate) {
-		if (chunk.Position() == pos) {
-			return &chunk;
+bool ChunkLoader::Queued(const Chunk::Pos &pos) {
+	for (const Chunk::Pos &chunk : to_generate) {
+		if (chunk == pos) {
+			return true;
 		}
 	}
 	return nullptr;
 }
 
-Chunk *ChunkLoader::Known(const Chunk::Pos &pos) {
-	Chunk *chunk = Loaded(pos);
-	if (chunk) return chunk;
-
+bool ChunkLoader::Known(const Chunk::Pos &pos) {
+	if (Loaded(pos)) return true;
 	return Queued(pos);
 }
 
@@ -227,10 +224,11 @@ Chunk &ChunkLoader::ForceLoad(const Chunk::Pos &pos) {
 		return *chunk;
 	}
 
-	chunk = Queued(pos);
-	if (chunk) {
-		gen(*chunk);
-		return *chunk;
+	for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end; ++iter) {
+		if (*iter == pos) {
+			to_generate.erase(iter);
+			break;
+		}
 	}
 
 	loaded.emplace_back(reg);
@@ -259,9 +257,9 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 	}
 	// abort far away queued chunks
 	for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end;) {
-		if (std::abs(base.x - iter->Position().x) > unload_dist
-				|| std::abs(base.y - iter->Position().y) > unload_dist
-				|| std::abs(base.z - iter->Position().z) > unload_dist) {
+		if (std::abs(base.x - iter->x) > unload_dist
+				|| std::abs(base.y - iter->y) > unload_dist
+				|| std::abs(base.z - iter->z) > unload_dist) {
 			iter = to_generate.erase(iter);
 		} else {
 			++iter;
@@ -273,12 +271,32 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 }
 
 void ChunkLoader::Update() {
+	bool reused = false;
 	if (!to_generate.empty()) {
-		gen(to_generate.front());
-		loaded.splice(loaded.end(), to_generate, to_generate.begin());
+		Chunk::Pos pos(to_generate.front());
+
+		for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
+			if (iter->Position() == pos) {
+				loaded.splice(loaded.end(), to_free, iter);
+				reused = true;
+				break;
+			}
+		}
+
+		if (!reused) {
+			if (to_free.empty()) {
+				loaded.emplace_back(reg);
+			} else {
+				loaded.splice(loaded.end(), to_free, to_free.begin());
+				reused = true;
+			}
+			loaded.back().Position(pos);
+			gen(loaded.back());
+		}
+		to_generate.pop_front();
 	}
 
-	if (!to_free.empty()) {
+	if (!reused && !to_free.empty()) {
 		to_free.pop_front();
 	}
 }
