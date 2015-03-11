@@ -2,4 +2,7 @@
 *.swo
 blank
 blank.debug
+blank.profile
 build
+cachegrind.out.*
+callgrind.out.*
