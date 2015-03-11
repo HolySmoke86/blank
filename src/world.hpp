@@ -8,7 +8,6 @@
 #include "shader.hpp"
 #include "shape.hpp"
 
-#include <list>
 #include <glm/glm.hpp>
 
 
@@ -19,8 +18,6 @@ class World {
 public:
 	World();
 
-	void Generate(const Chunk::Pos &from, const Chunk::Pos &to);
-
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
@@ -30,17 +27,12 @@ public:
 		glm::vec3 *normal = nullptr);
 
 	BlockTypeRegistry &BlockTypes() { return blockType; }
-	std::list<Chunk> &LoadedChunks() { return loaded; }
 
 	Entity &Player() { return player; }
 
-	Chunk *ChunkLoaded(const Chunk::Pos &);
-	Chunk *ChunkQueued(const Chunk::Pos &);
-	Chunk *ChunkAvailable(const Chunk::Pos &);
-	Chunk &Next(const Chunk &, const glm::tvec3<int> &dir);
+	Chunk &Next(const Chunk &to, const glm::tvec3<int> &dir);
 
 	void Update(int dt);
-	void CheckChunkGeneration();
 
 	void Render(DirectionalLighting &);
 
@@ -51,13 +43,9 @@ private:
 	CuboidShape slabShape;
 
 	Generator generate;
+	ChunkLoader chunks;
 
 	Entity player;
-	Chunk::Pos player_chunk;
-
-	std::list<Chunk> loaded;
-	std::list<Chunk> to_generate;
-	std::list<Chunk> to_free;
 
 };
 

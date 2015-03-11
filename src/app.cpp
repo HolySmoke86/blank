@@ -31,8 +31,6 @@ Application::Application()
 , place_id(1) {
 	GLContext::EnableVSync();
 
-	world.Generate({ -4, -4, -4 }, { 5, 5, 5});
-
 	hud.Viewport(960, 600);
 	hud.Display(*world.BlockTypes()[place_id]);
 

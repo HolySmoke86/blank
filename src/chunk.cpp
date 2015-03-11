@@ -1,5 +1,7 @@
 #include "chunk.hpp"
 
+#include "generator.hpp"
+
 #include <limits>
 #include <glm/gtx/transform.hpp>
 
@@ -139,5 +141,146 @@ void Chunk::Update() {
 	dirty = false;
 }
 
+
+ChunkLoader::ChunkLoader(const BlockTypeRegistry &reg, const Generator &gen)
+: base(0, 0, 0)
+, reg(reg)
+, gen(gen)
+, loaded()
+, to_generate()
+, to_free()
+, load_dist(4)
+, unload_dist(5) {
+
+}
+
+namespace {
+
+struct ChunkLess {
+
+	explicit ChunkLess(const Chunk::Pos &base)
+	: base(base) { }
+
+	bool operator ()(const Chunk &a, const Chunk &b) const {
+		Chunk::Pos da(base - a.Position());
+		Chunk::Pos db(base - b.Position());
+		return
+			da.x * da.x + da.y * da.y + da.z * da.z <
+			db.x * db.x + db.y * db.y + db.z * db.z;
+	}
+
+	Chunk::Pos base;
+
+};
+
+}
+
+void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
+	for (int z = from.z; z < to.z; ++z) {
+		for (int y = from.y; y < to.y; ++y) {
+			for (int x = from.x; x < to.x; ++x) {
+				Chunk::Pos pos(x, y, z);
+				if (Known(pos)) {
+					continue;
+				} else if (x == 0 && y == 0 && z == 0) {
+					loaded.emplace_back(reg);
+					loaded.back().Position(pos);
+					gen(loaded.back());
+				} else {
+					to_generate.emplace_back(reg);
+					to_generate.back().Position(pos);
+				}
+			}
+		}
+	}
+	to_generate.sort(ChunkLess(base));
+}
+
+Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) {
+	for (Chunk &chunk : loaded) {
+		if (chunk.Position() == pos) {
+			return &chunk;
+		}
+	}
+	return nullptr;
+}
+
+Chunk *ChunkLoader::Queued(const Chunk::Pos &pos) {
+	for (Chunk &chunk : to_generate) {
+		if (chunk.Position() == pos) {
+			return &chunk;
+		}
+	}
+	return nullptr;
+}
+
+Chunk *ChunkLoader::Known(const Chunk::Pos &pos) {
+	Chunk *chunk = Loaded(pos);
+	if (chunk) return chunk;
+
+	return Queued(pos);
+}
+
+Chunk &ChunkLoader::ForceLoad(const Chunk::Pos &pos) {
+	Chunk *chunk = Loaded(pos);
+	if (chunk) {
+		return *chunk;
+	}
+
+	chunk = Queued(pos);
+	if (chunk) {
+		gen(*chunk);
+		return *chunk;
+	}
+
+	loaded.emplace_back(reg);
+	loaded.back().Position(pos);
+	gen(loaded.back());
+	return loaded.back();
+}
+
+void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
+	if (new_base == base) {
+		return;
+	}
+	base = new_base;
+
+	// unload far away chunks
+	for (auto iter(loaded.begin()), end(loaded.end()); iter != end;) {
+		if (std::abs(base.x - iter->Position().x) > unload_dist
+				|| std::abs(base.y - iter->Position().y) > unload_dist
+				|| std::abs(base.z - iter->Position().z) > unload_dist) {
+			auto saved = iter;
+			++iter;
+			to_free.splice(to_free.end(), loaded, saved);
+		} else {
+			++iter;
+		}
+	}
+	// abort far away queued chunks
+	for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end;) {
+		if (std::abs(base.x - iter->Position().x) > unload_dist
+				|| std::abs(base.y - iter->Position().y) > unload_dist
+				|| std::abs(base.z - iter->Position().z) > unload_dist) {
+			iter = to_generate.erase(iter);
+		} else {
+			++iter;
+		}
+	}
+	// add missing new chunks
+	const Chunk::Pos offset(load_dist, load_dist, load_dist);
+	Generate(base - offset, base + offset);
+}
+
+void ChunkLoader::Update() {
+	if (!to_generate.empty()) {
+		gen(to_generate.front());
+		loaded.splice(loaded.end(), to_generate, to_generate.begin());
+	}
+
+	if (!to_free.empty()) {
+		to_free.pop_front();
+	}
+}
 
 }

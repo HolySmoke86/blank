@@ -5,6 +5,7 @@
 #include "geometry.hpp"
 #include "model.hpp"
 
+#include <list>
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -84,6 +85,41 @@ private:
 	Model model;
 	Pos position;
 	bool dirty;
+
+};
+
+
+class Generator;
+
+class ChunkLoader {
+
+public:
+	ChunkLoader(const BlockTypeRegistry &, const Generator &);
+
+	void Generate(const Chunk::Pos &from, const Chunk::Pos &to);
+
+	std::list<Chunk> &Loaded() { return loaded; }
+
+	Chunk *Loaded(const Chunk::Pos &);
+	Chunk *Queued(const Chunk::Pos &);
+	Chunk *Known(const Chunk::Pos &);
+	Chunk &ForceLoad(const Chunk::Pos &);
+
+	void Rebase(const Chunk::Pos &);
+	void Update();
+
+private:
+	Chunk::Pos base;
+
+	const BlockTypeRegistry &reg;
+	const Generator &gen;
+
+	std::list<Chunk> loaded;
+	std::list<Chunk> to_generate;
+	std::list<Chunk> to_free;
+
+	int load_dist;
+	int unload_dist;
 
 };
 
