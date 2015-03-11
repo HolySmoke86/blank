@@ -137,6 +137,8 @@ void Chunk::Update() {
 
 	Model::Index vtx_counter = 0;
 	for (size_t i = 0; i < Size(); ++i) {
+		if (Obstructed(i)) continue;
+
 		const BlockType &type = Type(blocks[i]);
 		type.FillModel(buf, ToCoords(i), vtx_counter);
 		vtx_counter += type.shape->VertexCount();
@@ -144,6 +146,34 @@ void Chunk::Update() {
 
 	model.Update(buf);
 	dirty = false;
+}
+
+bool Chunk::Obstructed(int idx) const {
+	if (IsBorder(idx)) return false;
+
+	// not checking neighbor visibility here, so all
+	// invisible blocks must have their fill set to 6x false
+	// (the default, so should be okay)
+
+	const BlockType &right = Type(blocks[idx + 1]);
+	if (!right.fill.left) return false;
+
+	const BlockType &left = Type(blocks[idx - 1]);
+	if (!left.fill.right) return false;
+
+	const BlockType &top = Type(blocks[idx + Width()]);
+	if (!top.fill.bottom) return false;
+
+	const BlockType &bottom = Type(blocks[idx - Width()]);
+	if (!bottom.fill.top) return false;
+
+	const BlockType &front = Type(blocks[idx + Width() * Height()]);
+	if (!front.fill.back) return false;
+
+	const BlockType &back = Type(blocks[idx - Width() * Height()]);
+	if (!back.fill.front) return false;
+
+	return true;
 }
 
 

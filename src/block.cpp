@@ -5,6 +5,16 @@ namespace blank {
 
 const NullShape BlockType::DEFAULT_SHAPE;
 
+BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s)
+: shape(s)
+, color(col)
+, outline_color(-1, -1, -1)
+, id(0)
+, visible(v)
+, fill({ false, false, false, false, false, false }) {
+
+}
+
 void BlockType::FillModel(
 	Model::Buffer &buf,
 	const glm::vec3 &pos_offset,

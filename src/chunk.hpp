@@ -52,6 +52,17 @@ public:
 		);
 	}
 
+	static constexpr bool IsBorder(int idx) {
+		return
+			idx < Width() * Height() ||
+			(idx / Width()) % Height() == 0 ||
+			(idx / Width()) % Height() == Height() - 1 ||
+			(idx / (Width() * Height())) == Depth() - 1;
+	}
+
+	// check if block at given index is completely enclosed (and therefore invisible)
+	bool Obstructed(int idx) const;
+
 	void Allocate();
 	void Invalidate() { dirty = true; }
 

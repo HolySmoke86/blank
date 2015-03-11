@@ -14,18 +14,73 @@ World::World()
 , generate(0)
 , chunks(blockType, generate)
 , player() {
-	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &blockShape }); // white block
-	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &stairShape }); // white stair
-	blockType.Add(BlockType{ true, { 1.0f, 1.0f, 1.0f }, &slabShape }); // white slab
-	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &blockShape }); // red block
-	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &stairShape }); // red stair
-	blockType.Add(BlockType{ true, { 1.0f, 0.0f, 0.0f }, &slabShape }); // red slab
-	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &blockShape }); // green block
-	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &stairShape }); // green stair
-	blockType.Add(BlockType{ true, { 0.0f, 1.0f, 0.0f }, &slabShape }); // green slab
-	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &blockShape }); // blue block
-	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &stairShape }); // blue stair
-	blockType.Add(BlockType{ true, { 0.0f, 0.0f, 1.0f }, &slabShape }); // blue slab
+	BlockType::Faces block_fill = {  true,  true,  true,  true,  true,  true };
+	BlockType::Faces slab_fill  = { false, false, false,  true, false, false };
+	BlockType::Faces stair_fill = {  true, false, false,  true, false, false };
+
+	{ // white block
+		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
+		type.fill = block_fill;
+		blockType.Add(type);
+	}
+	{ // white slab
+		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &slabShape);
+		type.fill = slab_fill;
+		blockType.Add(type);
+	}
+	{ // white stair
+		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &stairShape);
+		type.fill = stair_fill;
+		blockType.Add(type);
+	}
+
+	{ // red block
+		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &blockShape);
+		type.fill = block_fill;
+		blockType.Add(type);
+	}
+	{ // red slab
+		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &slabShape);
+		type.fill = slab_fill;
+		blockType.Add(type);
+	}
+	{ // red stair
+		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &stairShape);
+		type.fill = stair_fill;
+		blockType.Add(type);
+	}
+
+	{ // green block
+		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &blockShape);
+		type.fill = block_fill;
+		blockType.Add(type);
+	}
+	{ // green slab
+		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &slabShape);
+		type.fill = slab_fill;
+		blockType.Add(type);
+	}
+	{ // green stair
+		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &stairShape);
+		type.fill = stair_fill;
+		blockType.Add(type);
+	}
+
+	{ // blue block
+		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &blockShape);
+		type.fill = block_fill;
+		blockType.Add(type);
+	}
+	{ // blue slab
+		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &slabShape);
+		type.fill = slab_fill;
+		blockType.Add(type);
+	}
+	{ // blue stair
+		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &stairShape);
+		type.fill = stair_fill;
+		blockType.Add(type);
+	}
 
 	generate.Space(0);
 	generate.Solids({ 1, 4, 7, 10 });

@@ -28,20 +28,28 @@ struct Block {
 /// attributes of a type of block
 struct BlockType {
 
-	Block::Type id;
-
-	bool visible;
-
 	const Shape *shape;
 	glm::vec3 color;
 	glm::vec3 outline_color;
 
+	Block::Type id;
+
+	bool visible;
+
+	struct Faces {
+		bool right;
+		bool left;
+		bool top;
+		bool bottom;
+		bool front;
+		bool back;
+	} fill;
+
 	explicit BlockType(
 		bool v = false,
 		const glm::vec3 &color = { 1, 1, 1 },
-		const Shape *shape = &DEFAULT_SHAPE,
-		const glm::vec3 &outline_color = { -1, -1, -1 })
-	: id(0), visible(v), shape(shape), color(color), outline_color(outline_color) { }
+		const Shape *shape = &DEFAULT_SHAPE
+	);
 
 	static const NullShape DEFAULT_SHAPE;
 
