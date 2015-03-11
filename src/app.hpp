@@ -23,8 +23,16 @@ public:
 	Application(const Application &) = delete;
 	Application &operator =(const Application &) = delete;
 
+	/// run until user quits
 	void Run();
 	void Loop(int dt);
+
+	/// run for n frames
+	void RunN(size_t n);
+	/// run for t milliseconds
+	void RunT(size_t t);
+	/// run for n frames, assuming t milliseconds for each
+	void RunS(size_t n, size_t t);
 
 	void HandleEvents();
 	void Update(int dt);

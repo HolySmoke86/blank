@@ -40,6 +40,34 @@ Application::Application()
 }
 
 
+void Application::RunN(size_t n) {
+	Uint32 last = SDL_GetTicks();
+	for (size_t i = 0; i < n; ++i) {
+		Uint32 now = SDL_GetTicks();
+		int delta = now - last;
+		Loop(delta);
+		last = now;
+	}
+}
+
+void Application::RunT(size_t t) {
+	Uint32 last = SDL_GetTicks();
+	Uint32 finish = last + t;
+	while (last < finish) {
+		Uint32 now = SDL_GetTicks();
+		int delta = now - last;
+		Loop(delta);
+		last = now;
+	}
+}
+
+void Application::RunS(size_t n, size_t t) {
+	for (size_t i = 0; i < n; ++i) {
+		Loop(t);
+	}
+}
+
+
 void Application::Run() {
 	running = true;
 	Uint32 last = SDL_GetTicks();

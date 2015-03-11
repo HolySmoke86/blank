@@ -46,3 +46,19 @@ CPPFLAGS, CXXFLAGS, LDXXFLAGS:
 
 DEBUG_FLAGS, PROFILE_FLAGS, RELEASE_FLAGS:
 	flags for building binaries in debug, profile, and release mode
+
+
+Running
+=======
+
+blank
+	normal execution
+
+blank <n>
+	terminate after <n> frames
+
+blank -t <t>
+	terminate after <t> milliseconds
+
+blank <n> -t <t>
+	terminate after n frames, assume <t> milliseconds pass each frame
