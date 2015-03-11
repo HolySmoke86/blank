@@ -13,33 +13,33 @@ namespace blank {
 struct Shape {
 
 	/// the number of vertices (and normals) this shape has
-	size_t VertexCount() const { return vtx; }
+	size_t VertexCount() const { return vtx_pos.size(); }
 	/// the number of vertex indices this shape has
-	size_t VertexIndexCount() const { return vtx_idx; }
+	size_t VertexIndexCount() const { return vtx_idx.size(); }
 
 	/// fill given buffers with this shape's elements with an
 	/// optional offset
-	virtual void Vertices(
-		std::vector<glm::vec3> &vertex,
-		std::vector<glm::vec3> &normal,
-		std::vector<Model::Index> &index,
-		const glm::vec3 &elem_offset = { 0.0f, 0.0f, 0.0f },
+	void Vertices(
+		Model::Positions &vertex,
+		Model::Normals &normal,
+		Model::Indices &index,
+		const Model::Position &elem_offset = { 0.0f, 0.0f, 0.0f },
 		Model::Index idx_offset = 0
-	) const = 0;
+	) const;
 
 	/// the number of vertices this shape's outline has
-	size_t OutlineCount() const { return outl; }
+	size_t OutlineCount() const { return out_pos.size(); }
 	/// the number of vertex indices this shape's outline has
-	size_t OutlineIndexCount() const { return outl_idx; }
+	size_t OutlineIndexCount() const { return out_idx.size(); }
 
 	/// fill given buffers with this shape's outline's elements with
 	/// an optional offset
-	virtual void Outline(
-		std::vector<glm::vec3> &vertex,
-		std::vector<OutlineModel::Index> &index,
-		const glm::vec3 &offset = { 0.0f, 0.0f, 0.0f },
+	void Outline(
+		OutlineModel::Positions &vertex,
+		OutlineModel::Indices &index,
+		const OutlineModel::Position &offset = { 0.0f, 0.0f, 0.0f },
 		OutlineModel::Index idx_offset = 0
-	) const = 0;
+	) const;
 
 	/// Check if given ray would pass though this shape if it were
 	/// transformed with given matrix.
@@ -53,14 +53,23 @@ struct Shape {
 	) const = 0;
 
 protected:
-	Shape(size_t vtx, size_t vtx_idx, size_t outl, size_t outl_idx)
-	: vtx(vtx), vtx_idx(vtx_idx), outl(outl), outl_idx(outl_idx) { }
+	void SetShape(const Model::Positions &pos, const Model::Normals &nrm, const Model::Indices &idx) {
+		vtx_pos = pos;
+		vtx_nrm = nrm;
+		vtx_idx = idx;
+	}
+	void SetOutline(const OutlineModel::Positions &pos, const OutlineModel::Indices &idx) {
+		out_pos = pos;
+		out_idx = idx;
+	}
 
 private:
-	size_t vtx;
-	size_t vtx_idx;
-	size_t outl;
-	size_t outl_idx;
+	Model::Positions vtx_pos;
+	Model::Normals vtx_nrm;
+	Model::Indices vtx_idx;
+
+	OutlineModel::Positions out_pos;
+	OutlineModel::Indices out_idx;
 
 };
 
@@ -70,21 +79,6 @@ class NullShape
 
 public:
 	NullShape();
-
-	void Vertices(
-		std::vector<glm::vec3> &vertex,
-		std::vector<glm::vec3> &normal,
-		std::vector<Model::Index> &index,
-		const glm::vec3 &elem_offset = { 0.0f, 0.0f, 0.0f },
-		Model::Index idx_offset = 0
-	) const override;
-
-	void Outline(
-		std::vector<glm::vec3> &vertex,
-		std::vector<OutlineModel::Index> &index,
-		const glm::vec3 &offset = { 0.0f, 0.0f, 0.0f },
-		OutlineModel::Index idx_offset = 0
-	) const override;
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
 
@@ -96,21 +90,6 @@ class CuboidShape
 
 public:
 	CuboidShape(const AABB &bounds);
-
-	void Vertices(
-		std::vector<glm::vec3> &vertex,
-		std::vector<glm::vec3> &normal,
-		std::vector<Model::Index> &index,
-		const glm::vec3 &elem_offset = { 0.0f, 0.0f, 0.0f },
-		Model::Index idx_offset = 0
-	) const override;
-
-	void Outline(
-		std::vector<glm::vec3> &vertex,
-		std::vector<OutlineModel::Index> &index,
-		const glm::vec3 &offset = { 0.0f, 0.0f, 0.0f },
-		OutlineModel::Index idx_offset = 0
-	) const override;
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
 
@@ -125,21 +104,6 @@ class StairShape
 
 public:
 	StairShape(const AABB &bounds, const glm::vec2 &clip);
-
-	void Vertices(
-		std::vector<glm::vec3> &vertex,
-		std::vector<glm::vec3> &normal,
-		std::vector<Model::Index> &index,
-		const glm::vec3 &elem_offset = { 0.0f, 0.0f, 0.0f },
-		Model::Index idx_offset = 0
-	) const override;
-
-	void Outline(
-		std::vector<glm::vec3> &vertex,
-		std::vector<OutlineModel::Index> &index,
-		const glm::vec3 &offset = { 0.0f, 0.0f, 0.0f },
-		OutlineModel::Index idx_offset = 0
-	) const override;
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
 

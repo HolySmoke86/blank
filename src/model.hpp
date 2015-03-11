@@ -11,13 +11,21 @@ namespace blank {
 class Model {
 
 public:
+	using Position = glm::vec3;
+	using Color = glm::vec3;
+	using Normal = glm::vec3;
 	using Index = unsigned int;
 
+	using Positions = std::vector<Position>;
+	using Colors = std::vector<Color>;
+	using Normals = std::vector<Normal>;
+	using Indices = std::vector<Index>;
+
 public:
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec3> colors;
-	std::vector<glm::vec3> normals;
-	std::vector<Index> indices;
+	Positions vertices;
+	Colors colors;
+	Normals normals;
+	Indices indices;
 
 public:
 	Model();
@@ -59,12 +67,18 @@ private:
 class OutlineModel {
 
 public:
+	using Position = glm::vec3;
+	using Color = glm::vec3;
 	using Index = unsigned short;
 
+	using Positions = std::vector<Position>;
+	using Colors = std::vector<Color>;
+	using Indices = std::vector<Index>;
+
 public:
-	std::vector<glm::vec3> vertices;
-	std::vector<glm::vec3> colors;
-	std::vector<Index> indices;
+	Positions vertices;
+	Colors colors;
+	Indices indices;
 
 public:
 	OutlineModel();

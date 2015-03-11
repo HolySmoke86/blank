@@ -3,27 +3,39 @@
 
 namespace blank {
 
+void Shape::Vertices(
+	Model::Positions &vertex,
+	Model::Normals &normal,
+	Model::Indices &index,
+	const Model::Position &elem_offset,
+	Model::Index idx_offset
+) const {
+	for (const auto &pos : vtx_pos) {
+		vertex.emplace_back(elem_offset + pos);
+	}
+	normal.insert(normal.end(), vtx_nrm.begin(), vtx_nrm.end());
+	for (auto idx : vtx_idx) {
+		index.emplace_back(idx_offset + idx);
+	}
+}
+
+void Shape::Outline(
+	OutlineModel::Positions &vertex,
+	OutlineModel::Indices &index,
+	const OutlineModel::Position &elem_offset,
+	OutlineModel::Index idx_offset
+) const {
+	for (const auto &pos : out_pos) {
+		vertex.emplace_back(elem_offset + pos);
+	}
+	for (auto idx : out_idx) {
+		index.emplace_back(idx_offset + idx);
+	}
+}
+
+
 NullShape::NullShape()
-: Shape(0, 0, 0, 0) {
-
-}
-
-void NullShape::Vertices(
-	std::vector<glm::vec3> &,
-	std::vector<glm::vec3> &,
-	std::vector<Model::Index> &,
-	const glm::vec3 &,
-	Model::Index
-) const {
-
-}
-
-void NullShape::Outline(
-	std::vector<glm::vec3> &,
-	std::vector<OutlineModel::Index> &,
-	const glm::vec3 &,
-	OutlineModel::Index
-) const {
+: Shape() {
 
 }
 
@@ -37,127 +49,81 @@ bool NullShape::Intersects(
 
 
 CuboidShape::CuboidShape(const AABB &b)
-: Shape(24, 36, 8, 24)
+: Shape()
 , bb(b) {
 	bb.Adjust();
-}
-
-void CuboidShape::Vertices(
-	std::vector<glm::vec3> &vtx,
-	std::vector<glm::vec3> &norm,
-	std::vector<Model::Index> &index,
-	const glm::vec3 &pos,
-	Model::Index idx
-) const {
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.max.z); // front
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.min.z); // back
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.min.z); // top
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.min.z); // bottom
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.min.z); // left
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.min.z); // right
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.max.z);
-
-	norm.insert(norm.end(), 4, glm::vec3( 0.0f,  0.0f,  1.0f)); // front
-	norm.insert(norm.end(), 4, glm::vec3( 0.0f,  0.0f, -1.0f)); // back
-	norm.insert(norm.end(), 4, glm::vec3( 0.0f,  1.0f,  0.0f)); // top
-	norm.insert(norm.end(), 4, glm::vec3( 0.0f, -1.0f,  0.0f)); // bottom
-	norm.insert(norm.end(), 4, glm::vec3(-1.0f,  0.0f,  0.0f)); // left
-	norm.insert(norm.end(), 4, glm::vec3( 1.0f,  0.0f,  0.0f)); // right
-
-	index.emplace_back(idx +  0); // front
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  4); // back
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx +  8); // top
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx + 11);
-	index.emplace_back(idx + 12); // bottom
-	index.emplace_back(idx + 13);
-	index.emplace_back(idx + 14);
-	index.emplace_back(idx + 14);
-	index.emplace_back(idx + 13);
-	index.emplace_back(idx + 15);
-	index.emplace_back(idx + 16); // left
-	index.emplace_back(idx + 17);
-	index.emplace_back(idx + 18);
-	index.emplace_back(idx + 18);
-	index.emplace_back(idx + 17);
-	index.emplace_back(idx + 19);
-	index.emplace_back(idx + 20); // right
-	index.emplace_back(idx + 21);
-	index.emplace_back(idx + 22);
-	index.emplace_back(idx + 22);
-	index.emplace_back(idx + 21);
-	index.emplace_back(idx + 23);
-}
-
-void CuboidShape::Outline(
-	std::vector<glm::vec3> &vtx,
-	std::vector<OutlineModel::Index> &index,
-	const glm::vec3 &pos,
-	OutlineModel::Index idx
-) const {
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.min.z); // back
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.min.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.min.y, pos.z + bb.max.z); // front
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.min.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.min.x, pos.y + bb.max.y, pos.z + bb.max.z);
-	vtx.emplace_back(pos.x + bb.max.x, pos.y + bb.max.y, pos.z + bb.max.z);
-
-	index.emplace_back(idx +  0); // back
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  0);
-	index.emplace_back(idx +  4); // front
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  4);
-	index.emplace_back(idx +  0); // sides
-	index.emplace_back(idx +  4);
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  7);
+	SetShape({
+		{ bb.min.x, bb.min.y, bb.max.z }, // front
+		{ bb.max.x, bb.min.y, bb.max.z },
+		{ bb.min.x, bb.max.y, bb.max.z },
+		{ bb.max.x, bb.max.y, bb.max.z },
+		{ bb.min.x, bb.min.y, bb.min.z }, // back
+		{ bb.min.x, bb.max.y, bb.min.z },
+		{ bb.max.x, bb.min.y, bb.min.z },
+		{ bb.max.x, bb.max.y, bb.min.z },
+		{ bb.min.x, bb.max.y, bb.min.z }, // top
+		{ bb.min.x, bb.max.y, bb.max.z },
+		{ bb.max.x, bb.max.y, bb.min.z },
+		{ bb.max.x, bb.max.y, bb.max.z },
+		{ bb.min.x, bb.min.y, bb.min.z }, // bottom
+		{ bb.max.x, bb.min.y, bb.min.z },
+		{ bb.min.x, bb.min.y, bb.max.z },
+		{ bb.max.x, bb.min.y, bb.max.z },
+		{ bb.min.x, bb.min.y, bb.min.z }, // left
+		{ bb.min.x, bb.min.y, bb.max.z },
+		{ bb.min.x, bb.max.y, bb.min.z },
+		{ bb.min.x, bb.max.y, bb.max.z },
+		{ bb.max.x, bb.min.y, bb.min.z }, // right
+		{ bb.max.x, bb.max.y, bb.min.z },
+		{ bb.max.x, bb.min.y, bb.max.z },
+		{ bb.max.x, bb.max.y, bb.max.z },
+	}, {
+		{  0.0f,  0.0f,  1.0f }, // front
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f, -1.0f }, // back
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  1.0f,  0.0f }, // top
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f, -1.0f,  0.0f }, // bottom
+		{  0.0f, -1.0f,  0.0f },
+		{  0.0f, -1.0f,  0.0f },
+		{  0.0f, -1.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f }, // left
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f }, // right
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
+	}, {
+		  0,  1,  2,  2,  1,  3, // front
+		  4,  5,  6,  6,  5,  7, // back
+		  8,  9, 10, 10,  9, 11, // top
+		 12, 13, 14, 14, 13, 15, // bottom
+		 16, 17, 18, 18, 17, 19, // left
+		 20, 21, 22, 22, 21, 23, // right
+	});
+	SetOutline({
+		{ bb.min.x, bb.min.y, bb.min.z }, // back
+		{ bb.max.x, bb.min.y, bb.min.z },
+		{ bb.min.x, bb.max.y, bb.min.z },
+		{ bb.max.x, bb.max.y, bb.min.z },
+		{ bb.min.x, bb.min.y, bb.max.z }, // front
+		{ bb.max.x, bb.min.y, bb.max.z },
+		{ bb.min.x, bb.max.y, bb.max.z },
+		{ bb.max.x, bb.max.y, bb.max.z },
+	}, {
+		0, 1, 1, 3, 3, 2, 2, 0, // back
+		4, 5, 5, 7, 7, 6, 6, 4, // front
+		0, 4, 1, 5, 2, 6, 3, 7, // sides
+	});
 }
 
 bool CuboidShape::Intersects(
@@ -170,185 +136,124 @@ bool CuboidShape::Intersects(
 
 
 StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
-: Shape(40, 60, 12, 36)
+: Shape()
 , top({ { clip.x, clip.y, bb.min.z }, bb.max })
 , bot({ bb.min, { bb.max.x, clip.y, bb.max.z } }) {
-
-}
-
-
-void StairShape::Vertices(
-	std::vector<glm::vec3> &vtx,
-	std::vector<glm::vec3> &norm,
-	std::vector<Model::Index> &index,
-	const glm::vec3 &pos,
-	Model::Index idx
-) const {
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.min.y, pos.z + top.max.z); // front, upper
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.min.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.max.z); // front, lower
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.max.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.min.y, pos.z + top.min.z); // back, upper
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.min.z);
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.min.y, pos.z + top.min.z);
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.max.y, pos.z + top.min.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.min.z); // back, lower
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.max.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.min.z); // top, upper
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.max.y, pos.z + top.min.z);
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.min.z); // top, lower
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + bot.max.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + bot.max.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.min.z); // bottom
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.min.y, pos.z + top.min.z); // left, upper
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.min.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.min.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.min.z); // left, lower
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.min.z); // right
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + top.max.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + top.max.y, pos.z + bot.max.z);
-
-	norm.insert(norm.end(), 8, glm::vec3( 0.0f,  0.0f,  1.0f)); // front, x2
-	norm.insert(norm.end(), 8, glm::vec3( 0.0f,  0.0f, -1.0f)); // back, x2
-	norm.insert(norm.end(), 8, glm::vec3( 0.0f,  1.0f,  0.0f)); // top, x2
-	norm.insert(norm.end(), 4, glm::vec3( 0.0f, -1.0f,  0.0f)); // bottom
-	norm.insert(norm.end(), 8, glm::vec3(-1.0f,  0.0f,  0.0f)); // left, x2
-	norm.insert(norm.end(), 4, glm::vec3( 1.0f,  0.0f,  0.0f)); // right
-
-	index.emplace_back(idx +  0); // front, upper
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  4); // front, lower
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx +  8); // back, upper
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx + 11);
-	index.emplace_back(idx + 12); // back, lower
-	index.emplace_back(idx + 13);
-	index.emplace_back(idx + 14);
-	index.emplace_back(idx + 14);
-	index.emplace_back(idx + 13);
-	index.emplace_back(idx + 15);
-	index.emplace_back(idx + 16); // top, upper
-	index.emplace_back(idx + 17);
-	index.emplace_back(idx + 18);
-	index.emplace_back(idx + 18);
-	index.emplace_back(idx + 17);
-	index.emplace_back(idx + 19);
-	index.emplace_back(idx + 20); // top, lower
-	index.emplace_back(idx + 21);
-	index.emplace_back(idx + 22);
-	index.emplace_back(idx + 22);
-	index.emplace_back(idx + 21);
-	index.emplace_back(idx + 23);
-	index.emplace_back(idx + 24); // bottom
-	index.emplace_back(idx + 25);
-	index.emplace_back(idx + 26);
-	index.emplace_back(idx + 26);
-	index.emplace_back(idx + 25);
-	index.emplace_back(idx + 27);
-	index.emplace_back(idx + 28); // left, upper
-	index.emplace_back(idx + 29);
-	index.emplace_back(idx + 30);
-	index.emplace_back(idx + 30);
-	index.emplace_back(idx + 29);
-	index.emplace_back(idx + 31);
-	index.emplace_back(idx + 32); // left, lower
-	index.emplace_back(idx + 33);
-	index.emplace_back(idx + 34);
-	index.emplace_back(idx + 34);
-	index.emplace_back(idx + 33);
-	index.emplace_back(idx + 35);
-	index.emplace_back(idx + 36); // right
-	index.emplace_back(idx + 37);
-	index.emplace_back(idx + 38);
-	index.emplace_back(idx + 38);
-	index.emplace_back(idx + 37);
-	index.emplace_back(idx + 39);
-}
-
-void StairShape::Outline(
-	std::vector<glm::vec3> &vtx,
-	std::vector<OutlineModel::Index> &index,
-	const glm::vec3 &pos,
-	OutlineModel::Index idx
-) const {
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.min.z); // bottom
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.max.x, pos.y + bot.min.y, pos.z + bot.max.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + bot.min.z); // middle
-	vtx.emplace_back(pos.x + top.min.x, pos.y + bot.max.y, pos.z + bot.min.z);
-	vtx.emplace_back(pos.x + bot.min.x, pos.y + bot.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + bot.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.min.z); // top
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.max.y, pos.z + top.min.z);
-	vtx.emplace_back(pos.x + top.min.x, pos.y + top.max.y, pos.z + top.max.z);
-	vtx.emplace_back(pos.x + top.max.x, pos.y + top.max.y, pos.z + top.max.z);
-
-	index.emplace_back(idx +  0); // bottom
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  0);
-	index.emplace_back(idx +  4); // middle
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  4);
-	index.emplace_back(idx +  8); // top
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx + 11);
-	index.emplace_back(idx + 11);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx +  8);
-	index.emplace_back(idx +  0); // verticals
-	index.emplace_back(idx +  4);
-	index.emplace_back(idx +  2);
-	index.emplace_back(idx +  6);
-	index.emplace_back(idx +  5);
-	index.emplace_back(idx +  8);
-	index.emplace_back(idx +  7);
-	index.emplace_back(idx + 10);
-	index.emplace_back(idx +  1);
-	index.emplace_back(idx +  9);
-	index.emplace_back(idx +  3);
-	index.emplace_back(idx + 11);
+	SetShape({
+		{ top.min.x, top.min.y, top.max.z }, // front, upper
+		{ top.max.x, top.min.y, top.max.z },
+		{ top.min.x, top.max.y, top.max.z },
+		{ top.max.x, top.max.y, top.max.z },
+		{ bot.min.x, bot.min.y, bot.max.z }, // front, lower
+		{ bot.max.x, bot.min.y, bot.max.z },
+		{ bot.min.x, bot.max.y, bot.max.z },
+		{ bot.max.x, bot.max.y, bot.max.z },
+		{ top.min.x, top.min.y, top.min.z }, // back, upper
+		{ top.min.x, top.max.y, top.min.z },
+		{ top.max.x, top.min.y, top.min.z },
+		{ top.max.x, top.max.y, top.min.z },
+		{ bot.min.x, bot.min.y, bot.min.z }, // back, lower
+		{ bot.min.x, bot.max.y, bot.min.z },
+		{ bot.max.x, bot.min.y, bot.min.z },
+		{ bot.max.x, bot.max.y, bot.min.z },
+		{ top.min.x, top.max.y, top.min.z }, // top, upper
+		{ top.min.x, top.max.y, top.max.z },
+		{ top.max.x, top.max.y, top.min.z },
+		{ top.max.x, top.max.y, top.max.z },
+		{ bot.min.x, bot.max.y, bot.min.z }, // top, lower
+		{ bot.min.x, bot.max.y, bot.max.z },
+		{ top.min.x, bot.max.y, bot.min.z },
+		{ top.min.x, bot.max.y, bot.max.z },
+		{ bot.min.x, bot.min.y, bot.min.z }, // bottom
+		{ bot.max.x, bot.min.y, bot.min.z },
+		{ bot.min.x, bot.min.y, bot.max.z },
+		{ bot.max.x, bot.min.y, bot.max.z },
+		{ top.min.x, top.min.y, top.min.z }, // left, upper
+		{ top.min.x, top.min.y, top.max.z },
+		{ top.min.x, top.max.y, top.min.z },
+		{ top.min.x, top.max.y, top.max.z },
+		{ bot.min.x, bot.min.y, bot.min.z }, // left, lower
+		{ bot.min.x, bot.min.y, bot.max.z },
+		{ bot.min.x, bot.max.y, bot.min.z },
+		{ bot.min.x, bot.max.y, bot.max.z },
+		{ bot.max.x, bot.min.y, bot.min.z }, // right
+		{ bot.max.x, top.max.y, bot.min.z },
+		{ bot.max.x, bot.min.y, bot.max.z },
+		{ bot.max.x, top.max.y, bot.max.z },
+	}, {
+		{  0.0f,  0.0f,  1.0f }, // front, x2
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f,  1.0f },
+		{  0.0f,  0.0f, -1.0f }, // back, x2
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  0.0f, -1.0f },
+		{  0.0f,  1.0f,  0.0f }, // top, x2
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f,  1.0f,  0.0f },
+		{  0.0f, -1.0f,  0.0f }, // bottom
+		{  0.0f, -1.0f,  0.0f },
+		{  0.0f, -1.0f,  0.0f },
+		{  0.0f, -1.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f }, // left, x2
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{ -1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f }, // right
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
+	}, {
+		 0,  1,  2,  2,  1,  3, // front, upper
+		 4,  5,  6,  6,  5,  7, // front, lower
+		 8,  9, 10, 10,  9, 11, // back, upper
+		12, 13, 14, 14, 13, 15, // back, lower
+		16, 17, 18, 18, 17, 19, // top, upper
+		20, 21, 22, 22, 21, 23, // top, lower
+		24, 25, 26, 26, 25, 27, // bottom
+		28, 29, 30, 30, 29, 31, // left, upper
+		32, 33, 34, 34, 33, 35, // left, lower
+		36, 37, 38, 38, 37, 39, // right
+	});
+	SetOutline({
+		{ bot.min.x, bot.min.y, bot.min.z }, // bottom
+		{ bot.max.x, bot.min.y, bot.min.z },
+		{ bot.min.x, bot.min.y, bot.max.z },
+		{ bot.max.x, bot.min.y, bot.max.z },
+		{ bot.min.x, bot.max.y, bot.min.z }, // middle
+		{ top.min.x, bot.max.y, bot.min.z },
+		{ bot.min.x, bot.max.y, top.max.z },
+		{ top.min.x, bot.max.y, top.max.z },
+		{ top.min.x, top.max.y, top.min.z }, // top
+		{ top.max.x, top.max.y, top.min.z },
+		{ top.min.x, top.max.y, top.max.z },
+		{ top.max.x, top.max.y, top.max.z },
+	}, {
+		 0,  1,  1,  3,  3,  2,  2,  0, // bottom
+		 4,  5,  5,  7,  7,  6,  6,  4, // middle
+		 8,  9,  9, 11, 11, 10, 10 , 8, // top
+		 0,  4,  2,  6, // verticals
+		 5,  8,  7, 10,
+		 1,  9,  3, 11,
+	});
 }
 
 bool StairShape::Intersects(
@@ -386,6 +291,5 @@ bool StairShape::Intersects(
 		return false;
 	}
 }
-
 
 }
