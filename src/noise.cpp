@@ -3,8 +3,14 @@
 #include <cmath>
 
 
-namespace blank {
+namespace {
 
+constexpr float one_third = 1.0f/3.0f;
+constexpr float one_sixth = 1.0f/6.0f;
+
+}
+
+namespace blank {
 
 SimplexNoise::SimplexNoise(unsigned int seed)
 : grad({
@@ -25,17 +31,18 @@ SimplexNoise::SimplexNoise(unsigned int seed)
 	for (size_t i = 0; i < 256; ++i) {
 		val = 2346765 * val + 6446345;
 		perm[i] = val % 256;
+		perm[i + 256] = perm[i];
 	}
 }
 
 
 float SimplexNoise::operator ()(const glm::vec3 &in) const {
-	float skew = (in.x + in.y + in.z) / 3.0f;
+	float skew = (in.x + in.y + in.z) * one_third;
 
-	glm::vec3 skewed(std::floor(in.x + skew), std::floor(in.y + skew), std::floor(in.z + skew));
-	float tr = (skewed.x + skewed.y + skewed.z) / 6.0f;
+	glm::vec3 skewed(glm::floor(in + skew));
+	float tr = (skewed.x + skewed.y + skewed.z) * one_sixth;
 
-	glm::vec3 unskewed(skewed.x - tr, skewed.y - tr, skewed.z - tr);
+	glm::vec3 unskewed(skewed - tr);
 	glm::vec3 offset[4];
 	offset[0] = in - unskewed;
 
@@ -63,14 +70,14 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const {
 		third = { 1.0f, 1.0f, 0.0f };
 	}
 
-	offset[1] = offset[0] - second + glm::vec3(1.0f/6.0f);
-	offset[2] = offset[0] - third + glm::vec3(1.0f/3.0f);
-	offset[3] = offset[0] - glm::vec3(0.5f);
+	offset[1] = offset[0] - second + one_sixth;
+	offset[2] = offset[0] - third + one_third;
+	offset[3] = offset[0] - 0.5f;
 
-	size_t index[3] = {
-		unsigned(skewed.x) % 256,
-		unsigned(skewed.y) % 256,
-		unsigned(skewed.z) % 256,
+	unsigned char index[3] = {
+		(unsigned char)(skewed.x),
+		(unsigned char)(skewed.y),
+		(unsigned char)(skewed.z),
 	};
 	size_t corner[4] = {
 		Perm(index[0] + Perm(index[1] + Perm(index[2]))),
@@ -95,7 +102,7 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const {
 
 
 unsigned char SimplexNoise::Perm(size_t idx) const {
-	return perm[idx % 256];
+	return perm[idx];
 }
 
 const glm::vec3 &SimplexNoise::Grad(size_t idx) const {

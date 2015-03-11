@@ -19,7 +19,7 @@ private:
 	const glm::vec3 &Grad(size_t idx) const;
 
 private:
-	unsigned char perm[256];
+	unsigned char perm[512];
 	glm::vec3 grad[12];
 
 };
