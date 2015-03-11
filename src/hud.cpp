@@ -10,6 +10,7 @@ namespace blank {
 
 HUD::HUD()
 : block()
+, block_buf()
 , block_transform(1.0f)
 , block_visible(false)
 , crosshair()
@@ -46,8 +47,9 @@ void HUD::Viewport(float x, float y, float width, float height) {
 
 
 void HUD::Display(const BlockType &type) {
-	block.Clear();
-	type.FillModel(block);
+	block_buf.Clear();
+	type.FillModel(block_buf);
+	block.Update(block_buf);
 	block_visible = type.visible;
 }
 

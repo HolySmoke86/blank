@@ -6,12 +6,12 @@ namespace blank {
 const NullShape BlockType::DEFAULT_SHAPE;
 
 void BlockType::FillModel(
-	Model &model,
+	Model::Buffer &buf,
 	const glm::vec3 &pos_offset,
 	Model::Index idx_offset
 ) const {
-	shape->Vertices(model.vertices, model.normals, model.indices, pos_offset, idx_offset);
-	model.colors.insert(model.colors.end(), shape->VertexCount(), color);
+	shape->Vertices(buf.vertices, buf.normals, buf.indices, pos_offset, idx_offset);
+	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
 }
 
 void BlockType::FillOutlineModel(

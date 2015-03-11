@@ -47,7 +47,7 @@ struct BlockType {
 
 
 	void FillModel(
-		Model &m,
+		Model::Buffer &m,
 		const glm::vec3 &pos_offset = { 0, 0, 0 },
 		Model::Index idx_offset = 0
 	) const;

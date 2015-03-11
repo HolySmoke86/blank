@@ -6,13 +6,9 @@
 namespace blank {
 
 Model::Model()
-: vertices()
-, colors()
-, normals()
-, indices()
-, va(0)
+:  va(0)
 , handle{}
-, dirty(false) {
+, count(0) {
 	glGenVertexArrays(1, &va);
 	glGenBuffers(ATTRIB_COUNT, handle);
 }
@@ -23,12 +19,8 @@ Model::~Model() {
 }
 
 Model::Model(Model &&other)
-: vertices(std::move(other.vertices))
-, colors(std::move(other.colors))
-, normals(std::move(other.normals))
-, indices(std::move(other.indices))
-, va(other.va)
-, dirty(other.dirty) {
+: va(other.va)
+, count(other.count) {
 	other.va = 0;
 	for (int i = 0; i < ATTRIB_COUNT; ++i) {
 		handle[i] = other.handle[i];
@@ -37,45 +29,18 @@ Model::Model(Model &&other)
 }
 
 Model &Model::operator =(Model &&other) {
-	std::swap(vertices, other.vertices);
-	std::swap(colors, other.colors);
-	std::swap(normals, other.normals);
-	std::swap(indices, other.indices);
 	std::swap(va, other.va);
 	for (int i = 0; i < ATTRIB_COUNT; ++i) {
 		std::swap(handle[i], other.handle[i]);
 	}
-	dirty = other.dirty;
+	count = other.count;
 	return *this;
 }
 
-
-void Model::Clear() {
-	vertices.clear();
-	colors.clear();
-	normals.clear();
-	indices.clear();
-	Invalidate();
-}
-
-void Model::Reserve(int v, int i) {
-	vertices.reserve(v);
-	colors.reserve(v);
-	normals.reserve(v);
-	indices.reserve(i);
-}
-
-
-void Model::CheckUpdate() {
-	if (dirty) {
-		glBindVertexArray(va);
-		Update();
-	}
-}
-
-void Model::Update() {
+void Model::Update(const Buffer &buf) {
+	glBindVertexArray(va);
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, buf.vertices.size() * sizeof(glm::vec3), buf.vertices.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
 	glVertexAttribPointer(
 		ATTRIB_VERTEX, // location (for shader)
@@ -87,13 +52,12 @@ void Model::Update() {
 	);
 
 #ifndef NDEBUG
-	if (colors.size() < vertices.size()) {
+	if (buf.colors.size() < buf.vertices.size()) {
 		std::cerr << "Model: not enough colors!" << std::endl;
-		colors.resize(vertices.size(), { 1, 0, 1 });
 	}
 #endif
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_COLOR]);
-	glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(glm::vec3), colors.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, buf.colors.size() * sizeof(glm::vec3), buf.colors.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(ATTRIB_COLOR);
 	glVertexAttribPointer(
 		ATTRIB_COLOR,  // location (for shader)
@@ -105,13 +69,12 @@ void Model::Update() {
 	);
 
 #ifndef NDEBUG
-	if (normals.size() < vertices.size()) {
+	if (buf.normals.size() < buf.vertices.size()) {
 		std::cerr << "Model: not enough normals!" << std::endl;
-		normals.resize(vertices.size(), { 0, 1, 0 });
 	}
 #endif
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_NORMAL]);
-	glBufferData(GL_ARRAY_BUFFER, normals.size() * sizeof(glm::vec3), normals.data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, buf.normals.size() * sizeof(glm::vec3), buf.normals.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(ATTRIB_NORMAL);
 	glVertexAttribPointer(
 		ATTRIB_NORMAL, // location (for shader)
@@ -123,25 +86,19 @@ void Model::Update() {
 	);
 
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index), indices.data(), GL_STATIC_DRAW);
-
-	dirty = false;
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, buf.indices.size() * sizeof(Index), buf.indices.data(), GL_STATIC_DRAW);
+	count = buf.indices.size();
 }
 
 
-void Model::Draw() {
+void Model::Draw() const {
 	glBindVertexArray(va);
-
-	if (dirty) {
-		Update();
-	}
-
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
 	glDrawElements(
-		GL_TRIANGLES,      // how
-		indices.size(),    // count
+		GL_TRIANGLES,    // how
+		count,           // count
 		GL_UNSIGNED_INT, // type
-		nullptr            // offset
+		nullptr          // offset
 	);
 }
 

@@ -27,6 +27,7 @@ public:
 
 private:
 	Model block;
+	Model::Buffer block_buf;
 	glm::mat4 block_transform;
 	bool block_visible;
 

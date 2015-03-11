@@ -6,6 +6,12 @@
 #include <glm/gtx/transform.hpp>
 
 
+namespace {
+
+blank::Model::Buffer buf;
+
+}
+
 namespace blank {
 
 Chunk::Chunk(const BlockTypeRegistry &types)
@@ -117,7 +123,6 @@ void Chunk::CheckUpdate() {
 	if (dirty) {
 		Update();
 	}
-	model.CheckUpdate();
 }
 
 void Chunk::Update() {
@@ -127,17 +132,17 @@ void Chunk::Update() {
 		vtx_count += shape->VertexCount();
 		idx_count += shape->VertexIndexCount();
 	}
-	model.Clear();
-	model.Reserve(vtx_count, idx_count);
+	buf.Clear();
+	buf.Reserve(vtx_count, idx_count);
 
 	Model::Index vtx_counter = 0;
 	for (size_t i = 0; i < Size(); ++i) {
 		const BlockType &type = Type(blocks[i]);
-		type.FillModel(model, ToCoords(i), vtx_counter);
+		type.FillModel(buf, ToCoords(i), vtx_counter);
 		vtx_counter += type.shape->VertexCount();
 	}
 
-	model.Invalidate();
+	model.Update(buf);
 	dirty = false;
 }
 

@@ -22,10 +22,28 @@ public:
 	using Indices = std::vector<Index>;
 
 public:
-	Positions vertices;
-	Colors colors;
-	Normals normals;
-	Indices indices;
+	struct Buffer {
+
+		Positions vertices;
+		Colors colors;
+		Normals normals;
+		Indices indices;
+
+		void Clear() {
+			vertices.clear();
+			colors.clear();
+			normals.clear();
+			indices.clear();
+		}
+
+		void Reserve(size_t p, size_t i) {
+			vertices.reserve(p);
+			colors.reserve(p);
+			normals.reserve(p);
+			indices.reserve(i);
+		}
+
+	};
 
 public:
 	Model();
@@ -37,16 +55,9 @@ public:
 	Model(Model &&);
 	Model &operator =(Model &&);
 
-	void Invalidate() { dirty = true; }
+	void Update(const Buffer &);
 
-	void Clear();
-	void Reserve(int vtx_count, int idx_count);
-
-	void CheckUpdate();
-	void Draw();
-
-private:
-	void Update();
+	void Draw() const;
 
 private:
 	enum Attribute {
@@ -59,7 +70,7 @@ private:
 
 	GLuint va;
 	GLuint handle[ATTRIB_COUNT];
-	bool dirty;
+	size_t count;
 
 };
 
