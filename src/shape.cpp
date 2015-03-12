@@ -19,6 +19,24 @@ void Shape::Vertices(
 	}
 }
 
+void Shape::Vertices(
+	Model::Positions &vertex,
+	Model::Normals &normal,
+	Model::Indices &index,
+	const glm::mat4 &transform,
+	Model::Index idx_offset
+) const {
+	for (const auto &pos : vtx_pos) {
+		vertex.emplace_back(transform * glm::vec4(pos, 1.0f));
+	}
+	for (const auto &nrm : vtx_nrm) {
+		normal.emplace_back(transform * glm::vec4(nrm, 0.0f));
+	}
+	for (auto idx : vtx_idx) {
+		index.emplace_back(idx_offset + idx);
+	}
+}
+
 void Shape::Outline(
 	OutlineModel::Positions &vertex,
 	OutlineModel::Indices &index,

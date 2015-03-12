@@ -26,6 +26,13 @@ struct Shape {
 		const Model::Position &elem_offset = { 0.0f, 0.0f, 0.0f },
 		Model::Index idx_offset = 0
 	) const;
+	void Vertices(
+		Model::Positions &vertex,
+		Model::Normals &normal,
+		Model::Indices &index,
+		const glm::mat4 &transform,
+		Model::Index idx_offset = 0
+	) const;
 
 	/// the number of vertices this shape's outline has
 	size_t OutlineCount() const { return out_pos.size(); }

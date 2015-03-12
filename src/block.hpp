@@ -17,10 +17,30 @@ struct Block {
 	using Type = unsigned short;
 	using Pos = glm::vec3;
 
-	Type type;
+	enum Direction {
+		DIR_UP,
+		DIR_DOWN,
+		DIR_LEFT,
+		DIR_RIGHT,
+		DIR_FRONT,
+		DIR_BACK,
+		DIR_COUNT,
+	};
+	enum Rotation {
+		ROT_NONE,
+		ROT_90,
+		ROT_180,
+		ROT_270,
+		ROT_COUNT,
+	};
 
-	constexpr explicit Block(Type type = 0)
-	: type(type) { }
+	Type type;
+	unsigned char orient;
+
+	constexpr explicit Block(Type type = 0, Direction dir = DIR_UP, Rotation rot = ROT_NONE)
+	: type(type), orient(dir * ROT_COUNT + rot) { }
+
+	const glm::mat4 &Transform() const;
 
 };
 
@@ -56,7 +76,7 @@ struct BlockType {
 
 	void FillModel(
 		Model::Buffer &m,
-		const glm::vec3 &pos_offset = { 0, 0, 0 },
+		const glm::mat4 &transform = glm::mat4(1.0f),
 		Model::Index idx_offset = 0
 	) const;
 	void FillOutlineModel(

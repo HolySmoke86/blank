@@ -137,12 +137,12 @@ void Application::Update(int dt) {
 	float dist;
 	glm::vec3 normal;
 	if (world.Intersection(aim, glm::mat4(1.0f), &chunk, &blkid, &dist, &normal)) {
-		glm::vec3 pos = Chunk::ToCoords(blkid);
 		outline_visible = true;
 		outline.Clear();
 		chunk->Type(chunk->BlockAt(blkid)).FillOutlineModel(outline);
-		outline_transform = glm::translate(chunk->Transform(world.Player().ChunkCoords()), pos);
-		outline_transform = glm::scale(outline_transform, glm::vec3(1.0001f));
+		outline_transform = glm::scale(glm::mat4(1.0f), glm::vec3(1.0002f));
+		outline_transform = chunk->Transform(world.Player().ChunkCoords());
+		outline_transform *= chunk->ToTransform(blkid);
 	} else {
 		outline_visible = false;
 	}

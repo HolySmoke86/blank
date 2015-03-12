@@ -51,6 +51,7 @@ public:
 			0.5f + (idx / (Width() * Height()))
 		);
 	}
+	glm::mat4 ToTransform(int idx) const;
 
 	static constexpr bool IsBorder(int idx) {
 		return

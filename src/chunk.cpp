@@ -82,8 +82,7 @@ bool Chunk::Intersection(
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
-				Block::Pos pos(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f);
-				if (Type(blocks[id]).shape->Intersects(ray, glm::translate(M, pos), cur_dist, cur_norm)) {
+				if (Type(blocks[id]).shape->Intersects(ray, M * ToTransform(id), cur_dist, cur_norm)) {
 					if (cur_dist < closest_dist) {
 						closest_id = id;
 						closest_dist = cur_dist;
@@ -140,7 +139,7 @@ void Chunk::Update() {
 		if (Obstructed(i)) continue;
 
 		const BlockType &type = Type(blocks[i]);
-		type.FillModel(buf, ToCoords(i), vtx_counter);
+		type.FillModel(buf, ToTransform(i), vtx_counter);
 		vtx_counter += type.shape->VertexCount();
 	}
 
@@ -174,6 +173,10 @@ bool Chunk::Obstructed(int idx) const {
 	if (!back.fill.front) return false;
 
 	return true;
+}
+
+glm::mat4 Chunk::ToTransform(int idx) const {
+	return glm::translate(glm::mat4(1.0f), ToCoords(idx)) * blocks[idx].Transform();
 }
 
 
