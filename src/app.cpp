@@ -1,7 +1,5 @@
 #include "app.hpp"
 
-#include "geometry.hpp"
-
 #include <iostream>
 #include <stdexcept>
 
@@ -17,22 +15,10 @@ Application::Application()
 , init_glew()
 , program()
 , cam()
-, hud()
 , world()
-, controller(world.Player())
-, outline()
-, outline_visible(false)
-, outline_transform(1.0f)
-, running(false)
-, place(false)
-, remove(false)
-, pick(false)
-, remove_id(0)
-, place_id(1) {
+, interface(world)
+, running(false) {
 	GLContext::EnableVSync();
-
-	hud.Viewport(960, 600);
-	hud.Display(*world.BlockTypes()[place_id]);
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
@@ -91,37 +77,16 @@ void Application::HandleEvents() {
 		switch (event.type) {
 			case SDL_KEYDOWN:
 			case SDL_KEYUP:
-				controller.HandleKeyboard(event.key);
+				interface.Handle(event.key);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				if (event.button.button == 1) {
-					// left
-					remove = true;
-				} else if (event.button.button == 2) {
-					// middle
-					pick = true;
-				} else if (event.button.button == 3) {
-					// right
-					place = true;
-				}
+				interface.Handle(event.button);
 				break;
 			case SDL_MOUSEMOTION:
-				controller.HandleMouse(event.motion);
+				interface.Handle(event.motion);
 				break;
 			case SDL_MOUSEWHEEL:
-				if (event.wheel.y < 0) {
-					++place_id;
-					if (size_t(place_id) >= world.BlockTypes().Size()) {
-						place_id = 1;
-					}
-					hud.Display(*world.BlockTypes()[place_id]);
-				} else if (event.wheel.y > 0) {
-					--place_id;
-					if (place_id <= 0) {
-						place_id = world.BlockTypes().Size() - 1;
-					}
-					hud.Display(*world.BlockTypes()[place_id]);
-				}
+				interface.Handle(event.wheel);
 				break;
 			case SDL_QUIT:
 				running = false;
@@ -136,9 +101,10 @@ void Application::HandleEvents() {
 						break;
 					case SDL_WINDOWEVENT_RESIZED:
 						cam.Viewport(event.window.data1, event.window.data2);
-						hud.Viewport(event.window.data1, event.window.data2);
+						interface.Handle(event.window);
 						break;
 					default:
+						interface.Handle(event.window);
 						break;
 				}
 				break;
@@ -149,52 +115,8 @@ void Application::HandleEvents() {
 }
 
 void Application::Update(int dt) {
-	controller.Update(dt);
+	interface.Update(dt);
 	world.Update(dt);
-
-	Ray aim = controller.Aim();
-	Chunk *chunk;
-	int blkid;
-	float dist;
-	glm::vec3 normal;
-	if (world.Intersection(aim, glm::mat4(1.0f), &chunk, &blkid, &dist, &normal)) {
-		outline_visible = true;
-		outline.Clear();
-		chunk->Type(chunk->BlockAt(blkid)).FillOutlineModel(outline);
-		outline_transform = glm::scale(glm::mat4(1.0f), glm::vec3(1.0002f));
-		outline_transform = chunk->Transform(world.Player().ChunkCoords());
-		outline_transform *= chunk->ToTransform(blkid);
-	} else {
-		outline_visible = false;
-	}
-
-	if (pick) {
-		if (chunk) {
-			place_id = chunk->BlockAt(blkid).type;
-			hud.Display(*world.BlockTypes()[place_id]);
-		}
-		pick = false;
-	}
-	if (remove) {
-		if (chunk) {
-			chunk->BlockAt(blkid).type = remove_id;
-			chunk->Invalidate();
-		}
-		remove = false;
-	}
-	if (place) {
-		if (chunk) {
-			Chunk *mod_chunk = chunk;
-			glm::vec3 next_pos = Chunk::ToCoords(blkid) + normal;
-			if (!Chunk::InBounds(next_pos)) {
-				mod_chunk = &world.Next(*chunk, normal);
-				next_pos -= normal * glm::vec3(Chunk::Extent());
-			}
-			mod_chunk->BlockAt(next_pos).type = place_id;
-			mod_chunk->Invalidate();
-		}
-		place = false;
-	}
 }
 
 void Application::Render() {
@@ -205,12 +127,7 @@ void Application::Render() {
 	program.SetProjection(cam.Projection());
 	world.Render(program);
 
-	if (outline_visible) {
-		program.SetM(outline_transform);
-		outline.Draw();
-	}
-
-	hud.Render(program);
+	interface.Render(program);
 
 	window.Flip();
 }

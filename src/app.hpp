@@ -1,14 +1,9 @@
 #ifndef BLANK_APP_HPP_
 #define BLANK_APP_HPP_
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "camera.hpp"
-#include "controller.hpp"
-#include "hud.hpp"
 #include "init.hpp"
-#include "model.hpp"
+#include "interface.hpp"
 #include "shader.hpp"
 #include "world.hpp"
 
@@ -48,20 +43,10 @@ private:
 	DirectionalLighting program;
 
 	Camera cam;
-	HUD hud;
 	World world;
-	FPSController controller;
-
-	OutlineModel outline;
-	bool outline_visible;
-	glm::mat4 outline_transform;
+	Interface interface;
 
 	bool running;
-
-	bool place, remove, pick;
-
-	int remove_id;
-	int place_id;
 
 };
 

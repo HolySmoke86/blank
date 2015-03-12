@@ -4,7 +4,6 @@
 #include "entity.hpp"
 #include "geometry.hpp"
 
-#include <SDL.h>
 #include <glm/glm.hpp>
 
 
@@ -17,6 +16,9 @@ public:
 
 	Ray Aim() const { return entity.Aim(entity.ChunkCoords()); }
 
+	const glm::vec3 &Velocity() const { return velocity; }
+	void Velocity(const glm::vec3 &vel) { velocity = vel; }
+
 	// all angles in radians (full circle = 2π)
 	float Pitch() const { return pitch; }
 	void Pitch(float p);
@@ -25,22 +27,15 @@ public:
 	void Yaw(float y);
 	void RotateYaw(float delta);
 
-	void HandleKeyboard(const SDL_KeyboardEvent &);
-	void HandleMouse(const SDL_MouseMotionEvent &);
-
 	void Update(int dt);
 
 private:
 	Entity &entity;
 
+	glm::vec3 velocity;
+
 	float pitch;
 	float yaw;
-
-	float move_velocity;
-	float pitch_sensitivity;
-	float yaw_sensitivity;
-
-	bool front, back, left, right, up, down;
 
 };
 
