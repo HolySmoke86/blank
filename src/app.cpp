@@ -108,11 +108,32 @@ void Application::HandleEvents() {
 			case SDL_MOUSEMOTION:
 				controller.HandleMouse(event.motion);
 				break;
+			case SDL_MOUSEWHEEL:
+				if (event.wheel.y < 0) {
+					++place_id;
+					if (size_t(place_id) >= world.BlockTypes().Size()) {
+						place_id = 1;
+					}
+					hud.Display(*world.BlockTypes()[place_id]);
+				} else if (event.wheel.y > 0) {
+					--place_id;
+					if (place_id <= 0) {
+						place_id = world.BlockTypes().Size() - 1;
+					}
+					hud.Display(*world.BlockTypes()[place_id]);
+				}
+				break;
 			case SDL_QUIT:
 				running = false;
 				break;
 			case SDL_WINDOWEVENT:
 				switch (event.window.event) {
+					case SDL_WINDOWEVENT_FOCUS_GAINED:
+						window.GrabMouse();
+						break;
+					case SDL_WINDOWEVENT_FOCUS_LOST:
+						window.ReleaseMouse();
+						break;
 					case SDL_WINDOWEVENT_RESIZED:
 						cam.Viewport(event.window.data1, event.window.data2);
 						hud.Viewport(event.window.data1, event.window.data2);
