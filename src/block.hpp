@@ -57,10 +57,10 @@ struct BlockType {
 	bool visible;
 
 	struct Faces {
+		bool up;
+		bool down;
 		bool right;
 		bool left;
-		bool top;
-		bool bottom;
 		bool front;
 		bool back;
 	} fill;

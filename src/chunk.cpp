@@ -160,11 +160,11 @@ bool Chunk::Obstructed(int idx) const {
 	const BlockType &left = Type(blocks[idx - 1]);
 	if (!left.fill.right) return false;
 
-	const BlockType &top = Type(blocks[idx + Width()]);
-	if (!top.fill.bottom) return false;
+	const BlockType &up = Type(blocks[idx + Width()]);
+	if (!up.fill.down) return false;
 
-	const BlockType &bottom = Type(blocks[idx - Width()]);
-	if (!bottom.fill.top) return false;
+	const BlockType &down = Type(blocks[idx - Width()]);
+	if (!down.fill.up) return false;
 
 	const BlockType &front = Type(blocks[idx + Width() * Height()]);
 	if (!front.fill.back) return false;

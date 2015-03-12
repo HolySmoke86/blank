@@ -15,8 +15,8 @@ World::World()
 , chunks(blockType, generate)
 , player() {
 	BlockType::Faces block_fill = {  true,  true,  true,  true,  true,  true };
-	BlockType::Faces slab_fill  = { false, false, false,  true, false, false };
-	BlockType::Faces stair_fill = {  true, false, false,  true, false, false };
+	BlockType::Faces slab_fill  = { false,  true, false, false, false, false };
+	BlockType::Faces stair_fill = { false,  true, false, false, false,  true };
 
 	{ // white block
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);

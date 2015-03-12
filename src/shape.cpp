@@ -155,7 +155,7 @@ bool CuboidShape::Intersects(
 
 StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 : Shape()
-, top({ { clip.x, clip.y, bb.min.z }, bb.max })
+, top({ { bb.min.x, clip.y, bb.min.z }, { bb.max.x, bb.max.y, clip.x } })
 , bot({ bb.min, { bb.max.x, clip.y, bb.max.z } }) {
 	SetShape({
 		{ top.min.x, top.min.y, top.max.z }, // front, upper
@@ -166,22 +166,18 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		{ bot.max.x, bot.min.y, bot.max.z },
 		{ bot.min.x, bot.max.y, bot.max.z },
 		{ bot.max.x, bot.max.y, bot.max.z },
-		{ top.min.x, top.min.y, top.min.z }, // back, upper
-		{ top.min.x, top.max.y, top.min.z },
-		{ top.max.x, top.min.y, top.min.z },
-		{ top.max.x, top.max.y, top.min.z },
-		{ bot.min.x, bot.min.y, bot.min.z }, // back, lower
-		{ bot.min.x, bot.max.y, bot.min.z },
-		{ bot.max.x, bot.min.y, bot.min.z },
-		{ bot.max.x, bot.max.y, bot.min.z },
+		{ bot.min.x, bot.min.y, bot.min.z }, // back
+		{ bot.min.x, top.max.y, bot.min.z },
+		{ top.max.x, bot.min.y, bot.min.z },
+		{ top.max.x, top.max.y, bot.min.z },
 		{ top.min.x, top.max.y, top.min.z }, // top, upper
 		{ top.min.x, top.max.y, top.max.z },
 		{ top.max.x, top.max.y, top.min.z },
 		{ top.max.x, top.max.y, top.max.z },
-		{ bot.min.x, bot.max.y, bot.min.z }, // top, lower
+		{ bot.min.x, bot.max.y, top.max.z }, // top, lower
 		{ bot.min.x, bot.max.y, bot.max.z },
-		{ top.min.x, bot.max.y, bot.min.z },
-		{ top.min.x, bot.max.y, bot.max.z },
+		{ bot.max.x, bot.max.y, top.max.z },
+		{ bot.max.x, bot.max.y, bot.max.z },
 		{ bot.min.x, bot.min.y, bot.min.z }, // bottom
 		{ bot.max.x, bot.min.y, bot.min.z },
 		{ bot.min.x, bot.min.y, bot.max.z },
@@ -194,12 +190,16 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		{ bot.min.x, bot.min.y, bot.max.z },
 		{ bot.min.x, bot.max.y, bot.min.z },
 		{ bot.min.x, bot.max.y, bot.max.z },
-		{ bot.max.x, bot.min.y, bot.min.z }, // right
-		{ bot.max.x, top.max.y, bot.min.z },
+		{ top.max.x, top.min.y, top.min.z }, // right, upper
+		{ top.max.x, top.max.y, top.min.z },
+		{ top.max.x, top.min.y, top.max.z },
+		{ top.max.x, top.max.y, top.max.z },
+		{ bot.max.x, bot.min.y, bot.min.z }, // right, lower
+		{ bot.max.x, bot.max.y, bot.min.z },
 		{ bot.max.x, bot.min.y, bot.max.z },
-		{ bot.max.x, top.max.y, bot.max.z },
+		{ bot.max.x, bot.max.y, bot.max.z },
 	}, {
-		{  0.0f,  0.0f,  1.0f }, // front, x2
+		{  0.0f,  0.0f,  1.0f }, // front x2
 		{  0.0f,  0.0f,  1.0f },
 		{  0.0f,  0.0f,  1.0f },
 		{  0.0f,  0.0f,  1.0f },
@@ -207,15 +207,11 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		{  0.0f,  0.0f,  1.0f },
 		{  0.0f,  0.0f,  1.0f },
 		{  0.0f,  0.0f,  1.0f },
-		{  0.0f,  0.0f, -1.0f }, // back, x2
+		{  0.0f,  0.0f, -1.0f }, // back
 		{  0.0f,  0.0f, -1.0f },
 		{  0.0f,  0.0f, -1.0f },
 		{  0.0f,  0.0f, -1.0f },
-		{  0.0f,  0.0f, -1.0f },
-		{  0.0f,  0.0f, -1.0f },
-		{  0.0f,  0.0f, -1.0f },
-		{  0.0f,  0.0f, -1.0f },
-		{  0.0f,  1.0f,  0.0f }, // top, x2
+		{  0.0f,  1.0f,  0.0f }, // top x2
 		{  0.0f,  1.0f,  0.0f },
 		{  0.0f,  1.0f,  0.0f },
 		{  0.0f,  1.0f,  0.0f },
@@ -227,7 +223,7 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		{  0.0f, -1.0f,  0.0f },
 		{  0.0f, -1.0f,  0.0f },
 		{  0.0f, -1.0f,  0.0f },
-		{ -1.0f,  0.0f,  0.0f }, // left, x2
+		{ -1.0f,  0.0f,  0.0f }, // left x2
 		{ -1.0f,  0.0f,  0.0f },
 		{ -1.0f,  0.0f,  0.0f },
 		{ -1.0f,  0.0f,  0.0f },
@@ -235,31 +231,35 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		{ -1.0f,  0.0f,  0.0f },
 		{ -1.0f,  0.0f,  0.0f },
 		{ -1.0f,  0.0f,  0.0f },
-		{  1.0f,  0.0f,  0.0f }, // right
+		{  1.0f,  0.0f,  0.0f }, // right x2
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
+		{  1.0f,  0.0f,  0.0f },
 		{  1.0f,  0.0f,  0.0f },
 		{  1.0f,  0.0f,  0.0f },
 		{  1.0f,  0.0f,  0.0f },
 	}, {
 		 0,  1,  2,  2,  1,  3, // front, upper
 		 4,  5,  6,  6,  5,  7, // front, lower
-		 8,  9, 10, 10,  9, 11, // back, upper
-		12, 13, 14, 14, 13, 15, // back, lower
-		16, 17, 18, 18, 17, 19, // top, upper
-		20, 21, 22, 22, 21, 23, // top, lower
-		24, 25, 26, 26, 25, 27, // bottom
-		28, 29, 30, 30, 29, 31, // left, upper
-		32, 33, 34, 34, 33, 35, // left, lower
-		36, 37, 38, 38, 37, 39, // right
+		 8,  9, 10, 10,  9, 11, // back
+		12, 13, 14, 14, 13, 15, // top, upper
+		16, 17, 18, 18, 17, 19, // top, lower
+		20, 21, 22, 22, 21, 23, // bottom
+		24, 25, 26, 26, 25, 27, // left, upper
+		28, 29, 30, 30, 29, 31, // left, lower
+		32, 33, 34, 34, 33, 35, // right, upper
+		36, 37, 38, 38, 37, 39, // right, lower
 	});
 	SetOutline({
 		{ bot.min.x, bot.min.y, bot.min.z }, // bottom
 		{ bot.max.x, bot.min.y, bot.min.z },
 		{ bot.min.x, bot.min.y, bot.max.z },
 		{ bot.max.x, bot.min.y, bot.max.z },
-		{ bot.min.x, bot.max.y, bot.min.z }, // middle
-		{ top.min.x, bot.max.y, bot.min.z },
-		{ bot.min.x, bot.max.y, top.max.z },
-		{ top.min.x, bot.max.y, top.max.z },
+		{ bot.min.x, bot.max.y, top.max.z }, // middle
+		{ bot.max.x, bot.max.y, top.max.z },
+		{ bot.min.x, bot.max.y, bot.max.z },
+		{ bot.max.x, bot.max.y, bot.max.z },
 		{ top.min.x, top.max.y, top.min.z }, // top
 		{ top.max.x, top.max.y, top.min.z },
 		{ top.min.x, top.max.y, top.max.z },
@@ -268,9 +268,10 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		 0,  1,  1,  3,  3,  2,  2,  0, // bottom
 		 4,  5,  5,  7,  7,  6,  6,  4, // middle
 		 8,  9,  9, 11, 11, 10, 10 , 8, // top
-		 0,  4,  2,  6, // verticals
-		 5,  8,  7, 10,
-		 1,  9,  3, 11,
+		 0,  8,  4, 10,  2,  6, // verticals, btf
+		 1,  9,  5, 11,  3,  7,
+	//	 5,  8,  7, 10,
+	//	 1,  9,  3, 11,
 	});
 }
 
