@@ -104,7 +104,7 @@ bool Chunk::Intersection(
 		*dist = closest_dist;
 	}
 	if (normal) {
-		*normal = closest_normal;
+		*normal = glm::vec3(BlockAt(closest_id).Transform() * glm::vec4(closest_normal, 0.0f));
 	}
 	return true;
 }
