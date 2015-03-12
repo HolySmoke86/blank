@@ -224,6 +224,15 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 					loaded.emplace_back(reg);
 					loaded.back().Position(pos);
 					gen(loaded.back());
+
+				//	orientation testing
+				//	for (int i = 0; i < Block::FACE_COUNT; ++i) {
+				//		for (int j = 0; j < Block::TURN_COUNT; ++j) {
+				//			loaded.back().BlockAt(512 * j + 2 * i) = Block(3 * (j + 1), Block::Face(i), Block::Turn(j));
+				//		}
+				//	}
+				//	loaded.back().Invalidate();
+				//	loaded.back().CheckUpdate();
 				} else {
 					to_generate.emplace_back(pos);
 				}

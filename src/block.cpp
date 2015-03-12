@@ -10,31 +10,31 @@ namespace blank {
 
 namespace {
 
-const glm::mat4 block_transforms[Block::DIR_COUNT * Block::ROT_COUNT] = {
-	glm::mat4(1.0f),
-	glm::eulerAngleY(PI_0p5),
-	glm::eulerAngleY(PI),
-	glm::eulerAngleY(PI_1p5),
-	glm::eulerAngleX(PI),
-	glm::eulerAngleYX(PI_0p5, PI),
-	glm::eulerAngleYX(PI, PI),
-	glm::eulerAngleYX(PI_1p5, PI),
-	glm::eulerAngleZ(PI_0p5),
-	glm::eulerAngleYZ(PI_0p5, PI_0p5),
-	glm::eulerAngleYZ(PI, PI_0p5),
-	glm::eulerAngleYZ(PI_1p5, PI_0p5),
-	glm::eulerAngleZ(PI_1p5),
-	glm::eulerAngleYZ(PI_0p5, PI_1p5),
-	glm::eulerAngleYZ(PI, PI_1p5),
-	glm::eulerAngleYZ(PI_1p5, PI_1p5),
-	glm::eulerAngleX(PI_0p5),
-	glm::eulerAngleYX(PI_0p5, PI_0p5),
-	glm::eulerAngleYX(PI, PI_0p5),
-	glm::eulerAngleYX(PI_1p5, PI_0p5),
-	glm::eulerAngleX(PI_1p5),
-	glm::eulerAngleYX(PI_0p5, PI_1p5),
-	glm::eulerAngleYX(PI, PI_1p5),
-	glm::eulerAngleYX(PI_1p5, PI_1p5),
+const glm::mat4 block_transforms[Block::FACE_COUNT * Block::TURN_COUNT] = {
+	{  1,  0,  0,  0,  0,  1,  0,  0,  0,  0,  1,  0,  0,  0,  0,  1, }, // face: up,    turn: none
+	{  0,  0, -1,  0,  0,  1,  0,  0,  1,  0,  0,  0,  0,  0,  0,  1, }, // face: up,    turn: left
+	{ -1,  0,  0,  0,  0,  1,  0,  0,  0,  0, -1,  0,  0,  0,  0,  1, }, // face: up,    turn: around
+	{  0,  0,  1,  0,  0,  1,  0,  0, -1,  0,  0,  0,  0,  0,  0,  1, }, // face: up,    turn: right
+	{  1,  0,  0,  0,  0, -1,  0,  0,  0,  0, -1,  0,  0,  0,  0,  1, }, // face: down,  turn: none
+	{  0,  0, -1,  0,  0, -1,  0,  0, -1,  0,  0,  0,  0,  0,  0,  1, }, // face: down,  turn: left
+	{ -1,  0,  0,  0,  0, -1,  0,  0,  0,  0,  1,  0,  0,  0,  0,  1, }, // face: down,  turn: around
+	{  0,  0,  1,  0,  0, -1,  0,  0,  1,  0,  0,  0,  0,  0,  0,  1, }, // face: down,  turn: right
+	{  0, -1,  0,  0,  1,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  1, }, // face: right, turn: none
+	{  0, -1,  0,  0,  0,  0, -1,  0,  1,  0,  0,  0,  0,  0,  0,  1, }, // face: right, turn: left
+	{  0, -1,  0,  0, -1,  0,  0,  0,  0,  0, -1,  0,  0,  0,  0,  1, }, // face: right, turn: around
+	{  0, -1,  0,  0,  0,  0,  1,  0, -1,  0,  0,  0,  0,  0,  0,  1, }, // face: right, turn: right
+	{  0,  1,  0,  0, -1,  0,  0,  0,  0,  0,  1,  0,  0,  0,  0,  1, }, // face: left,  turn: none
+	{  0,  1,  0,  0,  0,  0,  1,  0,  1,  0,  0,  0,  0,  0,  0,  1, }, // face: left,  turn: left
+	{  0,  1,  0,  0,  1,  0,  0,  0,  0,  0, -1,  0,  0,  0,  0,  1, }, // face: left,  turn: around
+	{  0,  1,  0,  0,  0,  0, -1,  0, -1,  0,  0,  0,  0,  0,  0,  1, }, // face: left,  turn: right
+	{  1,  0,  0,  0,  0,  0,  1,  0,  0, -1,  0,  0,  0,  0,  0,  1, }, // face: front, turn: none
+	{  0,  0, -1,  0,  1,  0,  0,  0,  0, -1,  0,  0,  0,  0,  0,  1, }, // face: front, turn: left
+	{ -1,  0,  0,  0,  0,  0, -1,  0,  0, -1,  0,  0,  0,  0,  0,  1, }, // face: front, turn: around
+	{  0,  0,  1,  0, -1,  0,  0,  0,  0, -1,  0,  0,  0,  0,  0,  1, }, // face: front, turn: right
+	{  1,  0,  0,  0,  0,  0, -1,  0,  0,  1,  0,  0,  0,  0,  0,  1, }, // face: back,  turn: none
+	{  0,  0, -1,  0, -1,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  1, }, // face: back,  turn: left
+	{ -1,  0,  0,  0,  0,  0,  1,  0,  0,  1,  0,  0,  0,  0,  0,  1, }, // face: back,  turn: around
+	{  0,  0,  1,  0,  1,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  1, }, // face: back,  turn: right
 };
 
 }

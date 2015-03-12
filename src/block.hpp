@@ -17,28 +17,28 @@ struct Block {
 	using Type = unsigned short;
 	using Pos = glm::vec3;
 
-	enum Direction {
-		DIR_UP,
-		DIR_DOWN,
-		DIR_LEFT,
-		DIR_RIGHT,
-		DIR_FRONT,
-		DIR_BACK,
-		DIR_COUNT,
+	enum Face {
+		FACE_UP,
+		FACE_DOWN,
+		FACE_RIGHT,
+		FACE_LEFT,
+		FACE_FRONT,
+		FACE_BACK,
+		FACE_COUNT,
 	};
-	enum Rotation {
-		ROT_NONE,
-		ROT_90,
-		ROT_180,
-		ROT_270,
-		ROT_COUNT,
+	enum Turn {
+		TURN_NONE,
+		TURN_LEFT,
+		TURN_AROUND,
+		TURN_RIGHT,
+		TURN_COUNT,
 	};
 
 	Type type;
 	unsigned char orient;
 
-	constexpr explicit Block(Type type = 0, Direction dir = DIR_UP, Rotation rot = ROT_NONE)
-	: type(type), orient(dir * ROT_COUNT + rot) { }
+	constexpr explicit Block(Type type = 0, Face face = FACE_UP, Turn turn = TURN_NONE)
+	: type(type), orient(face * TURN_COUNT + turn) { }
 
 	const glm::mat4 &Transform() const;
 
