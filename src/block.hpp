@@ -42,6 +42,11 @@ struct Block {
 
 	const glm::mat4 &Transform() const;
 
+	Face GetFace() const { return Face(orient / 4); }
+	void SetFace(Face face) { orient = face * TURN_COUNT + GetTurn(); }
+	Turn GetTurn() const { return Turn(orient % 4); }
+	void SetTurn(Turn turn) { orient = GetFace() * TURN_COUNT + turn; }
+
 };
 
 

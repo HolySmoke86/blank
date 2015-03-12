@@ -12,7 +12,7 @@ namespace blank {
 Interface::Interface(World &world)
 : world(world)
 , ctrl(world.Player())
-, hud()
+, hud(world.BlockTypes())
 , aim_chunk(nullptr)
 , aim_block(0)
 , aim_normal()
@@ -30,7 +30,7 @@ Interface::Interface(World &world)
 , up(false)
 , down(false) {
 	hud.Viewport(960, 600);
-	hud.Display(*world.BlockTypes()[selection.type]);
+	hud.Display(selection);
 }
 
 
@@ -48,16 +48,36 @@ void Interface::Handle(const SDL_KeyboardEvent &event) {
 		case SDLK_d:
 			right = event.state == SDL_PRESSED;
 			break;
-		case SDLK_q:
 		case SDLK_SPACE:
 			up = event.state == SDL_PRESSED;
 			break;
-		case SDLK_e:
 		case SDLK_LSHIFT:
 			down = event.state == SDL_PRESSED;
 			break;
+
+		case SDLK_q:
+			if (event.state == SDL_PRESSED) {
+				FaceBlock();
+			}
+			break;
+		case SDLK_e:
+			if (event.state == SDL_PRESSED) {
+				TurnBlock();
+			}
+			break;
 	}
 }
+
+void Interface::FaceBlock() {
+	selection.SetFace(Block::Face((selection.GetFace() + 1) % Block::FACE_COUNT));
+	hud.Display(selection);
+}
+
+void Interface::TurnBlock() {
+	selection.SetTurn(Block::Turn((selection.GetTurn() + 1) % Block::TURN_COUNT));
+	hud.Display(selection);
+}
+
 
 void Interface::Handle(const SDL_MouseMotionEvent &event) {
 	ctrl.RotateYaw(event.xrel * yaw_sensitivity);
@@ -79,7 +99,7 @@ void Interface::Handle(const SDL_MouseButtonEvent &event) {
 void Interface::PickBlock() {
 	if (!aim_chunk) return;
 	selection = aim_chunk->BlockAt(aim_block);
-	hud.Display(*world.BlockTypes()[selection.type]);
+	hud.Display(selection);
 }
 
 void Interface::PlaceBlock() {
@@ -114,7 +134,7 @@ void Interface::SelectNext() {
 	if (size_t(selection.type) >= world.BlockTypes().Size()) {
 		selection.type = 1;
 	}
-	hud.Display(*world.BlockTypes()[selection.type]);
+	hud.Display(selection);
 }
 
 void Interface::SelectPrevious() {
@@ -122,7 +142,7 @@ void Interface::SelectPrevious() {
 	if (selection.type <= 0) {
 		selection.type = world.BlockTypes().Size() - 1;
 	}
-	hud.Display(*world.BlockTypes()[selection.type]);
+	hud.Display(selection);
 }
 
 void Interface::Handle(const SDL_WindowEvent &event) {

@@ -2,7 +2,6 @@
 #define BLANK_HUD_H_
 
 #include "model.hpp"
-#include "shader.hpp"
 #include "world.hpp"
 
 #include <glm/glm.hpp>
@@ -10,10 +9,13 @@
 
 namespace blank {
 
+class BlockTypeRegistry;
+class DirectionalLighting;
+
 class HUD {
 
 public:
-	HUD();
+	explicit HUD(const BlockTypeRegistry &);
 
 	HUD(const HUD &) = delete;
 	HUD &operator =(const HUD &) = delete;
@@ -21,11 +23,13 @@ public:
 	void Viewport(float width, float height);
 	void Viewport(float x, float y, float width, float height);
 
-	void Display(const BlockType &);
+	void Display(const Block &);
 
 	void Render(DirectionalLighting &);
 
 private:
+	const BlockTypeRegistry &types;
+
 	Model block;
 	Model::Buffer block_buf;
 	glm::mat4 block_transform;

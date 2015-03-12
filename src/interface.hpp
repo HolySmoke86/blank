@@ -26,6 +26,9 @@ public:
 	void Handle(const SDL_MouseWheelEvent &);
 	void Handle(const SDL_WindowEvent &);
 
+	void FaceBlock();
+	void TurnBlock();
+
 	void PickBlock();
 	void PlaceBlock();
 	void RemoveBlock();
