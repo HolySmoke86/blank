@@ -56,24 +56,14 @@ void Chunk::Draw() {
 bool Chunk::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
-	int *blkid,
-	float *dist,
-	glm::vec3 *normal) const {
-	{ // rough check
-		if (!blank::Intersection(ray, Bounds(), M)) {
-			return false;
-		}
-	}
-
-	if (!blkid && !dist && !normal) {
-		return true;
-	}
-
+	int &blkid,
+	float &dist,
+	glm::vec3 &normal
+) const {
 	// TODO: should be possible to heavily optimize this
 	int id = 0;
-	int closest_id = -1;
-	float closest_dist = std::numeric_limits<float>::infinity();
-	glm::vec3 closest_normal(0, 1, 0);
+	blkid = -1;
+	dist = std::numeric_limits<float>::infinity();
 	for (int z = 0; z < Depth(); ++z) {
 		for (int y = 0; y < Height(); ++y) {
 			for (int x = 0; x < Width(); ++x, ++id) {
@@ -83,30 +73,22 @@ bool Chunk::Intersection(
 				float cur_dist;
 				glm::vec3 cur_norm;
 				if (Type(blocks[id]).shape->Intersects(ray, M * ToTransform(id), cur_dist, cur_norm)) {
-					if (cur_dist < closest_dist) {
-						closest_id = id;
-						closest_dist = cur_dist;
-						closest_normal = cur_norm;
+					if (cur_dist < dist) {
+						blkid = id;
+						dist = cur_dist;
+						normal = cur_norm;
 					}
 				}
 			}
 		}
 	}
 
-	if (closest_id < 0) {
+	if (blkid < 0) {
 		return false;
+	} else {
+		normal = glm::vec3(BlockAt(blkid).Transform() * glm::vec4(normal, 0.0f));
+		return true;
 	}
-
-	if (blkid) {
-		*blkid = closest_id;
-	}
-	if (dist) {
-		*dist = closest_dist;
-	}
-	if (normal) {
-		*normal = glm::vec3(BlockAt(closest_id).Transform() * glm::vec4(closest_normal, 0.0f));
-	}
-	return true;
 }
 
 void Chunk::Position(const Pos &pos) {

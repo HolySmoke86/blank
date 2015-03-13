@@ -91,6 +91,17 @@ World::World()
 }
 
 
+namespace {
+
+struct Candidate {
+	Chunk *chunk;
+	float dist;
+};
+
+std::vector<Candidate> candidates;
+
+}
+
 bool World::Intersection(
 		const Ray &ray,
 		const glm::mat4 &M,
@@ -98,18 +109,30 @@ bool World::Intersection(
 		int *blkid,
 		float *dist,
 		glm::vec3 *normal) {
-	Chunk *closest_chunk = nullptr;
-	int closest_blkid = -1;
-	float closest_dist = std::numeric_limits<float>::infinity();
-	glm::vec3 closest_normal;
+	candidates.clear();
 
 	for (Chunk &cur_chunk : chunks.Loaded()) {
+		float cur_dist;
+		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(player.ChunkCoords()), cur_dist)) {
+			candidates.push_back({ &cur_chunk, cur_dist });
+		}
+	}
+
+	if (candidates.empty()) return false;
+
+	Chunk *closest_chunk = nullptr;
+	float closest_dist = std::numeric_limits<float>::infinity();
+	int closest_blkid = -1;
+	glm::vec3 closest_normal;
+
+	for (Candidate &cand : candidates) {
+		if (cand.dist > closest_dist) continue;
 		int cur_blkid;
 		float cur_dist;
 		glm::vec3 cur_normal;
-		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(player.ChunkCoords()), &cur_blkid, &cur_dist, &cur_normal)) {
+		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player.ChunkCoords()), cur_blkid, cur_dist, cur_normal)) {
 			if (cur_dist < closest_dist) {
-				closest_chunk = &cur_chunk;
+				closest_chunk = cand.chunk;
 				closest_blkid = cur_blkid;
 				closest_dist = cur_dist;
 				closest_normal = cur_normal;

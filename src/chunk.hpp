@@ -75,11 +75,19 @@ public:
 	const BlockType &Type(const Block &b) const { return *types->Get(b.type); }
 
 	bool Intersection(
+		const Ray &ray,
+		const glm::mat4 &M,
+		float &dist
+	) const {
+		return blank::Intersection(ray, Bounds(), M, &dist);
+	}
+
+	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
-		int *blkid = nullptr,
-		float *dist = nullptr,
-		glm::vec3 *normal = nullptr) const;
+		int &blkid,
+		float &dist,
+		glm::vec3 &normal) const;
 
 	void Position(const Pos &);
 	const Pos &Position() const { return position; }
