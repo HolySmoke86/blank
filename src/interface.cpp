@@ -72,10 +72,12 @@ void Interface::Handle(const SDL_KeyboardEvent &event) {
 			if (event.state == SDL_PRESSED) {
 				PrintBlockInfo();
 			}
+			break;
 		case SDLK_p:
 			if (event.state == SDL_PRESSED) {
 				PrintSelectionInfo();
 			}
+			break;
 	}
 }
 
