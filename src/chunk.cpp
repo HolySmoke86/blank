@@ -136,23 +136,23 @@ bool Chunk::Obstructed(int idx) const {
 	// invisible blocks must have their fill set to 6x false
 	// (the default, so should be okay)
 
-	const BlockType &right = Type(blocks[idx + 1]);
-	if (!right.fill.left) return false;
+	const Block &right = blocks[idx + 1];
+	if (!Type(right).FaceFilled(right, Block::FACE_LEFT)) return false;
 
-	const BlockType &left = Type(blocks[idx - 1]);
-	if (!left.fill.right) return false;
+	const Block &left = blocks[idx - 1];
+	if (!Type(left).FaceFilled(left, Block::FACE_RIGHT)) return false;
 
-	const BlockType &up = Type(blocks[idx + Width()]);
-	if (!up.fill.down) return false;
+	const Block &up = blocks[idx + Width()];
+	if (!Type(up).FaceFilled(up, Block::FACE_DOWN)) return false;
 
-	const BlockType &down = Type(blocks[idx - Width()]);
-	if (!down.fill.up) return false;
+	const Block &down = blocks[idx - Width()];
+	if (!Type(down).FaceFilled(down, Block::FACE_UP)) return false;
 
-	const BlockType &front = Type(blocks[idx + Width() * Height()]);
-	if (!front.fill.back) return false;
+	const Block &front = blocks[idx + Width() * Height()];
+	if (!Type(front).FaceFilled(front, Block::FACE_BACK)) return false;
 
-	const BlockType &back = Type(blocks[idx - Width() * Height()]);
-	if (!back.fill.front) return false;
+	const Block &back = blocks[idx - Width() * Height()];
+	if (!Type(back).FaceFilled(back, Block::FACE_FRONT)) return false;
 
 	return true;
 }

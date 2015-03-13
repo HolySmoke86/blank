@@ -56,6 +56,41 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s)
 
 }
 
+namespace {
+
+const Block::Face face_map[Block::FACE_COUNT * Block::TURN_COUNT][Block::FACE_COUNT] = {
+	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_FRONT, Block::FACE_BACK,  }, // face: up,    turn: none x
+	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_LEFT,  Block::FACE_RIGHT, }, // face: up,    turn: left
+	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_BACK,  Block::FACE_FRONT, }, // face: up,    turn: around
+	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_RIGHT, Block::FACE_LEFT,  }, // face: up,    turn: right
+	{ Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_BACK,  Block::FACE_FRONT, }, // face: down,  turn: none
+	{ Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_LEFT,  Block::FACE_RIGHT, }, // face: down,  turn: left
+	{ Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_FRONT, Block::FACE_BACK,  }, // face: down,  turn: around
+	{ Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_RIGHT, Block::FACE_LEFT,  }, // face: down,  turn: right
+	{ Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_FRONT, Block::FACE_BACK,  }, // face: right, turn: none
+	{ Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_DOWN,  Block::FACE_UP,    }, // face: right, turn: left
+	{ Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_BACK,  Block::FACE_FRONT, }, // face: right, turn: around
+	{ Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_UP,    Block::FACE_DOWN,  }, // face: right, turn: right
+	{ Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_FRONT, Block::FACE_BACK,  }, // face: left,  turn: none
+	{ Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_UP,    Block::FACE_DOWN,  }, // face: left,  turn: left
+	{ Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_BACK,  Block::FACE_FRONT, }, // face: left,  turn: around
+	{ Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_DOWN,  Block::FACE_UP,    }, // face: left,  turn: right
+	{ Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_UP,    Block::FACE_DOWN,  }, // face: front, turn: none
+	{ Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_LEFT,  Block::FACE_RIGHT, }, // face: front, turn: left
+	{ Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_DOWN,  Block::FACE_UP,    }, // face: front, turn: around
+	{ Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_RIGHT, Block::FACE_LEFT,  }, // face: front, turn: right
+	{ Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_DOWN,  Block::FACE_UP,    }, // face: back,  turn: none
+	{ Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_DOWN,  Block::FACE_UP,    Block::FACE_LEFT,  Block::FACE_RIGHT, }, // face: back,  turn: left
+	{ Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_UP,    Block::FACE_DOWN,  }, // face: back,  turn: around
+	{ Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_RIGHT, Block::FACE_LEFT,  }, // face: back,  turn: right
+};
+
+}
+
+bool BlockType::FaceFilled(const Block &block, Block::Face face) const {
+	return fill[face_map[block.orient][face]];
+}
+
 void BlockType::FillModel(
 	Model::Buffer &buf,
 	const glm::mat4 &transform,

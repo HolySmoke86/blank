@@ -61,14 +61,17 @@ struct BlockType {
 
 	bool visible;
 
-	// FIXME: fill faces don't respect block orientation
 	struct Faces {
-		bool up;
-		bool down;
-		bool right;
-		bool left;
-		bool front;
-		bool back;
+		bool face[Block::FACE_COUNT];
+		Faces &operator =(const Faces &other) {
+			for (int i = 0; i < Block::FACE_COUNT; ++i) {
+				face[i] = other.face[i];
+			}
+			return *this;
+		}
+		bool operator [](Block::Face f) const {
+			return face[f];
+		}
 	} fill;
 
 	explicit BlockType(
@@ -79,6 +82,7 @@ struct BlockType {
 
 	static const NullShape DEFAULT_SHAPE;
 
+	bool FaceFilled(const Block &, Block::Face) const;
 
 	void FillModel(
 		Model::Buffer &m,
