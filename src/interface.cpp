@@ -3,8 +3,10 @@
 #include "geometry.hpp"
 #include "world.hpp"
 
+#include <iostream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/io.hpp>
 
 
 namespace blank {
@@ -65,6 +67,15 @@ void Interface::Handle(const SDL_KeyboardEvent &event) {
 				TurnBlock();
 			}
 			break;
+
+		case SDLK_b:
+			if (event.state == SDL_PRESSED) {
+				PrintBlockInfo();
+			}
+		case SDLK_p:
+			if (event.state == SDL_PRESSED) {
+				PrintSelectionInfo();
+			}
 	}
 }
 
@@ -76,6 +87,31 @@ void Interface::FaceBlock() {
 void Interface::TurnBlock() {
 	selection.SetTurn(Block::Turn((selection.GetTurn() + 1) % Block::TURN_COUNT));
 	hud.Display(selection);
+}
+
+void Interface::PrintBlockInfo() {
+	std::cout << std::endl;
+	if (!aim_chunk) {
+		std::cout << "not looking at any block" << std::endl;
+		return;
+	}
+	std::cout << "looking at block " << aim_block
+		<< " " << Chunk::ToCoords(aim_block)
+		<< " of chunk " << aim_chunk->Position()
+		<< std::endl;
+	Print(aim_chunk->BlockAt(aim_block));
+}
+
+void Interface::PrintSelectionInfo() {
+	std::cout << std::endl;
+	Print(selection);
+}
+
+void Interface::Print(const Block &block) {
+	std::cout << "type: " << block.type
+		<< ", face: " << block.GetFace()
+		<< ", turn: " << block.GetTurn()
+		<< std::endl;
 }
 
 

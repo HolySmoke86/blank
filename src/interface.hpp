@@ -33,6 +33,10 @@ public:
 	void PlaceBlock();
 	void RemoveBlock();
 
+	void PrintBlockInfo();
+	void PrintSelectionInfo();
+	void Print(const Block &);
+
 	void SelectNext();
 	void SelectPrevious();
 
