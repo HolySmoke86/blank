@@ -61,6 +61,7 @@ struct BlockType {
 
 	bool visible;
 
+	// FIXME: fill faces don't respect block orientation
 	struct Faces {
 		bool up;
 		bool down;

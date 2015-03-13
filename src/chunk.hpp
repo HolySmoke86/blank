@@ -55,10 +55,12 @@ public:
 
 	static constexpr bool IsBorder(int idx) {
 		return
-			idx < Width() * Height() ||
-			(idx / Width()) % Height() == 0 ||
-			(idx / Width()) % Height() == Height() - 1 ||
-			(idx / (Width() * Height())) == Depth() - 1;
+			idx < Width() * Height() ||                    // low Z plane
+			idx % Width() == 0 ||                          // low X plane
+			(idx / (Width() * Height())) == Depth() - 1 || // high Z plane
+			idx % Width() == Width() - 1 ||                // high X plane
+			(idx / Width()) % Height() == 0 ||             // low Y plane
+			(idx / Width()) % Height() == Height() - 1;    // high Y plane
 	}
 
 	// check if block at given index is completely enclosed (and therefore invisible)
