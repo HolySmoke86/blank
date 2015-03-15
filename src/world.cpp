@@ -85,7 +85,13 @@ World::World()
 	generate.Space(0);
 	generate.Solids({ 1, 4, 7, 10 });
 
-	player.Position({ 4.0f, 4.0f, 4.0f });
+	player = &AddEntity();
+	player->Position({ 4.0f, 4.0f, 4.0f });
+
+	Entity &test_entity = AddEntity();
+	test_entity.Position({ 0.0f, 0.0f, 0.0f });
+	test_entity.SetShape(&blockShape, { 1.0f, 1.0f, 0.0f });
+	test_entity.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
 
 	chunks.Generate({ -4, -4, -4 }, { 5, 5, 5});
 }
@@ -113,7 +119,7 @@ bool World::Intersection(
 
 	for (Chunk &cur_chunk : chunks.Loaded()) {
 		float cur_dist;
-		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(player.ChunkCoords()), cur_dist)) {
+		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(player->ChunkCoords()), cur_dist)) {
 			candidates.push_back({ &cur_chunk, cur_dist });
 		}
 	}
@@ -130,7 +136,7 @@ bool World::Intersection(
 		int cur_blkid;
 		float cur_dist;
 		glm::vec3 cur_normal;
-		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player.ChunkCoords()), cur_blkid, cur_dist, cur_normal)) {
+		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player->ChunkCoords()), cur_blkid, cur_dist, cur_normal)) {
 			if (cur_dist < closest_dist) {
 				closest_chunk = cand.chunk;
 				closest_blkid = cur_blkid;
@@ -163,22 +169,31 @@ Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
 
 
 void World::Update(int dt) {
-	player.Update(dt);
-	chunks.Rebase(player.ChunkCoords());
+	for (Entity &entity : entities) {
+		entity.Update(dt);
+	}
+	chunks.Rebase(player->ChunkCoords());
 	chunks.Update();
 }
 
 
 void World::Render(DirectionalLighting &program) {
 	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
-	program.SetView(glm::inverse(player.Transform(player.ChunkCoords())));
+	program.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
 
 	for (Chunk &chunk : chunks.Loaded()) {
-		glm::mat4 m(chunk.Transform(player.ChunkCoords()));
+		glm::mat4 m(chunk.Transform(player->ChunkCoords()));
 		program.SetM(m);
 		glm::mat4 mvp(program.GetVP() * m);
 		if (!CullTest(Chunk::Bounds(), mvp)) {
 			chunk.Draw();
+		}
+	}
+
+	for (Entity &entity : entities) {
+		if (entity.HasShape()) {
+			program.SetM(entity.Transform(player->ChunkCoords()));
+			entity.Draw();
 		}
 	}
 }

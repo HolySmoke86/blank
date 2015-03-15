@@ -8,6 +8,7 @@
 #include "shader.hpp"
 #include "shape.hpp"
 
+#include <list>
 #include <glm/glm.hpp>
 
 
@@ -28,7 +29,8 @@ public:
 
 	BlockTypeRegistry &BlockTypes() { return blockType; }
 
-	Entity &Player() { return player; }
+	Entity &Player() { return *player; }
+	Entity &AddEntity() { entities.emplace_back(); return entities.back(); }
 
 	Chunk &Next(const Chunk &to, const glm::tvec3<int> &dir);
 
@@ -45,7 +47,8 @@ private:
 	Generator generate;
 	ChunkLoader chunks;
 
-	Entity player;
+	Entity *player;
+	std::list<Entity> entities;
 
 };
 

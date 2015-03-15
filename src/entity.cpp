@@ -5,14 +5,36 @@
 #include <cmath>
 #include <glm/gtx/transform.hpp>
 
+namespace {
+
+blank::Model::Buffer model_buffer;
+
+}
 
 namespace blank {
 
 Entity::Entity()
-: velocity()
-, position()
+: shape(nullptr)
+, model()
+, velocity(0, 0, 0)
+, position(0, 0, 0)
+, chunk(0, 0, 0)
+, angular_velocity(1.0f, 0.0f, 0.0f, 0.0f)
 , rotation(1.0f) {
 
+}
+
+
+void Entity::SetShape(Shape *s, const glm::vec3 &color) {
+	shape = s;
+	model_buffer.Clear();
+	shape->Vertices(model_buffer.vertices, model_buffer.normals, model_buffer.indices);
+	model_buffer.colors.resize(shape->VertexCount(), color);
+	model.Update(model_buffer);
+}
+
+void Entity::SetShapeless() {
+	shape = nullptr;
 }
 
 
@@ -52,8 +74,16 @@ void Entity::Move(const glm::vec3 &delta) {
 	Position(position + delta);
 }
 
+void Entity::AngularVelocity(const glm::quat &v) {
+	angular_velocity = v;
+}
+
 void Entity::Rotation(const glm::mat4 &rot) {
 	rotation = rot;
+}
+
+void Entity::Rotate(const glm::quat &delta) {
+	Rotation(rotation * glm::mat4_cast(delta));
 }
 
 glm::mat4 Entity::Transform(const Chunk::Pos &chunk_offset) const {
@@ -72,6 +102,12 @@ Ray Entity::Aim(const Chunk::Pos &chunk_offset) const {
 
 void Entity::Update(int dt) {
 	Move(velocity * float(dt));
+	Rotate(angular_velocity * float(dt));
+}
+
+
+void Entity::Draw() {
+	model.Draw();
 }
 
 }
