@@ -17,10 +17,19 @@ Application::Application()
 , cam()
 , world()
 , interface(world)
+, test_controller(MakeTestEntity(world))
 , running(false) {
 	GLContext::EnableVSync();
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
+}
+
+Entity &Application::MakeTestEntity(World &world) {
+	Entity &e = world.AddEntity();
+	e.Position({ 0.0f, 0.0f, 0.0f });
+	e.SetShape(world.BlockTypes()[1]->shape, { 1.0f, 1.0f, 0.0f });
+	e.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
+	return e;
 }
 
 
@@ -116,6 +125,7 @@ void Application::HandleEvents() {
 
 void Application::Update(int dt) {
 	interface.Update(dt);
+	test_controller.Update(dt);
 	world.Update(dt);
 }
 

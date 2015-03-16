@@ -3,9 +3,7 @@
 
 #include "block.hpp"
 #include "chunk.hpp"
-#include "geometry.hpp"
 #include "model.hpp"
-#include "shape.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -13,6 +11,7 @@
 
 namespace blank {
 
+class Ray;
 class Shape;
 
 class Entity {
@@ -22,7 +21,7 @@ public:
 
 	bool HasShape() const { return shape; }
 	const Shape *GetShape() const { return shape; }
-	void SetShape(Shape *, const glm::vec3 &color);
+	void SetShape(const Shape *, const glm::vec3 &color);
 	void SetShapeless();
 
 	const glm::vec3 &Velocity() const { return velocity; }
@@ -49,7 +48,7 @@ public:
 	void Draw();
 
 private:
-	Shape *shape;
+	const Shape *shape;
 	Model model;
 
 	glm::vec3 velocity;

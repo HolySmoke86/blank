@@ -39,6 +39,21 @@ private:
 
 };
 
+
+class RandomWalk {
+
+public:
+	explicit RandomWalk(Entity &);
+
+	void Update(int dt);
+
+private:
+	Entity &entity;
+
+	int time_left;
+
+};
+
 }
 
 #endif

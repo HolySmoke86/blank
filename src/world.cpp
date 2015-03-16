@@ -88,11 +88,6 @@ World::World()
 	player = &AddEntity();
 	player->Position({ 4.0f, 4.0f, 4.0f });
 
-	Entity &test_entity = AddEntity();
-	test_entity.Position({ 0.0f, 0.0f, 0.0f });
-	test_entity.SetShape(&blockShape, { 1.0f, 1.0f, 0.0f });
-	test_entity.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
-
 	chunks.Generate({ -4, -4, -4 }, { 5, 5, 5});
 }
 

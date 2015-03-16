@@ -2,6 +2,7 @@
 #define BLANK_APP_HPP_
 
 #include "camera.hpp"
+#include "controller.hpp"
 #include "init.hpp"
 #include "interface.hpp"
 #include "shader.hpp"
@@ -33,6 +34,8 @@ public:
 	void Update(int dt);
 	void Render();
 
+	static Entity &MakeTestEntity(World &);
+
 private:
 	InitSDL init_sdl;
 	InitIMG init_img;
@@ -45,6 +48,8 @@ private:
 	Camera cam;
 	World world;
 	Interface interface;
+
+	RandomWalk test_controller;
 
 	bool running;
 

@@ -1,6 +1,7 @@
 #include "entity.hpp"
 
-#include "chunk.hpp"
+#include "geometry.hpp"
+#include "shape.hpp"
 
 #include <cmath>
 #include <glm/gtx/transform.hpp>
@@ -25,7 +26,7 @@ Entity::Entity()
 }
 
 
-void Entity::SetShape(Shape *s, const glm::vec3 &color) {
+void Entity::SetShape(const Shape *s, const glm::vec3 &color) {
 	shape = s;
 	model_buffer.Clear();
 	shape->Vertices(model_buffer.vertices, model_buffer.normals, model_buffer.indices);
