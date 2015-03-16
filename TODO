@@ -1,0 +1,72 @@
+block placement/removal timers
+
+	currently block placement and removal is instantaneous. it should
+	actually take some time to place and remove a block. with
+	removal timing depending on the tool used to remove the block
+
+composite entity animations
+
+	complex entities are made up of part which have their own local
+	transform that can be animated (like e.g. an arm or head)
+
+textures
+
+	do I need to say anything? :)
+
+command line
+
+	usefull for development and later on world administration
+
+font rendering
+
+	mostly for labelled blocks and some ui elements
+
+networking
+
+	exchange of chunks and entities
+
+persistence
+
+	unloaded chunks should be saved to disk and restored when they
+	are loaded again
+
+launcher ui
+
+	select or create a world with configurable parameters
+
+entity ai
+
+	pathfinding, chase and roam states
+
+(block) lighting
+
+	lighting via light emitting blocks and brightness from the
+	manhattan distance to a light source. light levels should be
+	cached with each block and only recalculated on update
+
+gravity
+
+	maybe like light levels? should also store a direction with it in
+	that case. also, global gravity may be a world option.
+
+block attributes
+
+	when blocks are not just a solid rock of color, attributes may
+	become interesting. like labels on signs and contents of
+	containers
+
+chunk traversal
+
+	going from one chunk to the neighboring is highly wasteful as of
+	now. each chunk should have links to its neighbours. also, maybe
+	the chunk loader should keep an index of interesting, if not all
+	chunks by position, possibly base-relative
+
+transparency (blocks and entities)
+
+	transparent blocks because awesome
+
+world generator that is not boring
+
+	maybe divide into biomes and add special features like
+	settlements, ruins, all kinds of interesting stuff
