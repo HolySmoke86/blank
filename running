@@ -1,0 +1,32 @@
+Arguments
+=========
+
+blank
+	normal execution
+
+blank <n>
+	terminate after <n> frames
+
+blank -t <t>
+	terminate after <t> milliseconds
+
+blank <n> -t <t>
+	terminate after n frames, assume <t> milliseconds pass each frame
+
+
+Controls
+========
+
+Move around with WSAD, shift, and space, look around with mouse motion.
+Mouse button 1 deletes the block you're pointing at, button 2 selects it
+as the active block, and button 3 places the active block next to the one
+you're pointing at.
+
+As an alternative to picking, you can also use the mousewheel up/down to
+flip through available blocks.
+
+Q changes the face of the active block (loops over up, down, right, left,
+front, and back) and E changes the turn (none, left, around, and right).
+
+Pressing B prints details about the block you're pointing at and P prints
+info about the active block.
