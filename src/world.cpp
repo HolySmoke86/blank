@@ -20,65 +20,85 @@ World::World()
 
 	{ // white block
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
+		type.block_light = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // white slab
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &slabShape);
+		type.block_light = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // white stair
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &stairShape);
+		type.block_light = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
 
 	{ // red block
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &blockShape);
+		type.block_light = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // red slab
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &slabShape);
+		type.block_light = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // red stair
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &stairShape);
+		type.block_light = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
 
 	{ // green block
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &blockShape);
+		type.block_light = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // green slab
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &slabShape);
+		type.block_light = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // green stair
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &stairShape);
+		type.block_light = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
 
 	{ // blue block
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &blockShape);
+		type.block_light = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // blue slab
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &slabShape);
+		type.block_light = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // blue stair
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &stairShape);
+		type.block_light = true;
 		type.fill = stair_fill;
+		blockType.Add(type);
+	}
+
+	{ // glowing yellow block
+		BlockType type(true, { 1.0f, 1.0f, 0.0f }, &blockShape);
+		type.luminosity = 10;
+		type.block_light = true;
+		type.fill = block_fill;
 		blockType.Add(type);
 	}
 
@@ -156,6 +176,10 @@ bool World::Intersection(
 	return closest_chunk;
 }
 
+
+Chunk &World::PlayerChunk() {
+	return chunks.ForceLoad(player->ChunkCoords());
+}
 
 Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
 	const Chunk::Pos tgt_pos = to.Position() + dir;

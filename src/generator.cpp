@@ -28,9 +28,9 @@ void Generator::operator ()(Chunk &chunk) const {
 				float val = solidNoise(gen_pos);
 				if (val > solid_threshold) {
 					int type_val = int((typeNoise(gen_pos) + 1.0f) * solids.size()) % solids.size();
-					chunk.BlockAt(block_pos) = Block(solids[type_val]);
+					chunk.SetBlock(block_pos, Block(solids[type_val]));
 				} else {
-					chunk.BlockAt(block_pos) = Block(space);
+					chunk.SetBlock(block_pos, Block(space));
 				}
 			}
 		}

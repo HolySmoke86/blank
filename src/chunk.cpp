@@ -3,14 +3,9 @@
 #include "generator.hpp"
 
 #include <limits>
+#include <queue>
 #include <glm/gtx/transform.hpp>
 
-
-namespace {
-
-blank::Model::Buffer buf;
-
-}
 
 namespace blank {
 
@@ -117,8 +112,160 @@ void Chunk::Relink() {
 }
 
 
+namespace {
+
+struct SetNode {
+
+	Chunk *chunk;
+	Chunk::Pos pos;
+
+	SetNode(Chunk *chunk, Chunk::Pos pos)
+	: chunk(chunk), pos(pos) { }
+
+	int Get() const { return chunk->GetLight(pos); }
+	void Set(int level) { chunk->SetLight(pos, level); }
+
+	bool HasNext(Block::Face face) {
+		const Block *next = chunk->FindNext(pos, face);
+		return next && !chunk->Type(*next).block_light;
+	}
+	SetNode GetNext(Block::Face face) {
+		Chunk::Pos next_pos(pos + Block::FaceNormal(face));
+		if (Chunk::InBounds(next_pos)) {
+			return SetNode(chunk, next_pos);
+		} else {
+			return SetNode(&chunk->GetNeighbor(face), next_pos - (Block::FaceNormal(face) * Chunk::Extent()));
+		}
+	}
+
+};
+
+struct UnsetNode
+: public SetNode {
+
+	int level;
+
+	UnsetNode(Chunk *chunk, Chunk::Pos pos)
+	: SetNode(chunk, pos), level(Get()) { }
+
+	UnsetNode(const SetNode &set)
+	: SetNode(set), level(Get()) { }
+
+	UnsetNode GetNext(Block::Face face) { return UnsetNode(SetNode::GetNext(face)); }
+
+};
+
+std::queue<SetNode> light_queue;
+std::queue<UnsetNode> dark_queue;
+
+void work_light() {
+	while (!light_queue.empty()) {
+		SetNode node = light_queue.front();
+		light_queue.pop();
+
+		int level = node.Get() - 1;
+		for (int face = 0; face < Block::FACE_COUNT; ++face) {
+			if (node.HasNext(Block::Face(face))) {
+				SetNode other = node.GetNext(Block::Face(face));
+				if (other.Get() < level) {
+					other.Set(level);
+					light_queue.emplace(other);
+				}
+			}
+		}
+	}
+}
+
+void work_dark() {
+	while (!dark_queue.empty()) {
+		UnsetNode node = dark_queue.front();
+		dark_queue.pop();
+
+		for (int face = 0; face < Block::FACE_COUNT; ++face) {
+			if (node.HasNext(Block::Face(face))) {
+				UnsetNode other = node.GetNext(Block::Face(face));
+				// TODO: if there a light source here with the same level this will err
+				if (other.Get() != 0 && other.Get() < node.level) {
+					other.Set(0);
+					dark_queue.emplace(other);
+				} else {
+					light_queue.emplace(other);
+				}
+			}
+		}
+	}
+	work_light();
+}
+
+}
+
+void Chunk::SetBlock(int index, const Block &block) {
+	const BlockType &old_type = Type(blocks[index]);
+	const BlockType &new_type = Type(block);
+
+	blocks[index] = block;
+
+	if (&old_type == &new_type) return;
+
+	if (new_type.luminosity > 0) {
+		if (GetLight(index) < new_type.luminosity) {
+			SetLight(index, new_type.luminosity);
+			light_queue.emplace(this, ToPos(index));
+			work_light();
+		}
+	} else if (new_type.block_light && GetLight(index) != 0) {
+		SetLight(index, 0);
+		dark_queue.emplace(this, ToPos(index));
+		work_dark();
+	} else if (old_type.block_light && !new_type.block_light) {
+		int level = 0;
+		for (int face = 0; face < Block::FACE_COUNT; ++face) {
+			Pos next_pos(ToPos(index) + Block::FaceNormal(Block::Face(face)));
+			int next_level = 0;
+			if (InBounds(next_pos)) {
+				next_level = GetLight(next_pos);
+			} else {
+				if (HasNeighbor(Block::Face(face))) {
+					next_pos -= (Block::FaceNormal(Block::Face(face)) * Chunk::Extent());
+					next_level = GetNeighbor(Block::Face(face)).GetLight(next_pos);
+				}
+			}
+			if (level < next_level) {
+				level = next_level;
+			}
+		}
+		if (level > 1) {
+			SetLight(index, level - 1);
+			light_queue.emplace(this, ToPos(index));
+			work_light();
+		}
+	}
+}
+
+const Block *Chunk::FindNext(const Pos &pos, Block::Face face) const {
+	Pos next_pos(pos + Block::FaceNormal(face));
+	if (InBounds(next_pos)) {
+		return &BlockAt(pos + Block::FaceNormal(face));
+	} else if (HasNeighbor(face)) {
+		return &GetNeighbor(face).BlockAt(next_pos - (Block::FaceNormal(face) * Extent()));
+	} else {
+		return nullptr;
+	}
+}
+
+
+void Chunk::SetLight(int index, int level) {
+	light[index] = level;
+}
+
+int Chunk::GetLight(int index) const {
+	return light[index];
+}
+
+
 void Chunk::Allocate() {
-	blocks.resize(Size());
+	blocks.resize(Size(), Block(0));
+	light.resize(Size(), 0);
 }
 
 
@@ -176,6 +323,12 @@ glm::mat4 Chunk::Transform(const Pos &offset) const {
 	return glm::translate((position - offset) * Extent());
 }
 
+
+namespace {
+
+Model::Buffer buf;
+
+}
 
 void Chunk::CheckUpdate() {
 	if (dirty) {

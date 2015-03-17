@@ -47,6 +47,25 @@ struct Block {
 	Turn GetTurn() const { return Turn(orient % 4); }
 	void SetTurn(Turn turn) { orient = GetFace() * TURN_COUNT + turn; }
 
+	static glm::tvec3<int> FaceNormal(Face face) {
+		switch (face) {
+			case FACE_UP:
+				return { 0, 1, 0 };
+			case FACE_DOWN:
+				return { 0, -1, 0 };
+			case FACE_RIGHT:
+				return { 1, 0, 0 };
+			case FACE_LEFT:
+				return { -1, 0, 0 };
+			case FACE_FRONT:
+				return { 0, 0, 1 };
+			case FACE_BACK:
+				return { 0, 0, -1 };
+			default:
+				return { 0, 0, 0 };
+		}
+	}
+
 };
 
 
@@ -59,7 +78,10 @@ struct BlockType {
 
 	Block::Type id;
 
+	int luminosity;
+
 	bool visible;
+	bool block_light;
 
 	struct Faces {
 		bool face[Block::FACE_COUNT];

@@ -38,13 +38,13 @@ public:
 			pos.y >= 0 && pos.y < Height() &&
 			pos.z >= 0 && pos.z < Depth();
 	}
-	static constexpr bool InBounds(const Chunk::Pos &pos) {
+	static constexpr bool InBounds(const Pos &pos) {
 		return
 			pos.x >= 0 && pos.x < Width() &&
 			pos.y >= 0 && pos.y < Height() &&
 			pos.z >= 0 && pos.z < Depth();
 	}
-	static constexpr int ToIndex(const Chunk::Pos &pos) {
+	static constexpr int ToIndex(const Pos &pos) {
 		return pos.x + pos.y * Width() + pos.z * Width() * Height();
 	}
 	static constexpr bool InBounds(int idx) {
@@ -57,8 +57,8 @@ public:
 			0.5f + (idx / (Width() * Height()))
 		);
 	}
-	static Chunk::Pos ToPos(int idx) {
-		return Chunk::Pos(
+	static Pos ToPos(int idx) {
+		return Pos(
 			(idx % Width()),
 			((idx / Width()) % Height()),
 			(idx / (Width() * Height()))
@@ -90,14 +90,27 @@ public:
 	void Allocate();
 	void Invalidate() { dirty = true; }
 
-	Block &BlockAt(int index) { return blocks[index]; }
+	void SetBlock(int index, const Block &);
+	void SetBlock(const Block::Pos &pos, const Block &block) { SetBlock(ToIndex(pos), block); }
+	void SetBlock(const Pos &pos, const Block &block) { SetBlock(ToIndex(pos), block); }
+
 	const Block &BlockAt(int index) const { return blocks[index]; }
-	Block &BlockAt(const Block::Pos &pos) { return BlockAt(ToIndex(pos)); }
 	const Block &BlockAt(const Block::Pos &pos) const { return BlockAt(ToIndex(pos)); }
-	Block &BlockAt(const Chunk::Pos &pos) { return BlockAt(ToIndex(pos)); }
-	const Block &BlockAt(const Chunk::Pos &pos) const { return BlockAt(ToIndex(pos)); }
+	const Block &BlockAt(const Pos &pos) const { return BlockAt(ToIndex(pos)); }
+
+	const Block *FindNext(const Pos &pos, Block::Face face) const;
+	const Block *FindNext(const Block::Pos &pos, Block::Face face) const { return FindNext(Pos(pos), face); }
+	const Block *FindNext(int index, Block::Face face) const { return FindNext(ToPos(index), face); }
 
 	const BlockType &Type(const Block &b) const { return *types->Get(b.type); }
+
+	void SetLight(int index, int level);
+	void SetLight(const Pos &pos, int level) { SetLight(ToIndex(pos), level); }
+	void SetLight(const Block::Pos &pos, int level) { SetLight(ToIndex(pos), level); }
+
+	int GetLight(int index) const;
+	int GetLight(const Pos &pos) const { return GetLight(ToIndex(pos)); }
+	int GetLight(const Block::Pos &pos) const { return GetLight(ToIndex(pos)); }
 
 	bool Intersection(
 		const Ray &ray,
@@ -128,6 +141,7 @@ private:
 	const BlockTypeRegistry *types;
 	Chunk *neighbor[Block::FACE_COUNT];
 	std::vector<Block> blocks;
+	std::vector<unsigned char> light;
 	Model model;
 	Pos position;
 	bool dirty;

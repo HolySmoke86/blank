@@ -32,6 +32,7 @@ public:
 	Entity &Player() { return *player; }
 	Entity &AddEntity() { entities.emplace_back(); return entities.back(); }
 
+	Chunk &PlayerChunk();
 	Chunk &Next(const Chunk &to, const glm::tvec3<int> &dir);
 
 	void Update(int dt);

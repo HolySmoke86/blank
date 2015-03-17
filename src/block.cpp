@@ -51,7 +51,9 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s)
 , color(col)
 , outline_color(-1, -1, -1)
 , id(0)
+, luminosity(0)
 , visible(v)
+, block_light(false)
 , fill({ false, false, false, false, false, false }) {
 
 }

@@ -73,6 +73,11 @@ void Interface::Handle(const SDL_KeyboardEvent &event) {
 				PrintBlockInfo();
 			}
 			break;
+		case SDLK_l:
+			if (event.state == SDL_PRESSED) {
+				PrintLightInfo();
+			}
+			break;
 		case SDLK_p:
 			if (event.state == SDL_PRESSED) {
 				PrintSelectionInfo();
@@ -102,6 +107,13 @@ void Interface::PrintBlockInfo() {
 		<< " of chunk " << aim_chunk->Position()
 		<< std::endl;
 	Print(aim_chunk->BlockAt(aim_block));
+}
+
+void Interface::PrintLightInfo() {
+	std::cout
+		<< "light level " << world.PlayerChunk().GetLight(world.Player().Position())
+		<< " at position " << world.Player().Position()
+		<< std::endl;
 }
 
 void Interface::PrintSelectionInfo() {
@@ -148,13 +160,13 @@ void Interface::PlaceBlock() {
 		mod_chunk = &world.Next(*aim_chunk, aim_normal);
 		next_pos -= aim_normal * glm::vec3(Chunk::Extent());
 	}
-	mod_chunk->BlockAt(next_pos) = selection;
+	mod_chunk->SetBlock(next_pos, selection);
 	mod_chunk->Invalidate();
 }
 
 void Interface::RemoveBlock() {
 	if (!aim_chunk) return;
-	aim_chunk->BlockAt(aim_block) = remove;
+	aim_chunk->SetBlock(aim_block, remove);
 	aim_chunk->Invalidate();
 }
 
