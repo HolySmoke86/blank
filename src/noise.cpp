@@ -119,7 +119,7 @@ WorleyNoise::WorleyNoise(unsigned int seed)
 float WorleyNoise::operator ()(const glm::vec3 &in) const {
 	glm::vec3 center = floor(in);
 
-	float closest = 4.0f;
+	float closest = 1.0f;  // cannot be farther away than 1.0
 
 	for (int z = -1; z <= 1; ++z) {
 		for (int y = -1; y <= 1; ++y) {
@@ -141,7 +141,7 @@ float WorleyNoise::operator ()(const glm::vec3 &in) const {
 					point.z += float(cube_rand % 200000) / 200000.0f;
 
 					glm::vec3 diff(in - point);
-					float distance = dot(diff, diff);
+					float distance = sqrt(dot(diff, diff));
 					if (distance < closest) {
 						closest = distance;
 					}
@@ -150,7 +150,9 @@ float WorleyNoise::operator ()(const glm::vec3 &in) const {
 		}
 	}
 
-	return closest;
+	// closest ranges (0, 1), so normalizing to (-1,1) is trivial
+	// though heavily biased towards lower numbers
+	return 2.0f * closest - 1.0f;
 }
 
 }
