@@ -16,6 +16,7 @@ namespace blank {
 
 Chunk::Chunk(const BlockTypeRegistry &types)
 : types(&types)
+, neighbor{ 0, 0, 0, 0, 0, 0 }
 , blocks()
 , model()
 , position(0, 0, 0)
@@ -28,15 +29,91 @@ Chunk::Chunk(Chunk &&other)
 , blocks(std::move(other.blocks))
 , model(std::move(other.model))
 , dirty(other.dirty) {
-
+	for (size_t i = 0; i < Block::FACE_COUNT; ++i) {
+		neighbor[i] = other.neighbor[i];
+	}
 }
 
 Chunk &Chunk::operator =(Chunk &&other) {
 	types = other.types;
+	for (size_t i = 0; i < Block::FACE_COUNT; ++i) {
+		neighbor[i] = other.neighbor[i];
+	}
 	blocks = std::move(other.blocks);
 	model = std::move(other.model);
 	dirty = other.dirty;
 	return *this;
+}
+
+
+void Chunk::SetNeighbor(Chunk &other) {
+	if (other.position == position - Pos(-1, 0, 0)) {
+		neighbor[Block::FACE_LEFT] = &other;
+		other.neighbor[Block::FACE_RIGHT] = this;
+	} else if (other.position == position - Pos(1, 0, 0)) {
+		neighbor[Block::FACE_RIGHT] = &other;
+		other.neighbor[Block::FACE_LEFT] = this;
+	} else if (other.position == position - Pos(0, -1, 0)) {
+		neighbor[Block::FACE_DOWN] = &other;
+		other.neighbor[Block::FACE_UP] = this;
+	} else if (other.position == position - Pos(0, 1, 0)) {
+		neighbor[Block::FACE_UP] = &other;
+		other.neighbor[Block::FACE_DOWN] = this;
+	} else if (other.position == position - Pos(0, 0, -1)) {
+		neighbor[Block::FACE_BACK] = &other;
+		other.neighbor[Block::FACE_FRONT] = this;
+	} else if (other.position == position - Pos(0, 0, 1)) {
+		neighbor[Block::FACE_FRONT] = &other;
+		other.neighbor[Block::FACE_BACK] = this;
+	}
+}
+
+void Chunk::ClearNeighbors() {
+	for (int i = 0; i < Block::FACE_COUNT; ++i) {
+		neighbor[i] = nullptr;
+	}
+}
+
+void Chunk::Unlink() {
+	if (neighbor[Block::FACE_UP]) {
+		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = nullptr;
+	}
+	if (neighbor[Block::FACE_DOWN]) {
+		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = nullptr;
+	}
+	if (neighbor[Block::FACE_LEFT]) {
+		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = nullptr;
+	}
+	if (neighbor[Block::FACE_RIGHT]) {
+		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = nullptr;
+	}
+	if (neighbor[Block::FACE_FRONT]) {
+		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = nullptr;
+	}
+	if (neighbor[Block::FACE_BACK]) {
+		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = nullptr;
+	}
+}
+
+void Chunk::Relink() {
+	if (neighbor[Block::FACE_UP]) {
+		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = this;
+	}
+	if (neighbor[Block::FACE_DOWN]) {
+		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = this;
+	}
+	if (neighbor[Block::FACE_LEFT]) {
+		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = this;
+	}
+	if (neighbor[Block::FACE_RIGHT]) {
+		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = this;
+	}
+	if (neighbor[Block::FACE_FRONT]) {
+		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = this;
+	}
+	if (neighbor[Block::FACE_BACK]) {
+		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = this;
+	}
 }
 
 
@@ -118,9 +195,10 @@ void Chunk::Update() {
 
 	Model::Index vtx_counter = 0;
 	for (size_t i = 0; i < Size(); ++i) {
-		if (Obstructed(i)) continue;
-
 		const BlockType &type = Type(blocks[i]);
+
+		if (!type.visible || Obstructed(i)) continue;
+
 		type.FillModel(buf, ToTransform(i), vtx_counter);
 		vtx_counter += type.shape->VertexCount();
 	}
@@ -130,29 +208,91 @@ void Chunk::Update() {
 }
 
 bool Chunk::Obstructed(int idx) const {
-	if (IsBorder(idx)) return false;
+	Chunk::Pos pos(ToPos(idx));
 
-	// not checking neighbor visibility here, so all
-	// invisible blocks must have their fill set to 6x false
-	// (the default, so should be okay)
+	Chunk::Pos left_pos(pos + Chunk::Pos(-1, 0, 0));
+	const Block *left_block = nullptr;
+	if (InBounds(left_pos)) {
+		left_block = &BlockAt(left_pos);
+	} else if (HasNeighbor(Block::FACE_LEFT)) {
+		left_pos += Chunk::Pos(Width(), 0, 0);
+		left_block = &GetNeighbor(Block::FACE_LEFT).BlockAt(left_pos);
+	} else {
+		return false;
+	}
+	if (!Type(*left_block).FaceFilled(*left_block, Block::FACE_RIGHT)) {
+		return false;
+	}
 
-	const Block &right = blocks[idx + 1];
-	if (!Type(right).FaceFilled(right, Block::FACE_LEFT)) return false;
+	Chunk::Pos right_pos(pos + Chunk::Pos(1, 0, 0));
+	const Block *right_block = nullptr;
+	if (InBounds(right_pos)) {
+		right_block = &BlockAt(right_pos);
+	} else if (HasNeighbor(Block::FACE_RIGHT)) {
+		right_pos += Chunk::Pos(-Width(), 0, 0);
+		right_block = &GetNeighbor(Block::FACE_RIGHT).BlockAt(right_pos);
+	} else {
+		return false;
+	}
+	if (!Type(*right_block).FaceFilled(*right_block, Block::FACE_LEFT)) {
+		return false;
+	}
 
-	const Block &left = blocks[idx - 1];
-	if (!Type(left).FaceFilled(left, Block::FACE_RIGHT)) return false;
+	Chunk::Pos down_pos(pos + Chunk::Pos(0, -1, 0));
+	const Block *down_block = nullptr;
+	if (InBounds(down_pos)) {
+		down_block = &BlockAt(down_pos);
+	} else if (HasNeighbor(Block::FACE_DOWN)) {
+		down_pos += Chunk::Pos(0, Height(), 0);
+		down_block = &GetNeighbor(Block::FACE_DOWN).BlockAt(down_pos);
+	} else {
+		return false;
+	}
+	if (!Type(*down_block).FaceFilled(*down_block, Block::FACE_UP)) {
+		return false;
+	}
 
-	const Block &up = blocks[idx + Width()];
-	if (!Type(up).FaceFilled(up, Block::FACE_DOWN)) return false;
+	Chunk::Pos up_pos(pos + Chunk::Pos(0, 1, 0));
+	const Block *up_block = nullptr;
+	if (InBounds(up_pos)) {
+		up_block = &BlockAt(up_pos);
+	} else if (HasNeighbor(Block::FACE_UP)) {
+		up_pos += Chunk::Pos(0, -Height(), 0);
+		up_block = &GetNeighbor(Block::FACE_UP).BlockAt(up_pos);
+	} else {
+		return false;
+	}
+	if (!Type(*up_block).FaceFilled(*up_block, Block::FACE_DOWN)) {
+		return false;
+	}
 
-	const Block &down = blocks[idx - Width()];
-	if (!Type(down).FaceFilled(down, Block::FACE_UP)) return false;
+	Chunk::Pos back_pos(pos + Chunk::Pos(0, 0, -1));
+	const Block *back_block = nullptr;
+	if (InBounds(back_pos)) {
+		back_block = &BlockAt(back_pos);
+	} else if (HasNeighbor(Block::FACE_BACK)) {
+		back_pos += Chunk::Pos(0, 0, Depth());
+		back_block = &GetNeighbor(Block::FACE_BACK).BlockAt(back_pos);
+	} else {
+		return false;
+	}
+	if (!Type(*back_block).FaceFilled(*back_block, Block::FACE_FRONT)) {
+		return false;
+	}
 
-	const Block &front = blocks[idx + Width() * Height()];
-	if (!Type(front).FaceFilled(front, Block::FACE_BACK)) return false;
-
-	const Block &back = blocks[idx - Width() * Height()];
-	if (!Type(back).FaceFilled(back, Block::FACE_FRONT)) return false;
+	Chunk::Pos front_pos(pos + Chunk::Pos(0, 0, 1));
+	const Block *front_block = nullptr;
+	if (InBounds(front_pos)) {
+		front_block = &BlockAt(front_pos);
+	} else if (HasNeighbor(Block::FACE_FRONT)) {
+		front_pos += Chunk::Pos(0, 0, -Depth());
+		front_block = &GetNeighbor(Block::FACE_FRONT).BlockAt(front_pos);
+	} else {
+		return false;
+	}
+	if (!Type(*front_block).FaceFilled(*front_block, Block::FACE_BACK)) {
+		return false;
+	}
 
 	return true;
 }
@@ -202,10 +342,8 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 				Chunk::Pos pos(x, y, z);
 				if (Known(pos)) {
 					continue;
-				} else if (x == 0 && y == 0 && z == 0) {
-					loaded.emplace_back(reg);
-					loaded.back().Position(pos);
-					gen(loaded.back());
+				} else if (pos == base) {
+					Generate(pos);
 
 				//	orientation testing
 				//	for (int i = 0; i < Block::FACE_COUNT; ++i) {
@@ -222,6 +360,25 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 		}
 	}
 	to_generate.sort(ChunkLess(base));
+}
+
+Chunk &ChunkLoader::Generate(const Chunk::Pos &pos) {
+	loaded.emplace_back(reg);
+	Chunk &chunk = loaded.back();
+	chunk.Position(pos);
+	Insert(chunk);
+	gen(chunk);
+	return chunk;
+}
+
+void ChunkLoader::Insert(Chunk &chunk) {
+	for (Chunk &other : loaded) {
+		chunk.SetNeighbor(other);
+	}
+}
+
+void ChunkLoader::Remove(Chunk &chunk) {
+	chunk.Unlink();
 }
 
 Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) {
@@ -260,10 +417,7 @@ Chunk &ChunkLoader::ForceLoad(const Chunk::Pos &pos) {
 		}
 	}
 
-	loaded.emplace_back(reg);
-	loaded.back().Position(pos);
-	gen(loaded.back());
-	return loaded.back();
+	return Generate(pos);
 }
 
 void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
@@ -278,6 +432,7 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 				|| std::abs(base.y - iter->Position().y) > unload_dist
 				|| std::abs(base.z - iter->Position().z) > unload_dist) {
 			auto saved = iter;
+			Remove(*saved);
 			++iter;
 			to_free.splice(to_free.end(), loaded, saved);
 		} else {
@@ -306,6 +461,7 @@ void ChunkLoader::Update() {
 
 		for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
 			if (iter->Position() == pos) {
+				iter->Relink();
 				loaded.splice(loaded.end(), to_free, iter);
 				reused = true;
 				break;
@@ -316,11 +472,14 @@ void ChunkLoader::Update() {
 			if (to_free.empty()) {
 				loaded.emplace_back(reg);
 			} else {
+				to_free.front().ClearNeighbors();
 				loaded.splice(loaded.end(), to_free, to_free.begin());
 				reused = true;
 			}
-			loaded.back().Position(pos);
-			gen(loaded.back());
+			Chunk &chunk = loaded.back();
+			chunk.Position(pos);
+			Insert(chunk);
+			gen(chunk);
 		}
 		to_generate.pop_front();
 	}

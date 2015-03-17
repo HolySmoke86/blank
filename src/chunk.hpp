@@ -32,14 +32,20 @@ public:
 
 	static AABB Bounds() { return AABB{ { 0, 0, 0 }, Extent() }; }
 
-	static constexpr bool InBounds(const glm::vec3 &pos) {
+	static constexpr bool InBounds(const Block::Pos &pos) {
 		return
 			pos.x >= 0 && pos.x < Width() &&
 			pos.y >= 0 && pos.y < Height() &&
 			pos.z >= 0 && pos.z < Depth();
 	}
-	static constexpr int ToIndex(const glm::vec3 &pos) {
-		return int(pos.x) + int(pos.y) * Width() + int(pos.z) * Width() * Height();
+	static constexpr bool InBounds(const Chunk::Pos &pos) {
+		return
+			pos.x >= 0 && pos.x < Width() &&
+			pos.y >= 0 && pos.y < Height() &&
+			pos.z >= 0 && pos.z < Depth();
+	}
+	static constexpr int ToIndex(const Chunk::Pos &pos) {
+		return pos.x + pos.y * Width() + pos.z * Width() * Height();
 	}
 	static constexpr bool InBounds(int idx) {
 		return idx >= 0 && idx < Size();
@@ -49,6 +55,13 @@ public:
 			0.5f + (idx % Width()),
 			0.5f + ((idx / Width()) % Height()),
 			0.5f + (idx / (Width() * Height()))
+		);
+	}
+	static Chunk::Pos ToPos(int idx) {
+		return Chunk::Pos(
+			(idx % Width()),
+			((idx / Width()) % Height()),
+			(idx / (Width() * Height()))
 		);
 	}
 	glm::mat4 ToTransform(int idx) const;
@@ -63,6 +76,14 @@ public:
 			(idx / Width()) % Height() == Height() - 1;    // high Y plane
 	}
 
+	void SetNeighbor(Chunk &);
+	bool HasNeighbor(Block::Face f) const { return neighbor[f]; }
+	Chunk &GetNeighbor(Block::Face f) { return *neighbor[f]; }
+	const Chunk &GetNeighbor(Block::Face f) const { return *neighbor[f]; }
+	void ClearNeighbors();
+	void Unlink();
+	void Relink();
+
 	// check if block at given index is completely enclosed (and therefore invisible)
 	bool Obstructed(int idx) const;
 
@@ -73,6 +94,8 @@ public:
 	const Block &BlockAt(int index) const { return blocks[index]; }
 	Block &BlockAt(const Block::Pos &pos) { return BlockAt(ToIndex(pos)); }
 	const Block &BlockAt(const Block::Pos &pos) const { return BlockAt(ToIndex(pos)); }
+	Block &BlockAt(const Chunk::Pos &pos) { return BlockAt(ToIndex(pos)); }
+	const Block &BlockAt(const Chunk::Pos &pos) const { return BlockAt(ToIndex(pos)); }
 
 	const BlockType &Type(const Block &b) const { return *types->Get(b.type); }
 
@@ -103,6 +126,7 @@ private:
 
 private:
 	const BlockTypeRegistry *types;
+	Chunk *neighbor[Block::FACE_COUNT];
 	std::vector<Block> blocks;
 	Model model;
 	Pos position;
@@ -129,6 +153,11 @@ public:
 
 	void Rebase(const Chunk::Pos &);
 	void Update();
+
+private:
+	Chunk &Generate(const Chunk::Pos &pos);
+	void Insert(Chunk &);
+	void Remove(Chunk &);
 
 private:
 	Chunk::Pos base;
