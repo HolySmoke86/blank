@@ -109,4 +109,48 @@ const glm::vec3 &SimplexNoise::Grad(size_t idx) const {
 	return grad[idx % 12];
 }
 
+
+WorleyNoise::WorleyNoise(unsigned int seed)
+: seed(seed)
+, num_points(8) {
+
+}
+
+float WorleyNoise::operator ()(const glm::vec3 &in) const {
+	glm::vec3 center = floor(in);
+
+	float closest = 4.0f;
+
+	for (int z = -1; z <= 1; ++z) {
+		for (int y = -1; y <= 1; ++y) {
+			for (int x = -1; x <= 1; ++x) {
+				glm::tvec3<int> cube(center.x + x, center.y + y, center.z + z);
+				unsigned int cube_rand =
+					(cube.x * 130223) ^
+					(cube.y * 159899) ^
+					(cube.z * 190717) ^
+					seed;
+
+				for (int i = 0; i < num_points; ++i) {
+					glm::vec3 point(cube);
+					cube_rand = 190667 * cube_rand + 109807;
+					point.x += float(cube_rand % 200000) / 200000.0f;
+					cube_rand = 135899 * cube_rand + 189169;
+					point.y += float(cube_rand % 200000) / 200000.0f;
+					cube_rand = 159739 * cube_rand + 112139;
+					point.z += float(cube_rand % 200000) / 200000.0f;
+
+					glm::vec3 diff(in - point);
+					float distance = dot(diff, diff);
+					if (distance < closest) {
+						closest = distance;
+					}
+				}
+			}
+		}
+	}
+
+	return closest;
+}
+
 }

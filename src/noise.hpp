@@ -24,6 +24,21 @@ private:
 
 };
 
+
+/// implementation of Worley noise (aka Cell or Voroni noise)
+class WorleyNoise {
+
+public:
+	explicit WorleyNoise(unsigned int seed);
+
+	float operator ()(const glm::vec3 &) const;
+
+private:
+	const unsigned int seed;
+	const int num_points;
+
+};
+
 }
 
 #endif
