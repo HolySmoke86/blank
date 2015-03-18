@@ -69,6 +69,8 @@ public:
 
 	void SetLightDirection(const glm::vec3 &);
 
+	void SetFogDensity(float);
+
 	void SetM(const glm::mat4 &m);
 	void SetProjection(const glm::mat4 &p);
 	void SetView(const glm::mat4 &v);
@@ -85,14 +87,18 @@ private:
 	glm::vec3 light_direction;
 	glm::vec3 light_color;
 
+	float fog_density;
+
 	glm::mat4 projection;
 	glm::mat4 view;
 	glm::mat4 vp;
 
 	GLuint m_handle;
+	GLuint mv_handle;
 	GLuint mvp_handle;
 	GLuint light_direction_handle;
 	GLuint light_color_handle;
+	GLuint fog_density_handle;
 
 };
 

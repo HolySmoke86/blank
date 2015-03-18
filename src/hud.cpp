@@ -62,6 +62,8 @@ void HUD::Display(const Block &b) {
 void HUD::Render(DirectionalLighting &program) {
 	if (block_visible) {
 		program.SetLightDirection({ 1.0f, 3.0f, 5.0f });
+		// disable distance fog
+		program.SetFogDensity(0.0f);
 		GLContext::ClearDepthBuffer();
 		program.SetMVP(block_transform, view, projection);
 		block.Draw();

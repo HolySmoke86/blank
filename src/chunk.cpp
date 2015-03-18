@@ -462,8 +462,8 @@ ChunkLoader::ChunkLoader(const BlockTypeRegistry &reg, const Generator &gen)
 , loaded()
 , to_generate()
 , to_free()
-, load_dist(4)
-, unload_dist(5) {
+, load_dist(6)
+, unload_dist(8) {
 
 }
 

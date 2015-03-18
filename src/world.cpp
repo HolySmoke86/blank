@@ -198,6 +198,11 @@ void World::Update(int dt) {
 
 void World::Render(DirectionalLighting &program) {
 	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
+	// fade out reaches 1/e (0.3679) at 1/fog_density,
+	// gets less than 0.01 at e/(2 * fog_density)
+	// I chose 0.011 because it yields 91 and 124 for those, so
+	// slightly less than 6 and 8 chunks
+	program.SetFogDensity(0.011f);
 	program.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
 
 	for (Chunk &chunk : chunks.Loaded()) {

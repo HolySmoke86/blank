@@ -143,9 +143,11 @@ DirectionalLighting::DirectionalLighting()
 , light_color(0.9f, 0.9f, 0.9f)
 , vp(1.0f)
 , m_handle(0)
+, mv_handle(0)
 , mvp_handle(0)
 , light_direction_handle(0)
-, light_color_handle(0) {
+, light_color_handle(0)
+, fog_density_handle(0) {
 	program.LoadShader(
 		GL_VERTEX_SHADER,
 		"#version 330 core\n"
@@ -153,11 +155,14 @@ DirectionalLighting::DirectionalLighting()
 		"layout(location = 1) in vec3 vtx_color;\n"
 		"layout(location = 2) in vec3 vtx_normal;\n"
 		"uniform mat4 M;\n"
+		"uniform mat4 MV;\n"
 		"uniform mat4 MVP;\n"
 		"out vec3 frag_color;\n"
+		"out vec3 vtx_viewspace;\n"
 		"out vec3 normal;\n"
 		"void main() {\n"
 			"gl_Position = MVP * vec4(vtx_position, 1);\n"
+			"vtx_viewspace = (MV * vec4(vtx_position, 1)).xyz;\n"
 			"normal = (M * vec4(vtx_normal, 0)).xyz;\n"
 			"frag_color = vtx_color;\n"
 		"}\n"
@@ -166,16 +171,23 @@ DirectionalLighting::DirectionalLighting()
 		GL_FRAGMENT_SHADER,
 		"#version 330 core\n"
 		"in vec3 frag_color;\n"
+		"in vec3 vtx_viewspace;\n"
 		"in vec3 normal;\n"
 		"uniform vec3 light_direction;\n"
 		"uniform vec3 light_color;\n"
+		"uniform float fog_density;\n"
 		"out vec3 color;\n"
 		"void main() {\n"
 			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
+			// this should be the same as the clear color, otherwise looks really weird
+			"vec3 fog_color = vec3(0, 0, 0);\n"
+			"float e = 2.718281828;\n"
 			"vec3 n = normalize(normal);\n"
 			"vec3 l = normalize(light_direction);\n"
 			"float cos_theta = clamp(dot(n, l), 0, 1);\n"
-			"color = ambient + frag_color * light_color * cos_theta;\n"
+			"vec3 reflect_color = ambient + frag_color * light_color * cos_theta;\n"
+			"float value = pow(e, -pow(fog_density * length(vtx_viewspace), 5));"
+			"color = mix(fog_color, reflect_color, value);\n"
 		"}\n"
 	);
 	program.Link();
@@ -185,9 +197,11 @@ DirectionalLighting::DirectionalLighting()
 	}
 
 	m_handle = program.UniformLocation("M");
+	mv_handle = program.UniformLocation("MV");
 	mvp_handle = program.UniformLocation("MVP");
 	light_direction_handle = program.UniformLocation("light_direction");
 	light_color_handle = program.UniformLocation("light_color");
+	fog_density_handle = program.UniformLocation("fog_density");
 }
 
 
@@ -201,14 +215,21 @@ void DirectionalLighting::Activate() {
 }
 
 void DirectionalLighting::SetM(const glm::mat4 &m) {
+	glm::mat4 mv(view * m);
 	glm::mat4 mvp(vp * m);
 	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
+	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 }
 
 void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) {
 	light_direction = -dir;
 	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
+}
+
+void DirectionalLighting::SetFogDensity(float f) {
+	fog_density = f;
+	glUniform1f(fog_density_handle, fog_density);
 }
 
 void DirectionalLighting::SetProjection(const glm::mat4 &p) {
