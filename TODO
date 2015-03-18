@@ -40,9 +40,8 @@ entity ai
 
 (block) lighting
 
-	lighting via light emitting blocks and brightness from the
-	manhattan distance to a light source. light levels should be
-	cached with each block and only recalculated on update
+	light levels are roughtly implemented. the shader has to be
+	adjusted so they actually have an impact on the resulting color
 
 gravity
 
@@ -57,10 +56,8 @@ block attributes
 
 chunk traversal
 
-	going from one chunk to the neighboring is highly wasteful as of
-	now. each chunk should have links to its neighbours. also, maybe
-	the chunk loader should keep an index of interesting, if not all
-	chunks by position, possibly base-relative
+	maybe the chunk loader should keep an index of interesting, if not
+	all chunks by position, possibly base-relative
 
 transparency (blocks and entities)
 
