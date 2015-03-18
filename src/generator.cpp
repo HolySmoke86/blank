@@ -11,6 +11,7 @@ Generator::Generator(unsigned int seed)
 , stretch(64.0f)
 , solid_threshold(0.8f)
 , space(0)
+, light(0)
 , solids() {
 
 }
@@ -32,6 +33,15 @@ void Generator::operator ()(Chunk &chunk) const {
 				} else {
 					chunk.SetBlock(block_pos, Block(space));
 				}
+			}
+		}
+	}
+	unsigned int random = 263167 * pos.x + 2097593 * pos.y + 426389 * pos.z;
+	for (int index = 0; index < Chunk::Size(); ++index) {
+		if (chunk.IsSurface(index)) {
+			random = random * 666649 + 7778777;
+			if ((random % 32) == 0) {
+				chunk.SetBlock(index, Block(light));
 			}
 		}
 	}

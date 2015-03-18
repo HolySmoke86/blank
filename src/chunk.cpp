@@ -263,6 +263,21 @@ int Chunk::GetLight(int index) const {
 }
 
 
+bool Chunk::IsSurface(const Pos &pos) const {
+	const Block &block = BlockAt(pos);
+	if (!Type(block).visible) {
+		return false;
+	}
+	for (int face = 0; face < Block::FACE_COUNT; ++face) {
+		const Block *next = FindNext(pos, Block::Face(face));
+		if (!next || !Type(*next).visible) {
+			return true;
+		}
+	}
+	return false;
+}
+
+
 void Chunk::Allocate() {
 	blocks.resize(Size(), Block(0));
 	light.resize(Size(), 0);

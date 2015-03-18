@@ -76,6 +76,10 @@ public:
 			(idx / Width()) % Height() == Height() - 1;    // high Y plane
 	}
 
+	bool IsSurface(int index) const { return IsSurface(ToPos(index)); }
+	bool IsSurface(const Block::Pos &pos) const { return IsSurface(Pos(pos)); }
+	bool IsSurface(const Pos &pos) const;
+
 	void SetNeighbor(Chunk &);
 	bool HasNeighbor(Block::Face f) const { return neighbor[f]; }
 	Chunk &GetNeighbor(Block::Face f) { return *neighbor[f]; }

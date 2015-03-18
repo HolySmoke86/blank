@@ -103,6 +103,7 @@ World::World()
 	}
 
 	generate.Space(0);
+	generate.Light(13);
 	generate.Solids({ 1, 4, 7, 10 });
 
 	player = &AddEntity();
