@@ -14,7 +14,7 @@ namespace blank {
 class Application {
 
 public:
-	Application();
+	explicit Application(unsigned int seed);
 
 	Application(const Application &) = delete;
 	Application &operator =(const Application &) = delete;

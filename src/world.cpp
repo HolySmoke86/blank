@@ -6,12 +6,12 @@
 
 namespace blank {
 
-World::World()
+World::World(unsigned int seed)
 : blockType()
 , blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
 , stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
-, generate(0)
+, generate(seed)
 , chunks(blockType, generate)
 , player() {
 	BlockType::Faces block_fill = {  true,  true,  true,  true,  true,  true };

@@ -17,7 +17,7 @@ namespace blank {
 class World {
 
 public:
-	World();
+	explicit World(unsigned int seed);
 
 	bool Intersection(
 		const Ray &,

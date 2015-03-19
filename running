@@ -4,7 +4,7 @@ Arguments
 blank
 	normal execution
 
-blank <n>
+blank [-n] <n>
 	terminate after <n> frames
 
 blank -t <t>
@@ -12,6 +12,9 @@ blank -t <t>
 
 blank <n> -t <t>
 	terminate after n frames, assume <t> milliseconds pass each frame
+
+blank -s <seed>
+	use <seed> (unsigned integer) as the world seed. default is 0
 
 
 Controls

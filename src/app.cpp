@@ -6,7 +6,7 @@
 
 namespace blank {
 
-Application::Application()
+Application::Application(unsigned int seed)
 : init_sdl()
 , init_img()
 , init_gl()
@@ -15,7 +15,7 @@ Application::Application()
 , init_glew()
 , program()
 , cam()
-, world()
+, world(seed)
 , interface(world)
 , test_controller(MakeTestEntity(world))
 , running(false) {
