@@ -36,7 +36,7 @@ public:
 class InitGL {
 
 public:
-	InitGL();
+	explicit InitGL(bool double_buffer = true, int sample_size = 1);
 
 	InitGL(const InitGL &) = delete;
 	InitGL &operator =(const InitGL &) = delete;

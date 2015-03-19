@@ -1,6 +1,8 @@
 #ifndef BLANK_RUNTIME_HPP_
 #define BLANK_RUNTIME_HPP_
 
+#include "app.hpp"
+
 #include <cstddef>
 
 
@@ -28,7 +30,7 @@ private:
 	Mode mode;
 	std::size_t n;
 	std::size_t t;
-	unsigned int seed;
+	Application::Config config;
 
 };
 

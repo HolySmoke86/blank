@@ -11,7 +11,7 @@
 
 namespace blank {
 
-Interface::Interface(World &world)
+Interface::Interface(const Config &config, World &world)
 : world(world)
 , ctrl(world.Player())
 , hud(world.BlockTypes())
@@ -20,9 +20,7 @@ Interface::Interface(World &world)
 , aim_normal()
 , outline()
 , outline_transform(1.0f)
-, move_velocity(0.005f)
-, pitch_sensitivity(-0.0025f)
-, yaw_sensitivity(-0.001f)
+, config(config)
 , remove(0)
 , selection(1)
 , front(false)
@@ -37,6 +35,8 @@ Interface::Interface(World &world)
 
 
 void Interface::Handle(const SDL_KeyboardEvent &event) {
+	if (config.keyboard_disabled) return;
+
 	switch (event.keysym.sym) {
 		case SDLK_w:
 			front = event.state == SDL_PRESSED;
@@ -130,11 +130,14 @@ void Interface::Print(const Block &block) {
 
 
 void Interface::Handle(const SDL_MouseMotionEvent &event) {
-	ctrl.RotateYaw(event.xrel * yaw_sensitivity);
-	ctrl.RotatePitch(event.yrel * pitch_sensitivity);
+	if (config.mouse_disabled) return;
+	ctrl.RotateYaw(event.xrel * config.yaw_sensitivity);
+	ctrl.RotatePitch(event.yrel * config.pitch_sensitivity);
 }
 
 void Interface::Handle(const SDL_MouseButtonEvent &event) {
+	if (config.mouse_disabled) return;
+
 	if (event.state != SDL_PRESSED) return;
 
 	if (event.button == 1) {
@@ -172,6 +175,8 @@ void Interface::RemoveBlock() {
 
 
 void Interface::Handle(const SDL_MouseWheelEvent &event) {
+	if (config.mouse_disabled) return;
+
 	if (event.y < 0) {
 		SelectNext();
 	} else if (event.y > 0) {
@@ -205,19 +210,19 @@ void Interface::Handle(const SDL_WindowEvent &event) {
 void Interface::Update(int dt) {
 	glm::vec3 vel;
 	if (right && !left) {
-		vel.x = move_velocity;
+		vel.x = config.move_velocity;
 	} else if (left && !right) {
-		vel.x = -move_velocity;
+		vel.x = -config.move_velocity;
 	}
 	if (up && !down) {
-		vel.y = move_velocity;
+		vel.y = config.move_velocity;
 	} else if (down && !up) {
-		vel.y = -move_velocity;
+		vel.y = -config.move_velocity;
 	}
 	if (back && !front) {
-		vel.z = move_velocity;
+		vel.z = config.move_velocity;
 	} else if (front && !back) {
-		vel.z = -move_velocity;
+		vel.z = -config.move_velocity;
 	}
 	ctrl.Velocity(vel);
 	ctrl.Update(dt);
@@ -238,6 +243,8 @@ void Interface::Update(int dt) {
 
 
 void Interface::Render(DirectionalLighting &program) {
+	if (config.visual_disabled) return;
+
 	if (aim_chunk) {
 		program.SetM(outline_transform);
 		outline.Draw();

@@ -6,20 +6,22 @@
 
 namespace blank {
 
-Application::Application(unsigned int seed)
+Application::Application(const Config &config)
 : init_sdl()
 , init_img()
-, init_gl()
+, init_gl(config.doublebuf, config.multisampling)
 , window()
 , ctx(window.CreateContext())
 , init_glew()
 , program()
 , cam()
-, world(seed)
-, interface(world)
+, world(config.world)
+, interface(config.interface, world)
 , test_controller(MakeTestEntity(world))
 , running(false) {
-	GLContext::EnableVSync();
+	if (config.vsync) {
+		GLContext::EnableVSync();
+	}
 
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }

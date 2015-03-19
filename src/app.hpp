@@ -14,7 +14,16 @@ namespace blank {
 class Application {
 
 public:
-	explicit Application(unsigned int seed);
+	struct Config {
+		bool vsync = true;
+		bool doublebuf = true;
+		int multisampling = 1;
+
+		Interface::Config interface = Interface::Config();
+		World::Config world = World::Config();
+	};
+
+	explicit Application(const Config &);
 
 	Application(const Application &) = delete;
 	Application &operator =(const Application &) = delete;

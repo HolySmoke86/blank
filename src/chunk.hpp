@@ -158,7 +158,12 @@ class Generator;
 class ChunkLoader {
 
 public:
-	ChunkLoader(const BlockTypeRegistry &, const Generator &);
+	struct Config {
+		int load_dist = 6;
+		int unload_dist = 8;
+	};
+
+	ChunkLoader(const Config &, const BlockTypeRegistry &, const Generator &);
 
 	void Generate(const Chunk::Pos &from, const Chunk::Pos &to);
 	void GenerateSurrounding(const Chunk::Pos &);

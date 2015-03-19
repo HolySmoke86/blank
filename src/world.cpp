@@ -6,14 +6,17 @@
 
 namespace blank {
 
-World::World(unsigned int seed)
+World::World(const Config &config)
 : blockType()
 , blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
 , stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
-, generate(seed)
-, chunks(blockType, generate)
-, player() {
+, generate(config.gen)
+, chunks(config.load, blockType, generate)
+, player()
+, entities()
+, light_direction(config.light_direction)
+, fog_density(config.fog_density) {
 	BlockType::Faces block_fill = {  true,  true,  true,  true,  true,  true };
 	BlockType::Faces slab_fill  = { false,  true, false, false, false, false };
 	BlockType::Faces stair_fill = { false,  true, false, false, false,  true };
@@ -107,7 +110,7 @@ World::World(unsigned int seed)
 	generate.Solids({ 1, 4, 7, 10 });
 
 	player = &AddEntity();
-	player->Position({ 4.0f, 4.0f, 4.0f });
+	player->Position(config.spawn);
 
 	chunks.GenerateSurrounding(player->ChunkCoords());
 }
@@ -198,12 +201,8 @@ void World::Update(int dt) {
 
 
 void World::Render(DirectionalLighting &program) {
-	program.SetLightDirection({ -1.0f, -3.0f, -2.0f });
-	// fade out reaches 1/e (0.3679) at 1/fog_density,
-	// gets less than 0.01 at e/(2 * fog_density)
-	// I chose 0.011 because it yields 91 and 124 for those, so
-	// slightly less than 6 and 8 chunks
-	program.SetFogDensity(0.011f);
+	program.SetLightDirection(light_direction);
+	program.SetFogDensity(fog_density);
 	program.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
 
 	for (Chunk &chunk : chunks.Loaded()) {

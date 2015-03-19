@@ -13,7 +13,14 @@ namespace blank {
 class Generator {
 
 public:
-	explicit Generator(unsigned int seed);
+	struct Config {
+		unsigned int solid_seed = 0;
+		unsigned int type_seed = 0;
+		float stretch = 64.0f;
+		float solid_threshold = 0.8f;
+	};
+
+	explicit Generator(const Config &);
 
 	void operator ()(Chunk &) const;
 

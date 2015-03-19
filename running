@@ -1,17 +1,44 @@
 Arguments
 =========
 
-blank
-	normal execution
+Runtime
+-------
 
-blank [-n] <n>
+[-n] <n>
 	terminate after <n> frames
 
-blank -t <t>
+-t <t>
 	terminate after <t> milliseconds
 
-blank <n> -t <t>
+[-n] <n> -t <t>
 	terminate after n frames, assume <t> milliseconds pass each frame
+
+Application
+-----------
+
+-d
+	disable double buffering
+
+-m <num>
+	set sample size to <num> (samples per pixel)
+
+--no-vsync
+	disable vsync
+
+Interface
+---------
+
+--no-keyboard
+	disable keyboard input handling
+
+--no-mouse
+	disable mouse input handling
+
+--no-hud
+	disable HUD drawing (includes the selected block outline)
+
+World
+-----
 
 blank -s <seed>
 	use <seed> (unsigned integer) as the world seed. default is 0

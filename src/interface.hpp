@@ -18,7 +18,17 @@ class World;
 class Interface {
 
 public:
-	explicit Interface(World &);
+	struct Config {
+		float move_velocity = 0.005f;
+		float pitch_sensitivity = -0.0025f;
+		float yaw_sensitivity = -0.001f;
+
+		bool keyboard_disabled = false;
+		bool mouse_disabled = false;
+		bool visual_disabled = false;
+	};
+
+	Interface(const Config &, World &);
 
 	void Handle(const SDL_KeyboardEvent &);
 	void Handle(const SDL_MouseMotionEvent &);
@@ -57,9 +67,7 @@ private:
 	OutlineModel outline;
 	glm::mat4 outline_transform;
 
-	float move_velocity;
-	float pitch_sensitivity;
-	float yaw_sensitivity;
+	Config config;
 
 	Block remove;
 	Block selection;

@@ -16,7 +16,7 @@ Runtime::Runtime()
 , mode(NORMAL)
 , n(0)
 , t(0)
-, seed(0) {
+, config() {
 
 }
 
@@ -43,13 +43,35 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 					options = false;
 				} else {
 					// long option
-					cerr << "unknown option " << arg << endl;
-					error = true;
+					if (strcmp(arg + 2, "no-vsync") == 0) {
+						config.vsync = false;
+					} else if (strcmp(arg + 2, "no-keyboard") == 0) {
+						config.interface.keyboard_disabled = true;
+					} else if (strcmp(arg + 2, "no-mouse") == 0) {
+						config.interface.mouse_disabled = true;
+					} else if (strcmp(arg + 2, "no-hud") == 0) {
+						config.interface.visual_disabled = true;
+					} else {
+						cerr << "unknown option " << arg << endl;
+						error = true;
+					}
 				}
 			} else {
 				// short options
 				for (int j = 1; arg[j] != '\0'; ++j) {
 					switch (arg[j]) {
+						case 'd':
+							config.doublebuf = false;
+							break;
+						case 'm':
+							++i;
+							if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+								cerr << "missing argument to -m" << endl;
+								error = true;
+							} else {
+								config.multisampling = strtoul(argv[i], nullptr, 10);
+							}
+							break;
 						case 'n':
 							++i;
 							if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
@@ -65,7 +87,8 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 								cerr << "missing argument to -s" << endl;
 								error = true;
 							} else {
-								seed = strtoul(argv[i], nullptr, 10);
+								config.world.gen.solid_seed = strtoul(argv[i], nullptr, 10);
+								config.world.gen.type_seed = config.world.gen.solid_seed;
 							}
 							break;
 						case 't':
@@ -121,7 +144,7 @@ int Runtime::Execute() {
 		return 1;
 	}
 
-	Application app(seed);
+	Application app(config);
 	switch (mode) {
 		default:
 		case NORMAL:

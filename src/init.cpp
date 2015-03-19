@@ -46,7 +46,7 @@ InitIMG::~InitIMG() {
 }
 
 
-InitGL::InitGL() {
+InitGL::InitGL(bool double_buffer, int sample_size) {
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) != 0) {
 		sdl_error("SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)");
 	}
@@ -57,8 +57,19 @@ InitGL::InitGL() {
 		sdl_error("SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)");
 	}
 
-	if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1) != 0) {
-		sdl_error("SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)");
+	if (double_buffer) {
+		if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1) != 0) {
+			sdl_error("SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)");
+		}
+	}
+
+	if (sample_size > 1) {
+		if (SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
+			sdl_error("SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS)");
+		}
+		if (SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, sample_size) != 0) {
+			sdl_error("SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES)");
+		}
 	}
 }
 

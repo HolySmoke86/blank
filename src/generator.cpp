@@ -5,11 +5,11 @@
 
 namespace blank {
 
-Generator::Generator(unsigned int seed)
-: solidNoise(seed)
-, typeNoise(seed + 1)
-, stretch(64.0f)
-, solid_threshold(0.8f)
+Generator::Generator(const Config &config)
+: solidNoise(config.solid_seed)
+, typeNoise(config.type_seed)
+, stretch(config.stretch)
+, solid_threshold(config.solid_threshold)
 , space(0)
 , light(0)
 , solids() {

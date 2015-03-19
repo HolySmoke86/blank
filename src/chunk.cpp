@@ -470,15 +470,15 @@ glm::mat4 Chunk::ToTransform(int idx) const {
 }
 
 
-ChunkLoader::ChunkLoader(const BlockTypeRegistry &reg, const Generator &gen)
+ChunkLoader::ChunkLoader(const Config &config, const BlockTypeRegistry &reg, const Generator &gen)
 : base(0, 0, 0)
 , reg(reg)
 , gen(gen)
 , loaded()
 , to_generate()
 , to_free()
-, load_dist(6)
-, unload_dist(8) {
+, load_dist(config.load_dist)
+, unload_dist(config.unload_dist) {
 
 }
 
