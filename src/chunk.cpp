@@ -618,8 +618,12 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 		}
 	}
 	// add missing new chunks
+	GenerateSurrounding(base);
+}
+
+void ChunkLoader::GenerateSurrounding(const Chunk::Pos &pos) {
 	const Chunk::Pos offset(load_dist, load_dist, load_dist);
-	Generate(base - offset, base + offset);
+	Generate(pos - offset, pos + offset);
 }
 
 void ChunkLoader::Update() {

@@ -161,6 +161,7 @@ public:
 	ChunkLoader(const BlockTypeRegistry &, const Generator &);
 
 	void Generate(const Chunk::Pos &from, const Chunk::Pos &to);
+	void GenerateSurrounding(const Chunk::Pos &);
 
 	std::list<Chunk> &Loaded() { return loaded; }
 

@@ -109,7 +109,7 @@ World::World(unsigned int seed)
 	player = &AddEntity();
 	player->Position({ 4.0f, 4.0f, 4.0f });
 
-	chunks.Generate({ -4, -4, -4 }, { 5, 5, 5});
+	chunks.GenerateSurrounding(player->ChunkCoords());
 }
 
 
