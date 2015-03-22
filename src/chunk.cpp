@@ -194,7 +194,6 @@ void work_dark() {
 			}
 		}
 	}
-	work_light();
 }
 
 }
@@ -207,17 +206,27 @@ void Chunk::SetBlock(int index, const Block &block) {
 
 	if (&old_type == &new_type) return;
 
-	if (new_type.luminosity > 0) {
-		if (GetLight(index) < new_type.luminosity) {
-			SetLight(index, new_type.luminosity);
-			light_queue.emplace(this, ToPos(index));
-			work_light();
-		}
-	} else if (new_type.block_light && GetLight(index) != 0) {
-		SetLight(index, 0);
+	if (new_type.luminosity > old_type.luminosity) {
+		// light added
+		SetLight(index, new_type.luminosity);
+		light_queue.emplace(this, ToPos(index));
+		work_light();
+	} else if (new_type.luminosity < old_type.luminosity) {
+		// light removed
 		dark_queue.emplace(this, ToPos(index));
+		SetLight(index, 0);
 		work_dark();
-	} else if (old_type.block_light && !new_type.block_light) {
+		SetLight(index, new_type.luminosity);
+		light_queue.emplace(this, ToPos(index));
+		work_light();
+	} else if (new_type.block_light && !old_type.block_light) {
+		// obstacle added
+		dark_queue.emplace(this, ToPos(index));
+		SetLight(index, 0);
+		work_dark();
+		work_light();
+	} else if (!new_type.block_light && old_type.block_light) {
+		// obstacle removed
 		int level = 0;
 		for (int face = 0; face < Block::FACE_COUNT; ++face) {
 			Pos next_pos(ToPos(index) + Block::FaceNormal(Block::Face(face)));
