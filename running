@@ -60,4 +60,4 @@ front, and back) and E changes the turn (none, left, around, and right).
 
 Pressing B prints details about the block you're pointing at and P prints
 info about the active block. L spits out the player position and light
-level there.
+level there. C dumps info about the chunk of the pointed at block.

@@ -44,6 +44,7 @@ public:
 	void RemoveBlock();
 
 	void PrintBlockInfo();
+	void PrintChunkInfo();
 	void PrintLightInfo();
 	void PrintSelectionInfo();
 	void Print(const Block &);

@@ -73,6 +73,11 @@ void Interface::Handle(const SDL_KeyboardEvent &event) {
 				PrintBlockInfo();
 			}
 			break;
+		case SDLK_c:
+			if (event.state == SDL_PRESSED) {
+				PrintChunkInfo();
+			}
+			break;
 		case SDLK_l:
 			if (event.state == SDL_PRESSED) {
 				PrintLightInfo();
@@ -107,6 +112,38 @@ void Interface::PrintBlockInfo() {
 		<< " of chunk " << aim_chunk->Position()
 		<< std::endl;
 	Print(aim_chunk->BlockAt(aim_block));
+}
+
+void Interface::PrintChunkInfo() {
+	std::cout << std::endl;
+	if (!aim_chunk) {
+		std::cout << "not looking at any block" << std::endl;
+		return;
+	}
+	std::cout << "looking at chunk "
+		<< aim_chunk->Position()
+		<< std::endl;
+
+	std::cout << "  neighbors:";
+	if (aim_chunk->HasNeighbor(Block::FACE_LEFT)) {
+		std::cout << " left";
+	}
+	if (aim_chunk->HasNeighbor(Block::FACE_RIGHT)) {
+		std::cout << " right";
+	}
+	if (aim_chunk->HasNeighbor(Block::FACE_UP)) {
+		std::cout << " up";
+	}
+	if (aim_chunk->HasNeighbor(Block::FACE_DOWN)) {
+		std::cout << " down";
+	}
+	if (aim_chunk->HasNeighbor(Block::FACE_FRONT)) {
+		std::cout << " front";
+	}
+	if (aim_chunk->HasNeighbor(Block::FACE_BACK)) {
+		std::cout << " back";
+	}
+	std::cout << std::endl;
 }
 
 void Interface::PrintLightInfo() {
