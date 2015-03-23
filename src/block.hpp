@@ -66,6 +66,23 @@ struct Block {
 		}
 	}
 
+	static Face NormalFace(const glm::vec3 &norm) {
+		const glm::vec3 anorm(abs(norm));
+		if (anorm.x > anorm.y) {
+			if (anorm.x > anorm.z) {
+				return norm.x > 0.0f ? FACE_RIGHT : FACE_LEFT;
+			} else {
+				return norm.z > 0.0f ? FACE_FRONT : FACE_BACK;
+			}
+		} else {
+			if (anorm.y > anorm.z) {
+				return norm.y > 0.0f ? FACE_UP : FACE_DOWN;
+			} else {
+				return norm.z > 0.0f ? FACE_FRONT : FACE_BACK;
+			}
+		}
+	}
+
 };
 
 
@@ -110,6 +127,11 @@ struct BlockType {
 		Model::Buffer &m,
 		const glm::mat4 &transform = glm::mat4(1.0f),
 		Model::Index idx_offset = 0
+	) const;
+	void FillBlockModel(
+		BlockModel::Buffer &m,
+		const glm::mat4 &transform = glm::mat4(1.0f),
+		BlockModel::Index idx_offset = 0
 	) const;
 	void FillOutlineModel(
 		OutlineModel &m,

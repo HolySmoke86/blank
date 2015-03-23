@@ -52,7 +52,8 @@ private:
 	Window window;
 	GLContext ctx;
 	InitGLEW init_glew;
-	DirectionalLighting program;
+	BlockLighting chunk_prog;
+	DirectionalLighting entity_prog;
 
 	Camera cam;
 	World world;

@@ -102,6 +102,15 @@ void BlockType::FillModel(
 	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
 }
 
+void BlockType::FillBlockModel(
+	BlockModel::Buffer &buf,
+	const glm::mat4 &transform,
+	BlockModel::Index idx_offset
+) const {
+	shape->Vertices(buf.vertices, buf.normals, buf.indices, transform, idx_offset);
+	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
+}
+
 void BlockType::FillOutlineModel(
 	OutlineModel &model,
 	const glm::vec3 &pos_offset,

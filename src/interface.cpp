@@ -124,24 +124,24 @@ void Interface::PrintChunkInfo() {
 		<< aim_chunk->Position()
 		<< std::endl;
 
-	std::cout << "  neighbors:";
+	std::cout << "  neighbors:" << std::endl;
 	if (aim_chunk->HasNeighbor(Block::FACE_LEFT)) {
-		std::cout << " left";
+		std::cout << " left  " << aim_chunk->GetNeighbor(Block::FACE_LEFT).Position() << std::endl;
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_RIGHT)) {
-		std::cout << " right";
+		std::cout << " right " << aim_chunk->GetNeighbor(Block::FACE_RIGHT).Position() << std::endl;
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_UP)) {
-		std::cout << " up";
+		std::cout << " up    " << aim_chunk->GetNeighbor(Block::FACE_UP).Position() << std::endl;
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_DOWN)) {
-		std::cout << " down";
+		std::cout << " down  " << aim_chunk->GetNeighbor(Block::FACE_DOWN).Position() << std::endl;
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_FRONT)) {
-		std::cout << " front";
+		std::cout << " front " << aim_chunk->GetNeighbor(Block::FACE_FRONT).Position() << std::endl;
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_BACK)) {
-		std::cout << " back";
+		std::cout << " back  " << aim_chunk->GetNeighbor(Block::FACE_BACK).Position() << std::endl;
 	}
 	std::cout << std::endl;
 }

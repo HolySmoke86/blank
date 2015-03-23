@@ -99,7 +99,7 @@ World::World(const Config &config)
 
 	{ // glowing yellow block
 		BlockType type(true, { 1.0f, 1.0f, 0.0f }, &blockShape);
-		type.luminosity = 10;
+		type.luminosity = 15;
 		type.block_light = true;
 		type.fill = block_fill;
 		blockType.Add(type);
@@ -200,23 +200,28 @@ void World::Update(int dt) {
 }
 
 
-void World::Render(DirectionalLighting &program) {
-	program.SetLightDirection(light_direction);
-	program.SetFogDensity(fog_density);
-	program.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
+void World::Render(BlockLighting &chunk_prog, DirectionalLighting &entity_prog) {
+	chunk_prog.Activate();
+	chunk_prog.SetFogDensity(fog_density);
+	chunk_prog.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
 
 	for (Chunk &chunk : chunks.Loaded()) {
 		glm::mat4 m(chunk.Transform(player->ChunkCoords()));
-		program.SetM(m);
-		glm::mat4 mvp(program.GetVP() * m);
+		chunk_prog.SetM(m);
+		glm::mat4 mvp(chunk_prog.GetVP() * m);
 		if (!CullTest(Chunk::Bounds(), mvp)) {
 			chunk.Draw();
 		}
 	}
 
+	entity_prog.Activate();
+	entity_prog.SetLightDirection(light_direction);
+	entity_prog.SetFogDensity(fog_density);
+	entity_prog.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
+
 	for (Entity &entity : entities) {
 		if (entity.HasShape()) {
-			program.SetM(entity.Transform(player->ChunkCoords()));
+			entity_prog.SetM(entity.Transform(player->ChunkCoords()));
 			entity.Draw();
 		}
 	}

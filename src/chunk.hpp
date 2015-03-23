@@ -116,6 +116,8 @@ public:
 	int GetLight(const Pos &pos) const { return GetLight(ToIndex(pos)); }
 	int GetLight(const Block::Pos &pos) const { return GetLight(ToIndex(pos)); }
 
+	float GetVertexLight(int index, const BlockModel::Position &, const BlockModel::Normal &) const;
+
 	bool Intersection(
 		const Ray &ray,
 		const glm::mat4 &M,
@@ -146,9 +148,26 @@ private:
 	Chunk *neighbor[Block::FACE_COUNT];
 	std::vector<Block> blocks;
 	std::vector<unsigned char> light;
-	Model model;
+	BlockModel model;
 	Pos position;
 	bool dirty;
+
+};
+
+
+struct BlockLookup {
+
+	Chunk *chunk;
+	Chunk::Pos pos;
+	const Block *result;
+
+	// resolve chunk/position/block from oob coordinates
+	// result will be nullptr if unsuccessful
+	BlockLookup(Chunk *c, const Chunk::Pos &p);
+
+	// resolve chunk/position/block from ib coordinates and direction
+	// result will be nullptr if unsuccessful
+	BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face dir);
 
 };
 

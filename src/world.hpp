@@ -52,7 +52,7 @@ public:
 
 	void Update(int dt);
 
-	void Render(DirectionalLighting &);
+	void Render(BlockLighting &, DirectionalLighting &);
 
 private:
 	BlockTypeRegistry blockType;

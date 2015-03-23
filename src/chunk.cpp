@@ -131,16 +131,12 @@ struct SetNode {
 	void Set(int level) { chunk->SetLight(pos, level); }
 
 	bool HasNext(Block::Face face) {
-		const Block *next = chunk->FindNext(pos, face);
-		return next && !chunk->Type(*next).block_light;
+		const BlockLookup next(chunk, pos, face);
+		return next.result && !next.chunk->Type(*next.result).block_light;
 	}
 	SetNode GetNext(Block::Face face) {
-		Chunk::Pos next_pos(pos + Block::FaceNormal(face));
-		if (Chunk::InBounds(next_pos)) {
-			return SetNode(chunk, next_pos);
-		} else {
-			return SetNode(&chunk->GetNeighbor(face), next_pos - (Block::FaceNormal(face) * Chunk::Extent()));
-		}
+		const BlockLookup next(chunk, pos, face);
+		return SetNode(next.chunk, next.pos);
 	}
 
 };
@@ -156,6 +152,11 @@ struct UnsetNode
 	UnsetNode(const SetNode &set)
 	: SetNode(set), level(Get()) { }
 
+
+	bool HasNext(Block::Face face) {
+		const BlockLookup next(chunk, pos, face);
+		return next.result;
+	}
 	UnsetNode GetNext(Block::Face face) { return UnsetNode(SetNode::GetNext(face)); }
 
 };
@@ -269,11 +270,49 @@ const Block *Chunk::FindNext(const Pos &pos, Block::Face face) const {
 
 
 void Chunk::SetLight(int index, int level) {
-	light[index] = level;
+	if (light[index] != level) {
+		light[index] = level;
+		Invalidate();
+	}
 }
 
 int Chunk::GetLight(int index) const {
 	return light[index];
+}
+
+float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const BlockModel::Normal &norm) const {
+	float light = GetLight(index);
+	Chunk::Pos pos(ToPos(index));
+
+	Block::Face direct_face(Block::NormalFace(norm));
+	const Chunk *direct_chunk = this;
+	Chunk::Pos direct_pos(pos + Block::FaceNormal(direct_face));
+	if (!InBounds(direct_pos)) {
+		if (HasNeighbor(direct_face)) {
+			direct_chunk = &GetNeighbor(direct_face);
+			direct_pos -= (Block::FaceNormal(direct_face) * Extent());
+			float direct_light = direct_chunk->GetLight(direct_pos);
+			if (direct_light > light) {
+				light = direct_light;
+			}
+		}
+	} else {
+		float direct_light = direct_chunk->GetLight(direct_pos);
+		if (direct_light > light) {
+			light = direct_light;
+		}
+	}
+
+	// cheap alternative until AO etc are implemented
+	// to tell the faces apart
+
+	if (direct_face == Block::FACE_LEFT || direct_face == Block::FACE_RIGHT) {
+		light -= 0.2;
+	} else if (direct_face == Block::FACE_FRONT || direct_face == Block::FACE_BACK) {
+		light -= 0.4;
+	}
+
+	return light;
 }
 
 
@@ -355,7 +394,7 @@ glm::mat4 Chunk::Transform(const Pos &offset) const {
 
 namespace {
 
-Model::Buffer buf;
+BlockModel::Buffer buf;
 
 }
 
@@ -375,14 +414,19 @@ void Chunk::Update() {
 	buf.Clear();
 	buf.Reserve(vtx_count, idx_count);
 
-	Model::Index vtx_counter = 0;
+	BlockModel::Index vtx_counter = 0;
 	for (size_t i = 0; i < Size(); ++i) {
 		const BlockType &type = Type(blocks[i]);
 
 		if (!type.visible || Obstructed(i)) continue;
 
-		type.FillModel(buf, ToTransform(i), vtx_counter);
+		type.FillBlockModel(buf, ToTransform(i), vtx_counter);
+		size_t vtx_begin = vtx_counter;
 		vtx_counter += type.shape->VertexCount();
+
+		for (size_t vtx = vtx_begin; vtx < vtx_counter; ++vtx) {
+			buf.lights.emplace_back(GetVertexLight(i, buf.vertices[vtx], buf.normals[vtx]));
+		}
 	}
 
 	model.Update(buf);
@@ -484,6 +528,74 @@ glm::mat4 Chunk::ToTransform(int idx) const {
 }
 
 
+BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
+: chunk(c), pos(p), result(nullptr) {
+	while (pos.x >= Chunk::Width()) {
+		if (chunk->HasNeighbor(Block::FACE_RIGHT)) {
+			chunk = &chunk->GetNeighbor(Block::FACE_RIGHT);
+			pos.x -= Chunk::Width();
+		} else {
+			return;
+		}
+	}
+	while (pos.x < 0) {
+		if (chunk->HasNeighbor(Block::FACE_LEFT)) {
+			chunk = &chunk->GetNeighbor(Block::FACE_LEFT);
+			pos.x += Chunk::Width();
+		} else {
+			return;
+		}
+	}
+	while (pos.y >= Chunk::Height()) {
+		if (chunk->HasNeighbor(Block::FACE_UP)) {
+			chunk = &chunk->GetNeighbor(Block::FACE_UP);
+			pos.y -= Chunk::Height();
+		} else {
+			return;
+		}
+	}
+	while (pos.y < 0) {
+		if (chunk->HasNeighbor(Block::FACE_DOWN)) {
+			chunk = &chunk->GetNeighbor(Block::FACE_DOWN);
+			pos.y += Chunk::Height();
+		} else {
+			return;
+		}
+	}
+	while (pos.z >= Chunk::Depth()) {
+		if (chunk->HasNeighbor(Block::FACE_FRONT)) {
+			chunk = &chunk->GetNeighbor(Block::FACE_FRONT);
+			pos.z -= Chunk::Depth();
+		} else {
+			return;
+		}
+	}
+	while (pos.z < 0) {
+		if (chunk->HasNeighbor(Block::FACE_BACK)) {
+			chunk = &chunk->GetNeighbor(Block::FACE_BACK);
+			pos.z += Chunk::Depth();
+		} else {
+			return;
+		}
+	}
+	result = &chunk->BlockAt(pos);
+}
+
+BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face)
+: chunk(c), pos(p), result(nullptr) {
+	pos += Block::FaceNormal(face);
+	if (Chunk::InBounds(pos)) {
+		result = &chunk->BlockAt(pos);
+	} else {
+		pos -= Block::FaceNormal(face) * Chunk::Extent();
+		if (chunk->HasNeighbor(face)) {
+			chunk = &chunk->GetNeighbor(face);
+			result = &chunk->BlockAt(pos);
+		}
+	}
+}
+
+
 ChunkLoader::ChunkLoader(const Config &config, const BlockTypeRegistry &reg, const Generator &gen)
 : base(0, 0, 0)
 , reg(reg)
@@ -526,6 +638,42 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 					continue;
 				} else if (pos == base) {
 					Generate(pos);
+
+				//	light testing
+				//	for (int i = 0; i < 16; ++i) {
+				//		for (int j = 0; j < 16; ++j) {
+				//			loaded.back().SetBlock(Chunk::Pos{  i, j,  0 }, Block(1));
+				//			loaded.back().SetBlock(Chunk::Pos{  i, j, 15 }, Block(1));
+				//			loaded.back().SetBlock(Chunk::Pos{  0, j,  i }, Block(1));
+				//			loaded.back().SetBlock(Chunk::Pos{ 15, j,  i }, Block(1));
+				//		}
+				//	}
+				//	loaded.back().SetBlock(Chunk::Pos{  1,  0,  1 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 14,  0,  1 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  1,  0, 14 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 14,  0, 14 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  1, 15,  1 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 14, 15,  1 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  1, 15, 14 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 14, 15, 14 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  7,  7,  0 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  8,  7,  0 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  7,  8,  0 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  8,  8,  0 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  7,  7, 15 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  8,  7, 15 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  7,  8, 15 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  8,  8, 15 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  0,  7,  7 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  0,  7,  8 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  0,  8,  7 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{  0,  8,  8 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 15,  7,  7 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 15,  7,  8 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 15,  8,  7 }, Block(13));
+				//	loaded.back().SetBlock(Chunk::Pos{ 15,  8,  8 }, Block(13));
+				//	loaded.back().Invalidate();
+				//	loaded.back().CheckUpdate();
 
 				//	orientation testing
 				//	for (int i = 0; i < Block::FACE_COUNT; ++i) {

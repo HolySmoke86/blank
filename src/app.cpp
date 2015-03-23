@@ -13,7 +13,8 @@ Application::Application(const Config &config)
 , window()
 , ctx(window.CreateContext())
 , init_glew()
-, program()
+, chunk_prog()
+, entity_prog()
 , cam()
 , world(config.world)
 , interface(config.interface, world)
@@ -134,12 +135,12 @@ void Application::Update(int dt) {
 void Application::Render() {
 	GLContext::Clear();
 
-	program.Activate();
+	chunk_prog.SetProjection(cam.Projection());
+	entity_prog.SetProjection(cam.Projection());
 
-	program.SetProjection(cam.Projection());
-	world.Render(program);
+	world.Render(chunk_prog, entity_prog);
 
-	interface.Render(program);
+	interface.Render(entity_prog);
 
 	window.Flip();
 }

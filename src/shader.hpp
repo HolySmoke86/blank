@@ -102,6 +102,43 @@ private:
 
 };
 
+class BlockLighting {
+
+public:
+	BlockLighting();
+
+	void Activate();
+
+	void SetFogDensity(float);
+
+	void SetM(const glm::mat4 &m);
+	void SetProjection(const glm::mat4 &p);
+	void SetView(const glm::mat4 &v);
+	void SetVP(const glm::mat4 &v, const glm::mat4 &p);
+	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p);
+
+	const glm::mat4 &Projection() const { return projection; }
+	const glm::mat4 &View() const { return view; }
+	const glm::mat4 &GetVP() const { return vp; }
+
+private:
+	Program program;
+
+	float fog_density;
+
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 vp;
+
+	GLuint m_handle;
+	GLuint mv_handle;
+	GLuint mvp_handle;
+	GLuint light_direction_handle;
+	GLuint light_color_handle;
+	GLuint fog_density_handle;
+
+};
+
 }
 
 #endif
