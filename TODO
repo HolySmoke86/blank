@@ -43,6 +43,10 @@ entity ai
 	light levels are roughtly implemented. the shader has to be
 	adjusted so they actually have an impact on the resulting color
 
+	there seems to be a bug with propagating light across chunk borders
+
+	also: how could block light affect entity lighting?
+
 gravity
 
 	maybe like light levels? should also store a direction with it in
@@ -67,3 +71,7 @@ world generator that is not boring
 
 	maybe divide into biomes and add special features like
 	settlements, ruins, all kinds of interesting stuff
+
+entity/world collision
+
+	entities should be stopped from entering solid parts of the world
