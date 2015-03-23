@@ -8,7 +8,7 @@ namespace blank {
 Generator::Generator(const Config &config)
 : solidNoise(config.solid_seed)
 , typeNoise(config.type_seed)
-, stretch(config.stretch)
+, stretch(1.0f/config.stretch)
 , solid_threshold(config.solid_threshold)
 , space(0)
 , light(0)
@@ -25,8 +25,8 @@ void Generator::operator ()(Chunk &chunk) const {
 		for (int y = 0; y < Chunk::Height(); ++y) {
 			for (int x = 0; x < Chunk::Width(); ++x) {
 				Block::Pos block_pos(x, y, z);
-				glm::vec3 gen_pos = (coords + block_pos) / stretch;
-				float val = solidNoise(gen_pos);
+				glm::vec3 gen_pos = (coords + block_pos) * stretch;
+				float val = OctaveNoise(solidNoise, coords + block_pos, 3, 0.5f, stretch, 2.0f);
 				if (val > solid_threshold) {
 					int type_val = int((typeNoise(gen_pos) + 1.0f) * solids.size()) % solids.size();
 					chunk.SetBlock(block_pos, Block(solids[type_val]));

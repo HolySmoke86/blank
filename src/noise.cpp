@@ -45,10 +45,9 @@ SimplexNoise::SimplexNoise(unsigned int seed)
 	{  0.0f,  1.0f, -1.0f },
 	{  0.0f, -1.0f, -1.0f },
 }) {
-	unsigned int val = seed;
+	GaloisLFSR random(seed ^ 0x0123456789ACBDEF);
 	for (size_t i = 0; i < 256; ++i) {
-		val = 2346765 * val + 6446345;
-		perm[i] = val % 256;
+		random(perm[i]);
 		perm[i + 256] = perm[i];
 	}
 }
