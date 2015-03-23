@@ -1,10 +1,39 @@
 #ifndef BLANK_NOISE_HPP_
 #define BLANK_NOISE_HPP_
 
+#include <cstdint>
+#include <limits>
 #include <glm/glm.hpp>
 
 
 namespace blank {
+
+class GaloisLFSR {
+
+public:
+	// seed should be non-zero
+	explicit GaloisLFSR(std::uint64_t seed);
+
+	// get the next bit
+	bool operator ()();
+
+	template<class T>
+	void operator ()(T &out) {
+		constexpr int num_bits =
+			std::numeric_limits<T>::digits +
+			std::numeric_limits<T>::is_signed;
+		for (int i = 0; i < num_bits; ++i) {
+			operator ()();
+		}
+		out = static_cast<T>(state);
+	}
+
+private:
+	std::uint64_t state;
+	// bits 64, 63, 61, and 60 set to 1 (counting from 1 lo to hi)
+	static constexpr std::uint64_t mask = 0xD800000000000000;
+
+};
 
 /// (3D only) adaptation of Stefan Gustavson's SimplexNoise java class
 class SimplexNoise {

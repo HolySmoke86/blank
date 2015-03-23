@@ -75,3 +75,9 @@ world generator that is not boring
 entity/world collision
 
 	entities should be stopped from entering solid parts of the world
+
+better noise
+
+	current simplex noise implementation repeats itself pretty quickly
+	also there seems to be a (imo) better implementation here:
+	http://flafla2.github.io/2014/08/09/perlinnoise.html
