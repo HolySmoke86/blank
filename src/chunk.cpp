@@ -13,6 +13,7 @@ Chunk::Chunk(const BlockTypeRegistry &types)
 : types(&types)
 , neighbor{ 0, 0, 0, 0, 0, 0 }
 , blocks()
+, light()
 , model()
 , position(0, 0, 0)
 , dirty(false) {
@@ -22,7 +23,9 @@ Chunk::Chunk(const BlockTypeRegistry &types)
 Chunk::Chunk(Chunk &&other)
 : types(other.types)
 , blocks(std::move(other.blocks))
+, light(std::move(other.light))
 , model(std::move(other.model))
+, position(other.position)
 , dirty(other.dirty) {
 	for (size_t i = 0; i < Block::FACE_COUNT; ++i) {
 		neighbor[i] = other.neighbor[i];
@@ -35,29 +38,31 @@ Chunk &Chunk::operator =(Chunk &&other) {
 		neighbor[i] = other.neighbor[i];
 	}
 	blocks = std::move(other.blocks);
+	light = std::move(other.light);
 	model = std::move(other.model);
+	position = other.position;
 	dirty = other.dirty;
 	return *this;
 }
 
 
 void Chunk::SetNeighbor(Chunk &other) {
-	if (other.position == position - Pos(-1, 0, 0)) {
+	if (other.position == position + Pos(-1, 0, 0)) {
 		neighbor[Block::FACE_LEFT] = &other;
 		other.neighbor[Block::FACE_RIGHT] = this;
-	} else if (other.position == position - Pos(1, 0, 0)) {
+	} else if (other.position == position + Pos(1, 0, 0)) {
 		neighbor[Block::FACE_RIGHT] = &other;
 		other.neighbor[Block::FACE_LEFT] = this;
-	} else if (other.position == position - Pos(0, -1, 0)) {
+	} else if (other.position == position + Pos(0, -1, 0)) {
 		neighbor[Block::FACE_DOWN] = &other;
 		other.neighbor[Block::FACE_UP] = this;
-	} else if (other.position == position - Pos(0, 1, 0)) {
+	} else if (other.position == position + Pos(0, 1, 0)) {
 		neighbor[Block::FACE_UP] = &other;
 		other.neighbor[Block::FACE_DOWN] = this;
-	} else if (other.position == position - Pos(0, 0, -1)) {
+	} else if (other.position == position + Pos(0, 0, -1)) {
 		neighbor[Block::FACE_BACK] = &other;
 		other.neighbor[Block::FACE_FRONT] = this;
-	} else if (other.position == position - Pos(0, 0, 1)) {
+	} else if (other.position == position + Pos(0, 0, 1)) {
 		neighbor[Block::FACE_FRONT] = &other;
 		other.neighbor[Block::FACE_BACK] = this;
 	}
