@@ -76,6 +76,8 @@ entity/world collision
 
 	entities should be stopped from entering solid parts of the world
 
+	also, current ray/obb intersection test sucks
+
 better noise
 
 	current simplex noise implementation repeats itself pretty quickly

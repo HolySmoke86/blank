@@ -94,7 +94,7 @@ glm::mat4 Entity::Transform(const Chunk::Pos &chunk_offset) const {
 
 Ray Entity::Aim(const Chunk::Pos &chunk_offset) const {
 	glm::mat4 transform = Transform(chunk_offset);
-	glm::vec4 from = transform * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f);
+	glm::vec4 from = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	from /= from.w;
 	glm::vec4 to = transform * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
 	to /= to.w;

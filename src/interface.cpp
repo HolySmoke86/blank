@@ -105,6 +105,8 @@ void Interface::PrintBlockInfo() {
 	std::cout << std::endl;
 	if (!aim_chunk) {
 		std::cout << "not looking at any block" << std::endl;
+		Ray aim = ctrl.Aim();
+		std::cout << "aim ray: " << aim.orig << ", " << aim.dir << std::endl;
 		return;
 	}
 	std::cout << "looking at block " << aim_block
