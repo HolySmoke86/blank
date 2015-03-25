@@ -155,19 +155,28 @@ private:
 };
 
 
-struct BlockLookup {
+class BlockLookup {
 
-	Chunk *chunk;
-	Chunk::Pos pos;
-	const Block *result;
-
-	// resolve chunk/position/block from oob coordinates
-	// result will be nullptr if unsuccessful
+public:
+	// resolve chunk/position from oob coordinates
 	BlockLookup(Chunk *c, const Chunk::Pos &p);
 
-	// resolve chunk/position/block from ib coordinates and direction
-	// result will be nullptr if unsuccessful
+	// resolve chunk/position from ib coordinates and direction
 	BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face dir);
+
+	// check if lookup was successful
+	operator bool() const { return chunk; }
+
+	// only valid if lookup was successful
+	Chunk &GetChunk() const { return *chunk; }
+	const Chunk::Pos &GetBlockPos() const { return pos; }
+	const Block &GetBlock() const { return GetChunk().BlockAt(GetBlockPos()); }
+	const BlockType &GetType() const { return GetChunk().Type(GetBlock()); }
+	int GetLight() const { return GetChunk().GetLight(GetBlockPos()); }
+
+private:
+	Chunk *chunk;
+	Chunk::Pos pos;
 
 };
 

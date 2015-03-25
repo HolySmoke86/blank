@@ -61,11 +61,11 @@ struct SetNode {
 
 	bool HasNext(Block::Face face) {
 		const BlockLookup next(chunk, pos, face);
-		return next.result && !next.chunk->Type(*next.result).block_light;
+		return next && !next.GetType().block_light;
 	}
 	SetNode GetNext(Block::Face face) {
 		const BlockLookup next(chunk, pos, face);
-		return SetNode(next.chunk, next.pos);
+		return SetNode(&next.GetChunk(), next.GetBlockPos());
 	}
 
 };
@@ -84,7 +84,7 @@ struct UnsetNode
 
 	bool HasNext(Block::Face face) {
 		const BlockLookup next(chunk, pos, face);
-		return next.result;
+		return next;
 	}
 	UnsetNode GetNext(Block::Face face) { return UnsetNode(SetNode::GetNext(face)); }
 
@@ -376,19 +376,10 @@ float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Bl
 	Chunk::Pos pos(ToPos(index));
 
 	Block::Face direct_face(Block::NormalFace(norm));
-	const Chunk *direct_chunk = this;
-	Chunk::Pos direct_pos(pos + Block::FaceNormal(direct_face));
-	if (!InBounds(direct_pos)) {
-		if (HasNeighbor(direct_face)) {
-			direct_chunk = &GetNeighbor(direct_face);
-			direct_pos -= (Block::FaceNormal(direct_face) * Extent());
-			float direct_light = direct_chunk->GetLight(direct_pos);
-			if (direct_light > light) {
-				light = direct_light;
-			}
-		}
-	} else {
-		float direct_light = direct_chunk->GetLight(direct_pos);
+	// tis okay
+	BlockLookup direct(const_cast<Chunk *>(this), pos, Block::NormalFace(norm));
+	if (direct) {
+		float direct_light = direct.GetLight();
 		if (direct_light > light) {
 			light = direct_light;
 		}
@@ -620,12 +611,13 @@ glm::mat4 Chunk::ToTransform(int idx) const {
 
 
 BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
-: chunk(c), pos(p), result(nullptr) {
+: chunk(c), pos(p) {
 	while (pos.x >= Chunk::Width()) {
 		if (chunk->HasNeighbor(Block::FACE_RIGHT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_RIGHT);
 			pos.x -= Chunk::Width();
 		} else {
+			chunk = nullptr;
 			return;
 		}
 	}
@@ -634,6 +626,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
 			chunk = &chunk->GetNeighbor(Block::FACE_LEFT);
 			pos.x += Chunk::Width();
 		} else {
+			chunk = nullptr;
 			return;
 		}
 	}
@@ -642,6 +635,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
 			chunk = &chunk->GetNeighbor(Block::FACE_UP);
 			pos.y -= Chunk::Height();
 		} else {
+			chunk = nullptr;
 			return;
 		}
 	}
@@ -650,6 +644,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
 			chunk = &chunk->GetNeighbor(Block::FACE_DOWN);
 			pos.y += Chunk::Height();
 		} else {
+			chunk = nullptr;
 			return;
 		}
 	}
@@ -658,6 +653,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
 			chunk = &chunk->GetNeighbor(Block::FACE_FRONT);
 			pos.z -= Chunk::Depth();
 		} else {
+			chunk = nullptr;
 			return;
 		}
 	}
@@ -666,23 +662,18 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
 			chunk = &chunk->GetNeighbor(Block::FACE_BACK);
 			pos.z += Chunk::Depth();
 		} else {
+			chunk = nullptr;
 			return;
 		}
 	}
-	result = &chunk->BlockAt(pos);
 }
 
 BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face)
-: chunk(c), pos(p), result(nullptr) {
+: chunk(c), pos(p) {
 	pos += Block::FaceNormal(face);
-	if (Chunk::InBounds(pos)) {
-		result = &chunk->BlockAt(pos);
-	} else {
+	if (!Chunk::InBounds(pos)) {
 		pos -= Block::FaceNormal(face) * Chunk::Extent();
-		if (chunk->HasNeighbor(face)) {
-			chunk = &chunk->GetNeighbor(face);
-			result = &chunk->BlockAt(pos);
-		}
+		chunk = &chunk->GetNeighbor(face);
 	}
 }
 
