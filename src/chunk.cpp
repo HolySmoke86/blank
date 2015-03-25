@@ -46,77 +46,6 @@ Chunk &Chunk::operator =(Chunk &&other) {
 }
 
 
-void Chunk::SetNeighbor(Chunk &other) {
-	if (other.position == position + Pos(-1, 0, 0)) {
-		neighbor[Block::FACE_LEFT] = &other;
-		other.neighbor[Block::FACE_RIGHT] = this;
-	} else if (other.position == position + Pos(1, 0, 0)) {
-		neighbor[Block::FACE_RIGHT] = &other;
-		other.neighbor[Block::FACE_LEFT] = this;
-	} else if (other.position == position + Pos(0, -1, 0)) {
-		neighbor[Block::FACE_DOWN] = &other;
-		other.neighbor[Block::FACE_UP] = this;
-	} else if (other.position == position + Pos(0, 1, 0)) {
-		neighbor[Block::FACE_UP] = &other;
-		other.neighbor[Block::FACE_DOWN] = this;
-	} else if (other.position == position + Pos(0, 0, -1)) {
-		neighbor[Block::FACE_BACK] = &other;
-		other.neighbor[Block::FACE_FRONT] = this;
-	} else if (other.position == position + Pos(0, 0, 1)) {
-		neighbor[Block::FACE_FRONT] = &other;
-		other.neighbor[Block::FACE_BACK] = this;
-	}
-}
-
-void Chunk::ClearNeighbors() {
-	for (int i = 0; i < Block::FACE_COUNT; ++i) {
-		neighbor[i] = nullptr;
-	}
-}
-
-void Chunk::Unlink() {
-	if (neighbor[Block::FACE_UP]) {
-		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = nullptr;
-	}
-	if (neighbor[Block::FACE_DOWN]) {
-		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = nullptr;
-	}
-	if (neighbor[Block::FACE_LEFT]) {
-		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = nullptr;
-	}
-	if (neighbor[Block::FACE_RIGHT]) {
-		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = nullptr;
-	}
-	if (neighbor[Block::FACE_FRONT]) {
-		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = nullptr;
-	}
-	if (neighbor[Block::FACE_BACK]) {
-		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = nullptr;
-	}
-}
-
-void Chunk::Relink() {
-	if (neighbor[Block::FACE_UP]) {
-		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = this;
-	}
-	if (neighbor[Block::FACE_DOWN]) {
-		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = this;
-	}
-	if (neighbor[Block::FACE_LEFT]) {
-		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = this;
-	}
-	if (neighbor[Block::FACE_RIGHT]) {
-		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = this;
-	}
-	if (neighbor[Block::FACE_FRONT]) {
-		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = this;
-	}
-	if (neighbor[Block::FACE_BACK]) {
-		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = this;
-	}
-}
-
-
 namespace {
 
 struct SetNode {
@@ -227,10 +156,12 @@ void Chunk::SetBlock(int index, const Block &block) {
 		work_light();
 	} else if (new_type.block_light && !old_type.block_light) {
 		// obstacle added
-		dark_queue.emplace(this, ToPos(index));
-		SetLight(index, 0);
-		work_dark();
-		work_light();
+		if (GetLight(index) > 0) {
+			dark_queue.emplace(this, ToPos(index));
+			SetLight(index, 0);
+			work_dark();
+			work_light();
+		}
 	} else if (!new_type.block_light && old_type.block_light) {
 		// obstacle removed
 		int level = 0;
@@ -265,6 +196,166 @@ const Block *Chunk::FindNext(const Pos &pos, Block::Face face) const {
 		return &GetNeighbor(face).BlockAt(next_pos - (Block::FaceNormal(face) * Extent()));
 	} else {
 		return nullptr;
+	}
+}
+
+void Chunk::SetNeighbor(Chunk &other) {
+	if (other.position == position + Pos(-1, 0, 0)) {
+		if (neighbor[Block::FACE_LEFT] != &other) {
+			neighbor[Block::FACE_LEFT] = &other;
+			other.neighbor[Block::FACE_RIGHT] = this;
+			for (int z = 0; z < Depth(); ++z) {
+				for (int y = 0; y < Height(); ++y) {
+					Pos my_pos(0, y, z);
+					Pos other_pos(Width() - 1, y, z);
+					if (GetLight(my_pos) > 0) {
+						light_queue.emplace(this, my_pos);
+					}
+					if (other.GetLight(other_pos) > 0) {
+						light_queue.emplace(&other, other_pos);
+					}
+				}
+			}
+			work_light();
+		}
+	} else if (other.position == position + Pos(1, 0, 0)) {
+		if (neighbor[Block::FACE_RIGHT] != &other) {
+			neighbor[Block::FACE_RIGHT] = &other;
+			other.neighbor[Block::FACE_LEFT] = this;
+			for (int z = 0; z < Depth(); ++z) {
+				for (int y = 0; y < Height(); ++y) {
+					Pos my_pos(Width() - 1, y, z);
+					Pos other_pos(0, y, z);
+					if (GetLight(my_pos) > 0) {
+						light_queue.emplace(this, my_pos);
+					}
+					if (other.GetLight(other_pos) > 0) {
+						light_queue.emplace(&other, other_pos);
+					}
+				}
+			}
+			work_light();
+		}
+	} else if (other.position == position + Pos(0, -1, 0)) {
+		if (neighbor[Block::FACE_DOWN] != &other) {
+			neighbor[Block::FACE_DOWN] = &other;
+			other.neighbor[Block::FACE_UP] = this;
+			for (int z = 0; z < Depth(); ++z) {
+				for (int x = 0; x < Width(); ++x) {
+					Pos my_pos(x, 0, z);
+					Pos other_pos(x, Height() - 1, z);
+					if (GetLight(my_pos) > 0) {
+						light_queue.emplace(this, my_pos);
+					}
+					if (other.GetLight(other_pos) > 0) {
+						light_queue.emplace(&other, other_pos);
+					}
+				}
+			}
+			work_light();
+		}
+	} else if (other.position == position + Pos(0, 1, 0)) {
+		if (neighbor[Block::FACE_UP] != &other) {
+			neighbor[Block::FACE_UP] = &other;
+			other.neighbor[Block::FACE_DOWN] = this;
+			for (int z = 0; z < Depth(); ++z) {
+				for (int x = 0; x < Width(); ++x) {
+					Pos my_pos(x, Height() - 1, z);
+					Pos other_pos(x, 0, z);
+					if (GetLight(my_pos) > 0) {
+						light_queue.emplace(this, my_pos);
+					}
+					if (other.GetLight(other_pos) > 0) {
+						light_queue.emplace(&other, other_pos);
+					}
+				}
+			}
+			work_light();
+		}
+	} else if (other.position == position + Pos(0, 0, -1)) {
+		if (neighbor[Block::FACE_BACK] != &other) {
+			neighbor[Block::FACE_BACK] = &other;
+			other.neighbor[Block::FACE_FRONT] = this;
+			for (int y = 0; y < Height(); ++y) {
+				for (int x = 0; x < Width(); ++x) {
+					Pos my_pos(x, y, 0);
+					Pos other_pos(x, y, Depth() - 1);
+					if (GetLight(my_pos) > 0) {
+						light_queue.emplace(this, my_pos);
+					}
+					if (other.GetLight(other_pos) > 0) {
+						light_queue.emplace(&other, other_pos);
+					}
+				}
+			}
+			work_light();
+		}
+	} else if (other.position == position + Pos(0, 0, 1)) {
+		if (neighbor[Block::FACE_FRONT] != &other) {
+			neighbor[Block::FACE_FRONT] = &other;
+			other.neighbor[Block::FACE_BACK] = this;
+			for (int y = 0; y < Height(); ++y) {
+				for (int x = 0; x < Width(); ++x) {
+					Pos my_pos(x, y, Depth() - 1);
+					Pos other_pos(x, y, 0);
+					if (GetLight(my_pos) > 0) {
+						light_queue.emplace(this, my_pos);
+					}
+					if (other.GetLight(other_pos) > 0) {
+						light_queue.emplace(&other, other_pos);
+					}
+				}
+			}
+			work_light();
+		}
+	}
+}
+
+void Chunk::ClearNeighbors() {
+	for (int i = 0; i < Block::FACE_COUNT; ++i) {
+		neighbor[i] = nullptr;
+	}
+}
+
+void Chunk::Unlink() {
+	if (neighbor[Block::FACE_UP]) {
+		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = nullptr;
+	}
+	if (neighbor[Block::FACE_DOWN]) {
+		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = nullptr;
+	}
+	if (neighbor[Block::FACE_LEFT]) {
+		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = nullptr;
+	}
+	if (neighbor[Block::FACE_RIGHT]) {
+		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = nullptr;
+	}
+	if (neighbor[Block::FACE_FRONT]) {
+		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = nullptr;
+	}
+	if (neighbor[Block::FACE_BACK]) {
+		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = nullptr;
+	}
+}
+
+void Chunk::Relink() {
+	if (neighbor[Block::FACE_UP]) {
+		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = this;
+	}
+	if (neighbor[Block::FACE_DOWN]) {
+		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = this;
+	}
+	if (neighbor[Block::FACE_LEFT]) {
+		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = this;
+	}
+	if (neighbor[Block::FACE_RIGHT]) {
+		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = this;
+	}
+	if (neighbor[Block::FACE_FRONT]) {
+		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = this;
+	}
+	if (neighbor[Block::FACE_BACK]) {
+		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = this;
 	}
 }
 
@@ -696,8 +787,9 @@ Chunk &ChunkLoader::Generate(const Chunk::Pos &pos) {
 	loaded.emplace_back(reg);
 	Chunk &chunk = loaded.back();
 	chunk.Position(pos);
-	Insert(chunk);
+	chunk.Allocate();
 	gen(chunk);
+	Insert(chunk);
 	return chunk;
 }
 
@@ -812,8 +904,9 @@ void ChunkLoader::Update() {
 			}
 			Chunk &chunk = loaded.back();
 			chunk.Position(pos);
-			Insert(chunk);
+			chunk.Allocate();
 			gen(chunk);
+			Insert(chunk);
 		}
 		to_generate.pop_front();
 	}

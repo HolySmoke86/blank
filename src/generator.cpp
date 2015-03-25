@@ -18,7 +18,6 @@ Generator::Generator(const Config &config)
 
 
 void Generator::operator ()(Chunk &chunk) const {
-	chunk.Allocate();
 	Chunk::Pos pos(chunk.Position());
 	glm::vec3 coords(pos * Chunk::Extent());
 	for (int z = 0; z < Chunk::Depth(); ++z) {
