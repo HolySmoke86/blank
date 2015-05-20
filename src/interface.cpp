@@ -4,7 +4,6 @@
 #include "world.hpp"
 
 #include <iostream>
-#include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/io.hpp>
 
@@ -23,12 +22,8 @@ Interface::Interface(const Config &config, World &world)
 , config(config)
 , remove(0)
 , selection(1)
-, front(false)
-, back(false)
-, left(false)
-, right(false)
-, up(false)
-, down(false) {
+, fwd(0)
+, rev(0) {
 	hud.Viewport(960, 600);
 	hud.Display(selection);
 }
@@ -39,22 +34,22 @@ void Interface::Handle(const SDL_KeyboardEvent &event) {
 
 	switch (event.keysym.sym) {
 		case SDLK_w:
-			front = event.state == SDL_PRESSED;
+			rev.z = event.state == SDL_PRESSED;
 			break;
 		case SDLK_s:
-			back = event.state == SDL_PRESSED;
+			fwd.z = event.state == SDL_PRESSED;
 			break;
 		case SDLK_a:
-			left = event.state == SDL_PRESSED;
+			rev.x = event.state == SDL_PRESSED;
 			break;
 		case SDLK_d:
-			right = event.state == SDL_PRESSED;
+			fwd.x = event.state == SDL_PRESSED;
 			break;
 		case SDLK_SPACE:
-			up = event.state == SDL_PRESSED;
+			fwd.y = event.state == SDL_PRESSED;
 			break;
 		case SDLK_LSHIFT:
-			down = event.state == SDL_PRESSED;
+			rev.y = event.state == SDL_PRESSED;
 			break;
 
 		case SDLK_q:
@@ -247,23 +242,7 @@ void Interface::Handle(const SDL_WindowEvent &event) {
 
 
 void Interface::Update(int dt) {
-	glm::vec3 vel;
-	if (right && !left) {
-		vel.x = config.move_velocity;
-	} else if (left && !right) {
-		vel.x = -config.move_velocity;
-	}
-	if (up && !down) {
-		vel.y = config.move_velocity;
-	} else if (down && !up) {
-		vel.y = -config.move_velocity;
-	}
-	if (back && !front) {
-		vel.z = config.move_velocity;
-	} else if (front && !back) {
-		vel.z = -config.move_velocity;
-	}
-	ctrl.Velocity(vel);
+	ctrl.Velocity(glm::vec3(fwd - rev) * config.move_velocity);
 	ctrl.Update(dt);
 
 	Ray aim = ctrl.Aim();

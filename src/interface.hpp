@@ -8,6 +8,7 @@
 #include "shader.hpp"
 
 #include <SDL.h>
+#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -73,7 +74,7 @@ private:
 	Block remove;
 	Block selection;
 
-	bool front, back, left, right, up, down;
+	glm::tvec3<int> fwd, rev;
 
 };
 
