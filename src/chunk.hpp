@@ -91,7 +91,6 @@ public:
 	// check if block at given index is completely enclosed (and therefore invisible)
 	bool Obstructed(int idx) const;
 
-	void Allocate();
 	void Invalidate() { dirty = true; }
 
 	void SetBlock(int index, const Block &);
@@ -146,8 +145,8 @@ private:
 private:
 	const BlockTypeRegistry *types;
 	Chunk *neighbor[Block::FACE_COUNT];
-	std::vector<Block> blocks;
-	std::vector<unsigned char> light;
+	Block blocks[16 * 16 * 16];
+	unsigned char light[16 * 16 * 16];
 	BlockModel model;
 	Pos position;
 	bool dirty;

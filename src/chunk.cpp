@@ -2,6 +2,7 @@
 
 #include "generator.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <queue>
 #include <glm/gtx/transform.hpp>
@@ -11,9 +12,9 @@ namespace blank {
 
 Chunk::Chunk(const BlockTypeRegistry &types)
 : types(&types)
-, neighbor{ 0, 0, 0, 0, 0, 0 }
-, blocks()
-, light()
+, neighbor{0}
+, blocks{}
+, light{0}
 , model()
 , position(0, 0, 0)
 , dirty(false) {
@@ -22,23 +23,19 @@ Chunk::Chunk(const BlockTypeRegistry &types)
 
 Chunk::Chunk(Chunk &&other)
 : types(other.types)
-, blocks(std::move(other.blocks))
-, light(std::move(other.light))
 , model(std::move(other.model))
 , position(other.position)
 , dirty(other.dirty) {
-	for (size_t i = 0; i < Block::FACE_COUNT; ++i) {
-		neighbor[i] = other.neighbor[i];
-	}
+	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
+	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
+	std::copy(other.light, other.light + sizeof(light), light);
 }
 
 Chunk &Chunk::operator =(Chunk &&other) {
 	types = other.types;
-	for (size_t i = 0; i < Block::FACE_COUNT; ++i) {
-		neighbor[i] = other.neighbor[i];
-	}
-	blocks = std::move(other.blocks);
-	light = std::move(other.light);
+	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
+	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
+	std::copy(other.light, other.light + sizeof(light), light);
 	model = std::move(other.model);
 	position = other.position;
 	dirty = other.dirty;
@@ -413,12 +410,6 @@ bool Chunk::IsSurface(const Pos &pos) const {
 }
 
 
-void Chunk::Allocate() {
-	blocks.resize(Size(), Block(0));
-	light.resize(Size(), 0);
-}
-
-
 void Chunk::Draw() {
 	if (dirty) {
 		Update();
@@ -778,7 +769,6 @@ Chunk &ChunkLoader::Generate(const Chunk::Pos &pos) {
 	loaded.emplace_back(reg);
 	Chunk &chunk = loaded.back();
 	chunk.Position(pos);
-	chunk.Allocate();
 	gen(chunk);
 	Insert(chunk);
 	return chunk;
@@ -872,39 +862,31 @@ void ChunkLoader::GenerateSurrounding(const Chunk::Pos &pos) {
 }
 
 void ChunkLoader::Update() {
-	bool reused = false;
-	if (!to_generate.empty()) {
-		Chunk::Pos pos(to_generate.front());
-
-		for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
-			if (iter->Position() == pos) {
-				iter->Relink();
-				loaded.splice(loaded.end(), to_free, iter);
-				reused = true;
-				break;
-			}
-		}
-
-		if (!reused) {
-			if (to_free.empty()) {
-				loaded.emplace_back(reg);
-			} else {
-				to_free.front().ClearNeighbors();
-				loaded.splice(loaded.end(), to_free, to_free.begin());
-				reused = true;
-			}
-			Chunk &chunk = loaded.back();
-			chunk.Position(pos);
-			chunk.Allocate();
-			gen(chunk);
-			Insert(chunk);
-		}
-		to_generate.pop_front();
+	if (to_generate.empty()) {
+		return;
 	}
 
-	if (!reused && !to_free.empty()) {
-		to_free.pop_front();
+	Chunk::Pos pos(to_generate.front());
+	to_generate.pop_front();
+
+	for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
+		if (iter->Position() == pos) {
+			iter->Relink();
+			loaded.splice(loaded.end(), to_free, iter);
+			return;
+		}
 	}
+
+	if (to_free.empty()) {
+		loaded.emplace_back(reg);
+	} else {
+		to_free.front().ClearNeighbors();
+		loaded.splice(loaded.end(), to_free, to_free.begin());
+	}
+	Chunk &chunk = loaded.back();
+	chunk.Position(pos);
+	gen(chunk);
+	Insert(chunk);
 }
 
 }

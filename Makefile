@@ -59,7 +59,7 @@ callgrind: blank.profile
 		--branch-sim=yes --cacheuse=yes --cache-sim=yes \
 		--collect-bus=yes --collect-systime=yes --collect-jumps=yes \
 		--dump-instr=yes --simulate-hwpref=yes --simulate-wb=yes \
-		./blank.profile
+		./blank.profile -n 128 -t 16 --no-keyboard --no-mouse -d --no-vsync
 
 clean:
 	rm -df $(OBJ) $(DEP) $(DIR)
