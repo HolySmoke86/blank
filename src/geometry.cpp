@@ -19,67 +19,23 @@ bool Intersection(
 
 	glm::vec3 t1(t_min, t_min, t_min), t2(t_max, t_max, t_max);
 
-	{ // X
-		const glm::vec3 xaxis(M[0].x, M[0].y, M[0].z);
-		const float e = glm::dot(xaxis, delta);
-		const float f = glm::dot(ray.dir, xaxis);
+	for (int i = 0; i < 3; ++i) {
+		const glm::vec3 axis(M[i].x, M[i].y, M[i].z);
+		const float e = glm::dot(axis, delta);
+		const float f = glm::dot(axis, ray.dir);
 
 		if (std::abs(f) > std::numeric_limits<float>::epsilon()) {
-			t1.x = (e + aabb.min.x) / f;
-			t2.x = (e + aabb.max.x) / f;
+			t1[i] = (e + aabb.min[i]) / f;
+			t2[i] = (e + aabb.max[i]) / f;
 
-			t_min = std::max(t_min, std::min(t1.x, t2.x));
-			t_max = std::min(t_max, std::max(t1.x, t2.x));
+			t_min = std::max(t_min, std::min(t1[i], t2[i]));
+			t_max = std::min(t_max, std::max(t1[i], t2[i]));
 
 			if (t_max < t_min) {
 				return false;
 			}
 		} else {
-			if (aabb.min.x - e < 0.0f || -aabb.max.x - e > 0.0f) {
-				return false;
-			}
-		}
-	}
-
-	{ // Y
-		const glm::vec3 yaxis(M[1].x, M[1].y, M[1].z);
-		const float e = glm::dot(yaxis, delta);
-		const float f = glm::dot(ray.dir, yaxis);
-
-		if (std::abs(f) > std::numeric_limits<float>::epsilon()) {
-			t1.y = (e + aabb.min.y) / f;
-			t2.y = (e + aabb.max.y) / f;
-
-			t_min = std::max(t_min, std::min(t1.y, t2.y));
-			t_max = std::min(t_max, std::max(t1.y, t2.y));
-
-			if (t_max < t_min) {
-				return false;
-			}
-		} else {
-			if (aabb.min.y - e < 0.0f || -aabb.max.y - e > 0.0f) {
-				return false;
-			}
-		}
-	}
-
-	{ // Z
-		const glm::vec3 zaxis(M[2].x, M[2].y, M[2].z);
-		const float e = glm::dot(zaxis, delta);
-		const float f = glm::dot(ray.dir, zaxis);
-
-		if (std::abs(f) > std::numeric_limits<float>::epsilon()) {
-			t1.z = (e + aabb.min.z) / f;
-			t2.z = (e + aabb.max.z) / f;
-
-			t_min = std::max(t_min, std::min(t1.z, t2.z));
-			t_max = std::min(t_max, std::max(t1.z, t2.z));
-
-			if (t_max < t_min) {
-				return false;
-			}
-		} else {
-			if (aabb.min.z - e < 0.0f || -aabb.max.z - e > 0.0f) {
+			if (aabb.min[i] - e < 0.0f || -aabb.max[i] - e > 0.0f) {
 				return false;
 			}
 		}
