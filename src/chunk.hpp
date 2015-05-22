@@ -101,10 +101,6 @@ public:
 	const Block &BlockAt(const Block::Pos &pos) const { return BlockAt(ToIndex(pos)); }
 	const Block &BlockAt(const Pos &pos) const { return BlockAt(ToIndex(pos)); }
 
-	const Block *FindNext(const Pos &pos, Block::Face face) const;
-	const Block *FindNext(const Block::Pos &pos, Block::Face face) const { return FindNext(Pos(pos), face); }
-	const Block *FindNext(int index, Block::Face face) const { return FindNext(ToPos(index), face); }
-
 	const BlockType &Type(const Block &b) const { return *types->Get(b.type); }
 
 	void SetLight(int index, int level);

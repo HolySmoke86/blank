@@ -163,18 +163,9 @@ void Chunk::SetBlock(int index, const Block &block) {
 		// obstacle removed
 		int level = 0;
 		for (int face = 0; face < Block::FACE_COUNT; ++face) {
-			Pos next_pos(ToPos(index) + Block::FaceNormal(Block::Face(face)));
-			int next_level = 0;
-			if (InBounds(next_pos)) {
-				next_level = GetLight(next_pos);
-			} else {
-				if (HasNeighbor(Block::Face(face))) {
-					next_pos -= (Block::FaceNormal(Block::Face(face)) * Chunk::Extent());
-					next_level = GetNeighbor(Block::Face(face)).GetLight(next_pos);
-				}
-			}
-			if (level < next_level) {
-				level = next_level;
+			BlockLookup next_block(this, ToPos(index), Block::Face(face));
+			if (next_block) {
+				level = std::min(level, next_block.GetLight());
 			}
 		}
 		if (level > 1) {
@@ -182,17 +173,6 @@ void Chunk::SetBlock(int index, const Block &block) {
 			light_queue.emplace(this, ToPos(index));
 			work_light();
 		}
-	}
-}
-
-const Block *Chunk::FindNext(const Pos &pos, Block::Face face) const {
-	Pos next_pos(pos + Block::FaceNormal(face));
-	if (InBounds(next_pos)) {
-		return &BlockAt(pos + Block::FaceNormal(face));
-	} else if (HasNeighbor(face)) {
-		return &GetNeighbor(face).BlockAt(next_pos - (Block::FaceNormal(face) * Extent()));
-	} else {
-		return nullptr;
 	}
 }
 
@@ -315,44 +295,18 @@ void Chunk::ClearNeighbors() {
 }
 
 void Chunk::Unlink() {
-	if (neighbor[Block::FACE_UP]) {
-		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = nullptr;
-	}
-	if (neighbor[Block::FACE_DOWN]) {
-		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = nullptr;
-	}
-	if (neighbor[Block::FACE_LEFT]) {
-		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = nullptr;
-	}
-	if (neighbor[Block::FACE_RIGHT]) {
-		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = nullptr;
-	}
-	if (neighbor[Block::FACE_FRONT]) {
-		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = nullptr;
-	}
-	if (neighbor[Block::FACE_BACK]) {
-		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = nullptr;
+	for (int face = 0; face < Block::FACE_COUNT; ++face) {
+		if (neighbor[face]) {
+			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = nullptr;
+		}
 	}
 }
 
 void Chunk::Relink() {
-	if (neighbor[Block::FACE_UP]) {
-		neighbor[Block::FACE_UP]->neighbor[Block::FACE_DOWN] = this;
-	}
-	if (neighbor[Block::FACE_DOWN]) {
-		neighbor[Block::FACE_DOWN]->neighbor[Block::FACE_UP] = this;
-	}
-	if (neighbor[Block::FACE_LEFT]) {
-		neighbor[Block::FACE_LEFT]->neighbor[Block::FACE_RIGHT] = this;
-	}
-	if (neighbor[Block::FACE_RIGHT]) {
-		neighbor[Block::FACE_RIGHT]->neighbor[Block::FACE_LEFT] = this;
-	}
-	if (neighbor[Block::FACE_FRONT]) {
-		neighbor[Block::FACE_FRONT]->neighbor[Block::FACE_BACK] = this;
-	}
-	if (neighbor[Block::FACE_BACK]) {
-		neighbor[Block::FACE_BACK]->neighbor[Block::FACE_FRONT] = this;
+	for (int face = 0; face < Block::FACE_COUNT; ++face) {
+		if (neighbor[face]) {
+			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = this;
+		}
 	}
 }
 
@@ -401,8 +355,8 @@ bool Chunk::IsSurface(const Pos &pos) const {
 		return false;
 	}
 	for (int face = 0; face < Block::FACE_COUNT; ++face) {
-		const Block *next = FindNext(pos, Block::Face(face));
-		if (!next || !Type(*next).visible) {
+		BlockLookup next = BlockLookup(const_cast<Chunk *>(this), pos, Block::Face(face));
+		if (!next || !next.GetType().visible) {
 			return true;
 		}
 	}
@@ -509,88 +463,12 @@ void Chunk::Update() {
 bool Chunk::Obstructed(int idx) const {
 	Chunk::Pos pos(ToPos(idx));
 
-	Chunk::Pos left_pos(pos + Chunk::Pos(-1, 0, 0));
-	const Block *left_block = nullptr;
-	if (InBounds(left_pos)) {
-		left_block = &BlockAt(left_pos);
-	} else if (HasNeighbor(Block::FACE_LEFT)) {
-		left_pos += Chunk::Pos(Width(), 0, 0);
-		left_block = &GetNeighbor(Block::FACE_LEFT).BlockAt(left_pos);
-	} else {
-		return false;
-	}
-	if (!Type(*left_block).FaceFilled(*left_block, Block::FACE_RIGHT)) {
-		return false;
-	}
-
-	Chunk::Pos right_pos(pos + Chunk::Pos(1, 0, 0));
-	const Block *right_block = nullptr;
-	if (InBounds(right_pos)) {
-		right_block = &BlockAt(right_pos);
-	} else if (HasNeighbor(Block::FACE_RIGHT)) {
-		right_pos += Chunk::Pos(-Width(), 0, 0);
-		right_block = &GetNeighbor(Block::FACE_RIGHT).BlockAt(right_pos);
-	} else {
-		return false;
-	}
-	if (!Type(*right_block).FaceFilled(*right_block, Block::FACE_LEFT)) {
-		return false;
-	}
-
-	Chunk::Pos down_pos(pos + Chunk::Pos(0, -1, 0));
-	const Block *down_block = nullptr;
-	if (InBounds(down_pos)) {
-		down_block = &BlockAt(down_pos);
-	} else if (HasNeighbor(Block::FACE_DOWN)) {
-		down_pos += Chunk::Pos(0, Height(), 0);
-		down_block = &GetNeighbor(Block::FACE_DOWN).BlockAt(down_pos);
-	} else {
-		return false;
-	}
-	if (!Type(*down_block).FaceFilled(*down_block, Block::FACE_UP)) {
-		return false;
-	}
-
-	Chunk::Pos up_pos(pos + Chunk::Pos(0, 1, 0));
-	const Block *up_block = nullptr;
-	if (InBounds(up_pos)) {
-		up_block = &BlockAt(up_pos);
-	} else if (HasNeighbor(Block::FACE_UP)) {
-		up_pos += Chunk::Pos(0, -Height(), 0);
-		up_block = &GetNeighbor(Block::FACE_UP).BlockAt(up_pos);
-	} else {
-		return false;
-	}
-	if (!Type(*up_block).FaceFilled(*up_block, Block::FACE_DOWN)) {
-		return false;
-	}
-
-	Chunk::Pos back_pos(pos + Chunk::Pos(0, 0, -1));
-	const Block *back_block = nullptr;
-	if (InBounds(back_pos)) {
-		back_block = &BlockAt(back_pos);
-	} else if (HasNeighbor(Block::FACE_BACK)) {
-		back_pos += Chunk::Pos(0, 0, Depth());
-		back_block = &GetNeighbor(Block::FACE_BACK).BlockAt(back_pos);
-	} else {
-		return false;
-	}
-	if (!Type(*back_block).FaceFilled(*back_block, Block::FACE_FRONT)) {
-		return false;
-	}
-
-	Chunk::Pos front_pos(pos + Chunk::Pos(0, 0, 1));
-	const Block *front_block = nullptr;
-	if (InBounds(front_pos)) {
-		front_block = &BlockAt(front_pos);
-	} else if (HasNeighbor(Block::FACE_FRONT)) {
-		front_pos += Chunk::Pos(0, 0, -Depth());
-		front_block = &GetNeighbor(Block::FACE_FRONT).BlockAt(front_pos);
-	} else {
-		return false;
-	}
-	if (!Type(*front_block).FaceFilled(*front_block, Block::FACE_BACK)) {
-		return false;
+	for (int f = 0; f < Block::FACE_COUNT; ++f) {
+		Block::Face face = Block::Face(f);
+		BlockLookup next(const_cast<Chunk *>(this), pos, face);
+		if (!next || !next.GetType().FaceFilled(next.GetBlock(), Block::Opposite(face))) {
+			return false;
+		}
 	}
 
 	return true;

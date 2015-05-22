@@ -42,10 +42,14 @@ struct Block {
 
 	const glm::mat4 &Transform() const;
 
-	Face GetFace() const { return Face(orient / 4); }
+	Face GetFace() const { return Face(orient / TURN_COUNT); }
 	void SetFace(Face face) { orient = face * TURN_COUNT + GetTurn(); }
-	Turn GetTurn() const { return Turn(orient % 4); }
+	Turn GetTurn() const { return Turn(orient % TURN_COUNT); }
 	void SetTurn(Turn turn) { orient = GetFace() * TURN_COUNT + turn; }
+
+	static Face Opposite(Face f) {
+		return Face(f ^ 1);
+	}
 
 	static glm::tvec3<int> FaceNormal(Face face) {
 		switch (face) {
