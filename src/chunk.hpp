@@ -111,7 +111,7 @@ public:
 	int GetLight(const Pos &pos) const { return GetLight(ToIndex(pos)); }
 	int GetLight(const Block::Pos &pos) const { return GetLight(ToIndex(pos)); }
 
-	float GetVertexLight(int index, const BlockModel::Position &, const BlockModel::Normal &) const;
+	float GetVertexLight(int index, const BlockModel::Position &, const Model::Normal &) const;
 
 	bool Intersection(
 		const Ray &ray,

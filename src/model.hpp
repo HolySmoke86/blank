@@ -80,13 +80,11 @@ class BlockModel {
 public:
 	using Position = glm::vec3;
 	using Color = glm::vec3;
-	using Normal = glm::vec3;
 	using Light = float;
 	using Index = unsigned int;
 
 	using Positions = std::vector<Position>;
 	using Colors = std::vector<Color>;
-	using Normals = std::vector<Normal>;
 	using Lights = std::vector<Light>;
 	using Indices = std::vector<Index>;
 
@@ -95,14 +93,12 @@ public:
 
 		Positions vertices;
 		Colors colors;
-		Normals normals;
 		Lights lights;
 		Indices indices;
 
 		void Clear() {
 			vertices.clear();
 			colors.clear();
-			normals.clear();
 			lights.clear();
 			indices.clear();
 		}
@@ -110,7 +106,6 @@ public:
 		void Reserve(size_t p, size_t i) {
 			vertices.reserve(p);
 			colors.reserve(p);
-			normals.reserve(p);
 			lights.reserve(p);
 			indices.reserve(i);
 		}
@@ -135,7 +130,6 @@ private:
 	enum Attribute {
 		ATTRIB_VERTEX,
 		ATTRIB_COLOR,
-		ATTRIB_NORMAL,
 		ATTRIB_LIGHT,
 		ATTRIB_INDEX,
 		ATTRIB_COUNT,

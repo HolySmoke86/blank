@@ -17,14 +17,19 @@ struct Shape {
 	/// the number of vertex indices this shape has
 	size_t VertexIndexCount() const { return vtx_idx.size(); }
 
+	const Model::Normal &VertexNormal(size_t idx) const { return vtx_nrm[idx]; }
+	Model::Normal VertexNormal(
+		size_t idx, const glm::mat4 &transform
+	) const {
+		return Model::Normal(transform * glm::vec4(vtx_nrm[idx], 0.0f));
+	}
+
 	/// fill given buffers with this shape's elements with an
-	/// optional offset
+	/// optional transform and offset
 	void Vertices(
 		Model::Positions &vertex,
 		Model::Normals &normal,
-		Model::Indices &index,
-		const Model::Position &elem_offset = { 0.0f, 0.0f, 0.0f },
-		Model::Index idx_offset = 0
+		Model::Indices &index
 	) const;
 	void Vertices(
 		Model::Positions &vertex,
@@ -32,6 +37,12 @@ struct Shape {
 		Model::Indices &index,
 		const glm::mat4 &transform,
 		Model::Index idx_offset = 0
+	) const;
+	void Vertices(
+		BlockModel::Positions &vertex,
+		BlockModel::Indices &index,
+		const glm::mat4 &transform,
+		BlockModel::Index idx_offset = 0
 	) const;
 
 	/// the number of vertices this shape's outline has

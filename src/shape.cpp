@@ -6,16 +6,16 @@ namespace blank {
 void Shape::Vertices(
 	Model::Positions &vertex,
 	Model::Normals &normal,
-	Model::Indices &index,
-	const Model::Position &elem_offset,
-	Model::Index idx_offset
+	Model::Indices &index
 ) const {
 	for (const auto &pos : vtx_pos) {
-		vertex.emplace_back(elem_offset + pos);
+		vertex.emplace_back(pos);
 	}
-	normal.insert(normal.end(), vtx_nrm.begin(), vtx_nrm.end());
+	for (const auto &nrm : vtx_nrm) {
+		normal.emplace_back(nrm);
+	}
 	for (auto idx : vtx_idx) {
-		index.emplace_back(idx_offset + idx);
+		index.emplace_back(idx);
 	}
 }
 
@@ -31,6 +31,20 @@ void Shape::Vertices(
 	}
 	for (const auto &nrm : vtx_nrm) {
 		normal.emplace_back(transform * glm::vec4(nrm, 0.0f));
+	}
+	for (auto idx : vtx_idx) {
+		index.emplace_back(idx_offset + idx);
+	}
+}
+
+void Shape::Vertices(
+	BlockModel::Positions &vertex,
+	BlockModel::Indices &index,
+	const glm::mat4 &transform,
+	BlockModel::Index idx_offset
+) const {
+	for (const auto &pos : vtx_pos) {
+		vertex.emplace_back(transform * glm::vec4(pos, 1.0f));
 	}
 	for (auto idx : vtx_idx) {
 		index.emplace_back(idx_offset + idx);

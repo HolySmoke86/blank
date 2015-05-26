@@ -132,6 +132,10 @@ void Program::Log(std::ostream &out) const {
 }
 
 
+GLint Program::AttributeLocation(const GLchar *name) const {
+	return glGetAttribLocation(handle, name);
+}
+
 GLint Program::UniformLocation(const GLchar *name) const {
 	return glGetUniformLocation(handle, name);
 }
@@ -257,7 +261,6 @@ void DirectionalLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const g
 BlockLighting::BlockLighting()
 : program()
 , vp(1.0f)
-, m_handle(0)
 , mv_handle(0)
 , mvp_handle(0)
 , fog_density_handle(0) {
@@ -266,20 +269,16 @@ BlockLighting::BlockLighting()
 		"#version 330 core\n"
 		"layout(location = 0) in vec3 vtx_position;\n"
 		"layout(location = 1) in vec3 vtx_color;\n"
-		"layout(location = 2) in vec3 vtx_normal;\n"
-		"layout(location = 3) in float vtx_light;\n"
-		"uniform mat4 M;\n"
+		"layout(location = 2) in float vtx_light;\n"
 		"uniform mat4 MV;\n"
 		"uniform mat4 MVP;\n"
 		"out vec3 frag_color;\n"
 		"out vec3 vtx_viewspace;\n"
-		"out vec3 normal;\n"
 		"out float frag_light;\n"
 		"void main() {\n"
 			"gl_Position = MVP * vec4(vtx_position, 1);\n"
 			"frag_color = vtx_color;\n"
 			"vtx_viewspace = (MV * vec4(vtx_position, 1)).xyz;\n"
-			"normal = (M * vec4(vtx_normal, 0)).xyz;\n"
 			"frag_light = vtx_light;\n"
 		"}\n"
 	);
@@ -294,8 +293,6 @@ BlockLighting::BlockLighting()
 		"void main() {\n"
 			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
 			"float light_power = clamp(pow(0.8, 15 - frag_light), 0, 1);\n"
-			//"float light_power = clamp(frag_light / 15, 0, 1);\n"
-			// this should be the same as the clear color, otherwise looks really weird
 			"vec3 fog_color = vec3(0, 0, 0);\n"
 			"float e = 2.718281828;\n"
 			//"vec3 reflect_color = ambient + frag_color * light_power;\n"
@@ -310,7 +307,6 @@ BlockLighting::BlockLighting()
 		throw std::runtime_error("link program");
 	}
 
-	m_handle = program.UniformLocation("M");
 	mv_handle = program.UniformLocation("MV");
 	mvp_handle = program.UniformLocation("MVP");
 	fog_density_handle = program.UniformLocation("fog_density");
@@ -326,7 +322,6 @@ void BlockLighting::Activate() {
 void BlockLighting::SetM(const glm::mat4 &m) {
 	glm::mat4 mv(view * m);
 	glm::mat4 mvp(vp * m);
-	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
 	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 }

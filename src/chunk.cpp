@@ -322,7 +322,7 @@ int Chunk::GetLight(int index) const {
 	return light[index];
 }
 
-float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const BlockModel::Normal &norm) const {
+float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Model::Normal &norm) const {
 	float light = GetLight(index);
 	Chunk::Pos pos(ToPos(index));
 
@@ -452,7 +452,11 @@ void Chunk::Update() {
 		vtx_counter += type.shape->VertexCount();
 
 		for (size_t vtx = vtx_begin; vtx < vtx_counter; ++vtx) {
-			buf.lights.emplace_back(GetVertexLight(i, buf.vertices[vtx], buf.normals[vtx]));
+			buf.lights.emplace_back(GetVertexLight(
+				i,
+				buf.vertices[vtx],
+				type.shape->VertexNormal(vtx - vtx_begin, blocks[i].Transform())
+			));
 		}
 	}
 

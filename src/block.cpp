@@ -61,7 +61,7 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s)
 namespace {
 
 const Block::Face face_map[Block::FACE_COUNT * Block::TURN_COUNT][Block::FACE_COUNT] = {
-	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_FRONT, Block::FACE_BACK,  }, // face: up,    turn: none x
+	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_RIGHT, Block::FACE_LEFT,  Block::FACE_FRONT, Block::FACE_BACK,  }, // face: up,    turn: none
 	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_FRONT, Block::FACE_BACK,  Block::FACE_LEFT,  Block::FACE_RIGHT, }, // face: up,    turn: left
 	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_LEFT,  Block::FACE_RIGHT, Block::FACE_BACK,  Block::FACE_FRONT, }, // face: up,    turn: around
 	{ Block::FACE_UP,    Block::FACE_DOWN,  Block::FACE_BACK,  Block::FACE_FRONT, Block::FACE_RIGHT, Block::FACE_LEFT,  }, // face: up,    turn: right
@@ -107,7 +107,7 @@ void BlockType::FillBlockModel(
 	const glm::mat4 &transform,
 	BlockModel::Index idx_offset
 ) const {
-	shape->Vertices(buf.vertices, buf.normals, buf.indices, transform, idx_offset);
+	shape->Vertices(buf.vertices, buf.indices, transform, idx_offset);
 	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
 }
 

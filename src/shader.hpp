@@ -49,6 +49,7 @@ public:
 	bool Linked() const;
 	void Log(std::ostream &) const;
 
+	GLint AttributeLocation(const GLchar *name) const;
 	GLint UniformLocation(const GLchar *name) const;
 
 	void Use() const { glUseProgram(handle); }
@@ -130,7 +131,6 @@ private:
 	glm::mat4 view;
 	glm::mat4 vp;
 
-	GLuint m_handle;
 	GLuint mv_handle;
 	GLuint mvp_handle;
 	GLuint light_direction_handle;

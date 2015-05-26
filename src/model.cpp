@@ -167,23 +167,6 @@ void BlockModel::Update(const Buffer &buf) {
 	);
 
 #ifndef NDEBUG
-	if (buf.normals.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough normals!" << std::endl;
-	}
-#endif
-	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_NORMAL]);
-	glBufferData(GL_ARRAY_BUFFER, buf.normals.size() * sizeof(glm::vec3), buf.normals.data(), GL_STATIC_DRAW);
-	glEnableVertexAttribArray(ATTRIB_NORMAL);
-	glVertexAttribPointer(
-		ATTRIB_NORMAL, // location (for shader)
-		3,             // size
-		GL_FLOAT,      // type
-		GL_FALSE,      // normalized
-		0,             // stride
-		nullptr        // offset
-	);
-
-#ifndef NDEBUG
 	if (buf.lights.size() < buf.vertices.size()) {
 		std::cerr << "BlockModel: not enough lights!" << std::endl;
 	}
