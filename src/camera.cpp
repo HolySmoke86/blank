@@ -1,5 +1,7 @@
 #include "camera.hpp"
 
+#include "geometry.hpp"
+
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -7,7 +9,7 @@
 namespace blank {
 
 Camera::Camera()
-: fov(45.0f)
+: fov(PI_0p25)
 , aspect(1.0f)
 , near_clip(0.1f)
 , far_clip(256.0f)

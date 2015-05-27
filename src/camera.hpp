@@ -14,6 +14,7 @@ public:
 	void Viewport(int width, int height);
 	void Viewport(int x, int y, int width, int height);
 
+	/// FOV in radians
 	void FOV(float f);
 	void Aspect(float r);
 	void Aspect(float w, float h);
