@@ -88,8 +88,8 @@ public:
 	void Unlink();
 	void Relink();
 
-	// check if block at given index is completely enclosed (and therefore invisible)
-	bool Obstructed(int idx) const;
+	// check which faces of a block at given index are obstructed (and therefore invisible)
+	Block::FaceSet Obstructed(int idx) const;
 
 	void Invalidate() { dirty = true; }
 

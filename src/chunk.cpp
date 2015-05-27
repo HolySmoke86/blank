@@ -445,7 +445,7 @@ void Chunk::Update() {
 	for (size_t i = 0; i < Size(); ++i) {
 		const BlockType &type = Type(blocks[i]);
 
-		if (!type.visible || Obstructed(i)) continue;
+		if (!type.visible || Obstructed(i).All()) continue;
 
 		type.FillBlockModel(buf, ToTransform(i), vtx_counter);
 		size_t vtx_begin = vtx_counter;
@@ -464,18 +464,19 @@ void Chunk::Update() {
 	dirty = false;
 }
 
-bool Chunk::Obstructed(int idx) const {
+Block::FaceSet Chunk::Obstructed(int idx) const {
 	Chunk::Pos pos(ToPos(idx));
+	Block::FaceSet result;
 
 	for (int f = 0; f < Block::FACE_COUNT; ++f) {
 		Block::Face face = Block::Face(f);
 		BlockLookup next(const_cast<Chunk *>(this), pos, face);
-		if (!next || !next.GetType().FaceFilled(next.GetBlock(), Block::Opposite(face))) {
-			return false;
+		if (next && next.GetType().FaceFilled(next.GetBlock(), Block::Opposite(face))) {
+			result.Set(face);
 		}
 	}
 
-	return true;
+	return result;
 }
 
 glm::mat4 Chunk::ToTransform(int idx) const {

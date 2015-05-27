@@ -87,6 +87,43 @@ struct Block {
 		}
 	}
 
+	struct FaceSet {
+
+		explicit FaceSet(unsigned char v = 0)
+		: value(v) { }
+
+		bool IsSet(Face f) const {
+			return value & Mask(f);
+		}
+		void Set(Face f) {
+			value |= Mask(f);
+		}
+		void Unset(Face f) {
+			value |= ~Mask(f);
+		}
+
+		void Clear() {
+			value = 0;
+		}
+		void Fill() {
+			value = Mask(FACE_COUNT) - 1;
+		}
+
+		bool Empty() const {
+			return value == 0;
+		}
+		bool All() const {
+			return value == Mask(FACE_COUNT) - 1;
+		}
+
+		unsigned char Mask(Face f) const {
+			return 1 << f;
+		}
+
+		unsigned char value;
+
+	};
+
 };
 
 
