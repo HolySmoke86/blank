@@ -93,7 +93,6 @@ void Model::Update(const Buffer &buf) {
 
 void Model::Draw() const {
 	glBindVertexArray(va);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
 	glDrawElements(
 		GL_TRIANGLES,    // how
 		count,           // count
@@ -191,7 +190,6 @@ void BlockModel::Update(const Buffer &buf) {
 
 void BlockModel::Draw() const {
 	glBindVertexArray(va);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
 	glDrawElements(
 		GL_TRIANGLES,    // how
 		count,           // count
@@ -279,7 +277,6 @@ void OutlineModel::Draw() {
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
 	glDrawElements(
 		GL_LINES,          // how
 		indices.size(),    // count
