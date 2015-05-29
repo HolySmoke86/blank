@@ -49,6 +49,8 @@ SimplexNoise::SimplexNoise(unsigned int seed) noexcept
 	for (size_t i = 0; i < 256; ++i) {
 		random(perm[i]);
 		perm[i + 256] = perm[i];
+		perm12[i] = perm[i] % 12;
+		perm12[i + 256] = perm12[i];
 	}
 }
 
@@ -96,11 +98,11 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const noexcept {
 		(unsigned char)(skewed.y),
 		(unsigned char)(skewed.z),
 	};
-	size_t corner[4] = {
-		Perm(index[0] + Perm(index[1] + Perm(index[2]))),
-		Perm(index[0] + second.x + Perm(index[1] + second.y + Perm(index[2] + second.z))),
-		Perm(index[0] + third.x + Perm(index[1] + third.y + Perm(index[2] + third.z))),
-		Perm(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1))),
+	unsigned char corner[4] = {
+		Perm12(index[0] + Perm(index[1] + Perm(index[2]))),
+		Perm12(index[0] + int(second.x) + Perm(index[1] + int(second.y) + Perm(index[2] + int(second.z)))),
+		Perm12(index[0] + int(third.x) + Perm(index[1] + int(third.y) + Perm(index[2] + int(third.z)))),
+		Perm12(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1))),
 	};
 	float n[4];
 	float t[4];
@@ -122,8 +124,12 @@ unsigned char SimplexNoise::Perm(size_t idx) const noexcept {
 	return perm[idx];
 }
 
-const glm::vec3 &SimplexNoise::Grad(size_t idx) const noexcept {
-	return grad[idx % 12];
+unsigned char SimplexNoise::Perm12(size_t idx) const noexcept {
+	return perm12[idx];
+}
+
+const glm::vec3 &SimplexNoise::Grad(unsigned char idx) const noexcept {
+	return grad[idx];
 }
 
 
@@ -141,21 +147,21 @@ float WorleyNoise::operator ()(const glm::vec3 &in) const noexcept {
 	for (int z = -1; z <= 1; ++z) {
 		for (int y = -1; y <= 1; ++y) {
 			for (int x = -1; x <= 1; ++x) {
-				glm::tvec3<int> cube(center.x + x, center.y + y, center.z + z);
+				glm::vec3 cube(center.x + x, center.y + y, center.z + z);
 				unsigned int cube_rand =
-					(cube.x * 130223) ^
-					(cube.y * 159899) ^
-					(cube.z * 190717) ^
+					(unsigned(cube.x) * 130223) ^
+					(unsigned(cube.y) * 159899) ^
+					(unsigned(cube.z) * 190717) ^
 					seed;
 
 				for (int i = 0; i < num_points; ++i) {
 					glm::vec3 point(cube);
 					cube_rand = 190667 * cube_rand + 109807;
-					point.x += float(cube_rand % 200000) / 200000.0f;
+					point.x += float(cube_rand % 262144) / 262144.0f;
 					cube_rand = 135899 * cube_rand + 189169;
-					point.y += float(cube_rand % 200000) / 200000.0f;
+					point.y += float(cube_rand % 262144) / 262144.0f;
 					cube_rand = 159739 * cube_rand + 112139;
-					point.z += float(cube_rand % 200000) / 200000.0f;
+					point.z += float(cube_rand % 262144) / 262144.0f;
 
 					glm::vec3 diff(in - point);
 					float distance = sqrt(dot(diff, diff));

@@ -46,10 +46,12 @@ public:
 
 private:
 	unsigned char Perm(size_t idx) const noexcept;
-	const glm::vec3 &Grad(size_t idx) const noexcept;
+	unsigned char Perm12(size_t idx) const noexcept;
+	const glm::vec3 &Grad(unsigned char idx) const noexcept;
 
 private:
 	unsigned char perm[512];
+	unsigned char perm12[512];
 	glm::vec3 grad[12];
 
 };
