@@ -34,40 +34,29 @@ struct Block {
 		TURN_COUNT,
 	};
 
+	static constexpr int ORIENT_COUNT = FACE_COUNT * TURN_COUNT;
+
 	Type type;
 	unsigned char orient;
 
 	constexpr explicit Block(Type type = 0, Face face = FACE_UP, Turn turn = TURN_NONE)
 	: type(type), orient(face * TURN_COUNT + turn) { }
 
-	const glm::mat4 &Transform() const;
+	const glm::mat4 &Transform() const { return orient2transform[orient]; }
 
 	Face GetFace() const { return Face(orient / TURN_COUNT); }
 	void SetFace(Face face) { orient = face * TURN_COUNT + GetTurn(); }
 	Turn GetTurn() const { return Turn(orient % TURN_COUNT); }
 	void SetTurn(Turn turn) { orient = GetFace() * TURN_COUNT + turn; }
 
+	Face OrientedFace(Face f) const { return orient2face[orient][f]; }
+
 	static Face Opposite(Face f) {
 		return Face(f ^ 1);
 	}
 
 	static glm::tvec3<int> FaceNormal(Face face) {
-		switch (face) {
-			case FACE_UP:
-				return { 0, 1, 0 };
-			case FACE_DOWN:
-				return { 0, -1, 0 };
-			case FACE_RIGHT:
-				return { 1, 0, 0 };
-			case FACE_LEFT:
-				return { -1, 0, 0 };
-			case FACE_FRONT:
-				return { 0, 0, 1 };
-			case FACE_BACK:
-				return { 0, 0, -1 };
-			default:
-				return { 0, 0, 0 };
-		}
+		return face2normal[face];
 	}
 
 	static Face NormalFace(const glm::vec3 &norm) {
@@ -124,6 +113,11 @@ struct Block {
 
 	};
 
+private:
+	static const glm::tvec3<int> face2normal[6];
+	static const glm::mat4 orient2transform[ORIENT_COUNT];
+	static const Face orient2face[ORIENT_COUNT][FACE_COUNT];
+
 };
 
 
@@ -162,7 +156,9 @@ struct BlockType {
 
 	static const NullShape DEFAULT_SHAPE;
 
-	bool FaceFilled(const Block &, Block::Face) const;
+	bool FaceFilled(const Block &block, Block::Face face) const {
+		return fill[block.OrientedFace(face)];
+	}
 
 	void FillModel(
 		Model::Buffer &m,
