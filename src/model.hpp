@@ -29,7 +29,7 @@ public:
 		Normals normals;
 		Indices indices;
 
-		void Clear() {
+		void Clear() noexcept {
 			vertices.clear();
 			colors.clear();
 			normals.clear();
@@ -46,18 +46,18 @@ public:
 	};
 
 public:
-	Model();
-	~Model();
+	Model() noexcept;
+	~Model() noexcept;
 
 	Model(const Model &) = delete;
 	Model &operator =(const Model &) = delete;
 
-	Model(Model &&);
-	Model &operator =(Model &&);
+	Model(Model &&) noexcept;
+	Model &operator =(Model &&) noexcept;
 
-	void Update(const Buffer &);
+	void Update(const Buffer &) noexcept;
 
-	void Draw() const;
+	void Draw() const noexcept;
 
 private:
 	enum Attribute {
@@ -96,7 +96,7 @@ public:
 		Lights lights;
 		Indices indices;
 
-		void Clear() {
+		void Clear() noexcept {
 			vertices.clear();
 			colors.clear();
 			lights.clear();
@@ -113,18 +113,18 @@ public:
 	};
 
 public:
-	BlockModel();
-	~BlockModel();
+	BlockModel() noexcept;
+	~BlockModel() noexcept;
 
 	BlockModel(const BlockModel &) = delete;
 	BlockModel &operator =(const Model &) = delete;
 
-	BlockModel(BlockModel &&);
-	BlockModel &operator =(BlockModel &&);
+	BlockModel(BlockModel &&) noexcept;
+	BlockModel &operator =(BlockModel &&) noexcept;
 
-	void Update(const Buffer &);
+	void Update(const Buffer &) noexcept;
 
-	void Draw() const;
+	void Draw() const noexcept;
 
 private:
 	enum Attribute {
@@ -159,21 +159,21 @@ public:
 	Indices indices;
 
 public:
-	OutlineModel();
-	~OutlineModel();
+	OutlineModel() noexcept;
+	~OutlineModel() noexcept;
 
 	OutlineModel(const OutlineModel &) = delete;
 	OutlineModel &operator =(const OutlineModel &) = delete;
 
-	void Invalidate() { dirty = true; }
+	void Invalidate() noexcept { dirty = true; }
 
-	void Clear();
+	void Clear() noexcept;
 	void Reserve(int vtx_count, int idx_count);
 
-	void Draw();
+	void Draw() noexcept;
 
 private:
-	void Update();
+	void Update() noexcept;
 
 private:
 	enum Attribute {

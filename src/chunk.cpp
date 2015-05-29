@@ -5,12 +5,11 @@
 #include <algorithm>
 #include <limits>
 #include <queue>
-#include <glm/gtx/transform.hpp>
 
 
 namespace blank {
 
-Chunk::Chunk(const BlockTypeRegistry &types)
+Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 : types(&types)
 , neighbor{0}
 , blocks{}
@@ -21,7 +20,7 @@ Chunk::Chunk(const BlockTypeRegistry &types)
 
 }
 
-Chunk::Chunk(Chunk &&other)
+Chunk::Chunk(Chunk &&other) noexcept
 : types(other.types)
 , model(std::move(other.model))
 , position(other.position)
@@ -31,7 +30,7 @@ Chunk::Chunk(Chunk &&other)
 	std::copy(other.light, other.light + sizeof(light), light);
 }
 
-Chunk &Chunk::operator =(Chunk &&other) {
+Chunk &Chunk::operator =(Chunk &&other) noexcept {
 	types = other.types;
 	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
 	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
@@ -53,14 +52,14 @@ struct SetNode {
 	SetNode(Chunk *chunk, Chunk::Pos pos)
 	: chunk(chunk), pos(pos) { }
 
-	int Get() const { return chunk->GetLight(pos); }
-	void Set(int level) { chunk->SetLight(pos, level); }
+	int Get() const noexcept { return chunk->GetLight(pos); }
+	void Set(int level) noexcept { chunk->SetLight(pos, level); }
 
-	bool HasNext(Block::Face face) {
+	bool HasNext(Block::Face face) noexcept {
 		const BlockLookup next(chunk, pos, face);
 		return next && !next.GetType().block_light;
 	}
-	SetNode GetNext(Block::Face face) {
+	SetNode GetNext(Block::Face face) noexcept {
 		const BlockLookup next(chunk, pos, face);
 		return SetNode(&next.GetChunk(), next.GetBlockPos());
 	}
@@ -79,18 +78,18 @@ struct UnsetNode
 	: SetNode(set), level(Get()) { }
 
 
-	bool HasNext(Block::Face face) {
+	bool HasNext(Block::Face face) noexcept {
 		const BlockLookup next(chunk, pos, face);
 		return next;
 	}
-	UnsetNode GetNext(Block::Face face) { return UnsetNode(SetNode::GetNext(face)); }
+	UnsetNode GetNext(Block::Face face) noexcept { return UnsetNode(SetNode::GetNext(face)); }
 
 };
 
 std::queue<SetNode> light_queue;
 std::queue<UnsetNode> dark_queue;
 
-void work_light() {
+void work_light() noexcept {
 	while (!light_queue.empty()) {
 		SetNode node = light_queue.front();
 		light_queue.pop();
@@ -108,7 +107,7 @@ void work_light() {
 	}
 }
 
-void work_dark() {
+void work_dark() noexcept {
 	while (!dark_queue.empty()) {
 		UnsetNode node = dark_queue.front();
 		dark_queue.pop();
@@ -130,7 +129,7 @@ void work_dark() {
 
 }
 
-void Chunk::SetBlock(int index, const Block &block) {
+void Chunk::SetBlock(int index, const Block &block) noexcept {
 	const BlockType &old_type = Type(blocks[index]);
 	const BlockType &new_type = Type(block);
 
@@ -176,7 +175,7 @@ void Chunk::SetBlock(int index, const Block &block) {
 	}
 }
 
-void Chunk::SetNeighbor(Chunk &other) {
+void Chunk::SetNeighbor(Chunk &other) noexcept {
 	if (other.position == position + Pos(-1, 0, 0)) {
 		if (neighbor[Block::FACE_LEFT] != &other) {
 			neighbor[Block::FACE_LEFT] = &other;
@@ -288,13 +287,13 @@ void Chunk::SetNeighbor(Chunk &other) {
 	}
 }
 
-void Chunk::ClearNeighbors() {
+void Chunk::ClearNeighbors() noexcept {
 	for (int i = 0; i < Block::FACE_COUNT; ++i) {
 		neighbor[i] = nullptr;
 	}
 }
 
-void Chunk::Unlink() {
+void Chunk::Unlink() noexcept {
 	for (int face = 0; face < Block::FACE_COUNT; ++face) {
 		if (neighbor[face]) {
 			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = nullptr;
@@ -302,7 +301,7 @@ void Chunk::Unlink() {
 	}
 }
 
-void Chunk::Relink() {
+void Chunk::Relink() noexcept {
 	for (int face = 0; face < Block::FACE_COUNT; ++face) {
 		if (neighbor[face]) {
 			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = this;
@@ -311,18 +310,18 @@ void Chunk::Relink() {
 }
 
 
-void Chunk::SetLight(int index, int level) {
+void Chunk::SetLight(int index, int level) noexcept {
 	if (light[index] != level) {
 		light[index] = level;
 		Invalidate();
 	}
 }
 
-int Chunk::GetLight(int index) const {
+int Chunk::GetLight(int index) const noexcept {
 	return light[index];
 }
 
-float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Model::Normal &norm) const {
+float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Model::Normal &norm) const noexcept {
 	float light = GetLight(index);
 	Chunk::Pos pos(ToPos(index));
 
@@ -349,7 +348,7 @@ float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Mo
 }
 
 
-bool Chunk::IsSurface(const Pos &pos) const {
+bool Chunk::IsSurface(const Pos &pos) const noexcept {
 	const Block &block = BlockAt(pos);
 	if (!Type(block).visible) {
 		return false;
@@ -364,7 +363,7 @@ bool Chunk::IsSurface(const Pos &pos) const {
 }
 
 
-void Chunk::Draw() {
+void Chunk::Draw() noexcept {
 	if (dirty) {
 		Update();
 	}
@@ -378,7 +377,7 @@ bool Chunk::Intersection(
 	int &blkid,
 	float &dist,
 	glm::vec3 &normal
-) const {
+) const noexcept {
 	// TODO: should be possible to heavily optimize this
 	int id = 0;
 	blkid = -1;
@@ -410,14 +409,6 @@ bool Chunk::Intersection(
 	}
 }
 
-void Chunk::Position(const Pos &pos) {
-	position = pos;
-}
-
-glm::mat4 Chunk::Transform(const Pos &offset) const {
-	return glm::translate((position - offset) * Extent());
-}
-
 
 namespace {
 
@@ -425,13 +416,13 @@ BlockModel::Buffer buf;
 
 }
 
-void Chunk::CheckUpdate() {
+void Chunk::CheckUpdate() noexcept {
 	if (dirty) {
 		Update();
 	}
 }
 
-void Chunk::Update() {
+void Chunk::Update() noexcept {
 	int vtx_count = 0, idx_count = 0;
 	for (const auto &block : blocks) {
 		const Shape *shape = Type(block).shape;
@@ -464,7 +455,7 @@ void Chunk::Update() {
 	dirty = false;
 }
 
-Block::FaceSet Chunk::Obstructed(int idx) const {
+Block::FaceSet Chunk::Obstructed(int idx) const noexcept {
 	Chunk::Pos pos(ToPos(idx));
 	Block::FaceSet result;
 
@@ -479,12 +470,12 @@ Block::FaceSet Chunk::Obstructed(int idx) const {
 	return result;
 }
 
-glm::mat4 Chunk::ToTransform(int idx) const {
+glm::mat4 Chunk::ToTransform(int idx) const noexcept {
 	return glm::translate(glm::mat4(1.0f), ToCoords(idx)) * blocks[idx].Transform();
 }
 
 
-BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
+BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 : chunk(c), pos(p) {
 	while (pos.x >= Chunk::Width()) {
 		if (chunk->HasNeighbor(Block::FACE_RIGHT)) {
@@ -542,7 +533,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p)
 	}
 }
 
-BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face)
+BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face) noexcept
 : chunk(c), pos(p) {
 	pos += Block::FaceNormal(face);
 	if (!Chunk::InBounds(pos)) {
@@ -552,7 +543,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face)
 }
 
 
-ChunkLoader::ChunkLoader(const Config &config, const BlockTypeRegistry &reg, const Generator &gen)
+ChunkLoader::ChunkLoader(const Config &config, const BlockTypeRegistry &reg, const Generator &gen) noexcept
 : base(0, 0, 0)
 , reg(reg)
 , gen(gen)
@@ -568,10 +559,10 @@ namespace {
 
 struct ChunkLess {
 
-	explicit ChunkLess(const Chunk::Pos &base)
+	explicit ChunkLess(const Chunk::Pos &base) noexcept
 	: base(base) { }
 
-	bool operator ()(const Chunk::Pos &a, const Chunk::Pos &b) const {
+	bool operator ()(const Chunk::Pos &a, const Chunk::Pos &b) const noexcept {
 		Chunk::Pos da(base - a);
 		Chunk::Pos db(base - b);
 		return
@@ -657,17 +648,17 @@ Chunk &ChunkLoader::Generate(const Chunk::Pos &pos) {
 	return chunk;
 }
 
-void ChunkLoader::Insert(Chunk &chunk) {
+void ChunkLoader::Insert(Chunk &chunk) noexcept {
 	for (Chunk &other : loaded) {
 		chunk.SetNeighbor(other);
 	}
 }
 
-void ChunkLoader::Remove(Chunk &chunk) {
+void ChunkLoader::Remove(Chunk &chunk) noexcept {
 	chunk.Unlink();
 }
 
-Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) {
+Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) noexcept {
 	for (Chunk &chunk : loaded) {
 		if (chunk.Position() == pos) {
 			return &chunk;
@@ -676,7 +667,7 @@ Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) {
 	return nullptr;
 }
 
-bool ChunkLoader::Queued(const Chunk::Pos &pos) {
+bool ChunkLoader::Queued(const Chunk::Pos &pos) noexcept {
 	for (const Chunk::Pos &chunk : to_generate) {
 		if (chunk == pos) {
 			return true;
@@ -685,7 +676,7 @@ bool ChunkLoader::Queued(const Chunk::Pos &pos) {
 	return nullptr;
 }
 
-bool ChunkLoader::Known(const Chunk::Pos &pos) {
+bool ChunkLoader::Known(const Chunk::Pos &pos) noexcept {
 	if (Loaded(pos)) return true;
 	return Queued(pos);
 }

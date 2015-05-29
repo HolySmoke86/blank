@@ -17,35 +17,35 @@ class Shape;
 class Entity {
 
 public:
-	Entity();
+	Entity() noexcept;
 
-	bool HasShape() const { return shape; }
-	const Shape *GetShape() const { return shape; }
+	bool HasShape() const noexcept { return shape; }
+	const Shape *GetShape() const noexcept { return shape; }
 	void SetShape(const Shape *, const glm::vec3 &color);
-	void SetShapeless();
+	void SetShapeless() noexcept;
 
-	const glm::vec3 &Velocity() const { return velocity; }
-	void Velocity(const glm::vec3 &);
+	const glm::vec3 &Velocity() const noexcept { return velocity; }
+	void Velocity(const glm::vec3 &) noexcept;
 
-	const Block::Pos &Position() const { return position; }
-	void Position(const Block::Pos &);
-	void Move(const glm::vec3 &delta);
+	const Block::Pos &Position() const noexcept { return position; }
+	void Position(const Block::Pos &) noexcept;
+	void Move(const glm::vec3 &delta) noexcept;
 
-	const Chunk::Pos ChunkCoords() const { return chunk; }
+	const Chunk::Pos ChunkCoords() const noexcept { return chunk; }
 
-	const glm::quat &AngularVelocity() const { return angular_velocity; }
-	void AngularVelocity(const glm::quat &);
+	const glm::quat &AngularVelocity() const noexcept { return angular_velocity; }
+	void AngularVelocity(const glm::quat &) noexcept;
 
-	const glm::mat4 &Rotation() const { return rotation; }
-	void Rotation(const glm::mat4 &);
-	void Rotate(const glm::quat &delta);
+	const glm::mat4 &Rotation() const noexcept { return rotation; }
+	void Rotation(const glm::mat4 &) noexcept;
+	void Rotate(const glm::quat &delta) noexcept;
 
-	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const;
-	Ray Aim(const Chunk::Pos &chunk_offset) const;
+	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const noexcept;
+	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
-	void Update(int dt);
+	void Update(int dt) noexcept;
 
-	void Draw();
+	void Draw() noexcept;
 
 private:
 	const Shape *shape;

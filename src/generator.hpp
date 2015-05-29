@@ -20,12 +20,12 @@ public:
 		float solid_threshold = 0.5f;
 	};
 
-	explicit Generator(const Config &);
+	explicit Generator(const Config &) noexcept;
 
-	void operator ()(Chunk &) const;
+	void operator ()(Chunk &) const noexcept;
 
-	void Space(Block::Type t) { space = t; }
-	void Light(Block::Type t) { light = t; }
+	void Space(Block::Type t) noexcept { space = t; }
+	void Light(Block::Type t) noexcept { light = t; }
 	void Solids(const std::vector<Block::Type> &s) { solids = s; }
 
 private:

@@ -11,7 +11,7 @@ using namespace std;
 
 namespace blank {
 
-Runtime::Runtime()
+Runtime::Runtime() noexcept
 : name("blank")
 , mode(NORMAL)
 , n(0)

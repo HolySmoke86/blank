@@ -9,21 +9,21 @@ namespace blank {
 class Camera {
 
 public:
-	Camera();
+	Camera() noexcept;
 
-	void Viewport(int width, int height);
-	void Viewport(int x, int y, int width, int height);
+	void Viewport(int width, int height) noexcept;
+	void Viewport(int x, int y, int width, int height) noexcept;
 
 	/// FOV in radians
-	void FOV(float f);
-	void Aspect(float r);
-	void Aspect(float w, float h);
-	void Clip(float near, float far);
+	void FOV(float f) noexcept;
+	void Aspect(float r) noexcept;
+	void Aspect(float w, float h) noexcept;
+	void Clip(float near, float far) noexcept;
 
-	const glm::mat4 &Projection() { return projection; }
+	const glm::mat4 &Projection() noexcept { return projection; }
 
 private:
-	void UpdateProjection();
+	void UpdateProjection() noexcept;
 
 private:
 	float fov;

@@ -5,20 +5,20 @@
 
 namespace blank {
 
-Model::Model()
-:  va(0)
+Model::Model() noexcept
+: va(0)
 , handle{}
 , count(0) {
 	glGenVertexArrays(1, &va);
 	glGenBuffers(ATTRIB_COUNT, handle);
 }
 
-Model::~Model() {
+Model::~Model() noexcept {
 	glDeleteBuffers(ATTRIB_COUNT, handle);
 	glDeleteVertexArrays(1, &va);
 }
 
-Model::Model(Model &&other)
+Model::Model(Model &&other) noexcept
 : va(other.va)
 , count(other.count) {
 	other.va = 0;
@@ -28,7 +28,7 @@ Model::Model(Model &&other)
 	}
 }
 
-Model &Model::operator =(Model &&other) {
+Model &Model::operator =(Model &&other) noexcept {
 	std::swap(va, other.va);
 	for (int i = 0; i < ATTRIB_COUNT; ++i) {
 		std::swap(handle[i], other.handle[i]);
@@ -37,7 +37,7 @@ Model &Model::operator =(Model &&other) {
 	return *this;
 }
 
-void Model::Update(const Buffer &buf) {
+void Model::Update(const Buffer &buf) noexcept {
 	glBindVertexArray(va);
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
 	glBufferData(GL_ARRAY_BUFFER, buf.vertices.size() * sizeof(glm::vec3), buf.vertices.data(), GL_STATIC_DRAW);
@@ -91,7 +91,7 @@ void Model::Update(const Buffer &buf) {
 }
 
 
-void Model::Draw() const {
+void Model::Draw() const noexcept {
 	glBindVertexArray(va);
 	glDrawElements(
 		GL_TRIANGLES,    // how
@@ -102,7 +102,7 @@ void Model::Draw() const {
 }
 
 
-BlockModel::BlockModel()
+BlockModel::BlockModel() noexcept
 : va(0)
 , handle{}
 , count(0) {
@@ -110,12 +110,12 @@ BlockModel::BlockModel()
 	glGenBuffers(ATTRIB_COUNT, handle);
 }
 
-BlockModel::~BlockModel() {
+BlockModel::~BlockModel() noexcept {
 	glDeleteBuffers(ATTRIB_COUNT, handle);
 	glDeleteVertexArrays(1, &va);
 }
 
-BlockModel::BlockModel(BlockModel &&other)
+BlockModel::BlockModel(BlockModel &&other) noexcept
 : va(other.va)
 , count(other.count) {
 	other.va = 0;
@@ -125,7 +125,7 @@ BlockModel::BlockModel(BlockModel &&other)
 	}
 }
 
-BlockModel &BlockModel::operator =(BlockModel &&other) {
+BlockModel &BlockModel::operator =(BlockModel &&other) noexcept {
 	std::swap(va, other.va);
 	for (int i = 0; i < ATTRIB_COUNT; ++i) {
 		std::swap(handle[i], other.handle[i]);
@@ -134,7 +134,7 @@ BlockModel &BlockModel::operator =(BlockModel &&other) {
 	return *this;
 }
 
-void BlockModel::Update(const Buffer &buf) {
+void BlockModel::Update(const Buffer &buf) noexcept {
 	glBindVertexArray(va);
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
 	glBufferData(GL_ARRAY_BUFFER, buf.vertices.size() * sizeof(glm::vec3), buf.vertices.data(), GL_STATIC_DRAW);
@@ -188,7 +188,7 @@ void BlockModel::Update(const Buffer &buf) {
 }
 
 
-void BlockModel::Draw() const {
+void BlockModel::Draw() const noexcept {
 	glBindVertexArray(va);
 	glDrawElements(
 		GL_TRIANGLES,    // how
@@ -198,7 +198,7 @@ void BlockModel::Draw() const {
 	);
 }
 
-OutlineModel::OutlineModel()
+OutlineModel::OutlineModel() noexcept
 : vertices()
 , colors()
 , indices()
@@ -209,13 +209,13 @@ OutlineModel::OutlineModel()
 	glGenBuffers(ATTRIB_COUNT, handle);
 }
 
-OutlineModel::~OutlineModel() {
+OutlineModel::~OutlineModel() noexcept {
 	glDeleteBuffers(ATTRIB_COUNT, handle);
 	glDeleteVertexArrays(1, &va);
 }
 
 
-void OutlineModel::Clear() {
+void OutlineModel::Clear() noexcept {
 	vertices.clear();
 	colors.clear();
 	indices.clear();
@@ -229,7 +229,7 @@ void OutlineModel::Reserve(int v, int i) {
 }
 
 
-void OutlineModel::Update() {
+void OutlineModel::Update() noexcept {
 	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(glm::vec3), vertices.data(), GL_STATIC_DRAW);
 	glEnableVertexAttribArray(ATTRIB_VERTEX);
@@ -267,7 +267,7 @@ void OutlineModel::Update() {
 }
 
 
-void OutlineModel::Draw() {
+void OutlineModel::Draw() noexcept {
 	glBindVertexArray(va);
 
 	if (dirty) {

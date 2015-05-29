@@ -6,7 +6,7 @@
 
 namespace blank {
 
-FPSController::FPSController(Entity &entity)
+FPSController::FPSController(Entity &entity) noexcept
 : entity(entity)
 , pitch(0)
 , yaw(0) {
@@ -14,7 +14,7 @@ FPSController::FPSController(Entity &entity)
 }
 
 
-void FPSController::Pitch(float p) {
+void FPSController::Pitch(float p) noexcept {
 	pitch = p;
 	if (pitch > PI / 2) {
 		pitch = PI / 2;
@@ -23,11 +23,11 @@ void FPSController::Pitch(float p) {
 	}
 }
 
-void FPSController::RotatePitch(float delta) {
+void FPSController::RotatePitch(float delta) noexcept {
 	Pitch(pitch + delta);
 }
 
-void FPSController::Yaw(float y) {
+void FPSController::Yaw(float y) noexcept {
 	yaw = y;
 	if (yaw > PI) {
 		yaw -= PI * 2;
@@ -36,25 +36,25 @@ void FPSController::Yaw(float y) {
 	}
 }
 
-void FPSController::RotateYaw(float delta) {
+void FPSController::RotateYaw(float delta) noexcept {
 	Yaw(yaw + delta);
 }
 
 
-void FPSController::Update(int dt) {
+void FPSController::Update(int dt) noexcept {
 	entity.Rotation(glm::eulerAngleYX(yaw, pitch));
 	entity.Velocity(glm::rotateY(velocity, yaw));
 }
 
 
-RandomWalk::RandomWalk(Entity &e)
+RandomWalk::RandomWalk(Entity &e) noexcept
 : entity(e)
 , time_left(0) {
 
 }
 
 
-void RandomWalk::Update(int dt) {
+void RandomWalk::Update(int dt) noexcept {
 	time_left -= dt;
 	if (time_left > 0) return;
 	time_left += 2500 + (rand() % 5000);

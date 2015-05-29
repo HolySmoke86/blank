@@ -201,7 +201,7 @@ void Interface::PlaceBlock() {
 	mod_chunk->Invalidate();
 }
 
-void Interface::RemoveBlock() {
+void Interface::RemoveBlock() noexcept {
 	if (!aim_chunk) return;
 	aim_chunk->SetBlock(aim_block, remove);
 	aim_chunk->Invalidate();
@@ -234,7 +234,7 @@ void Interface::SelectPrevious() {
 	hud.Display(selection);
 }
 
-void Interface::Handle(const SDL_WindowEvent &event) {
+void Interface::Handle(const SDL_WindowEvent &event) noexcept {
 	if (event.event == SDL_WINDOWEVENT_RESIZED) {
 		hud.Viewport(event.data1, event.data2);
 	}
@@ -260,7 +260,7 @@ void Interface::Update(int dt) {
 }
 
 
-void Interface::Render(DirectionalLighting &program) {
+void Interface::Render(DirectionalLighting &program) noexcept {
 	if (config.visual_disabled) return;
 
 	if (aim_chunk) {

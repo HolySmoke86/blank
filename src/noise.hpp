@@ -12,13 +12,13 @@ class GaloisLFSR {
 
 public:
 	// seed should be non-zero
-	explicit GaloisLFSR(std::uint64_t seed);
+	explicit GaloisLFSR(std::uint64_t seed) noexcept;
 
 	// get the next bit
-	bool operator ()();
+	bool operator ()() noexcept;
 
 	template<class T>
-	void operator ()(T &out) {
+	void operator ()(T &out) noexcept {
 		constexpr int num_bits =
 			std::numeric_limits<T>::digits +
 			std::numeric_limits<T>::is_signed;
@@ -40,13 +40,13 @@ private:
 class SimplexNoise {
 
 public:
-	explicit SimplexNoise(unsigned int seed);
+	explicit SimplexNoise(unsigned int seed) noexcept;
 
-	float operator ()(const glm::vec3 &) const;
+	float operator ()(const glm::vec3 &) const noexcept;
 
 private:
-	unsigned char Perm(size_t idx) const;
-	const glm::vec3 &Grad(size_t idx) const;
+	unsigned char Perm(size_t idx) const noexcept;
+	const glm::vec3 &Grad(size_t idx) const noexcept;
 
 private:
 	unsigned char perm[512];
@@ -59,9 +59,9 @@ private:
 class WorleyNoise {
 
 public:
-	explicit WorleyNoise(unsigned int seed);
+	explicit WorleyNoise(unsigned int seed) noexcept;
 
-	float operator ()(const glm::vec3 &) const;
+	float operator ()(const glm::vec3 &) const noexcept;
 
 private:
 	const unsigned int seed;

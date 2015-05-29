@@ -12,12 +12,12 @@ constexpr float one_sixth = 1.0f/6.0f;
 
 namespace blank {
 
-GaloisLFSR::GaloisLFSR(std::uint64_t seed)
+GaloisLFSR::GaloisLFSR(std::uint64_t seed) noexcept
 : state(seed) {
 
 }
 
-bool GaloisLFSR::operator ()() {
+bool GaloisLFSR::operator ()() noexcept {
 	bool result = state & 1;
 	state >>= 1;
 	if (result) {
@@ -30,7 +30,7 @@ bool GaloisLFSR::operator ()() {
 }
 
 
-SimplexNoise::SimplexNoise(unsigned int seed)
+SimplexNoise::SimplexNoise(unsigned int seed) noexcept
 : grad({
 	{  1.0f,  1.0f,  0.0f },
 	{ -1.0f,  1.0f,  0.0f },
@@ -53,7 +53,7 @@ SimplexNoise::SimplexNoise(unsigned int seed)
 }
 
 
-float SimplexNoise::operator ()(const glm::vec3 &in) const {
+float SimplexNoise::operator ()(const glm::vec3 &in) const noexcept {
 	float skew = (in.x + in.y + in.z) * one_third;
 
 	glm::vec3 skewed(glm::floor(in + skew));
@@ -118,22 +118,22 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const {
 }
 
 
-unsigned char SimplexNoise::Perm(size_t idx) const {
+unsigned char SimplexNoise::Perm(size_t idx) const noexcept {
 	return perm[idx];
 }
 
-const glm::vec3 &SimplexNoise::Grad(size_t idx) const {
+const glm::vec3 &SimplexNoise::Grad(size_t idx) const noexcept {
 	return grad[idx % 12];
 }
 
 
-WorleyNoise::WorleyNoise(unsigned int seed)
+WorleyNoise::WorleyNoise(unsigned int seed) noexcept
 : seed(seed)
 , num_points(8) {
 
 }
 
-float WorleyNoise::operator ()(const glm::vec3 &in) const {
+float WorleyNoise::operator ()(const glm::vec3 &in) const noexcept {
 	glm::vec3 center = floor(in);
 
 	float closest = 1.0f;  // cannot be farther away than 1.0

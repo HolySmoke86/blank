@@ -39,27 +39,27 @@ struct Block {
 	Type type;
 	unsigned char orient;
 
-	constexpr explicit Block(Type type = 0, Face face = FACE_UP, Turn turn = TURN_NONE)
+	constexpr explicit Block(Type type = 0, Face face = FACE_UP, Turn turn = TURN_NONE) noexcept
 	: type(type), orient(face * TURN_COUNT + turn) { }
 
-	const glm::mat4 &Transform() const { return orient2transform[orient]; }
+	const glm::mat4 &Transform() const noexcept { return orient2transform[orient]; }
 
-	Face GetFace() const { return Face(orient / TURN_COUNT); }
-	void SetFace(Face face) { orient = face * TURN_COUNT + GetTurn(); }
-	Turn GetTurn() const { return Turn(orient % TURN_COUNT); }
-	void SetTurn(Turn turn) { orient = GetFace() * TURN_COUNT + turn; }
+	Face GetFace() const noexcept { return Face(orient / TURN_COUNT); }
+	void SetFace(Face face) noexcept { orient = face * TURN_COUNT + GetTurn(); }
+	Turn GetTurn() const noexcept { return Turn(orient % TURN_COUNT); }
+	void SetTurn(Turn turn) noexcept { orient = GetFace() * TURN_COUNT + turn; }
 
-	Face OrientedFace(Face f) const { return orient2face[orient][f]; }
+	Face OrientedFace(Face f) const noexcept { return orient2face[orient][f]; }
 
-	static Face Opposite(Face f) {
+	static Face Opposite(Face f) noexcept {
 		return Face(f ^ 1);
 	}
 
-	static glm::tvec3<int> FaceNormal(Face face) {
+	static glm::tvec3<int> FaceNormal(Face face) noexcept {
 		return face2normal[face];
 	}
 
-	static Face NormalFace(const glm::vec3 &norm) {
+	static Face NormalFace(const glm::vec3 &norm) noexcept {
 		const glm::vec3 anorm(abs(norm));
 		if (anorm.x > anorm.y) {
 			if (anorm.x > anorm.z) {
@@ -137,13 +137,13 @@ struct BlockType {
 
 	struct Faces {
 		bool face[Block::FACE_COUNT];
-		Faces &operator =(const Faces &other) {
+		Faces &operator =(const Faces &other) noexcept {
 			for (int i = 0; i < Block::FACE_COUNT; ++i) {
 				face[i] = other.face[i];
 			}
 			return *this;
 		}
-		bool operator [](Block::Face f) const {
+		bool operator [](Block::Face f) const noexcept {
 			return face[f];
 		}
 	} fill;
@@ -152,11 +152,11 @@ struct BlockType {
 		bool v = false,
 		const glm::vec3 &color = { 1, 1, 1 },
 		const Shape *shape = &DEFAULT_SHAPE
-	);
+	) noexcept;
 
 	static const NullShape DEFAULT_SHAPE;
 
-	bool FaceFilled(const Block &block, Block::Face face) const {
+	bool FaceFilled(const Block &block, Block::Face face) const noexcept {
 		return fill[block.OrientedFace(face)];
 	}
 
@@ -164,17 +164,17 @@ struct BlockType {
 		Model::Buffer &m,
 		const glm::mat4 &transform = glm::mat4(1.0f),
 		Model::Index idx_offset = 0
-	) const;
+	) const noexcept;
 	void FillBlockModel(
 		BlockModel::Buffer &m,
 		const glm::mat4 &transform = glm::mat4(1.0f),
 		BlockModel::Index idx_offset = 0
-	) const;
+	) const noexcept;
 	void FillOutlineModel(
 		OutlineModel &m,
 		const glm::vec3 &pos_offset = { 0, 0, 0 },
 		OutlineModel::Index idx_offset = 0
-	) const;
+	) const noexcept;
 
 };
 
@@ -187,10 +187,10 @@ public:
 public:
 	Block::Type Add(const BlockType &);
 
-	size_t Size() const { return types.size(); }
+	size_t Size() const noexcept { return types.size(); }
 
-	BlockType *operator [](Block::Type id) { return &types[id]; }
-	const BlockType *Get(Block::Type id) const { return &types[id]; }
+	BlockType &operator [](Block::Type id) { return types[id]; }
+	const BlockType &Get(Block::Type id) const { return types[id]; }
 
 private:
 	std::vector<BlockType> types;

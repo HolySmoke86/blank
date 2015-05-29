@@ -39,18 +39,18 @@ HUD::HUD(const BlockTypeRegistry &types)
 }
 
 
-void HUD::Viewport(float width, float height) {
+void HUD::Viewport(float width, float height) noexcept {
 	Viewport(0, 0, width, height);
 }
 
-void HUD::Viewport(float x, float y, float width, float height) {
+void HUD::Viewport(float x, float y, float width, float height) noexcept {
 	projection = glm::ortho(x, width, height, y, near, far);
 	crosshair_transform = glm::translate(glm::mat4(1.0f), glm::vec3(width * 0.5f, height * 0.5f, 0.0f));
 }
 
 
 void HUD::Display(const Block &b) {
-	const BlockType &type = *types.Get(b.type);
+	const BlockType &type = types.Get(b.type);
 
 	block_buf.Clear();
 	type.FillModel(block_buf, b.Transform());
@@ -59,7 +59,7 @@ void HUD::Display(const Block &b) {
 }
 
 
-void HUD::Render(DirectionalLighting &program) {
+void HUD::Render(DirectionalLighting &program) noexcept {
 	if (block_visible) {
 		program.SetLightDirection({ 1.0f, 3.0f, 5.0f });
 		// disable distance fog

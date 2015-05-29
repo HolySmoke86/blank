@@ -149,20 +149,20 @@ void GLContext::EnableVSync() {
 	}
 }
 
-void GLContext::EnableDepthTest() {
+void GLContext::EnableDepthTest() noexcept {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 }
 
-void GLContext::EnableBackfaceCulling() {
+void GLContext::EnableBackfaceCulling() noexcept {
 	glEnable(GL_CULL_FACE);
 }
 
-void GLContext::Clear() {
+void GLContext::Clear() noexcept {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void GLContext::ClearDepthBuffer() {
+void GLContext::ClearDepthBuffer() noexcept {
 	glClear(GL_DEPTH_BUFFER_BIT);
 }
 

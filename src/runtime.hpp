@@ -19,7 +19,7 @@ public:
 		ERROR,
 	};
 
-	Runtime();
+	Runtime() noexcept;
 
 	void ReadArgs(int argc, const char *const *argv);
 

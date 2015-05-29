@@ -13,14 +13,14 @@ namespace blank {
 struct Shape {
 
 	/// the number of vertices (and normals) this shape has
-	size_t VertexCount() const { return vtx_pos.size(); }
+	size_t VertexCount() const noexcept { return vtx_pos.size(); }
 	/// the number of vertex indices this shape has
-	size_t VertexIndexCount() const { return vtx_idx.size(); }
+	size_t VertexIndexCount() const noexcept { return vtx_idx.size(); }
 
-	const Model::Normal &VertexNormal(size_t idx) const { return vtx_nrm[idx]; }
+	const Model::Normal &VertexNormal(size_t idx) const noexcept { return vtx_nrm[idx]; }
 	Model::Normal VertexNormal(
 		size_t idx, const glm::mat4 &transform
-	) const {
+	) const noexcept {
 		return Model::Normal(transform * glm::vec4(vtx_nrm[idx], 0.0f));
 	}
 
@@ -68,7 +68,7 @@ struct Shape {
 		const glm::mat4 &,
 		float &dist,
 		glm::vec3 &normal
-	) const = 0;
+	) const noexcept = 0;
 
 protected:
 	void SetShape(const Model::Positions &pos, const Model::Normals &nrm, const Model::Indices &idx) {
@@ -98,7 +98,7 @@ class NullShape
 public:
 	NullShape();
 
-	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
+	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 
 };
 
@@ -109,7 +109,7 @@ class CuboidShape
 public:
 	CuboidShape(const AABB &bounds);
 
-	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
+	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 
 private:
 	AABB bb;
@@ -123,7 +123,7 @@ class StairShape
 public:
 	StairShape(const AABB &bounds, const glm::vec2 &clip);
 
-	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const override;
+	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 
 private:
 	AABB top, bot;

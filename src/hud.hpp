@@ -20,12 +20,12 @@ public:
 	HUD(const HUD &) = delete;
 	HUD &operator =(const HUD &) = delete;
 
-	void Viewport(float width, float height);
-	void Viewport(float x, float y, float width, float height);
+	void Viewport(float width, float height) noexcept;
+	void Viewport(float x, float y, float width, float height) noexcept;
 
 	void Display(const Block &);
 
-	void Render(DirectionalLighting &);
+	void Render(DirectionalLighting &) noexcept;
 
 private:
 	const BlockTypeRegistry &types;

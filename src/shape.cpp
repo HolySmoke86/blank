@@ -75,7 +75,7 @@ bool NullShape::Intersects(
 	const Ray &,
 	const glm::mat4 &,
 	float &, glm::vec3 &
-) const {
+) const noexcept {
 	return false;
 }
 
@@ -162,7 +162,7 @@ bool CuboidShape::Intersects(
 	const Ray &ray,
 	const glm::mat4 &M,
 	float &dist, glm::vec3 &normal
-) const {
+) const noexcept {
 	return Intersection(ray, bb, M, &dist, &normal);
 }
 
@@ -294,7 +294,7 @@ bool StairShape::Intersects(
 	const glm::mat4 &M,
 	float &dist,
 	glm::vec3 &norm
-) const {
+) const noexcept {
 	float top_dist, bot_dist;
 	glm::vec3 top_norm, bot_norm;
 	bool top_hit = Intersection(ray, top, M, &top_dist, &top_norm);

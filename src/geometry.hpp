@@ -17,7 +17,7 @@ struct AABB {
 	glm::vec3 min;
 	glm::vec3 max;
 
-	void Adjust() {
+	void Adjust() noexcept {
 		if (max.x < min.x) std::swap(max.x, min.x);
 		if (max.y < min.y) std::swap(max.y, min.y);
 		if (max.z < min.z) std::swap(max.z, min.z);
@@ -34,9 +34,9 @@ bool Intersection(
 	const AABB &,
 	const glm::mat4 &M,
 	float *dist = nullptr,
-	glm::vec3 *normal = nullptr);
+	glm::vec3 *normal = nullptr) noexcept;
 
-bool CullTest(const AABB &box, const glm::mat4 &MVP);
+bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept;
 
 }
 

@@ -5,7 +5,7 @@
 
 namespace blank {
 
-Generator::Generator(const Config &config)
+Generator::Generator(const Config &config) noexcept
 : solidNoise(config.solid_seed)
 , typeNoise(config.type_seed)
 , stretch(1.0f/config.stretch)
@@ -17,7 +17,7 @@ Generator::Generator(const Config &config)
 }
 
 
-void Generator::operator ()(Chunk &chunk) const {
+void Generator::operator ()(Chunk &chunk) const noexcept {
 	Chunk::Pos pos(chunk.Position());
 	glm::vec3 coords(pos * Chunk::Extent());
 	for (int z = 0; z < Chunk::Depth(); ++z) {

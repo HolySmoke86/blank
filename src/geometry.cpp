@@ -11,7 +11,7 @@ bool Intersection(
 	const glm::mat4 &M,
 	float *dist,
 	glm::vec3 *normal
-) {
+) noexcept {
 	float t_min = 0.0f;
 	float t_max = std::numeric_limits<float>::infinity();
 	const glm::vec3 aabb_pos(M[3].x, M[3].y, M[3].z);
@@ -65,7 +65,7 @@ bool Intersection(
 	return true;
 }
 
-bool CullTest(const AABB &box, const glm::mat4 &MVP) {
+bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept {
 	// transform corners into clip space
 	glm::vec4 corners[8] = {
 		{ box.min.x, box.min.y, box.min.z, 1.0f },

@@ -42,27 +42,27 @@ Shader::~Shader() {
 	}
 }
 
-Shader::Shader(Shader &&other)
+Shader::Shader(Shader &&other) noexcept
 : handle(other.handle) {
 	other.handle = 0;
 }
 
-Shader &Shader::operator =(Shader &&other) {
+Shader &Shader::operator =(Shader &&other) noexcept {
 	std::swap(handle, other.handle);
 	return *this;
 }
 
 
-void Shader::Source(const GLchar *src) {
+void Shader::Source(const GLchar *src) noexcept {
 	const GLchar* src_arr[] = { src };
 	glShaderSource(handle, 1, src_arr, nullptr);
 }
 
-void Shader::Compile() {
+void Shader::Compile() noexcept {
 	glCompileShader(handle);
 }
 
-bool Shader::Compiled() const {
+bool Shader::Compiled() const noexcept {
 	GLint compiled = GL_FALSE;
 	glGetShaderiv(handle, GL_COMPILE_STATUS, &compiled);
 	return compiled == GL_TRUE;
@@ -77,7 +77,7 @@ void Shader::Log(std::ostream &out) const {
 }
 
 
-void Shader::AttachToProgram(GLuint id) const {
+void Shader::AttachToProgram(GLuint id) const noexcept {
 	glAttachShader(id, handle);
 }
 
@@ -109,15 +109,15 @@ const Shader &Program::LoadShader(GLenum type, const GLchar *src) {
 	return shader;
 }
 
-void Program::Attach(Shader &shader) {
+void Program::Attach(Shader &shader) noexcept {
 	shader.AttachToProgram(handle);
 }
 
-void Program::Link() {
+void Program::Link() noexcept {
 	glLinkProgram(handle);
 }
 
-bool Program::Linked() const {
+bool Program::Linked() const noexcept {
 	GLint linked = GL_FALSE;
 	glGetProgramiv(handle, GL_LINK_STATUS, &linked);
 	return linked == GL_TRUE;
@@ -132,11 +132,11 @@ void Program::Log(std::ostream &out) const {
 }
 
 
-GLint Program::AttributeLocation(const GLchar *name) const {
+GLint Program::AttributeLocation(const GLchar *name) const noexcept {
 	return glGetAttribLocation(handle, name);
 }
 
-GLint Program::UniformLocation(const GLchar *name) const {
+GLint Program::UniformLocation(const GLchar *name) const noexcept {
 	return glGetUniformLocation(handle, name);
 }
 
@@ -209,7 +209,7 @@ DirectionalLighting::DirectionalLighting()
 }
 
 
-void DirectionalLighting::Activate() {
+void DirectionalLighting::Activate() noexcept {
 	GLContext::EnableDepthTest();
 	GLContext::EnableBackfaceCulling();
 	program.Use();
@@ -218,7 +218,7 @@ void DirectionalLighting::Activate() {
 	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
 }
 
-void DirectionalLighting::SetM(const glm::mat4 &m) {
+void DirectionalLighting::SetM(const glm::mat4 &m) noexcept {
 	glm::mat4 mv(view * m);
 	glm::mat4 mvp(vp * m);
 	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
@@ -226,33 +226,33 @@ void DirectionalLighting::SetM(const glm::mat4 &m) {
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 }
 
-void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) {
+void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) noexcept {
 	light_direction = -dir;
 	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
 }
 
-void DirectionalLighting::SetFogDensity(float f) {
+void DirectionalLighting::SetFogDensity(float f) noexcept {
 	fog_density = f;
 	glUniform1f(fog_density_handle, fog_density);
 }
 
-void DirectionalLighting::SetProjection(const glm::mat4 &p) {
+void DirectionalLighting::SetProjection(const glm::mat4 &p) noexcept {
 	projection = p;
 	vp = p * view;
 }
 
-void DirectionalLighting::SetView(const glm::mat4 &v) {
+void DirectionalLighting::SetView(const glm::mat4 &v) noexcept {
 	view = v;
 	vp = projection * v;
 }
 
-void DirectionalLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) {
+void DirectionalLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept {
 	projection = p;
 	view = v;
 	vp = p * v;
 }
 
-void DirectionalLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) {
+void DirectionalLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept {
 	SetVP(v, p);
 	SetM(m);
 }
@@ -313,41 +313,41 @@ BlockLighting::BlockLighting()
 }
 
 
-void BlockLighting::Activate() {
+void BlockLighting::Activate() noexcept {
 	GLContext::EnableDepthTest();
 	GLContext::EnableBackfaceCulling();
 	program.Use();
 }
 
-void BlockLighting::SetM(const glm::mat4 &m) {
+void BlockLighting::SetM(const glm::mat4 &m) noexcept {
 	glm::mat4 mv(view * m);
 	glm::mat4 mvp(vp * m);
 	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
 	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
 }
 
-void BlockLighting::SetFogDensity(float f) {
+void BlockLighting::SetFogDensity(float f) noexcept {
 	fog_density = f;
 	glUniform1f(fog_density_handle, fog_density);
 }
 
-void BlockLighting::SetProjection(const glm::mat4 &p) {
+void BlockLighting::SetProjection(const glm::mat4 &p) noexcept {
 	projection = p;
 	vp = p * view;
 }
 
-void BlockLighting::SetView(const glm::mat4 &v) {
+void BlockLighting::SetView(const glm::mat4 &v) noexcept {
 	view = v;
 	vp = projection * v;
 }
 
-void BlockLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) {
+void BlockLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept {
 	projection = p;
 	view = v;
 	vp = p * v;
 }
 
-void BlockLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) {
+void BlockLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept {
 	SetVP(v, p);
 	SetM(m);
 }

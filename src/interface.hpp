@@ -35,14 +35,14 @@ public:
 	void Handle(const SDL_MouseMotionEvent &);
 	void Handle(const SDL_MouseButtonEvent &);
 	void Handle(const SDL_MouseWheelEvent &);
-	void Handle(const SDL_WindowEvent &);
+	void Handle(const SDL_WindowEvent &) noexcept;
 
 	void FaceBlock();
 	void TurnBlock();
 
 	void PickBlock();
 	void PlaceBlock();
-	void RemoveBlock();
+	void RemoveBlock() noexcept;
 
 	void PrintBlockInfo();
 	void PrintChunkInfo();
@@ -55,7 +55,7 @@ public:
 
 	void Update(int dt);
 
-	void Render(DirectionalLighting &);
+	void Render(DirectionalLighting &) noexcept;
 
 private:
 	World &world;
