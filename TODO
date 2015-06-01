@@ -40,10 +40,9 @@ entity ai
 
 (block) lighting
 
-	light levels are roughtly implemented. the shader has to be
-	adjusted so they actually have an impact on the resulting color
-
-	there seems to be a bug with propagating light across chunk borders
+	occlusion/neighbor light mixing is implemented, but still linear
+	this could be solved by using a pre-interpolated light texture and
+	mapping light levels to coordinates on that
 
 	also: how could block light affect entity lighting?
 

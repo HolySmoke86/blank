@@ -55,6 +55,21 @@ struct Block {
 		return Face(f ^ 1);
 	}
 
+	static int Axis(Face f) noexcept {
+		switch (f) {
+			case FACE_UP:
+			case FACE_DOWN:
+				return 1;
+			default:
+			case FACE_RIGHT:
+			case FACE_LEFT:
+				return 0;
+			case FACE_FRONT:
+			case FACE_BACK:
+				return 2;
+		}
+	}
+
 	static glm::tvec3<int> FaceNormal(Face face) noexcept {
 		return face2normal[face];
 	}

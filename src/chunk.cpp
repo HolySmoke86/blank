@@ -333,18 +333,81 @@ float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Mo
 		if (direct_light > light) {
 			light = direct_light;
 		}
+	} else {
+		return light;
 	}
 
-	// cheap alternative until AO etc are implemented
-	// to tell the faces apart
-
-	if (direct_face == Block::FACE_LEFT || direct_face == Block::FACE_RIGHT) {
-		light -= 0.2;
-	} else if (direct_face == Block::FACE_FRONT || direct_face == Block::FACE_BACK) {
-		light -= 0.4;
+	if (Type(BlockAt(index)).luminosity > 0 || direct.GetType().block_light) {
+		return light;
 	}
 
-	return light;
+	Block::Face edge[2];
+	switch (Block::Axis(direct_face)) {
+		case 0: // X
+			edge[0] = (vtx.y - pos.y) > 0.5f ? Block::FACE_UP : Block::FACE_DOWN;
+			edge[1] = (vtx.z - pos.z) > 0.5f ? Block::FACE_FRONT : Block::FACE_BACK;
+			break;
+		case 1: // Y
+			edge[0] = (vtx.z - pos.z) > 0.5f ? Block::FACE_FRONT : Block::FACE_BACK;
+			edge[1] = (vtx.x - pos.x) > 0.5f ? Block::FACE_RIGHT : Block::FACE_LEFT;
+			break;
+		case 2: // Z
+			edge[0] = (vtx.x - pos.x) > 0.5f ? Block::FACE_RIGHT : Block::FACE_LEFT;
+			edge[1] = (vtx.y - pos.y) > 0.5f ? Block::FACE_UP : Block::FACE_DOWN;
+			break;
+	}
+
+	int num = 1;
+	int occlusion = 0;
+
+	BlockLookup next[2] = {
+		direct.Next(edge[0]),
+		direct.Next(edge[1]),
+	};
+
+	if (next[0]) {
+		if (next[0].GetType().block_light) {
+			++occlusion;
+		} else {
+			light += next[0].GetLight();
+			++num;
+		}
+	}
+	if (next[1]) {
+		if (next[1].GetType().block_light) {
+			++occlusion;
+		} else {
+			light += next[1].GetLight();
+			++num;
+		}
+	}
+	if (occlusion < 2) {
+		if (next[0]) {
+			BlockLookup corner = next[0].Next(edge[1]);
+			if (corner) {
+				if (corner.GetType().block_light) {
+					++occlusion;
+				} else {
+					light += corner.GetLight();
+					++num;
+				}
+			}
+		} else if (next[1]) {
+			BlockLookup corner = next[1].Next(edge[0]);
+			if (corner) {
+				if (corner.GetType().block_light) {
+					++occlusion;
+				} else {
+					light += corner.GetLight();
+					++num;
+				}
+			}
+		}
+	} else {
+		++occlusion;
+	}
+
+	return (light / num) - (occlusion * 0.8f);
 }
 
 

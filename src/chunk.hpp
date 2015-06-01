@@ -172,6 +172,9 @@ public:
 	const BlockType &GetType() const noexcept { return GetChunk().Type(GetBlock()); }
 	int GetLight() const noexcept { return GetChunk().GetLight(GetBlockPos()); }
 
+	// traverse in given direction
+	BlockLookup Next(Block::Face f) const { return BlockLookup(chunk, pos, f); }
+
 private:
 	Chunk *chunk;
 	Chunk::Pos pos;
