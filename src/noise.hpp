@@ -18,14 +18,14 @@ public:
 	bool operator ()() noexcept;
 
 	template<class T>
-	void operator ()(T &out) noexcept {
+	T operator ()(T &out) noexcept {
 		constexpr int num_bits =
 			std::numeric_limits<T>::digits +
 			std::numeric_limits<T>::is_signed;
 		for (int i = 0; i < num_bits; ++i) {
 			operator ()();
 		}
-		out = static_cast<T>(state);
+		return out = static_cast<T>(state);
 	}
 
 private:
@@ -45,13 +45,13 @@ public:
 	float operator ()(const glm::vec3 &) const noexcept;
 
 private:
-	unsigned char Perm(size_t idx) const noexcept;
-	unsigned char Perm12(size_t idx) const noexcept;
-	const glm::vec3 &Grad(unsigned char idx) const noexcept;
+	int Perm(int idx) const noexcept;
+	int Perm12(int idx) const noexcept;
+	const glm::vec3 &Grad(int idx) const noexcept;
 
 private:
-	unsigned char perm[512];
-	unsigned char perm12[512];
+	int perm[512];
+	int perm12[512];
 	glm::vec3 grad[12];
 
 };

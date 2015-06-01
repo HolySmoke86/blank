@@ -471,7 +471,7 @@ Block::FaceSet Chunk::Obstructed(int idx) const noexcept {
 }
 
 glm::mat4 Chunk::ToTransform(int idx) const noexcept {
-	return glm::translate(glm::mat4(1.0f), ToCoords(idx)) * blocks[idx].Transform();
+	return glm::translate(ToCoords(idx)) * blocks[idx].Transform();
 }
 
 

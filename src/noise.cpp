@@ -46,8 +46,10 @@ SimplexNoise::SimplexNoise(unsigned int seed) noexcept
 	{  0.0f, -1.0f, -1.0f },
 }) {
 	GaloisLFSR random(seed ^ 0x0123456789ACBDEF);
+	unsigned char value;
 	for (size_t i = 0; i < 256; ++i) {
-		random(perm[i]);
+		perm[i] = random(value);
+		perm[i] &= 0xFF;
 		perm[i + 256] = perm[i];
 		perm12[i] = perm[i] % 12;
 		perm12[i + 256] = perm12[i];
@@ -62,73 +64,92 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const noexcept {
 	float tr = (skewed.x + skewed.y + skewed.z) * one_sixth;
 
 	glm::vec3 unskewed(skewed - tr);
-	glm::vec3 offset[4];
-	offset[0] = in - unskewed;
+	glm::vec3 relative(in - unskewed);
 
 	glm::vec3 second, third;
 
-	if (offset[0].x >= offset[0].y) {
-		if (offset[0].y >= offset[0].z) {
-			second = { 1.0f, 0.0f, 0.0f };
-			third = { 1.0f, 1.0f, 0.0f };
-		} else if (offset[0].x >= offset[0].z) {
-			second = { 1.0f, 0.0f, 0.0f };
-			third = { 1.0f, 0.0f, 1.0f };
+	if (relative.x >= relative.y) {
+		if (relative.y >= relative.z) {
+			second = { 1, 0, 0 };
+			third = { 1, 1, 0 };
+		} else if (relative.x >= relative.z) {
+			second = { 1, 0, 0 };
+			third = { 1, 0, 1 };
 		} else {
-			second = { 0.0f, 0.0f, 1.0f };
-			third = { 1.0f, 0.0f, 1.0f };
+			second = { 0, 0, 1 };
+			third = { 1, 0, 1 };
 		}
-	} else if (offset[0].y < offset[0].z) {
-		second = { 0.0f, 0.0f, 1.0f };
-		third = { 0.0f, 1.0f, 1.0f };
-	} else if (offset[0].x < offset[0].z) {
-		second = { 0.0f, 1.0f, 0.0f };
-		third = { 0.0f, 1.0f, 1.0f };
+	} else if (relative.y < relative.z) {
+		second = { 0, 0, 1 };
+		third = { 0, 1, 1 };
+	} else if (relative.x < relative.z) {
+		second = { 0, 1, 0 };
+		third = { 0, 1, 1 };
 	} else {
-		second = { 0.0f, 1.0f, 0.0f };
-		third = { 1.0f, 1.0f, 0.0f };
+		second = { 0, 1, 0 };
+		third = { 1, 1, 0 };
 	}
 
-	offset[1] = offset[0] - second + one_sixth;
-	offset[2] = offset[0] - third + one_third;
-	offset[3] = offset[0] - 0.5f;
+	glm::vec3 offset[4] = {
+		in - unskewed,
+		relative - second + one_sixth,
+		relative - third + one_third,
+		relative - 0.5f,
+	};
 
-	unsigned char index[3] = {
-		(unsigned char)(skewed.x),
-		(unsigned char)(skewed.y),
-		(unsigned char)(skewed.z),
+	int index[3] = {
+		(int)(skewed.x) & 0xFF,
+		(int)(skewed.y) & 0xFF,
+		(int)(skewed.z) & 0xFF,
 	};
-	unsigned char corner[4] = {
-		Perm12(index[0] + Perm(index[1] + Perm(index[2]))),
-		Perm12(index[0] + int(second.x) + Perm(index[1] + int(second.y) + Perm(index[2] + int(second.z)))),
-		Perm12(index[0] + int(third.x) + Perm(index[1] + int(third.y) + Perm(index[2] + int(third.z)))),
-		Perm12(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1))),
-	};
-	float n[4];
-	float t[4];
-	for (size_t i = 0; i < 4; ++i) {
-		t[i] = 0.6f - dot(offset[i], offset[i]);
-		if (t[i] < 0.0f) {
-			n[i] = 0.0f;
-		} else {
-			t[i] *= t[i];
-			n[i] = t[i] * t[i] * dot(Grad(corner[i]), offset[i]);
-		}
+
+	float n = 0.0f;
+
+	// 0
+	float t = 0.6f - dot(offset[0], offset[0]);
+	if (t > 0.0f) {
+		t *= t;
+		int corner = Perm12(index[0] + Perm(index[1] + Perm(index[2])));
+		n += t * t * dot(Grad(corner), offset[0]);
 	}
 
-	return 32.0f * (n[0] + n[1] + n[2] + n[3]);
+	// 1
+	t = 0.6f - dot(offset[1], offset[1]);
+	if (t > 0.0f) {
+		t *= t;
+		int corner = Perm12(index[0] + int(second.x) + Perm(index[1] + int(second.y) + Perm(index[2] + int(second.z))));
+		n += t * t * dot(Grad(corner), offset[1]);
+	}
+
+	// 2
+	t = 0.6f - dot(offset[2], offset[2]);
+	if (t > 0.0f) {
+		t *= t;
+		int corner = Perm12(index[0] + int(third.x) + Perm(index[1] + int(third.y) + Perm(index[2] + int(third.z))));
+		n += t * t * dot(Grad(corner), offset[2]);
+	}
+
+	// 3
+	t = 0.6f - dot(offset[3], offset[3]);
+	if (t > 0.0f) {
+		t *= t;
+		int corner = Perm12(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1)));
+		n += t * t * dot(Grad(corner), offset[3]);
+	}
+
+	return 32.0f * n;
 }
 
 
-unsigned char SimplexNoise::Perm(size_t idx) const noexcept {
+int SimplexNoise::Perm(int idx) const noexcept {
 	return perm[idx];
 }
 
-unsigned char SimplexNoise::Perm12(size_t idx) const noexcept {
+int SimplexNoise::Perm12(int idx) const noexcept {
 	return perm12[idx];
 }
 
-const glm::vec3 &SimplexNoise::Grad(unsigned char idx) const noexcept {
+const glm::vec3 &SimplexNoise::Grad(int idx) const noexcept {
 	return grad[idx];
 }
 
