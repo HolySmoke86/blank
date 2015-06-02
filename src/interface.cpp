@@ -1,6 +1,5 @@
 #include "interface.hpp"
 
-#include "geometry.hpp"
 #include "world.hpp"
 
 #include <iostream>
@@ -14,12 +13,15 @@ Interface::Interface(const Config &config, World &world)
 : world(world)
 , ctrl(world.Player())
 , hud(world.BlockTypes())
+, aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_chunk(nullptr)
 , aim_block(0)
 , aim_normal()
 , outline()
 , outline_transform(1.0f)
 , config(config)
+, place_timer(256)
+, remove_timer(256)
 , remove(0)
 , selection(1)
 , fwd(0)
@@ -29,59 +31,72 @@ Interface::Interface(const Config &config, World &world)
 }
 
 
-void Interface::Handle(const SDL_KeyboardEvent &event) {
+void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 	if (config.keyboard_disabled) return;
 
 	switch (event.keysym.sym) {
 		case SDLK_w:
-			rev.z = event.state == SDL_PRESSED;
+			rev.z = 1;
 			break;
 		case SDLK_s:
-			fwd.z = event.state == SDL_PRESSED;
+			fwd.z = 1;
 			break;
 		case SDLK_a:
-			rev.x = event.state == SDL_PRESSED;
+			rev.x = 1;
 			break;
 		case SDLK_d:
-			fwd.x = event.state == SDL_PRESSED;
+			fwd.x = 1;
 			break;
 		case SDLK_SPACE:
-			fwd.y = event.state == SDL_PRESSED;
+			fwd.y = 1;
 			break;
 		case SDLK_LSHIFT:
-			rev.y = event.state == SDL_PRESSED;
+			rev.y = 1;
 			break;
 
 		case SDLK_q:
-			if (event.state == SDL_PRESSED) {
-				FaceBlock();
-			}
+			FaceBlock();
 			break;
 		case SDLK_e:
-			if (event.state == SDL_PRESSED) {
-				TurnBlock();
-			}
+			TurnBlock();
 			break;
 
 		case SDLK_b:
-			if (event.state == SDL_PRESSED) {
-				PrintBlockInfo();
-			}
+			PrintBlockInfo();
 			break;
 		case SDLK_c:
-			if (event.state == SDL_PRESSED) {
-				PrintChunkInfo();
-			}
+			PrintChunkInfo();
 			break;
 		case SDLK_l:
-			if (event.state == SDL_PRESSED) {
-				PrintLightInfo();
-			}
+			PrintLightInfo();
 			break;
 		case SDLK_p:
-			if (event.state == SDL_PRESSED) {
-				PrintSelectionInfo();
-			}
+			PrintSelectionInfo();
+			break;
+	}
+}
+
+void Interface::HandleRelease(const SDL_KeyboardEvent &event) {
+	if (config.keyboard_disabled) return;
+
+	switch (event.keysym.sym) {
+		case SDLK_w:
+			rev.z = 0;
+			break;
+		case SDLK_s:
+			fwd.z = 0;
+			break;
+		case SDLK_a:
+			rev.x = 0;
+			break;
+		case SDLK_d:
+			fwd.x = 0;
+			break;
+		case SDLK_SPACE:
+			fwd.y = 0;
+			break;
+		case SDLK_LSHIFT:
+			rev.y = 0;
 			break;
 	}
 }
@@ -169,17 +184,27 @@ void Interface::Handle(const SDL_MouseMotionEvent &event) {
 	ctrl.RotatePitch(event.yrel * config.pitch_sensitivity);
 }
 
-void Interface::Handle(const SDL_MouseButtonEvent &event) {
+void Interface::HandlePress(const SDL_MouseButtonEvent &event) {
 	if (config.mouse_disabled) return;
-
-	if (event.state != SDL_PRESSED) return;
 
 	if (event.button == 1) {
 		RemoveBlock();
+		remove_timer.Start();
 	} else if (event.button == 2) {
 		PickBlock();
 	} else if (event.button == 3) {
 		PlaceBlock();
+		place_timer.Start();
+	}
+}
+
+void Interface::HandleRelease(const SDL_MouseButtonEvent &event) {
+	if (config.mouse_disabled) return;
+
+	if (event.button == 1) {
+		remove_timer.Stop();
+	} else if (event.button == 3) {
+		place_timer.Stop();
 	}
 }
 
@@ -245,18 +270,34 @@ void Interface::Update(int dt) {
 	ctrl.Velocity(glm::vec3(fwd - rev) * config.move_velocity);
 	ctrl.Update(dt);
 
-	Ray aim = ctrl.Aim();
+	place_timer.Update(dt);
+	remove_timer.Update(dt);
+
+	aim = ctrl.Aim();
+	CheckAim();
+
+	if (remove_timer.Hit()) {
+		RemoveBlock();
+		CheckAim();
+	}
+
+	if (place_timer.Hit()) {
+		PlaceBlock();
+		CheckAim();
+	}
+}
+
+void Interface::CheckAim() {
 	float dist;
 	if (world.Intersection(aim, glm::mat4(1.0f), &aim_chunk, &aim_block, &dist, &aim_normal)) {
 		outline.Clear();
 		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outline);
-		outline_transform = glm::scale(glm::mat4(1.0f), glm::vec3(1.0002f));
-		outline_transform = aim_chunk->Transform(world.Player().ChunkCoords());
+		outline_transform = glm::scale(glm::vec3(1.0002f));
+		outline_transform *= aim_chunk->Transform(world.Player().ChunkCoords());
 		outline_transform *= aim_chunk->ToTransform(aim_block);
 	} else {
 		aim_chunk = nullptr;
 	}
-
 }
 
 

@@ -3,9 +3,11 @@
 
 #include "block.hpp"
 #include "controller.hpp"
+#include "geometry.hpp"
 #include "hud.hpp"
 #include "model.hpp"
 #include "shader.hpp"
+#include "timer.hpp"
 
 #include <SDL.h>
 #include <glm/glm.hpp>
@@ -31,9 +33,11 @@ public:
 
 	Interface(const Config &, World &);
 
-	void Handle(const SDL_KeyboardEvent &);
+	void HandlePress(const SDL_KeyboardEvent &);
+	void HandleRelease(const SDL_KeyboardEvent &);
 	void Handle(const SDL_MouseMotionEvent &);
-	void Handle(const SDL_MouseButtonEvent &);
+	void HandlePress(const SDL_MouseButtonEvent &);
+	void HandleRelease(const SDL_MouseButtonEvent &);
 	void Handle(const SDL_MouseWheelEvent &);
 	void Handle(const SDL_WindowEvent &) noexcept;
 
@@ -58,10 +62,14 @@ public:
 	void Render(DirectionalLighting &) noexcept;
 
 private:
+	void CheckAim();
+
+private:
 	World &world;
 	FPSController ctrl;
 	HUD hud;
 
+	Ray aim;
 	Chunk *aim_chunk;
 	int aim_block;
 	glm::vec3 aim_normal;
@@ -70,6 +78,9 @@ private:
 	glm::mat4 outline_transform;
 
 	Config config;
+
+	IntervalTimer place_timer;
+	IntervalTimer remove_timer;
 
 	Block remove;
 	Block selection;

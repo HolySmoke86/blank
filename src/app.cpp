@@ -88,11 +88,16 @@ void Application::HandleEvents() {
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
 			case SDL_KEYDOWN:
+				interface.HandlePress(event.key);
+				break;
 			case SDL_KEYUP:
-				interface.Handle(event.key);
+				interface.HandleRelease(event.key);
 				break;
 			case SDL_MOUSEBUTTONDOWN:
-				interface.Handle(event.button);
+				interface.HandlePress(event.button);
+				break;
+			case SDL_MOUSEBUTTONUP:
+				interface.HandleRelease(event.button);
 				break;
 			case SDL_MOUSEMOTION:
 				interface.Handle(event.motion);

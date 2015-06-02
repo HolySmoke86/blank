@@ -1,8 +1,7 @@
 block placement/removal timers
 
-	currently block placement and removal is instantaneous. it should
-	actually take some time to place and remove a block. with
-	removal timing depending on the tool used to remove the block
+	removal timing depending on the tool/block combination
+	animation for remove
 
 composite entity animations
 
