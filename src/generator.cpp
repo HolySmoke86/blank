@@ -20,9 +20,9 @@ Generator::Generator(const Config &config) noexcept
 void Generator::operator ()(Chunk &chunk) const noexcept {
 	Chunk::Pos pos(chunk.Position());
 	glm::vec3 coords(pos * Chunk::Extent());
-	for (int z = 0; z < Chunk::Depth(); ++z) {
-		for (int y = 0; y < Chunk::Height(); ++y) {
-			for (int x = 0; x < Chunk::Width(); ++x) {
+	for (int z = 0; z < Chunk::depth; ++z) {
+		for (int y = 0; y < Chunk::height; ++y) {
+			for (int x = 0; x < Chunk::width; ++x) {
 				Block::Pos block_pos(x, y, z);
 				glm::vec3 gen_pos = (coords + block_pos) * stretch;
 				float val = OctaveNoise(solidNoise, coords + block_pos, 3, 0.5f, stretch, 2.0f);
@@ -36,7 +36,7 @@ void Generator::operator ()(Chunk &chunk) const noexcept {
 		}
 	}
 	unsigned int random = 263167 * pos.x + 2097593 * pos.y + 426389 * pos.z;
-	for (int index = 0; index < Chunk::Size(); ++index) {
+	for (int index = 0; index < Chunk::size; ++index) {
 		if (chunk.IsSurface(index)) {
 			random = random * 666649 + 7778777;
 			if ((random % 32) == 0) {

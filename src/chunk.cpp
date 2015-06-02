@@ -9,6 +9,12 @@
 
 namespace blank {
 
+constexpr int Chunk::width;
+constexpr int Chunk::height;
+constexpr int Chunk::depth;
+constexpr int Chunk::size;
+
+
 Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 : types(&types)
 , neighbor{0}
@@ -180,10 +186,10 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 		if (neighbor[Block::FACE_LEFT] != &other) {
 			neighbor[Block::FACE_LEFT] = &other;
 			other.neighbor[Block::FACE_RIGHT] = this;
-			for (int z = 0; z < Depth(); ++z) {
-				for (int y = 0; y < Height(); ++y) {
+			for (int z = 0; z < depth; ++z) {
+				for (int y = 0; y < height; ++y) {
 					Pos my_pos(0, y, z);
-					Pos other_pos(Width() - 1, y, z);
+					Pos other_pos(width - 1, y, z);
 					if (GetLight(my_pos) > 0) {
 						light_queue.emplace(this, my_pos);
 					}
@@ -198,9 +204,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 		if (neighbor[Block::FACE_RIGHT] != &other) {
 			neighbor[Block::FACE_RIGHT] = &other;
 			other.neighbor[Block::FACE_LEFT] = this;
-			for (int z = 0; z < Depth(); ++z) {
-				for (int y = 0; y < Height(); ++y) {
-					Pos my_pos(Width() - 1, y, z);
+			for (int z = 0; z < depth; ++z) {
+				for (int y = 0; y < height; ++y) {
+					Pos my_pos(width - 1, y, z);
 					Pos other_pos(0, y, z);
 					if (GetLight(my_pos) > 0) {
 						light_queue.emplace(this, my_pos);
@@ -216,10 +222,10 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 		if (neighbor[Block::FACE_DOWN] != &other) {
 			neighbor[Block::FACE_DOWN] = &other;
 			other.neighbor[Block::FACE_UP] = this;
-			for (int z = 0; z < Depth(); ++z) {
-				for (int x = 0; x < Width(); ++x) {
+			for (int z = 0; z < depth; ++z) {
+				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, 0, z);
-					Pos other_pos(x, Height() - 1, z);
+					Pos other_pos(x, height - 1, z);
 					if (GetLight(my_pos) > 0) {
 						light_queue.emplace(this, my_pos);
 					}
@@ -234,9 +240,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 		if (neighbor[Block::FACE_UP] != &other) {
 			neighbor[Block::FACE_UP] = &other;
 			other.neighbor[Block::FACE_DOWN] = this;
-			for (int z = 0; z < Depth(); ++z) {
-				for (int x = 0; x < Width(); ++x) {
-					Pos my_pos(x, Height() - 1, z);
+			for (int z = 0; z < depth; ++z) {
+				for (int x = 0; x < width; ++x) {
+					Pos my_pos(x, height - 1, z);
 					Pos other_pos(x, 0, z);
 					if (GetLight(my_pos) > 0) {
 						light_queue.emplace(this, my_pos);
@@ -252,10 +258,10 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 		if (neighbor[Block::FACE_BACK] != &other) {
 			neighbor[Block::FACE_BACK] = &other;
 			other.neighbor[Block::FACE_FRONT] = this;
-			for (int y = 0; y < Height(); ++y) {
-				for (int x = 0; x < Width(); ++x) {
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, y, 0);
-					Pos other_pos(x, y, Depth() - 1);
+					Pos other_pos(x, y, depth - 1);
 					if (GetLight(my_pos) > 0) {
 						light_queue.emplace(this, my_pos);
 					}
@@ -270,9 +276,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 		if (neighbor[Block::FACE_FRONT] != &other) {
 			neighbor[Block::FACE_FRONT] = &other;
 			other.neighbor[Block::FACE_BACK] = this;
-			for (int y = 0; y < Height(); ++y) {
-				for (int x = 0; x < Width(); ++x) {
-					Pos my_pos(x, y, Depth() - 1);
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
+					Pos my_pos(x, y, depth - 1);
 					Pos other_pos(x, y, 0);
 					if (GetLight(my_pos) > 0) {
 						light_queue.emplace(this, my_pos);
@@ -321,9 +327,9 @@ int Chunk::GetLight(int index) const noexcept {
 	return light[index];
 }
 
-float Chunk::GetVertexLight(int index, const BlockModel::Position &vtx, const Model::Normal &norm) const noexcept {
+float Chunk::GetVertexLight(const Pos &pos, const BlockModel::Position &vtx, const Model::Normal &norm) const noexcept {
+	int index = ToIndex(pos);
 	float light = GetLight(index);
-	Chunk::Pos pos(ToPos(index));
 
 	Block::Face direct_face(Block::NormalFace(norm));
 	// tis okay
@@ -442,20 +448,21 @@ bool Chunk::Intersection(
 	glm::vec3 &normal
 ) const noexcept {
 	// TODO: should be possible to heavily optimize this
-	int id = 0;
+	int idx = 0;
 	blkid = -1;
 	dist = std::numeric_limits<float>::infinity();
-	for (int z = 0; z < Depth(); ++z) {
-		for (int y = 0; y < Height(); ++y) {
-			for (int x = 0; x < Width(); ++x, ++id) {
-				if (!Type(blocks[id]).visible) {
+	for (int z = 0; z < depth; ++z) {
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x, ++idx) {
+				const BlockType &type = Type(idx);
+				if (!type.visible) {
 					continue;
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
-				if (Type(blocks[id]).shape->Intersects(ray, M * ToTransform(id), cur_dist, cur_norm)) {
+				if (type.shape->Intersects(ray, M * ToTransform(Pos(x, y, z), idx), cur_dist, cur_norm)) {
 					if (cur_dist < dist) {
-						blkid = id;
+						blkid = idx;
 						dist = cur_dist;
 						normal = cur_norm;
 					}
@@ -495,22 +502,28 @@ void Chunk::Update() noexcept {
 	buf.Clear();
 	buf.Reserve(vtx_count, idx_count);
 
+	int idx = 0;
 	BlockModel::Index vtx_counter = 0;
-	for (size_t i = 0; i < Size(); ++i) {
-		const BlockType &type = Type(blocks[i]);
+	for (size_t z = 0; z < depth; ++z) {
+		for (size_t y = 0; y < height; ++y) {
+			for (size_t x = 0; x < width; ++x, ++idx) {
+				const BlockType &type = Type(BlockAt(idx));
+				const Pos pos(x, y, z);
 
-		if (!type.visible || Obstructed(i).All()) continue;
+				if (!type.visible || Obstructed(pos).All()) continue;
 
-		type.FillBlockModel(buf, ToTransform(i), vtx_counter);
-		size_t vtx_begin = vtx_counter;
-		vtx_counter += type.shape->VertexCount();
+				type.FillBlockModel(buf, ToTransform(pos, idx), vtx_counter);
+				size_t vtx_begin = vtx_counter;
+				vtx_counter += type.shape->VertexCount();
 
-		for (size_t vtx = vtx_begin; vtx < vtx_counter; ++vtx) {
-			buf.lights.emplace_back(GetVertexLight(
-				i,
-				buf.vertices[vtx],
-				type.shape->VertexNormal(vtx - vtx_begin, blocks[i].Transform())
-			));
+				for (size_t vtx = vtx_begin; vtx < vtx_counter; ++vtx) {
+					buf.lights.emplace_back(GetVertexLight(
+						pos,
+						buf.vertices[vtx],
+						type.shape->VertexNormal(vtx - vtx_begin, BlockAt(idx).Transform())
+					));
+				}
+			}
 		}
 	}
 
@@ -518,8 +531,7 @@ void Chunk::Update() noexcept {
 	dirty = false;
 }
 
-Block::FaceSet Chunk::Obstructed(int idx) const noexcept {
-	Chunk::Pos pos(ToPos(idx));
+Block::FaceSet Chunk::Obstructed(const Pos &pos) const noexcept {
 	Block::FaceSet result;
 
 	for (int f = 0; f < Block::FACE_COUNT; ++f) {
@@ -533,17 +545,17 @@ Block::FaceSet Chunk::Obstructed(int idx) const noexcept {
 	return result;
 }
 
-glm::mat4 Chunk::ToTransform(int idx) const noexcept {
-	return glm::translate(ToCoords(idx)) * blocks[idx].Transform();
+glm::mat4 Chunk::ToTransform(const Pos &pos, int idx) const noexcept {
+	return glm::translate(ToCoords(pos)) * BlockAt(idx).Transform();
 }
 
 
 BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 : chunk(c), pos(p) {
-	while (pos.x >= Chunk::Width()) {
+	while (pos.x >= Chunk::width) {
 		if (chunk->HasNeighbor(Block::FACE_RIGHT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_RIGHT);
-			pos.x -= Chunk::Width();
+			pos.x -= Chunk::width;
 		} else {
 			chunk = nullptr;
 			return;
@@ -552,16 +564,16 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	while (pos.x < 0) {
 		if (chunk->HasNeighbor(Block::FACE_LEFT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_LEFT);
-			pos.x += Chunk::Width();
+			pos.x += Chunk::width;
 		} else {
 			chunk = nullptr;
 			return;
 		}
 	}
-	while (pos.y >= Chunk::Height()) {
+	while (pos.y >= Chunk::height) {
 		if (chunk->HasNeighbor(Block::FACE_UP)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_UP);
-			pos.y -= Chunk::Height();
+			pos.y -= Chunk::height;
 		} else {
 			chunk = nullptr;
 			return;
@@ -570,16 +582,16 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	while (pos.y < 0) {
 		if (chunk->HasNeighbor(Block::FACE_DOWN)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_DOWN);
-			pos.y += Chunk::Height();
+			pos.y += Chunk::height;
 		} else {
 			chunk = nullptr;
 			return;
 		}
 	}
-	while (pos.z >= Chunk::Depth()) {
+	while (pos.z >= Chunk::depth) {
 		if (chunk->HasNeighbor(Block::FACE_FRONT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_FRONT);
-			pos.z -= Chunk::Depth();
+			pos.z -= Chunk::depth;
 		} else {
 			chunk = nullptr;
 			return;
@@ -588,7 +600,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	while (pos.z < 0) {
 		if (chunk->HasNeighbor(Block::FACE_BACK)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_BACK);
-			pos.z += Chunk::Depth();
+			pos.z += Chunk::depth;
 		} else {
 			chunk = nullptr;
 			return;

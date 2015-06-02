@@ -25,56 +25,59 @@ public:
 	Chunk(Chunk &&) noexcept;
 	Chunk &operator =(Chunk &&) noexcept;
 
-	static constexpr int Width() { return 16; }
-	static constexpr int Height() { return 16; }
-	static constexpr int Depth() { return 16; }
-	static Pos Extent() noexcept { return { Width(), Height(), Depth() }; }
-	static constexpr int Size() { return Width() * Height() * Depth(); }
+	static constexpr int width = 16;
+	static constexpr int height = 16;
+	static constexpr int depth = 16;
+	static Pos Extent() noexcept { return { width, height, depth }; }
+	static constexpr int size = width * height * depth;
 
 	static AABB Bounds() noexcept { return AABB{ { 0, 0, 0 }, Extent() }; }
 
 	static constexpr bool InBounds(const Block::Pos &pos) noexcept {
 		return
-			pos.x >= 0 && pos.x < Width() &&
-			pos.y >= 0 && pos.y < Height() &&
-			pos.z >= 0 && pos.z < Depth();
+			pos.x >= 0 && pos.x < width &&
+			pos.y >= 0 && pos.y < height &&
+			pos.z >= 0 && pos.z < depth;
 	}
 	static constexpr bool InBounds(const Pos &pos) noexcept {
 		return
-			pos.x >= 0 && pos.x < Width() &&
-			pos.y >= 0 && pos.y < Height() &&
-			pos.z >= 0 && pos.z < Depth();
+			pos.x >= 0 && pos.x < width &&
+			pos.y >= 0 && pos.y < height &&
+			pos.z >= 0 && pos.z < depth;
 	}
 	static constexpr int ToIndex(const Pos &pos) noexcept {
-		return pos.x + pos.y * Width() + pos.z * Width() * Height();
+		return pos.x + pos.y * width + pos.z * width * height;
 	}
 	static constexpr bool InBounds(int idx) noexcept {
-		return idx >= 0 && idx < Size();
+		return idx >= 0 && idx < size;
 	}
 	static Block::Pos ToCoords(int idx) noexcept {
 		return Block::Pos(
-			0.5f + (idx % Width()),
-			0.5f + ((idx / Width()) % Height()),
-			0.5f + (idx / (Width() * Height()))
+			0.5f + (idx % width),
+			0.5f + ((idx / width) % height),
+			0.5f + (idx / (width * height))
 		);
+	}
+	static Block::Pos ToCoords(const Pos &pos) noexcept {
+		return Block::Pos(pos) + 0.5f;
 	}
 	static Pos ToPos(int idx) noexcept {
 		return Pos(
-			(idx % Width()),
-			((idx / Width()) % Height()),
-			(idx / (Width() * Height()))
+			(idx % width),
+			((idx / width) % height),
+			(idx / (width * height))
 		);
 	}
-	glm::mat4 ToTransform(int idx) const noexcept;
+	glm::mat4 ToTransform(const Pos &pos, int idx) const noexcept;
 
 	static constexpr bool IsBorder(int idx) noexcept {
 		return
-			idx < Width() * Height() ||                    // low Z plane
-			idx % Width() == 0 ||                          // low X plane
-			(idx / (Width() * Height())) == Depth() - 1 || // high Z plane
-			idx % Width() == Width() - 1 ||                // high X plane
-			(idx / Width()) % Height() == 0 ||             // low Y plane
-			(idx / Width()) % Height() == Height() - 1;    // high Y plane
+			idx < width * height ||                    // low Z plane
+			idx % width == 0 ||                          // low X plane
+			(idx / (width * height)) == depth - 1 || // high Z plane
+			idx % width == width - 1 ||                // high X plane
+			(idx / width) % height == 0 ||             // low Y plane
+			(idx / width) % height == height - 1;    // high Y plane
 	}
 
 	bool IsSurface(int index) const noexcept { return IsSurface(ToPos(index)); }
@@ -90,7 +93,7 @@ public:
 	void Relink() noexcept;
 
 	// check which faces of a block at given index are obstructed (and therefore invisible)
-	Block::FaceSet Obstructed(int idx) const noexcept;
+	Block::FaceSet Obstructed(const Pos &) const noexcept;
 
 	void Invalidate() noexcept { dirty = true; }
 
@@ -103,6 +106,7 @@ public:
 	const Block &BlockAt(const Pos &pos) const noexcept { return BlockAt(ToIndex(pos)); }
 
 	const BlockType &Type(const Block &b) const noexcept { return types->Get(b.type); }
+	const BlockType &Type(int index) const noexcept { return Type(BlockAt(index)); }
 
 	void SetLight(int index, int level) noexcept;
 	void SetLight(const Pos &pos, int level) noexcept { SetLight(ToIndex(pos), level); }
@@ -112,7 +116,7 @@ public:
 	int GetLight(const Pos &pos) const noexcept { return GetLight(ToIndex(pos)); }
 	int GetLight(const Block::Pos &pos) const noexcept { return GetLight(ToIndex(pos)); }
 
-	float GetVertexLight(int index, const BlockModel::Position &, const Model::Normal &) const noexcept;
+	float GetVertexLight(const Pos &, const BlockModel::Position &, const Model::Normal &) const noexcept;
 
 	bool Intersection(
 		const Ray &ray,

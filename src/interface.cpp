@@ -294,7 +294,7 @@ void Interface::CheckAim() {
 		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outline);
 		outline_transform = glm::scale(glm::vec3(1.0002f));
 		outline_transform *= aim_chunk->Transform(world.Player().ChunkCoords());
-		outline_transform *= aim_chunk->ToTransform(aim_block);
+		outline_transform *= aim_chunk->ToTransform(Chunk::ToPos(aim_block), aim_block);
 	} else {
 		aim_chunk = nullptr;
 	}
