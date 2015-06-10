@@ -23,7 +23,9 @@ PROFILE_DIR := build/profile
 RELEASE_DIR := build/release
 DIR := $(RELEASE_DIR) $(DEBUG_DIR) $(PROFILE_DIR) build
 
-SRC := $(wildcard $(SOURCE_DIR)/*.cpp)
+LIB_SRC := $(wildcard $(SOURCE_DIR)/*/*.cpp)
+BIN_SRC := $(wildcard $(SOURCE_DIR)/*.cpp)
+SRC := $(LIB_SRC) $(BIN_SRC)
 RELEASE_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(RELEASE_DIR)/%.o, $(SRC))
 DEBUG_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(SRC))
 PROFILE_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(PROFILE_DIR)/%.o, $(SRC))
@@ -84,14 +86,17 @@ $(PROFILE_BIN): $(PROFILE_OBJ)
 	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(PROFILE_FLAGS) $^
 
 $(RELEASE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(RELEASE_DIR)
+	@mkdir -p "$(@D)"
 	@echo compile: $@
 	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
 
 $(DEBUG_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(DEBUG_DIR)
+	@mkdir -p "$(@D)"
 	@echo compile: $@
 	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(DEBUG_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
 
 $(PROFILE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(PROFILE_DIR)
+	@mkdir -p "$(@D)"
 	@echo compile: $@
 	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(PROFILE_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
 

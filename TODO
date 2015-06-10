@@ -43,12 +43,20 @@ entity ai
 	this could be solved by using a pre-interpolated light texture and
 	mapping light levels to coordinates on that
 
+	there seems to be a bug with adding/removing obstacles...again
+
 	also: how could block light affect entity lighting?
+	maybe get the interpolated light level at the entity's center and use
+	that as the light power for the directional lighting shader and use a
+	direction that's fixed relative to the camera?
 
 gravity
 
 	maybe like light levels? should also store a direction with it in
 	that case. also, global gravity may be a world option.
+	no, per-block gravity vector is most probably too expensive.
+	better have the chunks store a few point masses (maybe blocks that
+	emit gravitation?) and calculate from that
 
 block attributes
 
@@ -60,6 +68,9 @@ chunk traversal
 
 	maybe the chunk loader should keep an index of interesting, if not
 	all chunks by position, possibly base-relative
+
+	profiling indicates that this is not neccessary atm. maybe it will
+	when some more action is in the world
 
 transparency (blocks and entities)
 
