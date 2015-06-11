@@ -71,6 +71,15 @@ public:
 	}
 	glm::mat4 ToTransform(const Pos &pos, int idx) const noexcept;
 
+	static bool IsBorder(const Pos &pos) noexcept {
+		return
+			pos.x == 0 ||
+			pos.x == width - 1 ||
+			pos.y == 0 ||
+			pos.y == height - 1 ||
+			pos.z == 0 ||
+			pos.z == depth - 1;
+	}
 	static constexpr bool IsBorder(int idx) noexcept {
 		return
 			idx < width * height ||                    // low Z plane
