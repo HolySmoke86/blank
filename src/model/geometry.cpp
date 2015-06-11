@@ -35,7 +35,7 @@ bool Intersection(
 				return false;
 			}
 		} else {
-			if (aabb.min[i] - e < 0.0f || -aabb.max[i] - e > 0.0f) {
+			if (aabb.min[i] - e > 0.0f || aabb.max[i] - e < 0.0f) {
 				return false;
 			}
 		}
