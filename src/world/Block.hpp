@@ -98,7 +98,7 @@ struct Block {
 			value |= Mask(f);
 		}
 		void Unset(Face f) {
-			value |= ~Mask(f);
+			value &= ~Mask(f);
 		}
 
 		void Clear() {

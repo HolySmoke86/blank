@@ -3,6 +3,7 @@
 blank
 blank.debug
 blank.profile
+blank.test
 build
 cachegrind.out.*
 callgrind.out.*
