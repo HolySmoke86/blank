@@ -750,7 +750,7 @@ bool ChunkLoader::Queued(const Chunk::Pos &pos) noexcept {
 			return true;
 		}
 	}
-	return nullptr;
+	return false;
 }
 
 bool ChunkLoader::Known(const Chunk::Pos &pos) noexcept {
