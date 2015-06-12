@@ -18,6 +18,10 @@ CPPUNIT_TEST(testBounds);
 CPPUNIT_TEST(testBorder);
 CPPUNIT_TEST(testNeighbor);
 
+CPPUNIT_TEST(testBlock);
+CPPUNIT_TEST(testLight);
+CPPUNIT_TEST(testLightPropagation);
+
 CPPUNIT_TEST_SUITE_END();
 
 public:
@@ -27,6 +31,10 @@ public:
 	void testBounds();
 	void testBorder();
 	void testNeighbor();
+
+	void testBlock();
+	void testLight();
+	void testLightPropagation();
 
 private:
 	BlockTypeRegistry types;

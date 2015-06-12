@@ -4,6 +4,7 @@
 
 #include "../model/geometry.hpp"
 
+#include <ostream>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>
 
@@ -11,6 +12,66 @@
 namespace blank {
 
 const NullShape BlockType::DEFAULT_SHAPE;
+
+
+bool operator ==(const Block &a, const Block &b) {
+	return a.type == b.type && a.orient == b.orient;
+}
+
+std::ostream &operator <<(std::ostream &out, const Block &block) {
+	return out << "Block(" << block.type << ", " << block.GetFace() << ", " << block.GetTurn() << ')';
+}
+
+std::ostream &operator <<(std::ostream &out, const Block::Face &face) {
+	switch (face) {
+		case Block::FACE_UP:
+			out << "FACE_UP";
+			break;
+		case Block::FACE_DOWN:
+			out << "FACE_DOWN";
+			break;
+		case Block::FACE_RIGHT:
+			out << "FACE_RIGHT";
+			break;
+		case Block::FACE_LEFT:
+			out << "FACE_LEFT";
+			break;
+		case Block::FACE_FRONT:
+			out << "FACE_FRONT";
+			break;
+		case Block::FACE_BACK:
+			out << "FACE_BACK";
+			break;
+		default:
+		case Block::FACE_COUNT:
+			out << "invalid Block::Face";
+			break;
+	}
+	return out;
+}
+
+std::ostream &operator <<(std::ostream &out, const Block::Turn &turn) {
+	switch (turn) {
+		case Block::TURN_NONE:
+			out << "TURN_NONE";
+			break;
+		case Block::TURN_LEFT:
+			out << "TURN_LEFT";
+			break;
+		case Block::TURN_AROUND:
+			out << "TURN_AROUND";
+			break;
+		case Block::TURN_RIGHT:
+			out << "TURN_RIGHT";
+			break;
+		default:
+		case Block::TURN_COUNT:
+			out << "invalid Block::Turn";
+			break;
+	}
+	return out;
+}
+
 
 BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
 : shape(s)

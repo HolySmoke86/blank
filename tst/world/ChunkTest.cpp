@@ -336,5 +336,122 @@ void ChunkTest::testNeighbor() {
 	}
 }
 
+
+void ChunkTest::testBlock() {
+	unique_ptr<Chunk> chunk(new Chunk(types));
+
+	for (int index = 0; index < Chunk::size; ++index) {
+		CPPUNIT_ASSERT_EQUAL_MESSAGE(
+			"default chunk has non-default block",
+			Block(), chunk->BlockAt(index)
+		);
+	}
+
+	Block block(1, Block::FACE_LEFT, Block::TURN_RIGHT);
+	chunk->SetBlock(0, block);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong type on set block",
+		block.type, chunk->BlockAt(0).type
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong orientation on set block",
+		block.orient, chunk->BlockAt(0).orient
+	);
+	for (int index = 1; index < Chunk::size; ++index) {
+		CPPUNIT_ASSERT_EQUAL_MESSAGE(
+			"changing block at index 0 affected some other block",
+			Block(), chunk->BlockAt(index)
+		);
+	}
+}
+
+void ChunkTest::testLight() {
+	unique_ptr<Chunk> chunk(new Chunk(types));
+
+	for (int index = 0; index < Chunk::size; ++index) {
+		CPPUNIT_ASSERT_EQUAL_MESSAGE(
+			"default chunk has non-zero light level",
+			0, chunk->GetLight(index)
+		);
+	}
+
+	chunk->SetLight(0, 15);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong light level on set index",
+		15, chunk->GetLight(0)
+	);
+	for (int index = 1; index < Chunk::size; ++index) {
+		CPPUNIT_ASSERT_EQUAL_MESSAGE(
+			"changing light at index 0 affected some other index",
+			0, chunk->GetLight(index)
+		);
+	}
+}
+
+void ChunkTest::testLightPropagation() {
+	unique_ptr<Chunk> chunk(new Chunk(types));
+
+	// 0 air, 1 solid, 2 solid and emits light level of 5
+	chunk->SetBlock(Chunk::Pos(7, 7, 7), Block(2));
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding luminant block did not set correct light level",
+		5, chunk->GetLight(Chunk::Pos(7, 7, 7))
+	);
+
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in +X",
+		4, chunk->GetLight(Chunk::Pos(8, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in -X",
+		4, chunk->GetLight(Chunk::Pos(6, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in +Y",
+		4, chunk->GetLight(Chunk::Pos(7, 8, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in -Y",
+		4, chunk->GetLight(Chunk::Pos(7, 6, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in +Z",
+		4, chunk->GetLight(Chunk::Pos(7, 7, 8))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in -Z",
+		4, chunk->GetLight(Chunk::Pos(7, 7, 6))
+	);
+
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in 2D diagonal",
+		3, chunk->GetLight(Chunk::Pos(8, 8, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in 2D diagonal",
+		3, chunk->GetLight(Chunk::Pos(7, 6, 8))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in 2D diagonal",
+		3, chunk->GetLight(Chunk::Pos(6, 7, 8))
+	);
+
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in 3D diagonal",
+		2, chunk->GetLight(Chunk::Pos(8, 6, 6))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in 3D diagonal",
+		2, chunk->GetLight(Chunk::Pos(6, 6, 8))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"light did not propagate correctly in 3D diagonal",
+		2, chunk->GetLight(Chunk::Pos(6, 8, 8))
+	);
+
+	// now block the light to the left
+	chunk->SetBlock(Chunk::Pos(6, 7, 7), Block(1));
+}
+
 }
 }

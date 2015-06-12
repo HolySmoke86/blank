@@ -1,6 +1,7 @@
 #ifndef BLANK_WORLD_BLOCK_HPP_
 #define BLANK_WORLD_BLOCK_HPP_
 
+#include <iosfwd>
 #include <glm/glm.hpp>
 
 
@@ -129,6 +130,12 @@ private:
 	static const Face orient2face[ORIENT_COUNT][FACE_COUNT];
 
 };
+
+bool operator ==(const Block &, const Block &);
+
+std::ostream &operator <<(std::ostream &, const Block &);
+std::ostream &operator <<(std::ostream &, const Block::Face &);
+std::ostream &operator <<(std::ostream &, const Block::Turn &);
 
 }
 
