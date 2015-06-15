@@ -8,6 +8,7 @@ namespace blank {
 
 class Entity;
 
+/// Randomly start or stop moving in axis directions every now and then.
 class RandomWalk {
 
 public:

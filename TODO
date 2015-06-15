@@ -68,7 +68,7 @@ chunk traversal
 	all chunks by position, possibly base-relative
 
 	profiling indicates that this is not neccessary atm. maybe it will
-	when some more action is in the world
+	when there's some more action in the world
 
 transparency (blocks and entities)
 

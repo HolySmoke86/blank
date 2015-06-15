@@ -158,8 +158,8 @@ private:
 private:
 	const BlockTypeRegistry *types;
 	Chunk *neighbor[Block::FACE_COUNT];
-	Block blocks[16 * 16 * 16];
-	unsigned char light[16 * 16 * 16];
+	Block blocks[size];
+	unsigned char light[size];
 	BlockModel model;
 	Pos position;
 	bool dirty;

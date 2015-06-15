@@ -9,13 +9,19 @@
 
 namespace blank {
 
+/// Sets entity rotation and velocity according to stored velocity
+/// and pitch/yaw components.
+/// Rotation is applied in yaw,pitch order (YX). Velocity is relative
+/// to yaw only (Y axis).
 class FPSController {
 
 public:
 	explicit FPSController(Entity &) noexcept;
 
+	/// get position and face direction of controlled entity
 	Ray Aim() const noexcept { return entity.Aim(entity.ChunkCoords()); }
 
+	/// velocity, relative to heading (yaw only)
 	const glm::vec3 &Velocity() const noexcept { return velocity; }
 	void Velocity(const glm::vec3 &vel) noexcept { velocity = vel; }
 

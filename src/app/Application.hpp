@@ -31,6 +31,7 @@ public:
 
 	/// run until user quits
 	void Run();
+	/// evaluate a single frame of dt milliseconds
 	void Loop(int dt);
 
 	/// run for n frames
@@ -40,8 +41,11 @@ public:
 	/// run for n frames, assuming t milliseconds for each
 	void RunS(size_t n, size_t t);
 
+	/// process all events in SDL's queue
 	void HandleEvents();
+	/// integrate to the next step with dt milliseconds passed
 	void Update(int dt);
+	/// push the current state to display
 	void Render();
 
 	static Entity &MakeTestEntity(World &);
