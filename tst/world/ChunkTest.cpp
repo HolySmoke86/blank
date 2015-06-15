@@ -451,6 +451,85 @@ void ChunkTest::testLightPropagation() {
 
 	// now block the light to the left
 	chunk->SetBlock(Chunk::Pos(6, 7, 7), Block(1));
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"non-zero light level in solid block",
+		0, chunk->GetLight(Chunk::Pos(6, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		5, chunk->GetLight(Chunk::Pos(7, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		4, chunk->GetLight(Chunk::Pos(8, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		4, chunk->GetLight(Chunk::Pos(7, 8, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		4, chunk->GetLight(Chunk::Pos(7, 6, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		4, chunk->GetLight(Chunk::Pos(7, 7, 8))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		4, chunk->GetLight(Chunk::Pos(7, 7, 6))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		3, chunk->GetLight(Chunk::Pos(6, 6, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		3, chunk->GetLight(Chunk::Pos(6, 8, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		3, chunk->GetLight(Chunk::Pos(6, 7, 6))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		3, chunk->GetLight(Chunk::Pos(6, 7, 6))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		2, chunk->GetLight(Chunk::Pos(5, 6, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		2, chunk->GetLight(Chunk::Pos(5, 8, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		2, chunk->GetLight(Chunk::Pos(5, 7, 6))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle affected unrelated index",
+		2, chunk->GetLight(Chunk::Pos(5, 7, 6))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"adding obstacle resulted in unexpected light level behind it",
+		1, chunk->GetLight(Chunk::Pos(5, 7, 7))
+	);
+
+	// and remove it again
+	chunk->SetBlock(Chunk::Pos(6, 7, 7), Block(0));
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"removing obstacle did not refill light correctly",
+		4, chunk->GetLight(Chunk::Pos(6, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"removing obstacle did not refill light correctly",
+		3, chunk->GetLight(Chunk::Pos(5, 7, 7))
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"removing obstacle did not refill light correctly",
+		2, chunk->GetLight(Chunk::Pos(4, 7, 7))
+	);
 }
 
 }

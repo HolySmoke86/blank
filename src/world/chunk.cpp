@@ -169,15 +169,16 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	} else if (!new_type.block_light && old_type.block_light) {
 		// obstacle removed
 		int level = 0;
+		Pos pos(ToPos(index));
 		for (int face = 0; face < Block::FACE_COUNT; ++face) {
-			BlockLookup next_block(this, ToPos(index), Block::Face(face));
+			BlockLookup next_block(this, pos, Block::Face(face));
 			if (next_block) {
-				level = std::min(level, next_block.GetLight());
+				level = std::max(level, next_block.GetLight());
 			}
 		}
 		if (level > 1) {
 			SetLight(index, level - 1);
-			light_queue.emplace(this, ToPos(index));
+			light_queue.emplace(this, pos);
 			work_light();
 		}
 	}
@@ -449,7 +450,6 @@ bool Chunk::Intersection(
 	float &dist,
 	glm::vec3 &normal
 ) const noexcept {
-	// TODO: should be possible to heavily optimize this
 	int idx = 0;
 	blkid = -1;
 	dist = std::numeric_limits<float>::infinity();
