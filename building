@@ -3,7 +3,15 @@ Dependencies
 
 	GLEW, GLM, SDL2, SDL2_image
 
-archlinux: pacman -S glew glm sdl2 sdl2_image
+	CppUnit for tests
+
+archlinux: pacman -S glew glm sdl2 sdl2_image cppunit
+
+manual:
+	CppUnit http://sourceforge.net/projects/cppunit/
+	GLEW    http://glew.sourceforge.net/
+	GLM     http://glm.g-truc.net/0.9.6/index.html
+	SDL     http://www.libsdl.org/
 
 
 Makefile
@@ -20,6 +28,9 @@ release (default), debug, profile:
 
 run:
 	build and execute the main binary
+
+test:
+	build and run unittests
 
 gdb, cachegrind, callgrind:
 	build the binary suited for given tool and launch
