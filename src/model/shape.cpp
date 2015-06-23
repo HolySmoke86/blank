@@ -80,6 +80,14 @@ bool NullShape::Intersects(
 	return false;
 }
 
+bool NullShape::Intersects(
+	const glm::mat4 &,
+	const AABB &,
+	const glm::mat4 &
+) const noexcept {
+	return false;
+}
+
 
 CuboidShape::CuboidShape(const AABB &b)
 : Shape()
@@ -165,6 +173,14 @@ bool CuboidShape::Intersects(
 	float &dist, glm::vec3 &normal
 ) const noexcept {
 	return Intersection(ray, bb, M, &dist, &normal);
+}
+
+bool CuboidShape::Intersects(
+	const glm::mat4 &M,
+	const AABB &box,
+	const glm::mat4 &box_M
+) const noexcept {
+	return Intersection(bb, M, box, box_M);
 }
 
 
@@ -324,6 +340,14 @@ bool StairShape::Intersects(
 	} else {
 		return false;
 	}
+}
+
+bool StairShape::Intersects(
+	const glm::mat4 &M,
+	const AABB &box,
+	const glm::mat4 &box_M
+) const noexcept {
+	return Intersection(bot, M, box, box_M) || Intersection(top, M, box, box_M);
 }
 
 }

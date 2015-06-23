@@ -11,6 +11,7 @@
 
 namespace blank {
 
+class AABB;
 class Ray;
 
 struct Shape {
@@ -71,6 +72,14 @@ struct Shape {
 		const glm::mat4 &,
 		float &dist,
 		glm::vec3 &normal
+	) const noexcept = 0;
+
+	/// Check for intersection with given OBB.
+	/// The OBB is defined by box and box_M, M is applied to the shape.
+	virtual bool Intersects(
+		const glm::mat4 &M,
+		const AABB &box,
+		const glm::mat4 &box_M
 	) const noexcept = 0;
 
 protected:
