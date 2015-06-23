@@ -36,6 +36,12 @@ bool Intersection(
 	float *dist = nullptr,
 	glm::vec3 *normal = nullptr) noexcept;
 
+bool Intersection(
+	const AABB &a_box,
+	const glm::mat4 &a_m,
+	const AABB &b_box,
+	const glm::mat4 &b_m) noexcept;
+
 bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept;
 
 }

@@ -4,6 +4,7 @@
 
 #include <limits>
 #include <glm/gtx/io.hpp>
+#include <glm/gtx/transform.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::GeometryTest);
 
@@ -18,7 +19,7 @@ void GeometryTest::tearDown() {
 }
 
 
-void GeometryTest::testRayAABBIntersection() {
+void GeometryTest::testRayBoxIntersection() {
 	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 } }; // at origin, pointing right
 	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
 	glm::mat4 M(1); // no transformation
@@ -59,6 +60,39 @@ void GeometryTest::testRayAABBIntersection() {
 	CPPUNIT_ASSERT_MESSAGE(
 		"ray pointing away from box still intersects",
 		!Intersection(ray, box, M)
+	);
+}
+
+void GeometryTest::testBoxBoxIntersection() {
+	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
+	glm::mat4 Ma(1); // identity
+	glm::mat4 Mb(1); // identity
+	// they're identical, so should probably intersect ^^
+
+	CPPUNIT_ASSERT_MESSAGE(
+		"identical OBBs don't intersect",
+		Intersection(box, Ma, box, Mb)
+	);
+
+	Ma = glm::translate(glm::vec3(-2, 0, 0)); // 2 to the left
+	Mb = glm::translate(glm::vec3(2, 0, 0)); // 2 to the right
+	CPPUNIT_ASSERT_MESSAGE(
+		"distant OBBs intersect (2 apart, no rotation)",
+		!Intersection(box, Ma, box, Mb)
+	);
+
+	Ma = glm::rotate(PI_0p25, glm::vec3(0, 0, 1)); // rotated 45° around Z
+	Mb = glm::translate(glm::vec3(2.4, 0, 0)); // 2.4 to the right
+	// they should barely touch. intersect by about 0.01 if my head works
+	CPPUNIT_ASSERT_MESSAGE(
+		"OBBs don't intersect (one rotated by 45°)",
+		Intersection(box, Ma, box, Mb)
+	);
+
+	Mb = glm::translate(glm::vec3(3, 0, 0)); // 3 to the right
+	CPPUNIT_ASSERT_MESSAGE(
+		"OBBs intersect (one rotated by 45°)",
+		!Intersection(box, Ma, box, Mb)
 	);
 }
 

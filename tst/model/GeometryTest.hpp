@@ -12,7 +12,8 @@ class GeometryTest
 
 CPPUNIT_TEST_SUITE(GeometryTest);
 
-CPPUNIT_TEST(testRayAABBIntersection);
+CPPUNIT_TEST(testRayBoxIntersection);
+CPPUNIT_TEST(testBoxBoxIntersection);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -20,7 +21,8 @@ public:
 	void setUp();
 	void tearDown();
 
-	void testRayAABBIntersection();
+	void testRayBoxIntersection();
+	void testBoxBoxIntersection();
 
 };
 

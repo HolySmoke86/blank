@@ -65,6 +65,71 @@ bool Intersection(
 	return true;
 }
 
+
+bool Intersection(
+	const AABB &a_box,
+	const glm::mat4 &a_m,
+	const AABB &b_box,
+	const glm::mat4 &b_m
+) noexcept {
+	glm::vec3 a_corners[8] = {
+		glm::vec3(a_m * glm::vec4(a_box.min.x, a_box.min.y, a_box.min.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.min.x, a_box.min.y, a_box.max.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.min.x, a_box.max.y, a_box.min.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.min.x, a_box.max.y, a_box.max.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.max.x, a_box.min.y, a_box.min.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.max.x, a_box.min.y, a_box.max.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.max.x, a_box.max.y, a_box.min.z, 1)),
+		glm::vec3(a_m * glm::vec4(a_box.max.x, a_box.max.y, a_box.max.z, 1)),
+	};
+
+	glm::vec3 b_corners[8] = {
+		glm::vec3(b_m * glm::vec4(b_box.min.x, b_box.min.y, b_box.min.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.min.x, b_box.min.y, b_box.max.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.min.x, b_box.max.y, b_box.min.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.min.x, b_box.max.y, b_box.max.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.max.x, b_box.min.y, b_box.min.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.max.x, b_box.min.y, b_box.max.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.max.x, b_box.max.y, b_box.min.z, 1)),
+		glm::vec3(b_m * glm::vec4(b_box.max.x, b_box.max.y, b_box.max.z, 1)),
+	};
+
+	glm::vec3 axes[6] = {
+		glm::vec3(a_m * glm::vec4(1, 0, 0, 0)),
+		glm::vec3(a_m * glm::vec4(0, 1, 0, 0)),
+		glm::vec3(a_m * glm::vec4(0, 0, 1, 0)),
+		glm::vec3(b_m * glm::vec4(1, 0, 0, 0)),
+		glm::vec3(b_m * glm::vec4(0, 1, 0, 0)),
+		glm::vec3(b_m * glm::vec4(0, 0, 1, 0)),
+	};
+
+	for (const glm::vec3 &axis : axes) {
+		float a_min = std::numeric_limits<float>::infinity();
+		float a_max = -std::numeric_limits<float>::infinity();
+		for (const glm::vec3 &corner : a_corners) {
+			float val = glm::dot(corner, axis);
+			a_min = std::min(a_min, val);
+			a_max = std::max(a_max, val);
+		}
+
+		float b_min = std::numeric_limits<float>::infinity();
+		float b_max = -std::numeric_limits<float>::infinity();
+		for (const glm::vec3 &corner : b_corners) {
+			float val = glm::dot(corner, axis);
+			b_min = std::min(b_min, val);
+			b_max = std::max(b_max, val);
+		}
+
+		if (a_max < b_min || b_max < a_min) return false;
+	}
+
+	// TODO: find intersection point and normals
+	// normal could be deduced from the axis with the lowest min?
+
+	return true;
+}
+
+
 bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept {
 	// transform corners into clip space
 	glm::vec4 corners[8] = {
