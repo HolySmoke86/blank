@@ -627,9 +627,10 @@ ChunkLoader::ChunkLoader(const Config &config, const BlockTypeRegistry &reg, con
 , loaded()
 , to_generate()
 , to_free()
+, gen_timer(config.gen_limit)
 , load_dist(config.load_dist)
 , unload_dist(config.unload_dist) {
-
+	gen_timer.Start();
 }
 
 namespace {
@@ -774,6 +775,12 @@ Chunk &ChunkLoader::ForceLoad(const Chunk::Pos &pos) {
 	return Generate(pos);
 }
 
+bool ChunkLoader::OutOfRange(const Chunk::Pos &pos) const noexcept {
+	return std::abs(base.x - pos.x) > unload_dist
+			|| std::abs(base.y - pos.y) > unload_dist
+			|| std::abs(base.z - pos.z) > unload_dist;
+}
+
 void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 	if (new_base == base) {
 		return;
@@ -782,9 +789,7 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 
 	// unload far away chunks
 	for (auto iter(loaded.begin()), end(loaded.end()); iter != end;) {
-		if (std::abs(base.x - iter->Position().x) > unload_dist
-				|| std::abs(base.y - iter->Position().y) > unload_dist
-				|| std::abs(base.z - iter->Position().z) > unload_dist) {
+		if (OutOfRange(*iter)) {
 			auto saved = iter;
 			Remove(*saved);
 			++iter;
@@ -795,9 +800,7 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 	}
 	// abort far away queued chunks
 	for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end;) {
-		if (std::abs(base.x - iter->x) > unload_dist
-				|| std::abs(base.y - iter->y) > unload_dist
-				|| std::abs(base.z - iter->z) > unload_dist) {
+		if (OutOfRange(*iter)) {
 			iter = to_generate.erase(iter);
 		} else {
 			++iter;
@@ -812,8 +815,9 @@ void ChunkLoader::GenerateSurrounding(const Chunk::Pos &pos) {
 	Generate(pos - offset, pos + offset);
 }
 
-void ChunkLoader::Update() {
-	if (to_generate.empty()) {
+void ChunkLoader::Update(int dt) {
+	gen_timer.Update(dt);
+	if (!gen_timer.Hit() || to_generate.empty()) {
 		return;
 	}
 
@@ -824,7 +828,6 @@ void ChunkLoader::Update() {
 		if (iter->Position() == pos) {
 			iter->Relink();
 			loaded.splice(loaded.end(), to_free, iter);
-			return;
 		}
 	}
 

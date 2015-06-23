@@ -199,7 +199,7 @@ void World::Update(int dt) {
 		entity.Update(dt);
 	}
 	chunks.Rebase(player->ChunkCoords());
-	chunks.Update();
+	chunks.Update(dt);
 }
 
 
