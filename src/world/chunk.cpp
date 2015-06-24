@@ -481,6 +481,30 @@ bool Chunk::Intersection(
 	}
 }
 
+bool Chunk::Intersection(
+	const AABB &box,
+	const glm::mat4 &Mbox,
+	const glm::mat4 &Mchunk
+) const noexcept {
+	if (!blank::Intersection(box, Mbox, Bounds(), Mchunk)) {
+		return false;
+	}
+	for (int idx = 0, z = 0; z < depth; ++z) {
+		for (int y = 0; y < height; ++y) {
+			for (int x = 0; x < width; ++x, ++idx) {
+				const BlockType &type = Type(idx);
+				if (!type.visible) {
+					continue;
+				}
+				if (type.shape->Intersects(Mchunk * ToTransform(Pos(x, y, z), idx), box, Mbox)) {
+					return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
 
 namespace {
 

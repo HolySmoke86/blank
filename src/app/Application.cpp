@@ -32,7 +32,10 @@ Application::Application(const Config &config)
 
 Entity &Application::MakeTestEntity(World &world) {
 	Entity &e = world.AddEntity();
+	e.Name("test");
 	e.Position({ 0.0f, 0.0f, 0.0f });
+	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	e.WorldCollidable(true);
 	e.SetShape(world.BlockTypes()[1].shape, { 1.0f, 1.0f, 0.0f });
 	e.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
 	return e;

@@ -21,7 +21,7 @@ class World {
 public:
 	struct Config {
 		// initial player position
-		glm::vec3 spawn = { 4.0f, 4.0f, 4.0f };
+		glm::vec3 spawn = { 0.0f, 0.0f, 0.0f };
 		// direction facing towards(!) the light
 		glm::vec3 light_direction = { -1.0f, -3.0f, -2.0f };
 		// fade out reaches 1/e (0.3679) at 1/fog_density,
@@ -39,10 +39,12 @@ public:
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
-		Chunk **chunk = nullptr,
-		int *blkid = nullptr,
-		float *dist = nullptr,
-		glm::vec3 *normal = nullptr);
+		Chunk *&chunk,
+		int &blkid,
+		float &dist,
+		glm::vec3 &normal);
+
+	bool Intersection(const Entity &e);
 
 	BlockTypeRegistry &BlockTypes() { return blockType; }
 

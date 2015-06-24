@@ -356,7 +356,7 @@ void Interface::Update(int dt) {
 
 void Interface::CheckAim() {
 	float dist;
-	if (world.Intersection(aim, glm::mat4(1.0f), &aim_chunk, &aim_block, &dist, &aim_normal)) {
+	if (world.Intersection(aim, glm::mat4(1.0f), aim_chunk, aim_block, dist, aim_normal)) {
 		outline.Clear();
 		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outline);
 		outline_transform = glm::scale(glm::vec3(1.0002f));

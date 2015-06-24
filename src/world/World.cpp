@@ -3,6 +3,7 @@
 #include "../graphics/BlockLighting.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 
+#include <iostream>
 #include <limits>
 #include <glm/gtx/transform.hpp>
 
@@ -113,6 +114,9 @@ World::World(const Config &config)
 	generate.Solids({ 1, 4, 7, 10 });
 
 	player = &AddEntity();
+	player->Name("player");
+	player->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	player->WorldCollidable(true);
 	player->Position(config.spawn);
 
 	chunks.GenerateSurrounding(player->ChunkCoords());
@@ -131,12 +135,13 @@ std::vector<Candidate> candidates;
 }
 
 bool World::Intersection(
-		const Ray &ray,
-		const glm::mat4 &M,
-		Chunk **chunk,
-		int *blkid,
-		float *dist,
-		glm::vec3 *normal) {
+	const Ray &ray,
+	const glm::mat4 &M,
+	Chunk *&chunk,
+	int &blkid,
+	float &dist,
+	glm::vec3 &normal
+) {
 	candidates.clear();
 
 	for (Chunk &cur_chunk : chunks.Loaded()) {
@@ -148,39 +153,37 @@ bool World::Intersection(
 
 	if (candidates.empty()) return false;
 
-	Chunk *closest_chunk = nullptr;
-	float closest_dist = std::numeric_limits<float>::infinity();
-	int closest_blkid = -1;
-	glm::vec3 closest_normal;
+	chunk = nullptr;
+	dist = std::numeric_limits<float>::infinity();
+	blkid = -1;
 
 	for (Candidate &cand : candidates) {
-		if (cand.dist > closest_dist) continue;
+		if (cand.dist > dist) continue;
 		int cur_blkid;
 		float cur_dist;
 		glm::vec3 cur_normal;
 		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player->ChunkCoords()), cur_blkid, cur_dist, cur_normal)) {
-			if (cur_dist < closest_dist) {
-				closest_chunk = cand.chunk;
-				closest_blkid = cur_blkid;
-				closest_dist = cur_dist;
-				closest_normal = cur_normal;
+			if (cur_dist < dist) {
+				chunk = cand.chunk;
+				blkid = cur_blkid;
+				dist = cur_dist;
+				normal = cur_normal;
 			}
 		}
 	}
 
-	if (chunk) {
-		*chunk = closest_chunk;
+	return chunk;
+}
+
+bool World::Intersection(const Entity &e) {
+	AABB box = e.Bounds();
+	glm::mat4 M = e.Transform(player->ChunkCoords());
+	for (Chunk &cur_chunk : chunks.Loaded()) {
+		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()))) {
+			return true;
+		}
 	}
-	if (blkid) {
-		*blkid = closest_blkid;
-	}
-	if (dist) {
-		*dist = closest_dist;
-	}
-	if (normal) {
-		*normal = closest_normal;
-	}
-	return closest_chunk;
+	return false;
 }
 
 
@@ -197,6 +200,12 @@ Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
 void World::Update(int dt) {
 	for (Entity &entity : entities) {
 		entity.Update(dt);
+	}
+	for (Entity &entity : entities) {
+		if (entity.WorldCollidable() && Intersection(entity)) {
+			// entity collides with the world
+			std::cout << entity.Name() << " entity intersects world" << std::endl;
+		}
 	}
 	chunks.Rebase(player->ChunkCoords());
 	chunks.Update(dt);

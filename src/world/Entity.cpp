@@ -1,6 +1,5 @@
 #include "Entity.hpp"
 
-#include "../model/geometry.hpp"
 #include "../model/Shape.hpp"
 
 #include <cmath>
@@ -17,11 +16,14 @@ namespace blank {
 Entity::Entity() noexcept
 : shape(nullptr)
 , model()
+, name("anonymous")
+, bounds()
 , velocity(0, 0, 0)
 , position(0, 0, 0)
 , chunk(0, 0, 0)
 , angular_velocity(1.0f, 0.0f, 0.0f, 0.0f)
-, rotation(1.0f) {
+, rotation(1.0f)
+, world_collision(false) {
 
 }
 

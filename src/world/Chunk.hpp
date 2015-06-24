@@ -143,6 +143,11 @@ public:
 		float &dist,
 		glm::vec3 &normal) const noexcept;
 
+	bool Intersection(
+		const AABB &box,
+		const glm::mat4 &Mbox,
+		const glm::mat4 &Mchunk) const noexcept;
+
 	void Position(const Pos &pos) noexcept { position = pos; }
 	const Pos &Position() const noexcept { return position; }
 	glm::mat4 Transform(const Pos &offset) const noexcept {

@@ -3,15 +3,16 @@
 
 #include "Block.hpp"
 #include "Chunk.hpp"
+#include "../model/geometry.hpp"
 #include "../model/Model.hpp"
 
+#include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 
 namespace blank {
 
-class Ray;
 class Shape;
 
 class Entity {
@@ -23,6 +24,15 @@ public:
 	const Shape *GetShape() const noexcept { return shape; }
 	void SetShape(const Shape *, const glm::vec3 &color);
 	void SetShapeless() noexcept;
+
+	const std::string &Name() const noexcept { return name; }
+	void Name(const std::string &n) { name = n; }
+
+	const AABB &Bounds() const noexcept { return bounds; }
+	void Bounds(const AABB &b) noexcept { bounds = b; }
+
+	bool WorldCollidable() const noexcept { return world_collision; }
+	void WorldCollidable(bool b) noexcept { world_collision = b; }
 
 	const glm::vec3 &Velocity() const noexcept { return velocity; }
 	void Velocity(const glm::vec3 &) noexcept;
@@ -51,12 +61,18 @@ private:
 	const Shape *shape;
 	Model model;
 
+	std::string name;
+
+	AABB bounds;
+
 	glm::vec3 velocity;
 	Block::Pos position;
 	Chunk::Pos chunk;
 
 	glm::quat angular_velocity;
 	glm::mat4 rotation;
+
+	bool world_collision;
 
 };
 
