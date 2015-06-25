@@ -178,6 +178,8 @@ bool World::Intersection(
 bool World::Intersection(const Entity &e) {
 	AABB box = e.Bounds();
 	glm::mat4 M = e.Transform(player->ChunkCoords());
+	// TODO: this only needs to check the chunks surrounding the entity's chunk position
+	//       need find out if that is quicker than the rough chunk bounds test
 	for (Chunk &cur_chunk : chunks.Loaded()) {
 		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()))) {
 			return true;

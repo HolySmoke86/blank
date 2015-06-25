@@ -22,6 +22,10 @@ struct AABB {
 		if (max.y < min.y) std::swap(max.y, min.y);
 		if (max.z < min.z) std::swap(max.z, min.z);
 	}
+
+	glm::vec3 Center() const noexcept {
+		return min + (max - min) * 0.5f;
+	}
 };
 
 struct Ray {
@@ -40,7 +44,9 @@ bool Intersection(
 	const AABB &a_box,
 	const glm::mat4 &a_m,
 	const AABB &b_box,
-	const glm::mat4 &b_m) noexcept;
+	const glm::mat4 &b_m,
+	float &depth,
+	glm::vec3 &normal) noexcept;
 
 bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept;
 

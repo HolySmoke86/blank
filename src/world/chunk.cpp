@@ -5,6 +5,7 @@
 #include "Generator.hpp"
 
 #include <algorithm>
+#include <iostream>
 #include <limits>
 #include <queue>
 
@@ -486,7 +487,10 @@ bool Chunk::Intersection(
 	const glm::mat4 &Mbox,
 	const glm::mat4 &Mchunk
 ) const noexcept {
-	if (!blank::Intersection(box, Mbox, Bounds(), Mchunk)) {
+	float penetration;
+	glm::vec3 normal;
+
+	if (!blank::Intersection(box, Mbox, Bounds(), Mchunk, penetration, normal)) {
 		return false;
 	}
 	for (int idx = 0, z = 0; z < depth; ++z) {

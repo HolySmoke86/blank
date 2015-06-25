@@ -70,7 +70,9 @@ bool Intersection(
 	const AABB &a_box,
 	const glm::mat4 &a_m,
 	const AABB &b_box,
-	const glm::mat4 &b_m
+	const glm::mat4 &b_m,
+	float &depth,
+	glm::vec3 &normal
 ) noexcept {
 	glm::vec3 a_corners[8] = {
 		glm::vec3(a_m * glm::vec4(a_box.min.x, a_box.min.y, a_box.min.z, 1)),
@@ -103,6 +105,10 @@ bool Intersection(
 		glm::vec3(b_m * glm::vec4(0, 0, 1, 0)),
 	};
 
+	depth = std::numeric_limits<float>::infinity();
+	int min_axis = 0;
+
+	int cur_axis = 0;
 	for (const glm::vec3 &axis : axes) {
 		float a_min = std::numeric_limits<float>::infinity();
 		float a_max = -std::numeric_limits<float>::infinity();
@@ -121,11 +127,17 @@ bool Intersection(
 		}
 
 		if (a_max < b_min || b_max < a_min) return false;
+
+		float overlap = std::min(a_max, b_max) - std::max(a_min, b_min);
+		if (overlap < depth) {
+			depth = overlap;
+			min_axis = cur_axis;
+		}
+
+		++cur_axis;
 	}
 
-	// TODO: find intersection point and normals
-	// normal could be deduced from the axis with the lowest min?
-
+	normal = axes[min_axis];
 	return true;
 }
 

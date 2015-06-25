@@ -180,7 +180,9 @@ bool CuboidShape::Intersects(
 	const AABB &box,
 	const glm::mat4 &box_M
 ) const noexcept {
-	return Intersection(bb, M, box, box_M);
+	float depth;
+	glm::vec3 normal;
+	return Intersection(bb, M, box, box_M, depth, normal);
 }
 
 
@@ -347,7 +349,9 @@ bool StairShape::Intersects(
 	const AABB &box,
 	const glm::mat4 &box_M
 ) const noexcept {
-	return Intersection(bot, M, box, box_M) || Intersection(top, M, box, box_M);
+	float depth;
+	glm::vec3 normal;
+	return Intersection(bot, M, box, box_M, depth, normal) || Intersection(top, M, box, box_M, depth, normal);
 }
 
 }

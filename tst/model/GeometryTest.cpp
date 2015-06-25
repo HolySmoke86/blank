@@ -64,6 +64,10 @@ void GeometryTest::testRayBoxIntersection() {
 }
 
 void GeometryTest::testBoxBoxIntersection() {
+	const float delta = std::numeric_limits<float>::epsilon();
+	float depth = 0;
+	glm::vec3 normal(0);
+
 	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
 	glm::mat4 Ma(1); // identity
 	glm::mat4 Mb(1); // identity
@@ -71,28 +75,43 @@ void GeometryTest::testBoxBoxIntersection() {
 
 	CPPUNIT_ASSERT_MESSAGE(
 		"identical OBBs don't intersect",
-		Intersection(box, Ma, box, Mb)
+		Intersection(box, Ma, box, Mb, depth, normal)
+	);
+	// depth is two, but normal can be any
+	// (will probably be the first axis of box a, but any is valid)
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"penetration depth of coincidental 2x2x2 boxes is not 2",
+		2.0f, depth, delta
 	);
 
 	Ma = glm::translate(glm::vec3(-2, 0, 0)); // 2 to the left
 	Mb = glm::translate(glm::vec3(2, 0, 0)); // 2 to the right
 	CPPUNIT_ASSERT_MESSAGE(
 		"distant OBBs intersect (2 apart, no rotation)",
-		!Intersection(box, Ma, box, Mb)
+		!Intersection(box, Ma, box, Mb, depth, normal)
 	);
+	// depth and normal undefined for non-intersecting objects
 
 	Ma = glm::rotate(PI_0p25, glm::vec3(0, 0, 1)); // rotated 45° around Z
 	Mb = glm::translate(glm::vec3(2.4, 0, 0)); // 2.4 to the right
-	// they should barely touch. intersect by about 0.01 if my head works
+	// they should barely touch. intersect by about sqrt(2) - 1.4 if my head works
 	CPPUNIT_ASSERT_MESSAGE(
 		"OBBs don't intersect (one rotated by 45°)",
-		Intersection(box, Ma, box, Mb)
+		Intersection(box, Ma, box, Mb, depth, normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"bad penetration depth (with rotation)",
+		0.01421356237309504880f, depth, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"bad intersection normal (with rotation)",
+		glm::vec3(1, 0, 0), abs(normal) // normal can be in + or - x, therefore abs()
 	);
 
 	Mb = glm::translate(glm::vec3(3, 0, 0)); // 3 to the right
 	CPPUNIT_ASSERT_MESSAGE(
 		"OBBs intersect (one rotated by 45°)",
-		!Intersection(box, Ma, box, Mb)
+		!Intersection(box, Ma, box, Mb, depth, normal)
 	);
 }
 
