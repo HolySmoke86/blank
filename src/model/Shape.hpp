@@ -79,7 +79,9 @@ struct Shape {
 	virtual bool Intersects(
 		const glm::mat4 &M,
 		const AABB &box,
-		const glm::mat4 &box_M
+		const glm::mat4 &box_M,
+		float &depth,
+		glm::vec3 &normal
 	) const noexcept = 0;
 
 protected:

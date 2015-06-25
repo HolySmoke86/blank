@@ -83,7 +83,9 @@ bool NullShape::Intersects(
 bool NullShape::Intersects(
 	const glm::mat4 &,
 	const AABB &,
-	const glm::mat4 &
+	const glm::mat4 &,
+	float &,
+	glm::vec3 &
 ) const noexcept {
 	return false;
 }
@@ -178,10 +180,10 @@ bool CuboidShape::Intersects(
 bool CuboidShape::Intersects(
 	const glm::mat4 &M,
 	const AABB &box,
-	const glm::mat4 &box_M
+	const glm::mat4 &box_M,
+	float &depth,
+	glm::vec3 &normal
 ) const noexcept {
-	float depth;
-	glm::vec3 normal;
 	return Intersection(bb, M, box, box_M, depth, normal);
 }
 
@@ -347,10 +349,11 @@ bool StairShape::Intersects(
 bool StairShape::Intersects(
 	const glm::mat4 &M,
 	const AABB &box,
-	const glm::mat4 &box_M
+	const glm::mat4 &box_M,
+	float &depth,
+	glm::vec3 &normal
 ) const noexcept {
-	float depth;
-	glm::vec3 normal;
+	// TODO: this is wrong, but simple. so for now will have to do
 	return Intersection(bot, M, box, box_M, depth, normal) || Intersection(top, M, box, box_M, depth, normal);
 }
 

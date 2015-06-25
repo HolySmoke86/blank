@@ -8,6 +8,7 @@
 #include "../model/shapes.hpp"
 
 #include <list>
+#include <vector>
 #include <glm/glm.hpp>
 
 
@@ -15,6 +16,7 @@ namespace blank {
 
 class BlockLighting;
 class DirectionalLighting;
+class WorldCollision;
 
 class World {
 
@@ -44,7 +46,8 @@ public:
 		float &dist,
 		glm::vec3 &normal);
 
-	bool Intersection(const Entity &e);
+	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
+	void Resolve(const Entity &e, std::vector<WorldCollision> &);
 
 	BlockTypeRegistry &BlockTypes() { return blockType; }
 

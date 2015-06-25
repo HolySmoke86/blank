@@ -6,6 +6,7 @@
 #include "../model/BlockModel.hpp"
 #include "../model/geometry.hpp"
 
+#include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
@@ -13,6 +14,7 @@
 namespace blank {
 
 class BlockType;
+class WorldCollision;
 
 /// cube of size 16 (256 tiles, 4096 blocks)
 class Chunk {
@@ -146,7 +148,8 @@ public:
 	bool Intersection(
 		const AABB &box,
 		const glm::mat4 &Mbox,
-		const glm::mat4 &Mchunk) const noexcept;
+		const glm::mat4 &Mchunk,
+		std::vector<WorldCollision> &) const noexcept;
 
 	void Position(const Pos &pos) noexcept { position = pos; }
 	const Pos &Position() const noexcept { return position; }

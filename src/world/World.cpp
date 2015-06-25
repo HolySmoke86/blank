@@ -1,5 +1,6 @@
 #include "World.hpp"
 
+#include "WorldCollision.hpp"
 #include "../graphics/BlockLighting.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 
@@ -175,13 +176,13 @@ bool World::Intersection(
 	return chunk;
 }
 
-bool World::Intersection(const Entity &e) {
+bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
 	glm::mat4 M = e.Transform(player->ChunkCoords());
 	// TODO: this only needs to check the chunks surrounding the entity's chunk position
 	//       need find out if that is quicker than the rough chunk bounds test
 	for (Chunk &cur_chunk : chunks.Loaded()) {
-		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()))) {
+		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()), col)) {
 			return true;
 		}
 	}
@@ -199,18 +200,29 @@ Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
 }
 
 
+namespace {
+
+std::vector<WorldCollision> col;
+
+}
+
 void World::Update(int dt) {
 	for (Entity &entity : entities) {
 		entity.Update(dt);
 	}
 	for (Entity &entity : entities) {
-		if (entity.WorldCollidable() && Intersection(entity)) {
+		col.clear();
+		if (entity.WorldCollidable() && Intersection(entity, col)) {
 			// entity collides with the world
-			std::cout << entity.Name() << " entity intersects world" << std::endl;
+			Resolve(entity, col);
 		}
 	}
 	chunks.Rebase(player->ChunkCoords());
 	chunks.Update(dt);
+}
+
+void World::Resolve(const Entity &e, std::vector<WorldCollision> &col) {
+	std::cout << e.Name() << " entity intersects world at " << col.size() << " blocks" << std::endl;
 }
 
 

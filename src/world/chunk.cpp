@@ -3,6 +3,7 @@
 #include "ChunkLoader.hpp"
 
 #include "Generator.hpp"
+#include "WorldCollision.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -485,8 +486,10 @@ bool Chunk::Intersection(
 bool Chunk::Intersection(
 	const AABB &box,
 	const glm::mat4 &Mbox,
-	const glm::mat4 &Mchunk
+	const glm::mat4 &Mchunk,
+	std::vector<WorldCollision> &col
 ) const noexcept {
+	bool any = false;
 	float penetration;
 	glm::vec3 normal;
 
@@ -500,13 +503,14 @@ bool Chunk::Intersection(
 				if (!type.visible) {
 					continue;
 				}
-				if (type.shape->Intersects(Mchunk * ToTransform(Pos(x, y, z), idx), box, Mbox)) {
-					return true;
+				if (type.shape->Intersects(Mchunk * ToTransform(Pos(x, y, z), idx), box, Mbox, penetration, normal)) {
+					col.emplace_back(this, idx, penetration, normal);
+					any = true;
 				}
 			}
 		}
 	}
-	return false;
+	return any;
 }
 
 

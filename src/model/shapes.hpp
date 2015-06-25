@@ -17,7 +17,7 @@ public:
 	NullShape();
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
-	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &) const noexcept override;
+	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 
 };
 
@@ -29,7 +29,7 @@ public:
 	CuboidShape(const AABB &bounds);
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
-	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &) const noexcept override;
+	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 
 private:
 	AABB bb;
@@ -44,7 +44,7 @@ public:
 	StairShape(const AABB &bounds, const glm::vec2 &clip);
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
-	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &) const noexcept override;
+	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 
 private:
 	AABB top, bot;
