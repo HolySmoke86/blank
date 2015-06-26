@@ -50,6 +50,8 @@ entity ai
 
 	there's a bug where a chunk's model is not updated if its neighbor
 	changes border light levels
+	I kinda mitigated it a little for direct neighbors during linking, but
+	it still can happen in (hopefully) rare corner cases
 
 gravity
 

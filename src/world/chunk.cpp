@@ -186,6 +186,26 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	}
 }
 
+namespace {
+
+// propagate light from a's edge to b
+void edge_light(
+	Chunk &a, const Chunk::Pos &a_pos,
+	Chunk &b, const Chunk::Pos &b_pos
+) noexcept {
+	if (a.GetLight(a_pos) > 1) {
+		const BlockType &b_type = b.Type(Chunk::ToIndex(b_pos));
+		if (!b_type.block_light) {
+			light_queue.emplace(&a, a_pos);
+		}
+		if (b_type.visible) {
+			b.Invalidate();
+		}
+	}
+}
+
+}
+
 void Chunk::SetNeighbor(Chunk &other) noexcept {
 	if (other.position == position + Pos(-1, 0, 0)) {
 		if (neighbor[Block::FACE_LEFT] != &other) {
@@ -195,12 +215,8 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 				for (int y = 0; y < height; ++y) {
 					Pos my_pos(0, y, z);
 					Pos other_pos(width - 1, y, z);
-					if (GetLight(my_pos) > 0) {
-						light_queue.emplace(this, my_pos);
-					}
-					if (other.GetLight(other_pos) > 0) {
-						light_queue.emplace(&other, other_pos);
-					}
+					edge_light(*this, my_pos, other, other_pos);
+					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
 			work_light();
@@ -213,12 +229,8 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 				for (int y = 0; y < height; ++y) {
 					Pos my_pos(width - 1, y, z);
 					Pos other_pos(0, y, z);
-					if (GetLight(my_pos) > 0) {
-						light_queue.emplace(this, my_pos);
-					}
-					if (other.GetLight(other_pos) > 0) {
-						light_queue.emplace(&other, other_pos);
-					}
+					edge_light(*this, my_pos, other, other_pos);
+					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
 			work_light();
@@ -231,12 +243,8 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, 0, z);
 					Pos other_pos(x, height - 1, z);
-					if (GetLight(my_pos) > 0) {
-						light_queue.emplace(this, my_pos);
-					}
-					if (other.GetLight(other_pos) > 0) {
-						light_queue.emplace(&other, other_pos);
-					}
+					edge_light(*this, my_pos, other, other_pos);
+					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
 			work_light();
@@ -249,12 +257,8 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, height - 1, z);
 					Pos other_pos(x, 0, z);
-					if (GetLight(my_pos) > 0) {
-						light_queue.emplace(this, my_pos);
-					}
-					if (other.GetLight(other_pos) > 0) {
-						light_queue.emplace(&other, other_pos);
-					}
+					edge_light(*this, my_pos, other, other_pos);
+					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
 			work_light();
@@ -267,12 +271,8 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, y, 0);
 					Pos other_pos(x, y, depth - 1);
-					if (GetLight(my_pos) > 0) {
-						light_queue.emplace(this, my_pos);
-					}
-					if (other.GetLight(other_pos) > 0) {
-						light_queue.emplace(&other, other_pos);
-					}
+					edge_light(*this, my_pos, other, other_pos);
+					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
 			work_light();
@@ -285,12 +285,8 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, y, depth - 1);
 					Pos other_pos(x, y, 0);
-					if (GetLight(my_pos) > 0) {
-						light_queue.emplace(this, my_pos);
-					}
-					if (other.GetLight(other_pos) > 0) {
-						light_queue.emplace(&other, other_pos);
-					}
+					edge_light(*this, my_pos, other, other_pos);
+					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
 			work_light();
