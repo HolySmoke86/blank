@@ -22,10 +22,18 @@ struct BlockType {
 
 	Block::Type id;
 
+	// light level that blocks of this type emit
 	int luminosity;
 
+	// whether to draw
 	bool visible;
+	// if true, stops light from propagating and fixes level to luminosity
 	bool block_light;
+
+	// whether to check for collisions at all
+	bool collision;
+	// if the block should be impenetrable
+	bool collide_block;
 
 	struct Faces {
 		bool face[Block::FACE_COUNT];

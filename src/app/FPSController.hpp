@@ -18,6 +18,9 @@ class FPSController {
 public:
 	explicit FPSController(Entity &) noexcept;
 
+	Entity &Controlled() noexcept { return entity; }
+	const Entity &Controlled() const noexcept { return entity; }
+
 	/// get position and face direction of controlled entity
 	Ray Aim() const noexcept { return entity.Aim(entity.ChunkCoords()); }
 

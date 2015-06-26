@@ -44,6 +44,8 @@ public:
 	void FaceBlock();
 	void TurnBlock();
 
+	void ToggleCollision();
+
 	void PickBlock();
 	void PlaceBlock();
 	void RemoveBlock() noexcept;

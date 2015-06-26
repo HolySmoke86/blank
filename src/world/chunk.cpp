@@ -500,7 +500,7 @@ bool Chunk::Intersection(
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x, ++idx) {
 				const BlockType &type = Type(idx);
-				if (!type.visible) {
+				if (!type.collision) {
 					continue;
 				}
 				if (type.shape->Intersects(Mchunk * ToTransform(Pos(x, y, z), idx), box, Mbox, penetration, normal)) {

@@ -81,6 +81,8 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
 , luminosity(0)
 , visible(v)
 , block_light(false)
+, collision(false)
+, collide_block(false)
 , fill({ false, false, false, false, false, false }) {
 
 }

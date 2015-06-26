@@ -47,7 +47,7 @@ public:
 		glm::vec3 &normal);
 
 	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
-	void Resolve(const Entity &e, std::vector<WorldCollision> &);
+	void Resolve(Entity &e, std::vector<WorldCollision> &);
 
 	BlockTypeRegistry &BlockTypes() { return blockType; }
 

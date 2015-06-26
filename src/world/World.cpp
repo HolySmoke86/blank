@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <limits>
+#include <glm/gtx/io.hpp>
 #include <glm/gtx/transform.hpp>
 
 
@@ -29,18 +30,24 @@ World::World(const Config &config)
 	{ // white block
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // white slab
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &slabShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // white stair
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &stairShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
@@ -48,18 +55,24 @@ World::World(const Config &config)
 	{ // red block
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &blockShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // red slab
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &slabShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // red stair
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &stairShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
@@ -67,18 +80,24 @@ World::World(const Config &config)
 	{ // green block
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &blockShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // green slab
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &slabShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // green stair
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &stairShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
@@ -86,18 +105,24 @@ World::World(const Config &config)
 	{ // blue block
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &blockShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
 	{ // blue slab
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &slabShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = slab_fill;
 		blockType.Add(type);
 	}
 	{ // blue stair
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &stairShape);
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = stair_fill;
 		blockType.Add(type);
 	}
@@ -106,6 +131,8 @@ World::World(const Config &config)
 		BlockType type(true, { 1.0f, 1.0f, 0.0f }, &blockShape);
 		type.luminosity = 15;
 		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
 		type.fill = block_fill;
 		blockType.Add(type);
 	}
@@ -179,14 +206,15 @@ bool World::Intersection(
 bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
 	glm::mat4 M = e.Transform(player->ChunkCoords());
+	bool any = false;
 	// TODO: this only needs to check the chunks surrounding the entity's chunk position
 	//       need find out if that is quicker than the rough chunk bounds test
 	for (Chunk &cur_chunk : chunks.Loaded()) {
 		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()), col)) {
-			return true;
+			any = true;
 		}
 	}
-	return false;
+	return any;
 }
 
 
@@ -221,8 +249,36 @@ void World::Update(int dt) {
 	chunks.Update(dt);
 }
 
-void World::Resolve(const Entity &e, std::vector<WorldCollision> &col) {
-	std::cout << e.Name() << " entity intersects world at " << col.size() << " blocks" << std::endl;
+void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
+	// determine displacement for each cardinal axis and move entity accordingly
+	glm::vec3 min_disp(0.0f);
+	glm::vec3 max_disp(0.0f);
+	for (const WorldCollision &c : col) {
+		if (!c.Blocks()) continue;
+		glm::vec3 local_disp(c.normal * c.depth);
+		// swap if neccessary (normal may point away from the entity)
+		if (dot(c.normal, e.Position() - c.BlockCoords()) < 0) {
+			local_disp *= -1;
+		}
+		min_disp = min(min_disp, local_disp);
+		max_disp = max(max_disp, local_disp);
+	}
+	// for each axis
+	// if only one direction is set, use that as the final
+	// if both directions are set, use average
+	glm::vec3 final_disp(0.0f);
+	for (int axis = 0; axis < 3; ++axis) {
+		if (std::abs(min_disp[axis]) > std::numeric_limits<float>::epsilon()) {
+			if (std::abs(max_disp[axis]) > std::numeric_limits<float>::epsilon()) {
+				final_disp[axis] = (min_disp[axis] + max_disp[axis]) * 0.5f;
+			} else {
+				final_disp[axis] = min_disp[axis];
+			}
+		} else if (std::abs(max_disp[axis]) > std::numeric_limits<float>::epsilon()) {
+			final_disp[axis] = max_disp[axis];
+		}
+	}
+	e.Move(final_disp);
 }
 
 

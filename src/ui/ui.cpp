@@ -128,6 +128,10 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 			TurnBlock();
 			break;
 
+		case SDLK_n:
+			ToggleCollision();
+			break;
+
 		case SDLK_b:
 			PrintBlockInfo();
 			break;
@@ -176,6 +180,11 @@ void Interface::FaceBlock() {
 void Interface::TurnBlock() {
 	selection.SetTurn(Block::Turn((selection.GetTurn() + 1) % Block::TURN_COUNT));
 	hud.Display(selection);
+}
+
+void Interface::ToggleCollision() {
+	ctrl.Controlled().WorldCollidable(!ctrl.Controlled().WorldCollidable());
+	std::cout << "collision " << (ctrl.Controlled().WorldCollidable() ? "on" : "off") << std::endl;
 }
 
 void Interface::PrintBlockInfo() {

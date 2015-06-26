@@ -48,6 +48,9 @@ entity ai
 	that as the light power for the directional lighting shader and use a
 	direction that's fixed relative to the camera?
 
+	there's a bug where a chunk's model is not updated if its neighbor
+	changes border light levels
+
 gravity
 
 	maybe like light levels? should also store a direction with it in
@@ -70,6 +73,10 @@ chunk traversal
 	profiling indicates that this is not neccessary atm. maybe it will
 	when there's some more action in the world
 
+	I got a segfault (sadly in release mode, so no sensible trace, but
+	it was in ChunkLoader::Update). I suspect it has something to do
+	with how chunks are relinked after a near death experience.
+
 transparency (blocks and entities)
 
 	transparent blocks because awesome
@@ -81,9 +88,10 @@ world generator that is not boring
 
 entity/world collision
 
-	entities should be stopped from entering solid parts of the world
-
-	also, current ray/obb intersection test sucks
+	first draft of entity/world collision is implemented
+	it jitters and has some surprising behaviour
+	finding a spawn point which doesn't put entities in solids is
+	now a little more crucial. press N if you're in trouble
 
 better noise
 

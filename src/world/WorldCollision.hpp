@@ -1,12 +1,13 @@
 #ifndef BLANK_WORLD_WORLDCOLLISION_HPP_
 #define BLANK_WORLD_WORLDCOLLISION_HPP_
 
+#include "BlockType.hpp"
+#include "Chunk.hpp"
+
 #include <glm/glm.hpp>
 
 
 namespace blank {
-
-class Chunk;
 
 struct WorldCollision {
 
@@ -18,6 +19,10 @@ struct WorldCollision {
 
 	WorldCollision(const Chunk *c, int b, float d, const glm::vec3 &n)
 	: chunk(c), block(b), depth(d), normal(n) { }
+
+	bool Blocks() const noexcept { return chunk->Type(block).collide_block; }
+
+	glm::vec3 BlockCoords() const noexcept { return Chunk::ToCoords(block); }
 
 };
 
