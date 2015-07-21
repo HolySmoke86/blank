@@ -12,6 +12,7 @@ namespace blank {
 Application::Application(const Config &config)
 : init_sdl()
 , init_img()
+, init_ttf()
 , init_gl(config.doublebuf, config.multisampling)
 , window()
 , ctx(window.CreateContext())

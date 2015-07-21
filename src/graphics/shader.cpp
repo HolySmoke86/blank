@@ -1,8 +1,10 @@
+#include "BlendedSprite.hpp"
 #include "BlockLighting.hpp"
 #include "DirectionalLighting.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 
+#include "Texture.hpp"
 #include "../app/init.hpp"
 
 #include <algorithm>
@@ -319,6 +321,7 @@ BlockLighting::BlockLighting()
 void BlockLighting::Activate() noexcept {
 	GLContext::EnableDepthTest();
 	GLContext::EnableBackfaceCulling();
+	GLContext::DisableAlphaBlending();
 	program.Use();
 }
 
@@ -353,6 +356,82 @@ void BlockLighting::SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept {
 void BlockLighting::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept {
 	SetVP(v, p);
 	SetM(m);
+}
+
+
+BlendedSprite::BlendedSprite()
+: program()
+, vp(1.0f)
+, mvp_handle(0)
+, sampler_handle(0) {
+	program.LoadShader(
+		GL_VERTEX_SHADER,
+		"#version 330 core\n"
+		"layout(location = 0) in vec3 vtx_position;\n"
+		"layout(location = 1) in vec2 vtx_tex_uv;\n"
+		"uniform mat4 MVP;\n"
+		"out vec2 frag_tex_uv;\n"
+		"void main() {\n"
+			"gl_Position = MVP * vec4(vtx_position, 1);\n"
+			"frag_tex_uv = vtx_tex_uv;\n"
+		"}\n"
+	);
+	program.LoadShader(
+		GL_FRAGMENT_SHADER,
+		"#version 330 core\n"
+		"in vec2 frag_tex_uv;\n"
+		"uniform sampler2D tex_sampler;\n"
+		"out vec4 color;\n"
+		"void main() {\n"
+			"color = texture(tex_sampler, frag_tex_uv);\n"
+		"}\n"
+	);
+	program.Link();
+	if (!program.Linked()) {
+		program.Log(std::cerr);
+		throw std::runtime_error("link program");
+	}
+
+	mvp_handle = program.UniformLocation("MVP");
+	sampler_handle = program.UniformLocation("tex_sampler");
+}
+
+
+void BlendedSprite::Activate() noexcept {
+	GLContext::EnableAlphaBlending();
+	program.Use();
+}
+
+void BlendedSprite::SetM(const glm::mat4 &m) noexcept {
+	glm::mat4 mvp(vp * m);
+	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+}
+
+void BlendedSprite::SetProjection(const glm::mat4 &p) noexcept {
+	projection = p;
+	vp = p * view;
+}
+
+void BlendedSprite::SetView(const glm::mat4 &v) noexcept {
+	view = v;
+	vp = projection * v;
+}
+
+void BlendedSprite::SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept {
+	projection = p;
+	view = v;
+	vp = p * v;
+}
+
+void BlendedSprite::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept {
+	SetVP(v, p);
+	SetM(m);
+}
+
+void BlendedSprite::SetTexture(Texture &tex) noexcept {
+	glActiveTexture(GL_TEXTURE0);
+	tex.Bind();
+	glUniform1i(sampler_handle, 0);
 }
 
 }

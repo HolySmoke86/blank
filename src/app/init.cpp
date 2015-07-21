@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_ttf.h>
 #include <stdexcept>
 #include <string>
 #include <GL/glew.h>
@@ -43,6 +44,17 @@ InitIMG::InitIMG() {
 
 InitIMG::~InitIMG() {
 	IMG_Quit();
+}
+
+
+InitTTF::InitTTF() {
+	if (TTF_Init() != 0) {
+		sdl_error("TTF_Init()");
+	}
+}
+
+InitTTF::~InitTTF() {
+	TTF_Quit();
 }
 
 
@@ -156,6 +168,15 @@ void GLContext::EnableDepthTest() noexcept {
 
 void GLContext::EnableBackfaceCulling() noexcept {
 	glEnable(GL_CULL_FACE);
+}
+
+void GLContext::EnableAlphaBlending() noexcept {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+void GLContext::DisableAlphaBlending() noexcept {
+	glDisable(GL_BLEND);
 }
 
 void GLContext::Clear() noexcept {

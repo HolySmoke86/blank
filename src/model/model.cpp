@@ -1,6 +1,7 @@
 #include "BlockModel.hpp"
 #include "Model.hpp"
 #include "OutlineModel.hpp"
+#include "SpriteModel.hpp"
 
 #include <iostream>
 
@@ -281,6 +282,116 @@ void OutlineModel::Draw() noexcept {
 
 	glDrawElements(
 		GL_LINES,          // how
+		indices.size(),    // count
+		GL_UNSIGNED_SHORT, // type
+		nullptr            // offset
+	);
+}
+
+
+SpriteModel::SpriteModel() noexcept
+: vertices()
+, coords()
+, indices()
+, va(0)
+, handle{}
+, dirty(false) {
+	glGenVertexArrays(1, &va);
+	glGenBuffers(ATTRIB_COUNT, handle);
+}
+
+SpriteModel::~SpriteModel() noexcept {
+	glDeleteBuffers(ATTRIB_COUNT, handle);
+	glDeleteVertexArrays(1, &va);
+}
+
+
+void SpriteModel::Clear() noexcept {
+	vertices.clear();
+	coords.clear();
+	indices.clear();
+	Invalidate();
+}
+
+void SpriteModel::Reserve(int v, int i) {
+	vertices.reserve(v);
+	coords.reserve(v);
+	indices.reserve(i);
+}
+
+
+void SpriteModel::LoadRect(
+	float w, float h,
+	const glm::vec2 &pivot,
+	const glm::vec2 &tex_begin,
+	const glm::vec2 &tex_end
+) {
+	Clear();
+	Reserve(4, 6);
+
+	vertices.emplace_back( -pivot.x,  -pivot.y, 0.0f);
+	vertices.emplace_back(w-pivot.x,  -pivot.y, 0.0f);
+	vertices.emplace_back( -pivot.x, h-pivot.y, 0.0f);
+	vertices.emplace_back(w-pivot.x, h-pivot.y, 0.0f);
+
+	coords.emplace_back(tex_begin.x, tex_begin.y);
+	coords.emplace_back(tex_end.x,   tex_begin.y);
+	coords.emplace_back(tex_begin.x, tex_end.y);
+	coords.emplace_back(tex_end.x,   tex_end.y);
+
+	indices.assign({ 0, 2, 1, 1, 2, 3 });
+
+	Invalidate();
+}
+
+
+void SpriteModel::Update() noexcept {
+	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_VERTEX]);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Position), vertices.data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(ATTRIB_VERTEX);
+	glVertexAttribPointer(
+		ATTRIB_VERTEX, // location (for shader)
+		3,             // size
+		GL_FLOAT,      // type
+		GL_FALSE,      // normalized
+		0,             // stride
+		nullptr        // offset
+	);
+
+#ifndef NDEBUG
+	if (coords.size() < vertices.size()) {
+		std::cerr << "SpriteModel: not enough coords!" << std::endl;
+		coords.resize(vertices.size(), { 1, 1 });
+	}
+#endif
+	glBindBuffer(GL_ARRAY_BUFFER, handle[ATTRIB_TEXCOORD]);
+	glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(TexCoord), coords.data(), GL_STATIC_DRAW);
+	glEnableVertexAttribArray(ATTRIB_TEXCOORD);
+	glVertexAttribPointer(
+		ATTRIB_TEXCOORD, // location (for shader)
+		2,               // size
+		GL_FLOAT,        // type
+		GL_FALSE,        // normalized
+		0,               // stride
+		nullptr          // offset
+	);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, handle[ATTRIB_INDEX]);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index), indices.data(), GL_STATIC_DRAW);
+
+	dirty = false;
+}
+
+
+void SpriteModel::Draw() noexcept {
+	glBindVertexArray(va);
+
+	if (dirty) {
+		Update();
+	}
+
+	glDrawElements(
+		GL_TRIANGLES,      // how
 		indices.size(),    // count
 		GL_UNSIGNED_SHORT, // type
 		nullptr            // offset

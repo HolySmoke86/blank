@@ -33,6 +33,18 @@ public:
 };
 
 
+class InitTTF {
+
+public:
+	InitTTF();
+	~InitTTF();
+
+	InitTTF(const InitTTF &) = delete;
+	InitTTF &operator =(const InitTTF &) = delete;
+
+};
+
+
 class InitGL {
 
 public:
@@ -84,6 +96,8 @@ public:
 	static void EnableVSync();
 	static void EnableDepthTest() noexcept;
 	static void EnableBackfaceCulling() noexcept;
+	static void EnableAlphaBlending() noexcept;
+	static void DisableAlphaBlending() noexcept;
 
 	static void Clear() noexcept;
 	static void ClearDepthBuffer() noexcept;
