@@ -102,7 +102,6 @@ public:
 	const Chunk &GetNeighbor(Block::Face f) const noexcept { return *neighbor[f]; }
 	void ClearNeighbors() noexcept;
 	void Unlink() noexcept;
-	void Relink() noexcept;
 
 	// check which faces of a block at given index are obstructed (and therefore invisible)
 	Block::FaceSet Obstructed(const Pos &) const noexcept;

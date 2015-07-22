@@ -41,8 +41,14 @@ public:
 
 private:
 	Chunk &Generate(const Chunk::Pos &pos);
+	// link given chunk to all loaded neighbors
 	void Insert(Chunk &) noexcept;
-	void Remove(Chunk &) noexcept;
+	// remove a loaded chunk
+	// this unlinks it from its neighbors as well as moves it to the free list
+	// given iterator must point to a chunk from the loaded list
+	// returns an iterator to the chunk following the removed one
+	// in the loaded list (end for the last one)
+	std::list<Chunk>::iterator Remove(std::list<Chunk>::iterator) noexcept;
 
 private:
 	Chunk::Pos base;

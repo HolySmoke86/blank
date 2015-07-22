@@ -295,23 +295,10 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 }
 
 void Chunk::ClearNeighbors() noexcept {
-	for (int i = 0; i < Block::FACE_COUNT; ++i) {
-		neighbor[i] = nullptr;
-	}
-}
-
-void Chunk::Unlink() noexcept {
 	for (int face = 0; face < Block::FACE_COUNT; ++face) {
 		if (neighbor[face]) {
 			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = nullptr;
-		}
-	}
-}
-
-void Chunk::Relink() noexcept {
-	for (int face = 0; face < Block::FACE_COUNT; ++face) {
-		if (neighbor[face]) {
-			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = this;
+			neighbor[face] = nullptr;
 		}
 	}
 }
@@ -760,8 +747,15 @@ void ChunkLoader::Insert(Chunk &chunk) noexcept {
 	}
 }
 
-void ChunkLoader::Remove(Chunk &chunk) noexcept {
-	chunk.Unlink();
+std::list<Chunk>::iterator ChunkLoader::Remove(std::list<Chunk>::iterator chunk) noexcept {
+	// fetch next entry while chunk's still in the list
+	std::list<Chunk>::iterator next = chunk;
+	++next;
+	// unlink neighbors so they won't reference a dead chunk
+	chunk->ClearNeighbors();
+	// and move it from loaded to free list
+	to_free.splice(to_free.end(), loaded, chunk);
+	return next;
 }
 
 Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) noexcept {
@@ -818,10 +812,7 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 	// unload far away chunks
 	for (auto iter(loaded.begin()), end(loaded.end()); iter != end;) {
 		if (OutOfRange(*iter)) {
-			auto saved = iter;
-			Remove(*saved);
-			++iter;
-			to_free.splice(to_free.end(), loaded, saved);
+			iter = Remove(iter);
 		} else {
 			++iter;
 		}
@@ -844,27 +835,35 @@ void ChunkLoader::GenerateSurrounding(const Chunk::Pos &pos) {
 }
 
 void ChunkLoader::Update(int dt) {
+	// check if a chunk generation is scheduled for this frame
+	// and if there's a chunk waiting to be generated
 	gen_timer.Update(dt);
 	if (!gen_timer.Hit() || to_generate.empty()) {
 		return;
 	}
 
+	// take position of next chunk in queue
 	Chunk::Pos pos(to_generate.front());
 	to_generate.pop_front();
 
+	// look if the same chunk was already generated and still lingering
 	for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
 		if (iter->Position() == pos) {
-			iter->Relink();
 			loaded.splice(loaded.end(), to_free, iter);
+			Insert(loaded.back());
+			return;
 		}
 	}
 
+	// if the free list is empty, allocate a new chunk
+	// otherwise clear an unused one
 	if (to_free.empty()) {
 		loaded.emplace_back(reg);
 	} else {
 		to_free.front().ClearNeighbors();
 		loaded.splice(loaded.end(), to_free, to_free.begin());
 	}
+
 	Chunk &chunk = loaded.back();
 	chunk.Position(pos);
 	gen(chunk);

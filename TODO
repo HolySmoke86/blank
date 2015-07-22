@@ -76,10 +76,6 @@ chunk traversal
 	profiling indicates that this is not neccessary atm. maybe it will
 	when there's some more action in the world
 
-	I got a segfault (sadly in release mode, so no sensible trace, but
-	it was in ChunkLoader::Update). I suspect it has something to do
-	with how chunks are relinked after a near death experience.
-
 transparency (blocks and entities)
 
 	transparent blocks because awesome

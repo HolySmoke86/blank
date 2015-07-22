@@ -322,7 +322,6 @@ void ChunkTest::testNeighbor() {
 			"chunk did not link correct neighbor",
 			&*chunk, &neighbor->GetNeighbor(Block::Opposite(face))
 		);
-		chunk->Unlink();
 		chunk->ClearNeighbors();
 	}
 
