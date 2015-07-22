@@ -12,6 +12,11 @@ textures
 
 	do I need to say anything? :)
 
+font colours
+
+	set font fg and bg colour as either uniform or vertex attribute
+	and lerp between them based on the texture's alpha component
+
 command line
 
 	usefull for development and later on world administration

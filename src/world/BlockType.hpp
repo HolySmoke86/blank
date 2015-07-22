@@ -20,6 +20,9 @@ struct BlockType {
 	glm::vec3 color;
 	glm::vec3 outline_color;
 
+	// a string to display to the user
+	std::string label;
+
 	Block::Type id;
 
 	// light level that blocks of this type emit

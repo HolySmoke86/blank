@@ -29,6 +29,7 @@ World::World(const Config &config)
 
 	{ // white block
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
+		type.label = "White Block";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -37,6 +38,7 @@ World::World(const Config &config)
 	}
 	{ // white slab
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &slabShape);
+		type.label = "White Slab";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -45,6 +47,7 @@ World::World(const Config &config)
 	}
 	{ // white stair
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &stairShape);
+		type.label = "White Stair";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -54,6 +57,7 @@ World::World(const Config &config)
 
 	{ // red block
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &blockShape);
+		type.label = "Red Block";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -62,6 +66,7 @@ World::World(const Config &config)
 	}
 	{ // red slab
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &slabShape);
+		type.label = "Red Slab";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -70,6 +75,7 @@ World::World(const Config &config)
 	}
 	{ // red stair
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &stairShape);
+		type.label = "Red Stair";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -79,6 +85,7 @@ World::World(const Config &config)
 
 	{ // green block
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &blockShape);
+		type.label = "Green Block";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -87,6 +94,7 @@ World::World(const Config &config)
 	}
 	{ // green slab
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &slabShape);
+		type.label = "Green Slab";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -95,6 +103,7 @@ World::World(const Config &config)
 	}
 	{ // green stair
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &stairShape);
+		type.label = "Green Stair";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -104,6 +113,7 @@ World::World(const Config &config)
 
 	{ // blue block
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &blockShape);
+		type.label = "Blue Block";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -112,6 +122,7 @@ World::World(const Config &config)
 	}
 	{ // blue slab
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &slabShape);
+		type.label = "Blue Slab";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -120,6 +131,7 @@ World::World(const Config &config)
 	}
 	{ // blue stair
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &stairShape);
+		type.label = "Blue Stair";
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -129,6 +141,7 @@ World::World(const Config &config)
 
 	{ // glowing yellow block
 		BlockType type(true, { 1.0f, 1.0f, 0.0f }, &blockShape);
+		type.label = "Light";
 		type.luminosity = 15;
 		type.block_light = true;
 		type.collision = true;

@@ -4,6 +4,7 @@
 #include "HUD.hpp"
 #include "../app/FPSController.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../graphics/Font.hpp"
 #include "../model/geometry.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
@@ -15,7 +16,9 @@
 namespace blank {
 
 class Chunk;
+class BlendedSprite;
 class DirectionalLighting;
+class Assets;
 class World;
 
 class Interface {
@@ -31,7 +34,7 @@ public:
 		bool visual_disabled = false;
 	};
 
-	Interface(const Config &, World &);
+	Interface(const Config &, const Assets &, World &);
 
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
@@ -61,7 +64,7 @@ public:
 
 	void Update(int dt);
 
-	void Render(DirectionalLighting &) noexcept;
+	void Render(DirectionalLighting &, BlendedSprite &) noexcept;
 
 private:
 	void CheckAim();
@@ -69,6 +72,7 @@ private:
 private:
 	World &world;
 	FPSController ctrl;
+	Font font;
 	HUD hud;
 
 	Ray aim;

@@ -1,13 +1,17 @@
 #ifndef BLANK_APP_APPLICATION_HPP_
 #define BLANK_APP_APPLICATION_HPP_
 
+#include "Assets.hpp"
 #include "init.hpp"
 #include "RandomWalk.hpp"
+#include "../graphics/BlendedSprite.hpp"
 #include "../graphics/BlockLighting.hpp"
 #include "../graphics/Camera.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/World.hpp"
+
+#include <SDL.h>
 
 
 namespace blank {
@@ -43,6 +47,7 @@ public:
 
 	/// process all events in SDL's queue
 	void HandleEvents();
+	void Handle(const SDL_WindowEvent &);
 	/// integrate to the next step with dt milliseconds passed
 	void Update(int dt);
 	/// push the current state to display
@@ -58,8 +63,11 @@ private:
 	Window window;
 	GLContext ctx;
 	InitGLEW init_glew;
+	Assets assets;
+
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;
+	BlendedSprite sprite_prog;
 
 	Camera cam;
 	World world;

@@ -1,11 +1,27 @@
 #include "Application.hpp"
+#include "Assets.hpp"
 
+#include "../graphics/Font.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/Entity.hpp"
 
 #include <iostream>
 #include <stdexcept>
 
+using std::string;
+
+
+namespace {
+
+string get_asset_path() {
+	char *base = SDL_GetBasePath();
+	string assets(base);
+	assets += "assets/";
+	SDL_free(base);
+	return assets;
+}
+
+}
 
 namespace blank {
 
@@ -17,11 +33,13 @@ Application::Application(const Config &config)
 , window()
 , ctx(window.CreateContext())
 , init_glew()
+, assets(get_asset_path())
 , chunk_prog()
 , entity_prog()
+, sprite_prog()
 , cam()
 , world(config.world)
-, interface(config.interface, world)
+, interface(config.interface, assets, world)
 , test_controller(MakeTestEntity(world))
 , running(false) {
 	if (config.vsync) {
@@ -116,25 +134,29 @@ void Application::HandleEvents() {
 				running = false;
 				break;
 			case SDL_WINDOWEVENT:
-				switch (event.window.event) {
-					case SDL_WINDOWEVENT_FOCUS_GAINED:
-						window.GrabMouse();
-						break;
-					case SDL_WINDOWEVENT_FOCUS_LOST:
-						window.ReleaseMouse();
-						break;
-					case SDL_WINDOWEVENT_RESIZED:
-						cam.Viewport(event.window.data1, event.window.data2);
-						interface.Handle(event.window);
-						break;
-					default:
-						interface.Handle(event.window);
-						break;
-				}
+				Handle(event.window);
 				break;
 			default:
 				break;
 		}
+	}
+}
+
+void Application::Handle(const SDL_WindowEvent &event) {
+	switch (event.event) {
+		case SDL_WINDOWEVENT_FOCUS_GAINED:
+			window.GrabMouse();
+			break;
+		case SDL_WINDOWEVENT_FOCUS_LOST:
+			window.ReleaseMouse();
+			break;
+		case SDL_WINDOWEVENT_RESIZED:
+			cam.Viewport(event.data1, event.data2);
+			interface.Handle(event);
+			break;
+		default:
+			interface.Handle(event);
+			break;
 	}
 }
 
@@ -152,9 +174,20 @@ void Application::Render() {
 
 	world.Render(chunk_prog, entity_prog);
 
-	interface.Render(entity_prog);
+	interface.Render(entity_prog, sprite_prog);
 
 	window.Flip();
+}
+
+
+Assets::Assets(const string &base)
+: fonts(base + "fonts/") {
+
+}
+
+Font Assets::LoadFont(const string &name, int size) const {
+	string full = fonts + name + ".ttf";
+	return Font(full.c_str(), size);
 }
 
 }

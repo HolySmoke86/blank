@@ -77,6 +77,7 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
 : shape(s)
 , color(col)
 , outline_color(-1, -1, -1)
+, label("some block")
 , id(0)
 , luminosity(0)
 , visible(v)

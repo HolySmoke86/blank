@@ -1,11 +1,16 @@
 #include "HUD.hpp"
 #include "Interface.hpp"
 
+#include "../app/Assets.hpp"
 #include "../app/init.hpp"
+#include "../graphics/BlendedSprite.hpp"
 #include "../graphics/DirectionalLighting.hpp"
+#include "../graphics/Font.hpp"
 #include "../model/shapes.hpp"
 #include "../world/World.hpp"
 
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/io.hpp>
@@ -13,18 +18,23 @@
 
 namespace blank {
 
-HUD::HUD(const BlockTypeRegistry &types)
+HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 : types(types)
+, font(font)
 , block()
 , block_buf()
 , block_transform(1.0f)
+, block_label()
+, label_sprite()
+, label_transform(1.0f)
+, label_color{0xFF, 0xFF, 0xFF, 0xFF}
 , block_visible(false)
 , crosshair()
 , crosshair_transform(1.0f)
 , near(100.0f)
 , far(-100.0f)
 , projection(glm::ortho(0.0f, 1.0f, 1.0f, 0.0f, near, far))
-, view(glm::translate(glm::mat4(1.0f), glm::vec3(-0.5f, -0.5f, 0))) {
+, view(1.0f) {
 	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
 	block_transform = glm::scale(block_transform, glm::vec3(50.0f));
 	block_transform = glm::rotate(block_transform, 3.5f, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -48,7 +58,7 @@ void HUD::Viewport(float width, float height) noexcept {
 
 void HUD::Viewport(float x, float y, float width, float height) noexcept {
 	projection = glm::ortho(x, width, height, y, near, far);
-	crosshair_transform = glm::translate(glm::mat4(1.0f), glm::vec3(width * 0.5f, height * 0.5f, 0.0f));
+	crosshair_transform = glm::translate(glm::vec3(width * 0.5f, height * 0.5f, 0.0f));
 }
 
 
@@ -58,32 +68,47 @@ void HUD::Display(const Block &b) {
 	block_buf.Clear();
 	type.FillModel(block_buf, b.Transform());
 	block.Update(block_buf);
+
+	font.Render(type.label.c_str(), label_color, block_label);
+	glm::vec2 size(font.TextSize(type.label.c_str()));
+	label_sprite.LoadRect(size.x, size.y);
+	label_transform = glm::translate(glm::vec3(
+		std::max(5.0f, 50.0f - std::round(size.x * 0.5f)),
+		70.0f + size.y,
+		0.75f
+	));
+
 	block_visible = type.visible;
 }
 
 
-void HUD::Render(DirectionalLighting &program) noexcept {
-	program.SetLightDirection({ 1.0f, 3.0f, 5.0f });
+void HUD::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_prog) noexcept {
+	world_prog.Activate();
+	world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
 	// disable distance fog
-	program.SetFogDensity(0.0f);
+	world_prog.SetFogDensity(0.0f);
 	GLContext::ClearDepthBuffer();
 
-	program.SetVP(view, projection);
+	world_prog.SetMVP(crosshair_transform, view, projection);
+	crosshair.Draw();
 
 	if (block_visible) {
-		program.SetM(block_transform);
+		world_prog.SetM(block_transform);
 		block.Draw();
-	}
 
-	program.SetM(crosshair_transform);
-	crosshair.Draw();
+		sprite_prog.Activate();
+		sprite_prog.SetMVP(label_transform, view, projection);
+		sprite_prog.SetTexture(block_label);
+		label_sprite.Draw();
+	}
 }
 
 
-Interface::Interface(const Config &config, World &world)
+Interface::Interface(const Config &config, const Assets &assets, World &world)
 : world(world)
 , ctrl(world.Player())
-, hud(world.BlockTypes())
+, font(assets.LoadFont("DejaVuSans", 16))
+, hud(world.BlockTypes(), font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_chunk(nullptr)
 , aim_block(0)
@@ -381,15 +406,16 @@ void Interface::CheckAim() {
 }
 
 
-void Interface::Render(DirectionalLighting &program) noexcept {
+void Interface::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_prog) noexcept {
 	if (config.visual_disabled) return;
 
 	if (aim_chunk) {
-		program.SetM(outline_transform);
+		world_prog.Activate();
+		world_prog.SetM(outline_transform);
 		outline.Draw();
 	}
 
-	hud.Render(program);
+	hud.Render(world_prog, sprite_prog);
 }
 
 }

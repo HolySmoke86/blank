@@ -34,6 +34,31 @@ Font &Font::operator =(Font &&other) noexcept {
 }
 
 
+int Font::Style() const noexcept {
+	return TTF_GetFontStyle(handle);
+}
+
+void Font::Style(int s) const noexcept {
+	TTF_SetFontStyle(handle, s);
+}
+
+int Font::Outline() const noexcept {
+	return TTF_GetFontOutline(handle);
+}
+
+void Font::Outline(int px) noexcept {
+	TTF_SetFontOutline(handle, px);
+}
+
+
+int Font::Hinting() const noexcept {
+	return TTF_GetFontHinting(handle);
+}
+
+void Font::Hinting(int h) const noexcept {
+	TTF_SetFontHinting(handle, h);
+}
+
 bool Font::Kerning() const noexcept {
 	return TTF_GetFontKerning(handle);
 }
@@ -60,6 +85,15 @@ int Font::LineSkip() const noexcept {
 }
 
 
+const char *Font::FamilyName() const noexcept {
+	return TTF_FontFaceFamilyName(handle);
+}
+
+const char *Font::StyleName() const noexcept {
+	return TTF_FontFaceStyleName(handle);
+}
+
+
 bool Font::HasGlyph(Uint16 c) const noexcept {
 	return TTF_GlyphIsProvided(handle, c);
 }
@@ -74,16 +108,19 @@ glm::tvec2<int> Font::TextSize(const char *text) const {
 }
 
 Texture Font::Render(const char *text, SDL_Color color) const {
+	Texture tex;
+	return tex;
+}
+
+void Font::Render(const char *text, SDL_Color color, Texture &tex) const {
 	SDL_Surface *srf = TTF_RenderUTF8_Blended(handle, text, color);
 	if (!srf) {
 		throw std::runtime_error(TTF_GetError());
 	}
-	Texture tex;
 	tex.Bind();
 	tex.Data(*srf, false);
 	tex.FilterLinear();
 	SDL_FreeSurface(srf);
-	return tex;
 }
 
 

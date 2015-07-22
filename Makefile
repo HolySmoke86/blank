@@ -28,6 +28,9 @@ RELEASE_DIR := build/release
 TEST_DIR := build/test
 DIR := $(RELEASE_DIR) $(DEBUG_DIR) $(PROFILE_DIR) $(TEST_DIR) build
 
+ASSET_DIR := assets
+ASSET_DEP := $(ASSET_DIR)/.git
+
 LIB_SRC := $(wildcard $(SOURCE_DIR)/*/*.cpp)
 BIN_SRC := $(wildcard $(SOURCE_DIR)/*.cpp)
 SRC := $(LIB_SRC) $(BIN_SRC)
@@ -58,16 +61,16 @@ profile: $(PROFILE_BIN)
 
 tests: $(TEST_BIN)
 
-run: blank
+run: $(ASSET_DEP) blank
 	./blank
 
-gdb: blank.debug
+gdb: $(ASSET_DEP) blank.debug
 	gdb ./blank.debug
 
-cachegrind: blank.profile
+cachegrind: $(ASSET_DEP) blank.profile
 	valgrind ./blank.profile
 
-callgrind: blank.profile
+callgrind: $(ASSET_DEP) blank.profile
 	valgrind --tool=callgrind \
 		--branch-sim=yes --cacheuse=yes --cache-sim=yes \
 		--collect-bus=yes --collect-systime=yes --collect-jumps=yes \
@@ -102,6 +105,10 @@ $(PROFILE_BIN): $(PROFILE_OBJ)
 $(TEST_BIN): $(TEST_OBJ)
 	@echo link: $@
 	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(TESTLIBS) $(TEST_FLAGS) $^
+
+$(ASSET_DEP): .git/$(shell git symbolic-ref HEAD)
+	@git submodule update --init >/dev/null
+	@touch $@
 
 $(RELEASE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(RELEASE_DIR)
 	@mkdir -p "$(@D)"
