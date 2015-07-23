@@ -54,6 +54,10 @@ entity ai
 	I kinda mitigated it a little for direct neighbors during linking, but
 	it still can happen in (hopefully) rare corner cases
 
+	propagation through semi-filled blocks is wonky. I worked around it by
+	having the light propagate into solid blocks, but feels like this
+	could cause some weird behaviours
+
 gravity
 
 	maybe like light levels? should also store a direction with it in

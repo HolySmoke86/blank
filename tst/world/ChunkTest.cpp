@@ -451,10 +451,6 @@ void ChunkTest::testLightPropagation() {
 	// now block the light to the left
 	chunk->SetBlock(Chunk::Pos(6, 7, 7), Block(1));
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"non-zero light level in solid block",
-		0, chunk->GetLight(Chunk::Pos(6, 7, 7))
-	);
-	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
 		5, chunk->GetLight(Chunk::Pos(7, 7, 7))
 	);

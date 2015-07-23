@@ -65,9 +65,13 @@ struct SetNode {
 	int Get() const noexcept { return chunk->GetLight(pos); }
 	void Set(int level) noexcept { chunk->SetLight(pos, level); }
 
+	const BlockType &GetType() const noexcept { return chunk->Type(Chunk::ToIndex(pos)); }
+
 	bool HasNext(Block::Face face) noexcept {
+		const BlockType &type = GetType();
+		if (type.block_light && !type.luminosity) return false;
 		const BlockLookup next(chunk, pos, face);
-		return next && !next.GetType().block_light;
+		return next;
 	}
 	SetNode GetNext(Block::Face face) noexcept {
 		const BlockLookup next(chunk, pos, face);
