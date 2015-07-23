@@ -97,7 +97,8 @@ public:
 	static void EnableDepthTest() noexcept;
 	static void EnableBackfaceCulling() noexcept;
 	static void EnableAlphaBlending() noexcept;
-	static void DisableAlphaBlending() noexcept;
+	static void EnableInvertBlending() noexcept;
+	static void DisableBlending() noexcept;
 
 	static void Clear() noexcept;
 	static void ClearDepthBuffer() noexcept;

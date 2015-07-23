@@ -89,10 +89,12 @@ void HUD::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_prog) no
 	world_prog.SetFogDensity(0.0f);
 	GLContext::ClearDepthBuffer();
 
+	GLContext::EnableInvertBlending();
 	world_prog.SetMVP(crosshair_transform, view, projection);
 	crosshair.Draw();
 
 	if (block_visible) {
+		GLContext::DisableBlending();
 		world_prog.SetM(block_transform);
 		block.Draw();
 

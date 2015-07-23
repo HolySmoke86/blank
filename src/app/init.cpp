@@ -175,7 +175,12 @@ void GLContext::EnableAlphaBlending() noexcept {
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void GLContext::DisableAlphaBlending() noexcept {
+void GLContext::EnableInvertBlending() noexcept {
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+}
+
+void GLContext::DisableBlending() noexcept {
 	glDisable(GL_BLEND);
 }
 

@@ -321,7 +321,7 @@ BlockLighting::BlockLighting()
 void BlockLighting::Activate() noexcept {
 	GLContext::EnableDepthTest();
 	GLContext::EnableBackfaceCulling();
-	GLContext::DisableAlphaBlending();
+	GLContext::DisableBlending();
 	program.Use();
 }
 
