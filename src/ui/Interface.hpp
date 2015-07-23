@@ -15,10 +15,11 @@
 
 namespace blank {
 
+class Assets;
 class Chunk;
 class BlendedSprite;
 class DirectionalLighting;
-class Assets;
+class FrameCounter;
 class World;
 
 class Interface {
@@ -34,7 +35,7 @@ public:
 		bool visual_disabled = false;
 	};
 
-	Interface(const Config &, const Assets &, World &);
+	Interface(const Config &, const Assets &, const FrameCounter &, World &);
 
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
@@ -62,6 +63,9 @@ public:
 	void SelectNext();
 	void SelectPrevious();
 
+	void ToggleCounter();
+	void UpdateCounter();
+
 	void Update(int dt);
 
 	void Render(DirectionalLighting &, BlendedSprite &) noexcept;
@@ -70,6 +74,7 @@ private:
 	void CheckAim();
 
 private:
+	const FrameCounter &counter;
 	World &world;
 	FPSController ctrl;
 	Font font;
@@ -82,6 +87,12 @@ private:
 
 	OutlineModel outline;
 	glm::mat4 outline_transform;
+
+	bool show_counter;
+	Texture counter_tex;
+	SpriteModel counter_sprite;
+	glm::mat4 counter_transform;
+	SDL_Color counter_color;
 
 	Config config;
 

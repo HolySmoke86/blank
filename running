@@ -63,3 +63,5 @@ info about the active block. L spits out the player position and light
 level there. C dumps info about the chunk of the pointed at block.
 
 Press N to toggle player/world collision.
+
+F3 toggles a display telling how long on average it takes to compute a frame.

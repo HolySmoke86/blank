@@ -2,6 +2,7 @@
 #include "Interface.hpp"
 
 #include "../app/Assets.hpp"
+#include "../app/FrameCounter.hpp"
 #include "../app/init.hpp"
 #include "../graphics/BlendedSprite.hpp"
 #include "../graphics/DirectionalLighting.hpp"
@@ -12,6 +13,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/io.hpp>
 
@@ -106,8 +108,13 @@ void HUD::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_prog) no
 }
 
 
-Interface::Interface(const Config &config, const Assets &assets, World &world)
-: world(world)
+Interface::Interface(
+	const Config &config,
+	const Assets &assets,
+	const FrameCounter &counter,
+	World &world)
+: counter(counter)
+, world(world)
 , ctrl(world.Player())
 , font(assets.LoadFont("DejaVuSans", 16))
 , hud(world.BlockTypes(), font)
@@ -117,6 +124,11 @@ Interface::Interface(const Config &config, const Assets &assets, World &world)
 , aim_normal()
 , outline()
 , outline_transform(1.0f)
+, show_counter(false)
+, counter_tex()
+, counter_sprite()
+, counter_transform(1.0f)
+, counter_color{0xFF, 0xFF, 0xFF, 0xFF}
 , config(config)
 , place_timer(256)
 , remove_timer(256)
@@ -174,6 +186,10 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 			break;
 		case SDLK_p:
 			PrintSelectionInfo();
+			break;
+
+		case SDLK_F3:
+			ToggleCounter();
 			break;
 	}
 }
@@ -284,6 +300,26 @@ void Interface::Print(const Block &block) {
 		<< std::endl;
 }
 
+void Interface::ToggleCounter() {
+	if ((show_counter = !show_counter)) {
+		UpdateCounter();
+	}
+}
+
+void Interface::UpdateCounter() {
+	std::stringstream s;
+	s << std::setprecision(3) << counter.AvgRunning() << "ms";
+	std::string text = s.str();
+	font.Render(text.c_str(), counter_color, counter_tex);
+	glm::vec2 size(font.TextSize(text.c_str()));
+	counter_sprite.LoadRect(size.x, size.y);
+	counter_transform = glm::translate(glm::vec3(
+		400.0f - size.x,
+		25.0f,
+		0.75f
+	));
+}
+
 
 void Interface::Handle(const SDL_MouseMotionEvent &event) {
 	if (config.mouse_disabled) return;
@@ -392,6 +428,10 @@ void Interface::Update(int dt) {
 		PlaceBlock();
 		CheckAim();
 	}
+
+	if (show_counter && counter.Changed()) {
+		UpdateCounter();
+	}
 }
 
 void Interface::CheckAim() {
@@ -415,6 +455,13 @@ void Interface::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_pr
 		world_prog.Activate();
 		world_prog.SetM(outline_transform);
 		outline.Draw();
+	}
+
+	if (show_counter) {
+		sprite_prog.Activate();
+		sprite_prog.SetM(counter_transform);
+		sprite_prog.SetTexture(counter_tex);
+		counter_sprite.Draw();
 	}
 
 	hud.Render(world_prog, sprite_prog);

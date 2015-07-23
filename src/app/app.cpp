@@ -41,7 +41,7 @@ Application::Application(const Config &config)
 , sprite_prog()
 , cam()
 , world(config.world)
-, interface(config.interface, assets, world)
+, interface(config.interface, assets, counter, world)
 , test_controller(MakeTestEntity(world))
 , running(false) {
 	if (config.vsync) {
