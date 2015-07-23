@@ -1,5 +1,6 @@
 #include "Application.hpp"
 #include "Assets.hpp"
+#include "FrameCounter.hpp"
 
 #include "../graphics/Font.hpp"
 #include "../world/BlockType.hpp"
@@ -34,6 +35,7 @@ Application::Application(const Config &config)
 , ctx(window.CreateContext())
 , init_glew()
 , assets(get_asset_path())
+, counter()
 , chunk_prog()
 , entity_prog()
 , sprite_prog()
@@ -102,13 +104,16 @@ void Application::Run() {
 }
 
 void Application::Loop(int dt) {
+	counter.EnterFrame();
 	HandleEvents();
 	Update(dt);
 	Render();
+	counter.ExitFrame();
 }
 
 
 void Application::HandleEvents() {
+	counter.EnterHandle();
 	SDL_Event event;
 	while (SDL_PollEvent(&event)) {
 		switch (event.type) {
@@ -140,6 +145,7 @@ void Application::HandleEvents() {
 				break;
 		}
 	}
+	counter.ExitHandle();
 }
 
 void Application::Handle(const SDL_WindowEvent &event) {
@@ -161,13 +167,18 @@ void Application::Handle(const SDL_WindowEvent &event) {
 }
 
 void Application::Update(int dt) {
+	counter.EnterUpdate();
 	interface.Update(dt);
 	test_controller.Update(dt);
 	world.Update(dt);
+	counter.ExitUpdate();
 }
 
 void Application::Render() {
+	// gl implementation may (and will probably) delay vsync blocking until
+	// the first write after flipping, which is this clear call
 	GLContext::Clear();
+	counter.EnterRender();
 
 	chunk_prog.SetProjection(cam.Projection());
 	entity_prog.SetProjection(cam.Projection());
@@ -176,6 +187,7 @@ void Application::Render() {
 
 	interface.Render(entity_prog, sprite_prog);
 
+	counter.ExitRender();
 	window.Flip();
 }
 
@@ -188,6 +200,70 @@ Assets::Assets(const string &base)
 Font Assets::LoadFont(const string &name, int size) const {
 	string full = fonts + name + ".ttf";
 	return Font(full.c_str(), size);
+}
+
+
+void FrameCounter::EnterFrame() noexcept {
+	last_enter = SDL_GetTicks();
+	last_tick = last_enter;
+}
+
+void FrameCounter::EnterHandle() noexcept {
+	Tick();
+}
+
+void FrameCounter::ExitHandle() noexcept {
+	running.handle += Tick();
+}
+
+void FrameCounter::EnterUpdate() noexcept {
+	Tick();
+}
+
+void FrameCounter::ExitUpdate() noexcept {
+	running.update += Tick();
+}
+
+void FrameCounter::EnterRender() noexcept {
+	Tick();
+}
+
+void FrameCounter::ExitRender() noexcept {
+	running.render += Tick();
+}
+
+void FrameCounter::ExitFrame() noexcept {
+	Uint32 now = SDL_GetTicks();
+	running.total += now - last_enter;
+	++cur_frame;
+	if (cur_frame >= NUM_FRAMES) {
+		avg.handle = running.handle * factor;
+		avg.update = running.update * factor;
+		avg.render = running.render * factor;
+		avg.total = running.total * factor;
+		running = Frame<int>{};
+		cur_frame = 0;
+		changed = true;
+	} else {
+		changed = false;
+	}
+}
+
+int FrameCounter::Tick() noexcept {
+	Uint32 now = SDL_GetTicks();
+	int delta = now - last_tick;
+	last_tick = now;
+	return delta;
+}
+
+void FrameCounter::Print(std::ostream &out) const {
+	out << "frame:     " << AvgFrame() << std::endl;
+	out << "  handle:  " << AvgHandle() << std::endl;
+	out << "  update:  " << AvgUpdate() << std::endl;
+	out << "  render:  " << AvgRender() << std::endl;
+	out << "  running: " << AvgRunning() << std::endl;
+	out << "  waiting: " << AvgWaiting() << std::endl;
+	out << std::endl;
 }
 
 }

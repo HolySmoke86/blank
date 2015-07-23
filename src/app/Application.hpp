@@ -2,6 +2,7 @@
 #define BLANK_APP_APPLICATION_HPP_
 
 #include "Assets.hpp"
+#include "FrameCounter.hpp"
 #include "init.hpp"
 #include "RandomWalk.hpp"
 #include "../graphics/BlendedSprite.hpp"
@@ -64,6 +65,7 @@ private:
 	GLContext ctx;
 	InitGLEW init_glew;
 	Assets assets;
+	FrameCounter counter;
 
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;
