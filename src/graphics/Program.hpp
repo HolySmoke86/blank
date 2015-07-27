@@ -4,6 +4,7 @@
 #include <iosfwd>
 #include <list>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -27,6 +28,12 @@ public:
 
 	GLint AttributeLocation(const GLchar *name) const noexcept;
 	GLint UniformLocation(const GLchar *name) const noexcept;
+
+	void Uniform(GLint, GLint) noexcept;
+	void Uniform(GLint, float) noexcept;
+	void Uniform(GLint, const glm::vec3 &) noexcept;
+	void Uniform(GLint, const glm::vec4 &) noexcept;
+	void Uniform(GLint, const glm::mat4 &) noexcept;
 
 	void Use() const noexcept { glUseProgram(handle); }
 

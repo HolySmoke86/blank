@@ -25,6 +25,8 @@ public:
 	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept;
 
 	void SetTexture(Texture &) noexcept;
+	void SetFG(const glm::vec4 &) noexcept;
+	void SetBG(const glm::vec4 &) noexcept;
 
 	const glm::mat4 &Projection() const noexcept { return projection; }
 	const glm::mat4 &View() const noexcept { return view; }
@@ -39,6 +41,8 @@ private:
 
 	GLuint mvp_handle;
 	GLuint sampler_handle;
+	GLuint fg_handle;
+	GLuint bg_handle;
 
 };
 

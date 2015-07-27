@@ -28,7 +28,6 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 , block_label()
 , label_sprite()
 , label_transform(1.0f)
-, label_color{0xFF, 0xFF, 0xFF, 0xFF}
 , block_visible(false)
 , crosshair() {
 	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
@@ -55,7 +54,7 @@ void HUD::Display(const Block &b) {
 	type.FillModel(block_buf, b.Transform());
 	block.Update(block_buf);
 
-	font.Render(type.label.c_str(), label_color, block_label);
+	font.Render(type.label.c_str(), block_label);
 	glm::vec2 size(font.TextSize(type.label.c_str()));
 	label_sprite.LoadRect(size.x, size.y);
 	label_transform = glm::translate(glm::vec3(
@@ -88,6 +87,8 @@ void HUD::Render(Viewport &viewport) noexcept {
 		BlendedSprite &sprite_prog = viewport.SpriteProgram();
 		sprite_prog.SetM(label_transform);
 		sprite_prog.SetTexture(block_label);
+		sprite_prog.SetFG(glm::vec4(1.0f));
+		sprite_prog.SetBG(glm::vec4(0.5f));
 		label_sprite.Draw();
 	}
 }
@@ -114,7 +115,6 @@ Interface::Interface(
 , counter_sprite()
 , counter_transform(1.0f)
 , counter_x(935.0f)
-, counter_color{0xFF, 0xFF, 0xFF, 0xFF}
 , config(config)
 , place_timer(256)
 , remove_timer(256)
@@ -295,7 +295,7 @@ void Interface::UpdateCounter() {
 	std::stringstream s;
 	s << std::setprecision(3) << counter.AvgRunning() << "ms";
 	std::string text = s.str();
-	font.Render(text.c_str(), counter_color, counter_tex);
+	font.Render(text.c_str(), counter_tex);
 	glm::vec2 size(font.TextSize(text.c_str()));
 	counter_sprite.LoadRect(size.x, size.y);
 	counter_transform = glm::translate(glm::vec3(

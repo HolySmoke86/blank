@@ -31,8 +31,6 @@ public:
 private:
 	Program program;
 
-	float fog_density;
-
 	glm::mat4 projection;
 	glm::mat4 view;
 	glm::mat4 vp;

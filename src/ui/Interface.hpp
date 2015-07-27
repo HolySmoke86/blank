@@ -9,7 +9,6 @@
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
 
-#include <SDL.h>
 #include <glm/glm.hpp>
 
 
@@ -93,7 +92,6 @@ private:
 	SpriteModel counter_sprite;
 	glm::mat4 counter_transform;
 	float counter_x;
-	SDL_Color counter_color;
 
 	Config config;
 

@@ -59,8 +59,8 @@ public:
 
 	glm::tvec2<int> TextSize(const char *) const;
 
-	Texture Render(const char *, SDL_Color) const;
-	void Render(const char *, SDL_Color, Texture &) const;
+	Texture Render(const char *) const;
+	void Render(const char *, Texture &) const;
 
 private:
 	TTF_Font *handle;

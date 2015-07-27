@@ -39,7 +39,6 @@ private:
 	Texture block_label;
 	SpriteModel label_sprite;
 	glm::mat4 label_transform;
-	SDL_Color label_color;
 
 	bool block_visible;
 

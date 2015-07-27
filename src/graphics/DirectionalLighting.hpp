@@ -17,6 +17,7 @@ public:
 	void Activate() noexcept;
 
 	void SetLightDirection(const glm::vec3 &) noexcept;
+	void SetLightColor(const glm::vec3 &) noexcept;
 
 	void SetFogDensity(float) noexcept;
 
@@ -32,11 +33,6 @@ public:
 
 private:
 	Program program;
-
-	glm::vec3 light_direction;
-	glm::vec3 light_color;
-
-	float fog_density;
 
 	glm::mat4 projection;
 	glm::mat4 view;

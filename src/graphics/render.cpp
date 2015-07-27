@@ -107,13 +107,14 @@ glm::tvec2<int> Font::TextSize(const char *text) const {
 	return size;
 }
 
-Texture Font::Render(const char *text, SDL_Color color) const {
+Texture Font::Render(const char *text) const {
 	Texture tex;
+	Render(text, tex);
 	return tex;
 }
 
-void Font::Render(const char *text, SDL_Color color, Texture &tex) const {
-	SDL_Surface *srf = TTF_RenderUTF8_Blended(handle, text, color);
+void Font::Render(const char *text, Texture &tex) const {
+	SDL_Surface *srf = TTF_RenderUTF8_Blended(handle, text, { 0xFF, 0xFF, 0xFF, 0xFF });
 	if (!srf) {
 		throw std::runtime_error(TTF_GetError());
 	}

@@ -13,6 +13,7 @@
 #include <ostream>
 #include <stdexcept>
 #include <string>
+#include <glm/gtc/type_ptr.hpp>
 
 
 namespace {
@@ -146,10 +147,29 @@ GLint Program::UniformLocation(const GLchar *name) const noexcept {
 }
 
 
+void Program::Uniform(GLint loc, GLint val) noexcept {
+	glUniform1i(loc, val);
+}
+
+void Program::Uniform(GLint loc, float val) noexcept {
+	glUniform1f(loc, val);
+}
+
+void Program::Uniform(GLint loc, const glm::vec3 &val) noexcept {
+	glUniform3fv(loc, 1, glm::value_ptr(val));
+}
+
+void Program::Uniform(GLint loc, const glm::vec4 &val) noexcept {
+	glUniform4fv(loc, 1, glm::value_ptr(val));
+}
+
+void Program::Uniform(GLint loc, const glm::mat4 &val) noexcept {
+	glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(val));
+}
+
+
 DirectionalLighting::DirectionalLighting()
 : program()
-, light_direction(1.0f, 3.0f, 2.0f)
-, light_color(0.9f, 0.9f, 0.9f)
 , vp(1.0f)
 , m_handle(0)
 , mv_handle(0)
@@ -211,32 +231,34 @@ DirectionalLighting::DirectionalLighting()
 	light_direction_handle = program.UniformLocation("light_direction");
 	light_color_handle = program.UniformLocation("light_color");
 	fog_density_handle = program.UniformLocation("fog_density");
+
+	Activate();
+	program.Uniform(light_direction_handle, glm::vec3(1.0f, 3.0f, 2.0f));
+	program.Uniform(light_color_handle, glm::vec3(1.0f));
+	program.Uniform(fog_density_handle, 0.0f);
 }
 
 
 void DirectionalLighting::Activate() noexcept {
 	program.Use();
-
-	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
-	glUniform3f(light_color_handle, light_color.x, light_color.y, light_color.z);
 }
 
 void DirectionalLighting::SetM(const glm::mat4 &m) noexcept {
-	glm::mat4 mv(view * m);
-	glm::mat4 mvp(vp * m);
-	glUniformMatrix4fv(m_handle, 1, GL_FALSE, &m[0][0]);
-	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
-	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+	program.Uniform(m_handle, m);
+	program.Uniform(mv_handle, view * m);
+	program.Uniform(mvp_handle, vp * m);
 }
 
 void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) noexcept {
-	light_direction = -dir;
-	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
+	program.Uniform(light_direction_handle, -dir);
+}
+
+void DirectionalLighting::SetLightColor(const glm::vec3 &col) noexcept {
+	program.Uniform(light_color_handle, col);
 }
 
 void DirectionalLighting::SetFogDensity(float f) noexcept {
-	fog_density = f;
-	glUniform1f(fog_density_handle, fog_density);
+	program.Uniform(fog_density_handle, f);
 }
 
 void DirectionalLighting::SetProjection(const glm::mat4 &p) noexcept {
@@ -321,15 +343,12 @@ void BlockLighting::Activate() noexcept {
 }
 
 void BlockLighting::SetM(const glm::mat4 &m) noexcept {
-	glm::mat4 mv(view * m);
-	glm::mat4 mvp(vp * m);
-	glUniformMatrix4fv(mv_handle, 1, GL_FALSE, &mv[0][0]);
-	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+	program.Uniform(mv_handle, view * m);
+	program.Uniform(mvp_handle, vp * m);
 }
 
 void BlockLighting::SetFogDensity(float f) noexcept {
-	fog_density = f;
-	glUniform1f(fog_density_handle, fog_density);
+	program.Uniform(fog_density_handle, f);
 }
 
 void BlockLighting::SetProjection(const glm::mat4 &p) noexcept {
@@ -376,9 +395,14 @@ BlendedSprite::BlendedSprite()
 		"#version 330 core\n"
 		"in vec2 frag_tex_uv;\n"
 		"uniform sampler2D tex_sampler;\n"
+		"uniform vec4 fg_factor;\n"
+		"uniform vec4 bg_factor;\n"
 		"out vec4 color;\n"
 		"void main() {\n"
-			"color = texture(tex_sampler, frag_tex_uv);\n"
+			"vec4 tex_color = texture(tex_sampler, frag_tex_uv);\n"
+			"vec4 factor = mix(bg_factor, fg_factor, tex_color.a);\n"
+			"color = tex_color * factor;\n"
+			"color.a = factor.a;\n"
 		"}\n"
 	);
 	program.Link();
@@ -389,6 +413,12 @@ BlendedSprite::BlendedSprite()
 
 	mvp_handle = program.UniformLocation("MVP");
 	sampler_handle = program.UniformLocation("tex_sampler");
+	fg_handle = program.UniformLocation("fg_factor");
+	bg_handle = program.UniformLocation("bg_factor");
+
+	Activate();
+	SetFG(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	SetBG(glm::vec4(1.0f, 1.0f, 1.0f, 0.0f));
 }
 
 
@@ -397,8 +427,7 @@ void BlendedSprite::Activate() noexcept {
 }
 
 void BlendedSprite::SetM(const glm::mat4 &m) noexcept {
-	glm::mat4 mvp(vp * m);
-	glUniformMatrix4fv(mvp_handle, 1, GL_FALSE, &mvp[0][0]);
+	program.Uniform(mvp_handle, vp * m);
 }
 
 void BlendedSprite::SetProjection(const glm::mat4 &p) noexcept {
@@ -425,7 +454,15 @@ void BlendedSprite::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::ma
 void BlendedSprite::SetTexture(Texture &tex) noexcept {
 	glActiveTexture(GL_TEXTURE0);
 	tex.Bind();
-	glUniform1i(sampler_handle, 0);
+	program.Uniform(sampler_handle, GLint(0));
+}
+
+void BlendedSprite::SetFG(const glm::vec4 &v) noexcept {
+	program.Uniform(fg_handle, v);
+}
+
+void BlendedSprite::SetBG(const glm::vec4 &v) noexcept {
+	program.Uniform(bg_handle, v);
 }
 
 }
