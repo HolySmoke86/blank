@@ -11,11 +11,10 @@
 
 namespace blank {
 
-class BlendedSprite;
 class Block;
 class BlockTypeRegistry;
-class DirectionalLighting;
 class Font;
+class Viewport;
 
 class HUD {
 
@@ -25,12 +24,9 @@ public:
 	HUD(const HUD &) = delete;
 	HUD &operator =(const HUD &) = delete;
 
-	void Viewport(float width, float height) noexcept;
-	void Viewport(float x, float y, float width, float height) noexcept;
-
 	void Display(const Block &);
 
-	void Render(DirectionalLighting &, BlendedSprite &) noexcept;
+	void Render(Viewport &) noexcept;
 
 private:
 	const BlockTypeRegistry &types;
@@ -48,11 +44,6 @@ private:
 	bool block_visible;
 
 	OutlineModel crosshair;
-	glm::mat4 crosshair_transform;
-
-	float near, far;
-	glm::mat4 projection;
-	glm::mat4 view;
 
 };
 

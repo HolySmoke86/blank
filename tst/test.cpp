@@ -8,11 +8,7 @@ using CppUnit::TextUi::TestRunner;
 
 
 int main(int, char **) {
-	blank::InitSDL sdl;
-	blank::InitGL gl;
-	blank::Window win;
-	blank::GLContext ctx(win.CreateContext());
-	blank::InitGLEW glew;
+	blank::Init init;
 
 	TestRunner runner;
 	TestFactoryRegistry &registry = TestFactoryRegistry::getRegistry();

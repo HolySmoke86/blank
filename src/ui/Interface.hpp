@@ -17,9 +17,8 @@ namespace blank {
 
 class Assets;
 class Chunk;
-class BlendedSprite;
-class DirectionalLighting;
 class FrameCounter;
+class Viewport;
 class World;
 
 class Interface {
@@ -43,7 +42,8 @@ public:
 	void HandlePress(const SDL_MouseButtonEvent &);
 	void HandleRelease(const SDL_MouseButtonEvent &);
 	void Handle(const SDL_MouseWheelEvent &);
-	void Handle(const SDL_WindowEvent &) noexcept;
+
+	void Resize(const Viewport &);
 
 	void FaceBlock();
 	void TurnBlock();
@@ -68,7 +68,7 @@ public:
 
 	void Update(int dt);
 
-	void Render(DirectionalLighting &, BlendedSprite &) noexcept;
+	void Render(Viewport &) noexcept;
 
 private:
 	void CheckAim();
@@ -92,6 +92,7 @@ private:
 	Texture counter_tex;
 	SpriteModel counter_sprite;
 	glm::mat4 counter_transform;
+	float counter_x;
 	SDL_Color counter_color;
 
 	Config config;

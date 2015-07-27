@@ -1,8 +1,7 @@
 #include "World.hpp"
 
 #include "WorldCollision.hpp"
-#include "../graphics/BlockLighting.hpp"
-#include "../graphics/DirectionalLighting.hpp"
+#include "../graphics/Viewport.hpp"
 
 #include <iostream>
 #include <limits>
@@ -295,10 +294,11 @@ void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
 }
 
 
-void World::Render(BlockLighting &chunk_prog, DirectionalLighting &entity_prog) {
-	chunk_prog.Activate();
+void World::Render(Viewport &viewport) {
+	viewport.WorldPosition(player->Transform(player->ChunkCoords()));
+
+	BlockLighting &chunk_prog = viewport.ChunkProgram();
 	chunk_prog.SetFogDensity(fog_density);
-	chunk_prog.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
 
 	for (Chunk &chunk : chunks.Loaded()) {
 		glm::mat4 m(chunk.Transform(player->ChunkCoords()));
@@ -309,10 +309,9 @@ void World::Render(BlockLighting &chunk_prog, DirectionalLighting &entity_prog) 
 		}
 	}
 
-	entity_prog.Activate();
+	DirectionalLighting &entity_prog = viewport.EntityProgram();
 	entity_prog.SetLightDirection(light_direction);
 	entity_prog.SetFogDensity(fog_density);
-	entity_prog.SetView(glm::inverse(player->Transform(player->ChunkCoords())));
 
 	for (Entity &entity : entities) {
 		if (entity.HasShape()) {

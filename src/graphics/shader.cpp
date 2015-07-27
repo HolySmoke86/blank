@@ -215,8 +215,6 @@ DirectionalLighting::DirectionalLighting()
 
 
 void DirectionalLighting::Activate() noexcept {
-	GLContext::EnableDepthTest();
-	GLContext::EnableBackfaceCulling();
 	program.Use();
 
 	glUniform3f(light_direction_handle, light_direction.x, light_direction.y, light_direction.z);
@@ -319,9 +317,6 @@ BlockLighting::BlockLighting()
 
 
 void BlockLighting::Activate() noexcept {
-	GLContext::EnableDepthTest();
-	GLContext::EnableBackfaceCulling();
-	GLContext::DisableBlending();
 	program.Use();
 }
 
@@ -398,7 +393,6 @@ BlendedSprite::BlendedSprite()
 
 
 void BlendedSprite::Activate() noexcept {
-	GLContext::EnableAlphaBlending();
 	program.Use();
 }
 

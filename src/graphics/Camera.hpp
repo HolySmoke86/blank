@@ -11,16 +11,15 @@ class Camera {
 public:
 	Camera() noexcept;
 
-	void Viewport(int width, int height) noexcept;
-	void Viewport(int x, int y, int width, int height) noexcept;
-
 	/// FOV in radians
 	void FOV(float f) noexcept;
 	void Aspect(float r) noexcept;
 	void Aspect(float w, float h) noexcept;
 	void Clip(float near, float far) noexcept;
 
-	const glm::mat4 &Projection() noexcept { return projection; }
+	const glm::mat4 &Projection() const noexcept { return projection; }
+	const glm::mat4 &View() const noexcept { return view; }
+	void View(const glm::mat4 &v) noexcept { view = v; }
 
 private:
 	void UpdateProjection() noexcept;
@@ -28,10 +27,11 @@ private:
 private:
 	float fov;
 	float aspect;
-	float near_clip;
-	float far_clip;
+	float near;
+	float far;
 
 	glm::mat4 projection;
+	glm::mat4 view;
 
 };
 

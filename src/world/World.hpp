@@ -14,8 +14,7 @@
 
 namespace blank {
 
-class BlockLighting;
-class DirectionalLighting;
+class Viewport;
 class WorldCollision;
 
 class World {
@@ -59,7 +58,7 @@ public:
 
 	void Update(int dt);
 
-	void Render(BlockLighting &, DirectionalLighting &);
+	void Render(Viewport &);
 
 private:
 	BlockTypeRegistry blockType;

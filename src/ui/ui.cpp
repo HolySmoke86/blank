@@ -4,9 +4,8 @@
 #include "../app/Assets.hpp"
 #include "../app/FrameCounter.hpp"
 #include "../app/init.hpp"
-#include "../graphics/BlendedSprite.hpp"
-#include "../graphics/DirectionalLighting.hpp"
 #include "../graphics/Font.hpp"
+#include "../graphics/Viewport.hpp"
 #include "../model/shapes.hpp"
 #include "../world/World.hpp"
 
@@ -31,12 +30,7 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 , label_transform(1.0f)
 , label_color{0xFF, 0xFF, 0xFF, 0xFF}
 , block_visible(false)
-, crosshair()
-, crosshair_transform(1.0f)
-, near(100.0f)
-, far(-100.0f)
-, projection(glm::ortho(0.0f, 1.0f, 1.0f, 0.0f, near, far))
-, view(1.0f) {
+, crosshair() {
 	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
 	block_transform = glm::scale(block_transform, glm::vec3(50.0f));
 	block_transform = glm::rotate(block_transform, 3.5f, glm::vec3(1.0f, 0.0f, 0.0f));
@@ -51,16 +45,6 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 	});
 	crosshair.colors.resize(4, { 10.0f, 10.0f, 10.0f });
 	crosshair.Invalidate();
-}
-
-
-void HUD::Viewport(float width, float height) noexcept {
-	Viewport(0, 0, width, height);
-}
-
-void HUD::Viewport(float x, float y, float width, float height) noexcept {
-	projection = glm::ortho(x, width, height, y, near, far);
-	crosshair_transform = glm::translate(glm::vec3(width * 0.5f, height * 0.5f, 0.0f));
 }
 
 
@@ -84,24 +68,25 @@ void HUD::Display(const Block &b) {
 }
 
 
-void HUD::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_prog) noexcept {
-	world_prog.Activate();
+void HUD::Render(Viewport &viewport) noexcept {
+	viewport.ClearDepth();
+
+	DirectionalLighting &world_prog = viewport.HUDProgram();
 	world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
 	// disable distance fog
 	world_prog.SetFogDensity(0.0f);
-	GLContext::ClearDepthBuffer();
 
-	GLContext::EnableInvertBlending();
-	world_prog.SetMVP(crosshair_transform, view, projection);
+	viewport.EnableInvertBlending();
+	world_prog.SetM(viewport.CenterTransform());
 	crosshair.Draw();
 
 	if (block_visible) {
-		GLContext::DisableBlending();
+		viewport.DisableBlending();
 		world_prog.SetM(block_transform);
 		block.Draw();
 
-		sprite_prog.Activate();
-		sprite_prog.SetMVP(label_transform, view, projection);
+		BlendedSprite &sprite_prog = viewport.SpriteProgram();
+		sprite_prog.SetM(label_transform);
 		sprite_prog.SetTexture(block_label);
 		label_sprite.Draw();
 	}
@@ -128,6 +113,7 @@ Interface::Interface(
 , counter_tex()
 , counter_sprite()
 , counter_transform(1.0f)
+, counter_x(935.0f)
 , counter_color{0xFF, 0xFF, 0xFF, 0xFF}
 , config(config)
 , place_timer(256)
@@ -136,7 +122,6 @@ Interface::Interface(
 , selection(1)
 , fwd(0)
 , rev(0) {
-	hud.Viewport(960, 600);
 	hud.Display(selection);
 }
 
@@ -314,7 +299,7 @@ void Interface::UpdateCounter() {
 	glm::vec2 size(font.TextSize(text.c_str()));
 	counter_sprite.LoadRect(size.x, size.y);
 	counter_transform = glm::translate(glm::vec3(
-		400.0f - size.x,
+		counter_x - size.x,
 		25.0f,
 		0.75f
 	));
@@ -402,10 +387,9 @@ void Interface::SelectPrevious() {
 	hud.Display(selection);
 }
 
-void Interface::Handle(const SDL_WindowEvent &event) noexcept {
-	if (event.event == SDL_WINDOWEVENT_RESIZED) {
-		hud.Viewport(event.data1, event.data2);
-	}
+
+void Interface::Resize(const Viewport &viewport) {
+	counter_x = viewport.Width() - 25.0f;
 }
 
 
@@ -448,23 +432,23 @@ void Interface::CheckAim() {
 }
 
 
-void Interface::Render(DirectionalLighting &world_prog, BlendedSprite &sprite_prog) noexcept {
+void Interface::Render(Viewport &viewport) noexcept {
 	if (config.visual_disabled) return;
 
 	if (aim_chunk) {
-		world_prog.Activate();
+		DirectionalLighting &world_prog = viewport.EntityProgram();
 		world_prog.SetM(outline_transform);
 		outline.Draw();
 	}
 
 	if (show_counter) {
-		sprite_prog.Activate();
+		BlendedSprite &sprite_prog = viewport.SpriteProgram();
 		sprite_prog.SetM(counter_transform);
 		sprite_prog.SetTexture(counter_tex);
 		counter_sprite.Draw();
 	}
 
-	hud.Render(world_prog, sprite_prog);
+	hud.Render(viewport);
 }
 
 }

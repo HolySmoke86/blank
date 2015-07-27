@@ -17,6 +17,10 @@ font colours
 	set font fg and bg colour as either uniform or vertex attribute
 	and lerp between them based on the texture's alpha component
 
+	it may also be feasible to get rid of SDL_ttf and use freetype
+	directly to eliminate the unneccessary surface creation
+	ftgl might also be worth looking at
+
 command line
 
 	usefull for development and later on world administration

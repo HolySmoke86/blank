@@ -5,10 +5,7 @@
 #include "FrameCounter.hpp"
 #include "init.hpp"
 #include "RandomWalk.hpp"
-#include "../graphics/BlendedSprite.hpp"
-#include "../graphics/BlockLighting.hpp"
-#include "../graphics/Camera.hpp"
-#include "../graphics/DirectionalLighting.hpp"
+#include "../graphics/Viewport.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/World.hpp"
 
@@ -57,21 +54,11 @@ public:
 	static Entity &MakeTestEntity(World &);
 
 private:
-	InitSDL init_sdl;
-	InitIMG init_img;
-	InitTTF init_ttf;
-	InitGL init_gl;
-	Window window;
-	GLContext ctx;
-	InitGLEW init_glew;
+	Init init;
+	Viewport viewport;
 	Assets assets;
 	FrameCounter counter;
 
-	BlockLighting chunk_prog;
-	DirectionalLighting entity_prog;
-	BlendedSprite sprite_prog;
-
-	Camera cam;
 	World world;
 	Interface interface;
 

@@ -2,11 +2,20 @@
 #define BLANK_APP_INIT_HPP_
 
 #include <SDL.h>
+#include <stdexcept>
+#include <string>
 
 
 namespace blank {
 
-class GLContext;
+class SDLError
+: public std::runtime_error {
+
+public:
+	SDLError();
+	explicit SDLError(const std::string &);
+
+};
 
 
 class InitSDL {
@@ -71,7 +80,7 @@ public:
 	void GrabMouse();
 	void ReleaseMouse();
 
-	GLContext CreateContext();
+	SDL_Window *Handle() { return handle; }
 
 	void Flip();
 
@@ -87,24 +96,11 @@ public:
 	explicit GLContext(SDL_Window *);
 	~GLContext();
 
-	GLContext(GLContext &&);
-	GLContext &operator =(GLContext &&);
-
 	GLContext(const GLContext &) = delete;
 	GLContext &operator =(const GLContext &) = delete;
 
-	static void EnableVSync();
-	static void EnableDepthTest() noexcept;
-	static void EnableBackfaceCulling() noexcept;
-	static void EnableAlphaBlending() noexcept;
-	static void EnableInvertBlending() noexcept;
-	static void DisableBlending() noexcept;
-
-	static void Clear() noexcept;
-	static void ClearDepthBuffer() noexcept;
-
 private:
-	SDL_GLContext handle;
+	SDL_GLContext ctx;
 
 };
 
@@ -116,6 +112,21 @@ public:
 
 	InitGLEW(const InitGLEW &) = delete;
 	InitGLEW &operator =(const InitGLEW &) = delete;
+
+};
+
+
+struct Init {
+
+	Init(bool double_buffer = true, int sample_size = 1);
+
+	InitSDL init_sdl;
+	InitIMG init_img;
+	InitTTF init_ttf;
+	InitGL init_gl;
+	Window window;
+	GLContext ctx;
+	InitGLEW init_glew;
 
 };
 

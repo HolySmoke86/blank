@@ -4,30 +4,39 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
-#include <stdexcept>
-#include <string>
 #include <GL/glew.h>
 
 
 namespace {
 
-void sdl_error(std::string msg) {
+std::string sdl_error_append(std::string msg) {
 	const char *error = SDL_GetError();
 	if (*error != '\0') {
 		msg += ": ";
 		msg += error;
 		SDL_ClearError();
 	}
-	throw std::runtime_error(msg);
+	return msg;
 }
 
 }
 
 namespace blank {
 
+SDLError::SDLError()
+: std::runtime_error(SDL_GetError()) {
+
+}
+
+SDLError::SDLError(const std::string &msg)
+: std::runtime_error(sdl_error_append(msg)) {
+
+}
+
+
 InitSDL::InitSDL() {
 	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		sdl_error("SDL_Init(SDL_INIT_VIDEO)");
+		throw SDLError("SDL_Init(SDL_INIT_VIDEO)");
 	}
 }
 
@@ -38,7 +47,7 @@ InitSDL::~InitSDL() {
 
 InitIMG::InitIMG() {
 	if (IMG_Init(IMG_INIT_PNG) == 0) {
-		sdl_error("IMG_Init(IMG_INIT_PNG)");
+		throw SDLError("IMG_Init(IMG_INIT_PNG)");
 	}
 }
 
@@ -49,7 +58,7 @@ InitIMG::~InitIMG() {
 
 InitTTF::InitTTF() {
 	if (TTF_Init() != 0) {
-		sdl_error("TTF_Init()");
+		throw SDLError("TTF_Init()");
 	}
 }
 
@@ -60,27 +69,27 @@ InitTTF::~InitTTF() {
 
 InitGL::InitGL(bool double_buffer, int sample_size) {
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3) != 0) {
-		sdl_error("SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)");
+		throw SDLError("SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)");
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3) != 0) {
-		sdl_error("SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)");
+		throw SDLError("SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)");
 	}
 	if (SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE) != 0) {
-		sdl_error("SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)");
+		throw SDLError("SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)");
 	}
 
 	if (double_buffer) {
 		if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1) != 0) {
-			sdl_error("SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)");
+			throw SDLError("SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)");
 		}
 	}
 
 	if (sample_size > 1) {
 		if (SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
-			sdl_error("SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS)");
+			throw SDLError("SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS)");
 		}
 		if (SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, sample_size) != 0) {
-			sdl_error("SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES)");
+			throw SDLError("SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES)");
 		}
 	}
 }
@@ -94,7 +103,7 @@ Window::Window()
 	SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
 )) {
 	if (!handle) {
-		sdl_error("SDL_CreateWindow");
+		throw SDLError("SDL_CreateWindow");
 	}
 }
 
@@ -112,18 +121,14 @@ void Window::ReleaseInput() {
 
 void Window::GrabMouse() {
 	if (SDL_SetRelativeMouseMode(SDL_TRUE) != 0) {
-		sdl_error("SDL_SetRelativeMouseMode");
+		throw SDLError("SDL_SetRelativeMouseMode");
 	}
 }
 
 void Window::ReleaseMouse() {
 	if (SDL_SetRelativeMouseMode(SDL_FALSE) != 0) {
-		sdl_error("SDL_SetRelativeMouseMode");
+		throw SDLError("SDL_SetRelativeMouseMode");
 	}
-}
-
-GLContext Window::CreateContext() {
-	return GLContext(handle);
 }
 
 void Window::Flip() {
@@ -132,64 +137,14 @@ void Window::Flip() {
 
 
 GLContext::GLContext(SDL_Window *win)
-: handle(SDL_GL_CreateContext(win)) {
-	if (!handle) {
-		sdl_error("SDL_GL_CreateContext");
+: ctx(SDL_GL_CreateContext(win)) {
+	if (!ctx) {
+		throw SDLError("SDL_GL_CreateContext");
 	}
 }
 
 GLContext::~GLContext() {
-	if (handle) {
-		SDL_GL_DeleteContext(handle);
-	}
-}
-
-
-GLContext::GLContext(GLContext &&other)
-: handle(other.handle) {
-	other.handle = nullptr;
-}
-
-GLContext &GLContext::operator =(GLContext &&other) {
-	std::swap(handle, other.handle);
-	return *this;
-}
-
-void GLContext::EnableVSync() {
-	if (SDL_GL_SetSwapInterval(1) != 0) {
-		sdl_error("SDL_GL_SetSwapInterval");
-	}
-}
-
-void GLContext::EnableDepthTest() noexcept {
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-}
-
-void GLContext::EnableBackfaceCulling() noexcept {
-	glEnable(GL_CULL_FACE);
-}
-
-void GLContext::EnableAlphaBlending() noexcept {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-void GLContext::EnableInvertBlending() noexcept {
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-}
-
-void GLContext::DisableBlending() noexcept {
-	glDisable(GL_BLEND);
-}
-
-void GLContext::Clear() noexcept {
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void GLContext::ClearDepthBuffer() noexcept {
-	glClear(GL_DEPTH_BUFFER_BIT);
+	SDL_GL_DeleteContext(ctx);
 }
 
 
@@ -206,6 +161,18 @@ InitGLEW::InitGLEW() {
 		msg.append(errBegin, errEnd);
 		throw std::runtime_error(msg);
 	}
+}
+
+
+Init::Init(bool double_buffer, int sample_size)
+: init_sdl()
+, init_img()
+, init_ttf()
+, init_gl(double_buffer, sample_size)
+, window()
+, ctx(window.Handle())
+, init_glew() {
+
 }
 
 }

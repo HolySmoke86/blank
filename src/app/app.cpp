@@ -27,28 +27,15 @@ string get_asset_path() {
 namespace blank {
 
 Application::Application(const Config &config)
-: init_sdl()
-, init_img()
-, init_ttf()
-, init_gl(config.doublebuf, config.multisampling)
-, window()
-, ctx(window.CreateContext())
-, init_glew()
+: init(config.doublebuf, config.multisampling)
+, viewport()
 , assets(get_asset_path())
 , counter()
-, chunk_prog()
-, entity_prog()
-, sprite_prog()
-, cam()
 , world(config.world)
 , interface(config.interface, assets, counter, world)
 , test_controller(MakeTestEntity(world))
 , running(false) {
-	if (config.vsync) {
-		GLContext::EnableVSync();
-	}
-
-	glClearColor(0.0, 0.0, 0.0, 1.0);
+	viewport.VSync(config.vsync);
 }
 
 Entity &Application::MakeTestEntity(World &world) {
@@ -94,7 +81,7 @@ void Application::RunS(size_t n, size_t t) {
 void Application::Run() {
 	running = true;
 	Uint32 last = SDL_GetTicks();
-	window.GrabMouse();
+	init.window.GrabMouse();
 	while (running) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
@@ -151,17 +138,16 @@ void Application::HandleEvents() {
 void Application::Handle(const SDL_WindowEvent &event) {
 	switch (event.event) {
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			window.GrabMouse();
+			init.window.GrabMouse();
 			break;
 		case SDL_WINDOWEVENT_FOCUS_LOST:
-			window.ReleaseMouse();
+			init.window.ReleaseMouse();
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
-			cam.Viewport(event.data1, event.data2);
-			interface.Handle(event);
+			viewport.Resize(event.data1, event.data2);
+			interface.Resize(viewport);
 			break;
 		default:
-			interface.Handle(event);
 			break;
 	}
 }
@@ -177,18 +163,14 @@ void Application::Update(int dt) {
 void Application::Render() {
 	// gl implementation may (and will probably) delay vsync blocking until
 	// the first write after flipping, which is this clear call
-	GLContext::Clear();
+	viewport.Clear();
 	counter.EnterRender();
 
-	chunk_prog.SetProjection(cam.Projection());
-	entity_prog.SetProjection(cam.Projection());
-
-	world.Render(chunk_prog, entity_prog);
-
-	interface.Render(entity_prog, sprite_prog);
+	world.Render(viewport);
+	interface.Render(viewport);
 
 	counter.ExitRender();
-	window.Flip();
+	init.window.Flip();
 }
 
 
