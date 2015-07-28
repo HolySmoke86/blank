@@ -1,6 +1,9 @@
+#include "BlendedSprite.hpp"
 #include "Font.hpp"
 #include "Format.hpp"
+#include "Text.hpp"
 #include "Texture.hpp"
+#include "Viewport.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -152,6 +155,45 @@ void Format::ReadPixelFormat(const SDL_PixelFormat &fmt) {
 		type = GL_UNSIGNED_BYTE;
 		internal = GL_RGB8;
 	}
+}
+
+
+Text::Text() noexcept
+: tex()
+, sprite()
+, bg(1.0f, 1.0f, 1.0f, 0.0f)
+, fg(1.0f, 1.0f, 1.0f, 1.0f)
+, size(0.0f)
+, pos(0.0f)
+, grav(Gravity::NORTH_WEST)
+, pivot(Gravity::NORTH_WEST)
+, dirty(false)
+, visible(false) {
+
+}
+
+void Text::Set(const Font &font, const char *text) {
+	font.Render(text, tex);
+	size = font.TextSize(text);
+	dirty = true;
+}
+
+void Text::Update() {
+	sprite.LoadRect(size.x, size.y, align(pivot, size));
+	dirty = false;
+}
+
+void Text::Render(Viewport &viewport) noexcept {
+	if (dirty) {
+		Update();
+	}
+	BlendedSprite &prog = viewport.SpriteProgram();
+	viewport.SetCursor(pos, grav);
+	prog.SetM(viewport.Cursor());
+	prog.SetTexture(tex);
+	prog.SetBG(bg);
+	prog.SetFG(fg);
+	sprite.Draw();
 }
 
 

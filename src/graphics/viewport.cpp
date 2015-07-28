@@ -76,7 +76,7 @@ void Canvas::UpdateProjection() noexcept {
 Viewport::Viewport()
 : cam()
 , canv()
-, center(1.0f)
+, cursor(1.0f)
 , chunk_prog()
 , entity_prog()
 , sprite_prog()
@@ -128,8 +128,6 @@ void Viewport::Resize(int w, int h) noexcept {
 	cam.Aspect(fw, fh);
 	canv.Resize(fw, fh);
 
-	center = glm::translate(glm::vec3(fw * 0.5f, fh * 0.5f, 0.0f));
-
 	chunk_prog.SetProjection(Perspective());
 	if (active_prog == HUD) {
 		entity_prog.SetProjection(Ortho());
@@ -145,6 +143,26 @@ void Viewport::Clear() noexcept {
 
 void Viewport::ClearDepth() noexcept {
 	glClear(GL_DEPTH_BUFFER_BIT);
+}
+
+
+void Viewport::SetCursor(const glm::vec3 &pos) {
+	cursor[3].x = pos.x;
+	cursor[3].y = pos.y;
+	cursor[3].z = pos.z;
+}
+
+void Viewport::SetCursor(const glm::vec3 &pos, Gravity grav) {
+	glm::vec2 p(align(grav, canv.Size(), glm::vec2(pos) + canv.Offset()));
+	cursor[3].x = p.x;
+	cursor[3].y = p.y;
+	cursor[3].z = pos.z;
+}
+
+void Viewport::MoveCursor(const glm::vec3 &d) {
+	cursor[3].x += d.x;
+	cursor[3].y += d.y;
+	cursor[3].z += d.z;
 }
 
 

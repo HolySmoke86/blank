@@ -1,6 +1,7 @@
 #ifndef BLANK_GRAPHICS_VIEWPORT_HPP_
 #define BLANK_GRAPHICS_VIEWPORT_HPP_
 
+#include "align.hpp"
 #include "BlendedSprite.hpp"
 #include "BlockLighting.hpp"
 #include "Camera.hpp"
@@ -8,7 +9,6 @@
 #include "DirectionalLighting.hpp"
 
 #include <glm/glm.hpp>
-#include <SDL.h>
 
 
 namespace blank {
@@ -41,6 +41,11 @@ public:
 	void Clear() noexcept;
 	void ClearDepth() noexcept;
 
+	void SetCursor(const glm::vec3 &);
+	void SetCursor(const glm::vec3 &, Gravity = Gravity::NORTH_WEST);
+	void MoveCursor(const glm::vec3 &);
+	const glm::mat4 &Cursor() const noexcept { return cursor; }
+
 	BlockLighting &ChunkProgram() noexcept;
 	DirectionalLighting &EntityProgram() noexcept;
 	DirectionalLighting &HUDProgram() noexcept;
@@ -50,14 +55,12 @@ public:
 
 	const glm::mat4 &Perspective() const noexcept { return cam.Projection(); }
 	const glm::mat4 &Ortho() const noexcept { return canv.Projection(); }
-	const glm::mat4 &CenterTransform() const noexcept { return center; }
 
 private:
-	SDL_GLContext ctx;
 	Camera cam;
 	Canvas canv;
 
-	glm::mat4 center;
+	glm::mat4 cursor;
 
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;

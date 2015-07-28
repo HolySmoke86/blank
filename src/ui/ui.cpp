@@ -26,8 +26,6 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 , block_buf()
 , block_transform(1.0f)
 , block_label()
-, label_sprite()
-, label_transform(1.0f)
 , block_visible(false)
 , crosshair() {
 	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
@@ -44,6 +42,14 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 	});
 	crosshair.colors.resize(4, { 10.0f, 10.0f, 10.0f });
 	crosshair.Invalidate();
+
+	block_label.Position(
+		glm::vec3(50.0f, 85.0f, 0.0f),
+		Gravity::NORTH_WEST,
+		Gravity::NORTH
+	);
+	block_label.Foreground(glm::vec4(1.0f));
+	block_label.Background(glm::vec4(0.5f));
 }
 
 
@@ -54,14 +60,7 @@ void HUD::Display(const Block &b) {
 	type.FillModel(block_buf, b.Transform());
 	block.Update(block_buf);
 
-	font.Render(type.label.c_str(), block_label);
-	glm::vec2 size(font.TextSize(type.label.c_str()));
-	label_sprite.LoadRect(size.x, size.y);
-	label_transform = glm::translate(glm::vec3(
-		std::max(5.0f, 50.0f - std::round(size.x * 0.5f)),
-		70.0f + size.y,
-		0.75f
-	));
+	block_label.Set(font, type.label);
 
 	block_visible = type.visible;
 }
@@ -76,20 +75,15 @@ void HUD::Render(Viewport &viewport) noexcept {
 	world_prog.SetFogDensity(0.0f);
 
 	viewport.EnableInvertBlending();
-	world_prog.SetM(viewport.CenterTransform());
+	viewport.SetCursor(glm::vec3(0.0f), Gravity::CENTER);
+	world_prog.SetM(viewport.Cursor());
 	crosshair.Draw();
 
 	if (block_visible) {
 		viewport.DisableBlending();
 		world_prog.SetM(block_transform);
 		block.Draw();
-
-		BlendedSprite &sprite_prog = viewport.SpriteProgram();
-		sprite_prog.SetM(label_transform);
-		sprite_prog.SetTexture(block_label);
-		sprite_prog.SetFG(glm::vec4(1.0f));
-		sprite_prog.SetBG(glm::vec4(0.5f));
-		label_sprite.Draw();
+		block_label.Render(viewport);
 	}
 }
 
@@ -110,11 +104,7 @@ Interface::Interface(
 , aim_normal()
 , outline()
 , outline_transform(1.0f)
-, show_counter(false)
-, counter_tex()
-, counter_sprite()
-, counter_transform(1.0f)
-, counter_x(935.0f)
+, counter_text()
 , config(config)
 , place_timer(256)
 , remove_timer(256)
@@ -122,6 +112,10 @@ Interface::Interface(
 , selection(1)
 , fwd(0)
 , rev(0) {
+	counter_text.Hide();
+	counter_text.Position(glm::vec3(-25.0f, 25.0f, 0.0f), Gravity::NORTH_EAST);
+	counter_text.Foreground(glm::vec4(1.0f));
+	counter_text.Background(glm::vec4(0.5f));
 	hud.Display(selection);
 }
 
@@ -286,7 +280,8 @@ void Interface::Print(const Block &block) {
 }
 
 void Interface::ToggleCounter() {
-	if ((show_counter = !show_counter)) {
+	counter_text.Toggle();
+	if (counter_text.Visible()) {
 		UpdateCounter();
 	}
 }
@@ -295,14 +290,7 @@ void Interface::UpdateCounter() {
 	std::stringstream s;
 	s << std::setprecision(3) << counter.AvgRunning() << "ms";
 	std::string text = s.str();
-	font.Render(text.c_str(), counter_tex);
-	glm::vec2 size(font.TextSize(text.c_str()));
-	counter_sprite.LoadRect(size.x, size.y);
-	counter_transform = glm::translate(glm::vec3(
-		counter_x - size.x,
-		25.0f,
-		0.75f
-	));
+	counter_text.Set(font, text);
 }
 
 
@@ -388,11 +376,6 @@ void Interface::SelectPrevious() {
 }
 
 
-void Interface::Resize(const Viewport &viewport) {
-	counter_x = viewport.Width() - 25.0f;
-}
-
-
 void Interface::Update(int dt) {
 	ctrl.Velocity(glm::vec3(fwd - rev) * config.move_velocity);
 	ctrl.Update(dt);
@@ -413,7 +396,7 @@ void Interface::Update(int dt) {
 		CheckAim();
 	}
 
-	if (show_counter && counter.Changed()) {
+	if (counter_text.Visible() && counter.Changed()) {
 		UpdateCounter();
 	}
 }
@@ -441,11 +424,8 @@ void Interface::Render(Viewport &viewport) noexcept {
 		outline.Draw();
 	}
 
-	if (show_counter) {
-		BlendedSprite &sprite_prog = viewport.SpriteProgram();
-		sprite_prog.SetM(counter_transform);
-		sprite_prog.SetTexture(counter_tex);
-		counter_sprite.Draw();
+	if (counter_text.Visible()) {
+		counter_text.Render(viewport);
 	}
 
 	hud.Render(viewport);

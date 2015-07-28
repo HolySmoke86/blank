@@ -14,9 +14,8 @@ textures
 
 font rendering
 
-	should combine all that's needed to render a text into some struct
-	also, with background nw being a thing, a padding might be nice
-	or could separate bg from fg rendering
+	with background now being a thing, a padding might be nice
+	that or maybe separate bg from fg rendering
 
 	it may also be feasible to get rid of SDL_ttf and use freetype
 	directly to eliminate the unneccessary surface creation

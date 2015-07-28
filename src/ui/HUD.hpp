@@ -1,10 +1,9 @@
 #ifndef BLANK_UI_HUD_H_
 #define BLANK_UI_HUD_H_
 
-#include "../graphics/Texture.hpp"
+#include "../graphics/Text.hpp"
 #include "../model/Model.hpp"
 #include "../model/OutlineModel.hpp"
-#include "../model/SpriteModel.hpp"
 
 #include <glm/glm.hpp>
 
@@ -36,9 +35,7 @@ private:
 	Model::Buffer block_buf;
 	glm::mat4 block_transform;
 
-	Texture block_label;
-	SpriteModel label_sprite;
-	glm::mat4 label_transform;
+	Text block_label;
 
 	bool block_visible;
 

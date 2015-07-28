@@ -5,6 +5,7 @@
 #include "../app/FPSController.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../graphics/Font.hpp"
+#include "../graphics/Text.hpp"
 #include "../model/geometry.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
@@ -41,8 +42,6 @@ public:
 	void HandlePress(const SDL_MouseButtonEvent &);
 	void HandleRelease(const SDL_MouseButtonEvent &);
 	void Handle(const SDL_MouseWheelEvent &);
-
-	void Resize(const Viewport &);
 
 	void FaceBlock();
 	void TurnBlock();
@@ -87,11 +86,7 @@ private:
 	OutlineModel outline;
 	glm::mat4 outline_transform;
 
-	bool show_counter;
-	Texture counter_tex;
-	SpriteModel counter_sprite;
-	glm::mat4 counter_transform;
-	float counter_x;
+	Text counter_text;
 
 	Config config;
 

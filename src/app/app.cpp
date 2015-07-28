@@ -145,7 +145,6 @@ void Application::Handle(const SDL_WindowEvent &event) {
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
 			viewport.Resize(event.data1, event.data2);
-			interface.Resize(viewport);
 			break;
 		default:
 			break;
