@@ -23,6 +23,9 @@ public:
 		value = 0;
 		speed = 0;
 	}
+	void Reset() noexcept {
+		value = 0;
+	}
 
 	bool Running() const noexcept {
 		return speed != 0;
@@ -30,6 +33,9 @@ public:
 	/// true if an interval boundary was passed by the last call to Update()
 	bool Hit() const noexcept {
 		return Running() && value % intv < last_dt;
+	}
+	bool HitOnce() const noexcept {
+		return value >= intv;
 	}
 	int Elapsed() const noexcept {
 		return value;

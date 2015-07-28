@@ -1,6 +1,8 @@
 #include "BlendedSprite.hpp"
+#include "FixedText.hpp"
 #include "Font.hpp"
 #include "Format.hpp"
+#include "MessageBox.hpp"
 #include "Text.hpp"
 #include "Texture.hpp"
 #include "Viewport.hpp"
@@ -158,16 +160,70 @@ void Format::ReadPixelFormat(const SDL_PixelFormat &fmt) {
 }
 
 
+MessageBox::MessageBox(const Font &f)
+: font(f)
+, lines()
+, max_lines(10)
+, pos(0.0f)
+, adv(0.0f, font.LineSkip(), 0.0f)
+, bg(1.0f, 1.0f, 1.0f, 0.0f)
+, fg(1.0f, 1.0f, 1.0f, 1.0f)
+, grav(Gravity::NORTH_WEST) {
+
+}
+
+void MessageBox::Position(const glm::vec3 &p, Gravity g) noexcept {
+	pos = p;
+	grav = g;
+	if (get_y(g) == Align::END) {
+		adv.y = -font.LineSkip();
+	} else {
+		adv.y = font.LineSkip();
+	}
+	for (Text &txt : lines) {
+		txt.Pivot(g);
+	}
+}
+
+void MessageBox::PushLine(const char *text) {
+	lines.emplace_front();
+	Text &txt = lines.front();
+	txt.Set(font, text);
+	txt.Pivot(grav);
+
+	while (lines.size() > max_lines) {
+		lines.pop_back();
+	}
+}
+
+void MessageBox::Render(Viewport &viewport) noexcept {
+	BlendedSprite &prog = viewport.SpriteProgram();
+	prog.SetBG(bg);
+	prog.SetFG(fg);
+	viewport.SetCursor(pos, grav);
+	for (Text &txt : lines) {
+		prog.SetM(viewport.Cursor());
+		txt.Render(viewport);
+		viewport.MoveCursor(adv);
+	}
+}
+
+
 Text::Text() noexcept
 : tex()
 , sprite()
+, size(0.0f)
+, pivot(Gravity::NORTH_WEST)
+, dirty(false) {
+
+}
+
+FixedText::FixedText() noexcept
+: Text()
 , bg(1.0f, 1.0f, 1.0f, 0.0f)
 , fg(1.0f, 1.0f, 1.0f, 1.0f)
-, size(0.0f)
 , pos(0.0f)
 , grav(Gravity::NORTH_WEST)
-, pivot(Gravity::NORTH_WEST)
-, dirty(false)
 , visible(false) {
 
 }
@@ -183,16 +239,21 @@ void Text::Update() {
 	dirty = false;
 }
 
+void FixedText::Render(Viewport &viewport) noexcept {
+	BlendedSprite &prog = viewport.SpriteProgram();
+	viewport.SetCursor(pos, grav);
+	prog.SetM(viewport.Cursor());
+	prog.SetBG(bg);
+	prog.SetFG(fg);
+	Text::Render(viewport);
+}
+
 void Text::Render(Viewport &viewport) noexcept {
 	if (dirty) {
 		Update();
 	}
 	BlendedSprite &prog = viewport.SpriteProgram();
-	viewport.SetCursor(pos, grav);
-	prog.SetM(viewport.Cursor());
 	prog.SetTexture(tex);
-	prog.SetBG(bg);
-	prog.SetFG(fg);
 	sprite.Draw();
 }
 

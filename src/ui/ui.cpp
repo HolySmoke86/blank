@@ -105,6 +105,8 @@ Interface::Interface(
 , outline()
 , outline_transform(1.0f)
 , counter_text()
+, messages(font)
+, msg_timer(5000)
 , config(config)
 , place_timer(256)
 , remove_timer(256)
@@ -116,6 +118,9 @@ Interface::Interface(
 	counter_text.Position(glm::vec3(-25.0f, 25.0f, 0.0f), Gravity::NORTH_EAST);
 	counter_text.Foreground(glm::vec4(1.0f));
 	counter_text.Background(glm::vec4(0.5f));
+	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
+	messages.Foreground(glm::vec4(1.0f));
+	messages.Background(glm::vec4(0.5f));
 	hud.Display(selection);
 }
 
@@ -210,61 +215,83 @@ void Interface::TurnBlock() {
 
 void Interface::ToggleCollision() {
 	ctrl.Controlled().WorldCollidable(!ctrl.Controlled().WorldCollidable());
-	std::cout << "collision " << (ctrl.Controlled().WorldCollidable() ? "on" : "off") << std::endl;
+	if (ctrl.Controlled().WorldCollidable()) {
+		PostMessage("collision on");
+	} else {
+		PostMessage("collision off");
+	}
 }
 
 void Interface::PrintBlockInfo() {
 	std::cout << std::endl;
 	if (!aim_chunk) {
-		std::cout << "not looking at any block" << std::endl;
+		PostMessage("not looking at any block");
 		Ray aim = ctrl.Aim();
-		std::cout << "aim ray: " << aim.orig << ", " << aim.dir << std::endl;
+		std::stringstream s;
+		s << "aim ray: " << aim.orig << ", " << aim.dir;
+		PostMessage(s.str());
 		return;
 	}
-	std::cout << "looking at block " << aim_block
+	std::stringstream s;
+	s << "looking at block " << aim_block
 		<< " " << Chunk::ToCoords(aim_block)
 		<< " of chunk " << aim_chunk->Position()
-		<< std::endl;
+	;
+	PostMessage(s.str());
 	Print(aim_chunk->BlockAt(aim_block));
 }
 
 void Interface::PrintChunkInfo() {
 	std::cout << std::endl;
 	if (!aim_chunk) {
-		std::cout << "not looking at any block" << std::endl;
+		PostMessage("not looking at any block");
 		return;
 	}
-	std::cout << "looking at chunk "
-		<< aim_chunk->Position()
-		<< std::endl;
+	std::stringstream s;
+	s << "looking at chunk " << aim_chunk->Position();
+	PostMessage(s.str());
 
-	std::cout << "  neighbors:" << std::endl;
+	PostMessage("  neighbors:");
 	if (aim_chunk->HasNeighbor(Block::FACE_LEFT)) {
-		std::cout << " left  " << aim_chunk->GetNeighbor(Block::FACE_LEFT).Position() << std::endl;
+		s.str("");
+		s << " left  " << aim_chunk->GetNeighbor(Block::FACE_LEFT).Position();
+		PostMessage(s.str());
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_RIGHT)) {
-		std::cout << " right " << aim_chunk->GetNeighbor(Block::FACE_RIGHT).Position() << std::endl;
+		s.str("");
+		s << " right " << aim_chunk->GetNeighbor(Block::FACE_RIGHT).Position();
+		PostMessage(s.str());
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_UP)) {
-		std::cout << " up    " << aim_chunk->GetNeighbor(Block::FACE_UP).Position() << std::endl;
+		s.str("");
+		s << " up    " << aim_chunk->GetNeighbor(Block::FACE_UP).Position();
+		PostMessage(s.str());
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_DOWN)) {
-		std::cout << " down  " << aim_chunk->GetNeighbor(Block::FACE_DOWN).Position() << std::endl;
+		s.str("");
+		s << " down  " << aim_chunk->GetNeighbor(Block::FACE_DOWN).Position();
+		PostMessage(s.str());
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_FRONT)) {
-		std::cout << " front " << aim_chunk->GetNeighbor(Block::FACE_FRONT).Position() << std::endl;
+		s.str("");
+		s << " front " << aim_chunk->GetNeighbor(Block::FACE_FRONT).Position();
+		PostMessage(s.str());
 	}
 	if (aim_chunk->HasNeighbor(Block::FACE_BACK)) {
-		std::cout << " back  " << aim_chunk->GetNeighbor(Block::FACE_BACK).Position() << std::endl;
+		s.str("");
+		s << " back  " << aim_chunk->GetNeighbor(Block::FACE_BACK).Position();
+		PostMessage(s.str());
 	}
 	std::cout << std::endl;
 }
 
 void Interface::PrintLightInfo() {
-	std::cout
+	std::stringstream s;
+	s
 		<< "light level " << world.PlayerChunk().GetLight(world.Player().Position())
 		<< " at position " << world.Player().Position()
-		<< std::endl;
+	;
+	PostMessage(s.str());
 }
 
 void Interface::PrintSelectionInfo() {
@@ -273,10 +300,12 @@ void Interface::PrintSelectionInfo() {
 }
 
 void Interface::Print(const Block &block) {
-	std::cout << "type: " << block.type
+	std::stringstream s;
+	s << "type: " << block.type
 		<< ", face: " << block.GetFace()
 		<< ", turn: " << block.GetTurn()
-		<< std::endl;
+	;
+	PostMessage(s.str());
 }
 
 void Interface::ToggleCounter() {
@@ -376,15 +405,28 @@ void Interface::SelectPrevious() {
 }
 
 
+void Interface::PostMessage(const char *msg) {
+	messages.PushLine(msg);
+	msg_timer.Reset();
+	msg_timer.Start();
+	std::cout << msg << std::endl;
+}
+
+
 void Interface::Update(int dt) {
 	ctrl.Velocity(glm::vec3(fwd - rev) * config.move_velocity);
 	ctrl.Update(dt);
 
+	msg_timer.Update(dt);
 	place_timer.Update(dt);
 	remove_timer.Update(dt);
 
 	aim = ctrl.Aim();
 	CheckAim();
+
+	if (msg_timer.HitOnce()) {
+		msg_timer.Stop();
+	}
 
 	if (remove_timer.Hit()) {
 		RemoveBlock();
@@ -426,6 +468,10 @@ void Interface::Render(Viewport &viewport) noexcept {
 
 	if (counter_text.Visible()) {
 		counter_text.Render(viewport);
+	}
+
+	if (msg_timer.Running()) {
+		messages.Render(viewport);
 	}
 
 	hud.Render(viewport);

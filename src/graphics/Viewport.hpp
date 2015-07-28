@@ -42,7 +42,7 @@ public:
 	void ClearDepth() noexcept;
 
 	void SetCursor(const glm::vec3 &);
-	void SetCursor(const glm::vec3 &, Gravity = Gravity::NORTH_WEST);
+	void SetCursor(const glm::vec3 &, Gravity);
 	void MoveCursor(const glm::vec3 &);
 	const glm::mat4 &Cursor() const noexcept { return cursor; }
 

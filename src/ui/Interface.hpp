@@ -4,12 +4,14 @@
 #include "HUD.hpp"
 #include "../app/FPSController.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../graphics/FixedText.hpp"
 #include "../graphics/Font.hpp"
-#include "../graphics/Text.hpp"
+#include "../graphics/MessageBox.hpp"
 #include "../model/geometry.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
 
+#include <string>
 #include <glm/glm.hpp>
 
 
@@ -64,6 +66,11 @@ public:
 	void ToggleCounter();
 	void UpdateCounter();
 
+	void PostMessage(const char *);
+	void PostMessage(const std::string &msg) {
+		PostMessage(msg.c_str());
+	}
+
 	void Update(int dt);
 
 	void Render(Viewport &) noexcept;
@@ -86,7 +93,9 @@ private:
 	OutlineModel outline;
 	glm::mat4 outline_transform;
 
-	Text counter_text;
+	FixedText counter_text;
+	MessageBox messages;
+	IntervalTimer msg_timer;
 
 	Config config;
 

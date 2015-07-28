@@ -7,9 +7,9 @@
 namespace blank {
 
 enum class Align {
-	LEFT,
-	CENTER,
-	RIGHT,
+	BEGIN,
+	MIDDLE,
+	END,
 };
 
 enum class Gravity {

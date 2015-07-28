@@ -1,7 +1,7 @@
 #ifndef BLANK_UI_HUD_H_
 #define BLANK_UI_HUD_H_
 
-#include "../graphics/Text.hpp"
+#include "../graphics/FixedText.hpp"
 #include "../model/Model.hpp"
 #include "../model/OutlineModel.hpp"
 
@@ -35,7 +35,7 @@ private:
 	Model::Buffer block_buf;
 	glm::mat4 block_transform;
 
-	Text block_label;
+	FixedText block_label;
 
 	bool block_visible;
 
