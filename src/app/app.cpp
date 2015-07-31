@@ -194,7 +194,7 @@ void FrameCounter::EnterHandle() noexcept {
 }
 
 void FrameCounter::ExitHandle() noexcept {
-	running.handle += Tick();
+	current.handle = Tick();
 }
 
 void FrameCounter::EnterUpdate() noexcept {
@@ -202,7 +202,7 @@ void FrameCounter::EnterUpdate() noexcept {
 }
 
 void FrameCounter::ExitUpdate() noexcept {
-	running.update += Tick();
+	current.update = Tick();
 }
 
 void FrameCounter::EnterRender() noexcept {
@@ -210,19 +210,19 @@ void FrameCounter::EnterRender() noexcept {
 }
 
 void FrameCounter::ExitRender() noexcept {
-	running.render += Tick();
+	current.render = Tick();
 }
 
 void FrameCounter::ExitFrame() noexcept {
 	Uint32 now = SDL_GetTicks();
-	running.total += now - last_enter;
+	current.total = now - last_enter;
+	current.running = current.handle + current.update + current.render;
+	current.waiting = current.total - current.running;
+	Accumulate();
+
 	++cur_frame;
 	if (cur_frame >= NUM_FRAMES) {
-		avg.handle = running.handle * factor;
-		avg.update = running.update * factor;
-		avg.render = running.render * factor;
-		avg.total = running.total * factor;
-		running = Frame<int>{};
+		Push();
 		cur_frame = 0;
 		changed = true;
 	} else {
@@ -237,14 +237,35 @@ int FrameCounter::Tick() noexcept {
 	return delta;
 }
 
-void FrameCounter::Print(std::ostream &out) const {
-	out << "frame:     " << AvgFrame() << std::endl;
-	out << "  handle:  " << AvgHandle() << std::endl;
-	out << "  update:  " << AvgUpdate() << std::endl;
-	out << "  render:  " << AvgRender() << std::endl;
-	out << "  running: " << AvgRunning() << std::endl;
-	out << "  waiting: " << AvgWaiting() << std::endl;
-	out << std::endl;
+void FrameCounter::Accumulate() noexcept {
+	sum.handle += current.handle;
+	sum.update += current.update;
+	sum.render += current.render;
+	sum.running += current.running;
+	sum.waiting += current.waiting;
+	sum.total += current.total;
+
+	max.handle = std::max(current.handle, max.handle);
+	max.update = std::max(current.update, max.update);
+	max.render = std::max(current.render, max.render);
+	max.running = std::max(current.running, max.running);
+	max.waiting = std::max(current.waiting, max.waiting);
+	max.total = std::max(current.total, max.total);
+
+	current = Frame<int>();
+}
+
+void FrameCounter::Push() noexcept {
+	peak = max;
+	avg.handle = sum.handle * factor;
+	avg.update = sum.update * factor;
+	avg.render = sum.render * factor;
+	avg.running = sum.running * factor;
+	avg.waiting = sum.waiting * factor;
+	avg.total = sum.total * factor;
+
+	sum = Frame<int>();
+	max = Frame<int>();
 }
 
 }

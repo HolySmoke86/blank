@@ -317,7 +317,9 @@ void Interface::ToggleCounter() {
 
 void Interface::UpdateCounter() {
 	std::stringstream s;
-	s << std::setprecision(3) << counter.AvgRunning() << "ms";
+	s << std::setprecision(3) <<
+		"avg: " << counter.Average().running << "ms, "
+		"peak: " << counter.Peak().running << "ms";
 	std::string text = s.str();
 	counter_text.Set(font, text);
 }
