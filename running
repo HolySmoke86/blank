@@ -37,6 +37,11 @@ Interface
 --no-hud
 	disable HUD drawing (includes the selected block outline)
 
+--no-audio
+	disable audio
+	the audio device and sounds will still be allocated
+	it just stops the interface from queueing buffers
+
 World
 -----
 
@@ -64,4 +69,6 @@ level there. C dumps info about the chunk of the pointed at block.
 
 Press N to toggle player/world collision.
 
+F1 toggles UI rendering.
 F3 toggles a display telling how long on average it takes to compute a frame.
+F4 toggles audio.

@@ -73,6 +73,10 @@ public:
 	}
 	glm::mat4 ToTransform(const Pos &pos, int idx) const noexcept;
 
+	Block::Pos ToSceneCoords(const Pos &base, const Block::Pos &pos) const noexcept {
+		return Block::Pos((position - base) * Extent()) + pos;
+	}
+
 	static bool IsBorder(const Pos &pos) noexcept {
 		return
 			pos.x == 0 ||

@@ -49,6 +49,8 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 						config.interface.mouse_disabled = true;
 					} else if (strcmp(arg + 2, "no-hud") == 0) {
 						config.interface.visual_disabled = true;
+					} else if (strcmp(arg + 2, "no-audio") == 0) {
+						config.interface.audio_disabled = true;
 					} else {
 						cerr << "unknown option " << arg << endl;
 						error = true;

@@ -1,6 +1,7 @@
 #include "init.hpp"
 
 #include <algorithm>
+#include <alut.h>
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
@@ -19,9 +20,29 @@ std::string sdl_error_append(std::string msg) {
 	return msg;
 }
 
+std::string alut_error_append(ALenum num, std::string msg) {
+	const char *error = alutGetErrorString(num);
+	if (*error != '\0') {
+		msg += ": ";
+		msg += error;
+	}
+	return msg;
+}
+
 }
 
 namespace blank {
+
+AlutError::AlutError(ALenum num)
+: std::runtime_error(alutGetErrorString(num)) {
+
+}
+
+AlutError::AlutError(ALenum num, const std::string &msg)
+: std::runtime_error(alut_error_append(num, msg)) {
+
+}
+
 
 SDLError::SDLError()
 : std::runtime_error(SDL_GetError()) {
@@ -64,6 +85,19 @@ InitTTF::InitTTF() {
 
 InitTTF::~InitTTF() {
 	TTF_Quit();
+}
+
+
+InitAL::InitAL() {
+	if (!alutInit(nullptr, nullptr)) {
+		throw AlutError(alutGetError(), "alutInit");
+	}
+}
+
+InitAL::~InitAL() {
+	if (!alutExit()) {
+		throw AlutError(alutGetError(), "alutExit");
+	}
 }
 
 

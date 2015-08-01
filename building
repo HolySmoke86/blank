@@ -1,11 +1,11 @@
 Dependencies
 ============
 
-	GLEW, GLM, SDL2, SDL2_image, SDL2_ttf
+	GLEW, GLM, SDL2, SDL2_image, SDL2_ttf, OpenAL, freealut
 
 	CppUnit for tests
 
-archlinux: pacman -S glew glm sdl2 sdl2_image sdl2_ttf cppunit
+archlinux: pacman -S glew glm sdl2 sdl2_image sdl2_ttf openal freealut cppunit
 
 manual:
 	CppUnit http://sourceforge.net/projects/cppunit/

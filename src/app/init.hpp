@@ -1,12 +1,22 @@
 #ifndef BLANK_APP_INIT_HPP_
 #define BLANK_APP_INIT_HPP_
 
+#include <al.h>
 #include <SDL.h>
 #include <stdexcept>
 #include <string>
 
 
 namespace blank {
+
+class AlutError
+: public std::runtime_error {
+
+public:
+	explicit AlutError(ALenum);
+	AlutError(ALenum, const std::string &);
+
+};
 
 class SDLError
 : public std::runtime_error {
@@ -50,6 +60,18 @@ public:
 
 	InitTTF(const InitTTF &) = delete;
 	InitTTF &operator =(const InitTTF &) = delete;
+
+};
+
+
+class InitAL {
+
+public:
+	InitAL();
+	~InitAL();
+
+	InitAL(const InitAL &) = delete;
+	InitAL &operator =(const InitAL &) = delete;
 
 };
 
@@ -123,6 +145,7 @@ struct Init {
 	InitSDL init_sdl;
 	InitIMG init_img;
 	InitTTF init_ttf;
+	InitAL init_al;
 	InitGL init_gl;
 	Window window;
 	GLContext ctx;

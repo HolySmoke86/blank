@@ -2,6 +2,7 @@
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
 
+#include "../audio/Sound.hpp"
 #include "../graphics/Font.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/Entity.hpp"
@@ -30,12 +31,17 @@ Application::Application(const Config &config)
 : init(config.doublebuf, config.multisampling)
 , viewport()
 , assets(get_asset_path())
+, audio()
 , counter()
 , world(config.world)
-, interface(config.interface, assets, counter, world)
+, interface(config.interface, assets, audio, counter, world)
 , test_controller(MakeTestEntity(world))
 , running(false) {
 	viewport.VSync(config.vsync);
+}
+
+Application::~Application() {
+	audio.StopAll();
 }
 
 Entity &Application::MakeTestEntity(World &world) {
@@ -156,6 +162,14 @@ void Application::Update(int dt) {
 	interface.Update(dt);
 	test_controller.Update(dt);
 	world.Update(dt);
+
+	glm::mat4 trans = world.Player().Transform(Chunk::Pos(0, 0, 0));
+	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
+	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
+	audio.Position(world.Player().Position());
+	audio.Velocity(world.Player().Velocity());
+	audio.Orientation(dir, up);
+
 	counter.ExitUpdate();
 }
 
@@ -174,13 +188,19 @@ void Application::Render() {
 
 
 Assets::Assets(const string &base)
-: fonts(base + "fonts/") {
+: fonts(base + "fonts/")
+, sounds(base + "sounds/") {
 
 }
 
 Font Assets::LoadFont(const string &name, int size) const {
 	string full = fonts + name + ".ttf";
 	return Font(full.c_str(), size);
+}
+
+Sound Assets::LoadSound(const string &name) const {
+	string full = sounds + name + ".wav";
+	return Sound(full.c_str());
 }
 
 

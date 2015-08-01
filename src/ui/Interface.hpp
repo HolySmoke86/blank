@@ -4,6 +4,7 @@
 #include "HUD.hpp"
 #include "../app/FPSController.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../audio/Sound.hpp"
 #include "../graphics/FixedText.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/MessageBox.hpp"
@@ -18,6 +19,7 @@
 namespace blank {
 
 class Assets;
+class Audio;
 class Chunk;
 class FrameCounter;
 class Viewport;
@@ -33,10 +35,11 @@ public:
 
 		bool keyboard_disabled = false;
 		bool mouse_disabled = false;
+		bool audio_disabled = false;
 		bool visual_disabled = false;
 	};
 
-	Interface(const Config &, const Assets &, const FrameCounter &, World &);
+	Interface(const Config &, const Assets &, Audio &, const FrameCounter &, World &);
 
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
@@ -63,6 +66,9 @@ public:
 	void SelectNext();
 	void SelectPrevious();
 
+	void ToggleAudio();
+	void ToggleVisual();
+
 	void ToggleCounter();
 	void UpdateCounter();
 
@@ -79,6 +85,7 @@ private:
 	void CheckAim();
 
 private:
+	Audio &audio;
 	const FrameCounter &counter;
 	World &world;
 	FPSController ctrl;
@@ -104,6 +111,9 @@ private:
 
 	Block remove;
 	Block selection;
+
+	Sound place_sound;
+	Sound remove_sound;
 
 	glm::tvec3<int> fwd, rev;
 

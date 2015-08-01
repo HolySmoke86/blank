@@ -4,6 +4,7 @@
 #include "../app/Assets.hpp"
 #include "../app/FrameCounter.hpp"
 #include "../app/init.hpp"
+#include "../audio/Audio.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../model/shapes.hpp"
@@ -91,9 +92,11 @@ void HUD::Render(Viewport &viewport) noexcept {
 Interface::Interface(
 	const Config &config,
 	const Assets &assets,
+	Audio &audio,
 	const FrameCounter &counter,
 	World &world)
-: counter(counter)
+: audio(audio)
+, counter(counter)
 , world(world)
 , ctrl(world.Player())
 , font(assets.LoadFont("DejaVuSans", 16))
@@ -112,6 +115,8 @@ Interface::Interface(
 , remove_timer(256)
 , remove(0)
 , selection(1)
+, place_sound(assets.LoadSound("thump"))
+, remove_sound(assets.LoadSound("plop"))
 , fwd(0)
 , rev(0) {
 	counter_text.Hide();
@@ -172,8 +177,14 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 			PrintSelectionInfo();
 			break;
 
+		case SDLK_F1:
+			ToggleVisual();
+			break;
 		case SDLK_F3:
 			ToggleCounter();
+			break;
+		case SDLK_F4:
+			ToggleAudio();
 			break;
 	}
 }
@@ -308,6 +319,24 @@ void Interface::Print(const Block &block) {
 	PostMessage(s.str());
 }
 
+void Interface::ToggleAudio() {
+	config.audio_disabled = !config.audio_disabled;
+	if (config.audio_disabled) {
+		PostMessage("audio off");
+	} else {
+		PostMessage("audio on");
+	}
+}
+
+void Interface::ToggleVisual() {
+	config.visual_disabled = !config.visual_disabled;
+	if (config.visual_disabled) {
+		PostMessage("visual off");
+	} else {
+		PostMessage("visual on");
+	}
+}
+
 void Interface::ToggleCounter() {
 	counter_text.Toggle();
 	if (counter_text.Visible()) {
@@ -371,12 +400,26 @@ void Interface::PlaceBlock() {
 	}
 	mod_chunk->SetBlock(next_pos, selection);
 	mod_chunk->Invalidate();
+
+	if (config.audio_disabled) return;
+	const Entity &player = ctrl.Controlled();
+	audio.Play(
+		place_sound,
+		mod_chunk->ToSceneCoords(player.ChunkCoords(), next_pos)
+	);
 }
 
 void Interface::RemoveBlock() noexcept {
 	if (!aim_chunk) return;
 	aim_chunk->SetBlock(aim_block, remove);
 	aim_chunk->Invalidate();
+
+	if (config.audio_disabled) return;
+	const Entity &player = ctrl.Controlled();
+	audio.Play(
+		remove_sound,
+		aim_chunk->ToSceneCoords(player.ChunkCoords(), Chunk::ToCoords(aim_block))
+	);
 }
 
 

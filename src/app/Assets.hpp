@@ -7,6 +7,7 @@
 namespace blank {
 
 class Font;
+class Sound;
 
 class Assets {
 
@@ -14,9 +15,11 @@ public:
 	explicit Assets(const std::string &base);
 
 	Font LoadFont(const std::string &name, int size) const;
+	Sound LoadSound(const std::string &name) const;
 
 private:
 	std::string fonts;
+	std::string sounds;
 
 };
 

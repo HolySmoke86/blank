@@ -5,6 +5,7 @@
 #include "FrameCounter.hpp"
 #include "init.hpp"
 #include "RandomWalk.hpp"
+#include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/World.hpp"
@@ -27,6 +28,7 @@ public:
 	};
 
 	explicit Application(const Config &);
+	~Application();
 
 	Application(const Application &) = delete;
 	Application &operator =(const Application &) = delete;
@@ -57,6 +59,7 @@ private:
 	Init init;
 	Viewport viewport;
 	Assets assets;
+	Audio audio;
 	FrameCounter counter;
 
 	World world;
