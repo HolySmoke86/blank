@@ -69,8 +69,9 @@ public:
 	void ToggleAudio();
 	void ToggleVisual();
 
-	void ToggleCounter();
+	void ToggleDebug();
 	void UpdateCounter();
+	void UpdatePosition();
 
 	void PostMessage(const char *);
 	void PostMessage(const std::string &msg) {
@@ -101,6 +102,7 @@ private:
 	glm::mat4 outline_transform;
 
 	FixedText counter_text;
+	FixedText position_text;
 	MessageBox messages;
 	IntervalTimer msg_timer;
 

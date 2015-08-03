@@ -43,6 +43,10 @@ public:
 
 	const Chunk::Pos ChunkCoords() const noexcept { return chunk; }
 
+	glm::vec3 AbsolutePosition() const noexcept {
+		return glm::vec3(chunk * Chunk::Extent()) + position;
+	}
+
 	const glm::quat &AngularVelocity() const noexcept { return angular_velocity; }
 	void AngularVelocity(const glm::quat &) noexcept;
 

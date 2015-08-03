@@ -124,6 +124,10 @@ Interface::Interface(
 	counter_text.Position(glm::vec3(-25.0f, 25.0f, 0.0f), Gravity::NORTH_EAST);
 	counter_text.Foreground(glm::vec4(1.0f));
 	counter_text.Background(glm::vec4(0.5f));
+	position_text.Hide();
+	position_text.Position(glm::vec3(-25.0f, 25.0f + font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	position_text.Foreground(glm::vec4(1.0f));
+	position_text.Background(glm::vec4(0.5f));
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
@@ -182,7 +186,7 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 			ToggleVisual();
 			break;
 		case SDLK_F3:
-			ToggleCounter();
+			ToggleDebug();
 			break;
 		case SDLK_F4:
 			ToggleAudio();
@@ -338,10 +342,12 @@ void Interface::ToggleVisual() {
 	}
 }
 
-void Interface::ToggleCounter() {
+void Interface::ToggleDebug() {
 	counter_text.Toggle();
+	position_text.Toggle();
 	if (counter_text.Visible()) {
 		UpdateCounter();
+		UpdatePosition();
 	}
 }
 
@@ -352,6 +358,12 @@ void Interface::UpdateCounter() {
 		"peak: " << counter.Peak().running << "ms";
 	std::string text = s.str();
 	counter_text.Set(font, text);
+}
+
+void Interface::UpdatePosition() {
+	std::stringstream s;
+	s << std::setprecision(3) << "pos: " << ctrl.Controlled().AbsolutePosition();
+	position_text.Set(font, s.str());
 }
 
 
@@ -487,6 +499,9 @@ void Interface::Update(int dt) {
 	if (counter_text.Visible() && counter.Changed()) {
 		UpdateCounter();
 	}
+	if (position_text.Visible()) {
+		UpdatePosition();
+	}
 }
 
 namespace {
@@ -521,6 +536,9 @@ void Interface::Render(Viewport &viewport) noexcept {
 
 	if (counter_text.Visible()) {
 		counter_text.Render(viewport);
+	}
+	if (position_text.Visible()) {
+		position_text.Render(viewport);
 	}
 
 	if (msg_timer.Running()) {
