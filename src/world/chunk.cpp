@@ -319,7 +319,7 @@ int Chunk::GetLight(int index) const noexcept {
 	return light[index];
 }
 
-float Chunk::GetVertexLight(const Pos &pos, const BlockModel::Position &vtx, const Model::Normal &norm) const noexcept {
+float Chunk::GetVertexLight(const Pos &pos, const BlockModel::Position &vtx, const EntityModel::Normal &norm) const noexcept {
 	int index = ToIndex(pos);
 	float light = GetLight(index);
 

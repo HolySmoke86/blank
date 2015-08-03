@@ -2,7 +2,7 @@
 #define BLANK_MODEL_SHAPE_HPP_
 
 #include "BlockModel.hpp"
-#include "Model.hpp"
+#include "EntityModel.hpp"
 #include "OutlineModel.hpp"
 
 #include <vector>
@@ -21,26 +21,26 @@ struct Shape {
 	/// the number of vertex indices this shape has
 	size_t VertexIndexCount() const noexcept { return vtx_idx.size(); }
 
-	const Model::Normal &VertexNormal(size_t idx) const noexcept { return vtx_nrm[idx]; }
-	Model::Normal VertexNormal(
+	const EntityModel::Normal &VertexNormal(size_t idx) const noexcept { return vtx_nrm[idx]; }
+	EntityModel::Normal VertexNormal(
 		size_t idx, const glm::mat4 &transform
 	) const noexcept {
-		return Model::Normal(transform * glm::vec4(vtx_nrm[idx], 0.0f));
+		return EntityModel::Normal(transform * glm::vec4(vtx_nrm[idx], 0.0f));
 	}
 
 	/// fill given buffers with this shape's elements with an
 	/// optional transform and offset
 	void Vertices(
-		Model::Positions &vertex,
-		Model::Normals &normal,
-		Model::Indices &index
+		EntityModel::Positions &vertex,
+		EntityModel::Normals &normal,
+		EntityModel::Indices &index
 	) const;
 	void Vertices(
-		Model::Positions &vertex,
-		Model::Normals &normal,
-		Model::Indices &index,
+		EntityModel::Positions &vertex,
+		EntityModel::Normals &normal,
+		EntityModel::Indices &index,
 		const glm::mat4 &transform,
-		Model::Index idx_offset = 0
+		EntityModel::Index idx_offset = 0
 	) const;
 	void Vertices(
 		BlockModel::Positions &vertex,
@@ -85,7 +85,7 @@ struct Shape {
 	) const noexcept = 0;
 
 protected:
-	void SetShape(const Model::Positions &pos, const Model::Normals &nrm, const Model::Indices &idx) {
+	void SetShape(const EntityModel::Positions &pos, const EntityModel::Normals &nrm, const EntityModel::Indices &idx) {
 		vtx_pos = pos;
 		vtx_nrm = nrm;
 		vtx_idx = idx;
@@ -96,9 +96,9 @@ protected:
 	}
 
 private:
-	Model::Positions vtx_pos;
-	Model::Normals vtx_nrm;
-	Model::Indices vtx_idx;
+	EntityModel::Positions vtx_pos;
+	EntityModel::Normals vtx_nrm;
+	EntityModel::Indices vtx_idx;
 
 	OutlineModel::Positions out_pos;
 	OutlineModel::Indices out_idx;

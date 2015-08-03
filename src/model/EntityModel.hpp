@@ -1,5 +1,7 @@
-#ifndef BLANK_MODEL_MODEL_HPP_
-#define BLANK_MODEL_MODEL_HPP_
+#ifndef BLANK_MODEL_ENTITYMODEL_HPP_
+#define BLANK_MODEL_ENTITYMODEL_HPP_
+
+#include "../graphics/VertexArray.hpp"
 
 #include <vector>
 #include <GL/glew.h>
@@ -8,7 +10,7 @@
 
 namespace blank {
 
-class Model {
+class EntityModel {
 
 public:
 	using Position = glm::vec3;
@@ -21,7 +23,14 @@ public:
 	using Normals = std::vector<Normal>;
 	using Indices = std::vector<Index>;
 
-public:
+	enum Attribute {
+		ATTRIB_VERTEX,
+		ATTRIB_COLOR,
+		ATTRIB_NORMAL,
+		ATTRIB_INDEX,
+		ATTRIB_COUNT,
+	};
+
 	struct Buffer {
 
 		Positions vertices;
@@ -45,32 +54,15 @@ public:
 
 	};
 
+	using VAO = VertexArray<ATTRIB_COUNT>;
+
 public:
-	Model() noexcept;
-	~Model() noexcept;
-
-	Model(const Model &) = delete;
-	Model &operator =(const Model &) = delete;
-
-	Model(Model &&) noexcept;
-	Model &operator =(Model &&) noexcept;
-
 	void Update(const Buffer &) noexcept;
 
 	void Draw() const noexcept;
 
 private:
-	enum Attribute {
-		ATTRIB_VERTEX,
-		ATTRIB_COLOR,
-		ATTRIB_NORMAL,
-		ATTRIB_INDEX,
-		ATTRIB_COUNT,
-	};
-
-	GLuint va;
-	GLuint handle[ATTRIB_COUNT];
-	size_t count;
+	VAO vao;
 
 };
 

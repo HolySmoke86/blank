@@ -4,7 +4,7 @@
 #include "Block.hpp"
 #include "Chunk.hpp"
 #include "../model/geometry.hpp"
-#include "../model/Model.hpp"
+#include "../model/EntityModel.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
@@ -59,7 +59,7 @@ public:
 
 private:
 	const Shape *shape;
-	Model model;
+	EntityModel model;
 
 	std::string name;
 

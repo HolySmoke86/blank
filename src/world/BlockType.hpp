@@ -3,7 +3,7 @@
 
 #include "Block.hpp"
 #include "../model/BlockModel.hpp"
-#include "../model/Model.hpp"
+#include "../model/EntityModel.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../model/shapes.hpp"
 
@@ -63,10 +63,10 @@ struct BlockType {
 		return fill[block.OrientedFace(face)];
 	}
 
-	void FillModel(
-		Model::Buffer &m,
+	void FillEntityModel(
+		EntityModel::Buffer &m,
 		const glm::mat4 &transform = glm::mat4(1.0f),
-		Model::Index idx_offset = 0
+		EntityModel::Index idx_offset = 0
 	) const noexcept;
 	void FillBlockModel(
 		BlockModel::Buffer &m,
@@ -74,7 +74,7 @@ struct BlockType {
 		BlockModel::Index idx_offset = 0
 	) const noexcept;
 	void FillOutlineModel(
-		OutlineModel &m,
+		OutlineModel::Buffer &m,
 		const glm::vec3 &pos_offset = { 0, 0, 0 },
 		OutlineModel::Index idx_offset = 0
 	) const noexcept;

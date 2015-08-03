@@ -7,7 +7,7 @@
 
 namespace {
 
-blank::Model::Buffer model_buffer;
+blank::EntityModel::Buffer model_buffer;
 
 }
 

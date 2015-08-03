@@ -234,8 +234,15 @@ void Text::Set(const Font &font, const char *text) {
 	dirty = true;
 }
 
+namespace {
+
+SpriteModel::Buffer sprite_buf;
+
+}
+
 void Text::Update() {
-	sprite.LoadRect(size.x, size.y, align(pivot, size));
+	sprite_buf.LoadRect(size.x, size.y, align(pivot, size));
+	sprite.Update(sprite_buf);
 	dirty = false;
 }
 

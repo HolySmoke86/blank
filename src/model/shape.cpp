@@ -5,9 +5,9 @@
 namespace blank {
 
 void Shape::Vertices(
-	Model::Positions &vertex,
-	Model::Normals &normal,
-	Model::Indices &index
+	EntityModel::Positions &vertex,
+	EntityModel::Normals &normal,
+	EntityModel::Indices &index
 ) const {
 	for (const auto &pos : vtx_pos) {
 		vertex.emplace_back(pos);
@@ -21,11 +21,11 @@ void Shape::Vertices(
 }
 
 void Shape::Vertices(
-	Model::Positions &vertex,
-	Model::Normals &normal,
-	Model::Indices &index,
+	EntityModel::Positions &vertex,
+	EntityModel::Normals &normal,
+	EntityModel::Indices &index,
 	const glm::mat4 &transform,
-	Model::Index idx_offset
+	EntityModel::Index idx_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
 		vertex.emplace_back(transform * glm::vec4(pos, 1.0f));

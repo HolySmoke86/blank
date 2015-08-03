@@ -1,6 +1,8 @@
 #ifndef BLANK_MODEL_BLOCKMODEL_HPP_
 #define BLANK_MODEL_BLOCKMODEL_HPP_
 
+#include "../graphics/VertexArray.hpp"
+
 #include <vector>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -21,7 +23,14 @@ public:
 	using Lights = std::vector<Light>;
 	using Indices = std::vector<Index>;
 
-public:
+	enum Attribute {
+		ATTRIB_VERTEX,
+		ATTRIB_COLOR,
+		ATTRIB_LIGHT,
+		ATTRIB_INDEX,
+		ATTRIB_COUNT,
+	};
+
 	struct Buffer {
 
 		Positions vertices;
@@ -45,32 +54,15 @@ public:
 
 	};
 
+	using VAO = VertexArray<ATTRIB_COUNT>;
+
 public:
-	BlockModel() noexcept;
-	~BlockModel() noexcept;
-
-	BlockModel(const BlockModel &) = delete;
-	BlockModel &operator =(const BlockModel &) = delete;
-
-	BlockModel(BlockModel &&) noexcept;
-	BlockModel &operator =(BlockModel &&) noexcept;
-
 	void Update(const Buffer &) noexcept;
 
 	void Draw() const noexcept;
 
 private:
-	enum Attribute {
-		ATTRIB_VERTEX,
-		ATTRIB_COLOR,
-		ATTRIB_LIGHT,
-		ATTRIB_INDEX,
-		ATTRIB_COUNT,
-	};
-
-	GLuint va;
-	GLuint handle[ATTRIB_COUNT];
-	size_t count;
+	VAO vao;
 
 };
 

@@ -34,15 +34,16 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 	block_transform = glm::rotate(block_transform, 3.5f, glm::vec3(1.0f, 0.0f, 0.0f));
 	block_transform = glm::rotate(block_transform, 0.35f, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	crosshair.vertices = std::vector<glm::vec3>({
+	OutlineModel::Buffer buf;
+	buf.vertices = std::vector<glm::vec3>({
 		{ -10.0f,   0.0f, 0.0f }, { 10.0f,  0.0f, 0.0f },
 		{   0.0f, -10.0f, 0.0f }, {  0.0f, 10.0f, 0.0f },
 	});
-	crosshair.indices = std::vector<OutlineModel::Index>({
+	buf.indices = std::vector<OutlineModel::Index>({
 		0, 1, 2, 3
 	});
-	crosshair.colors.resize(4, { 10.0f, 10.0f, 10.0f });
-	crosshair.Invalidate();
+	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f });
+	crosshair.Update(buf);
 
 	block_label.Position(
 		glm::vec3(50.0f, 85.0f, 0.0f),
@@ -58,7 +59,7 @@ void HUD::Display(const Block &b) {
 	const BlockType &type = types.Get(b.type);
 
 	block_buf.Clear();
-	type.FillModel(block_buf, b.Transform());
+	type.FillEntityModel(block_buf, b.Transform());
 	block.Update(block_buf);
 
 	block_label.Set(font, type.label);
@@ -488,11 +489,18 @@ void Interface::Update(int dt) {
 	}
 }
 
+namespace {
+
+OutlineModel::Buffer outl_buf;
+
+}
+
 void Interface::CheckAim() {
 	float dist;
 	if (world.Intersection(aim, glm::mat4(1.0f), aim_chunk, aim_block, dist, aim_normal)) {
-		outline.Clear();
-		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outline);
+		outl_buf.Clear();
+		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outl_buf);
+		outline.Update(outl_buf);
 		outline_transform = glm::scale(glm::vec3(1.0002f));
 		outline_transform *= aim_chunk->Transform(world.Player().ChunkCoords());
 		outline_transform *= aim_chunk->ToTransform(Chunk::ToPos(aim_block), aim_block);

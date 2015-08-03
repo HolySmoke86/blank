@@ -2,7 +2,7 @@
 #define BLANK_UI_HUD_H_
 
 #include "../graphics/FixedText.hpp"
-#include "../model/Model.hpp"
+#include "../model/EntityModel.hpp"
 #include "../model/OutlineModel.hpp"
 
 #include <glm/glm.hpp>
@@ -31,8 +31,8 @@ private:
 	const BlockTypeRegistry &types;
 	const Font &font;
 
-	Model block;
-	Model::Buffer block_buf;
+	EntityModel block;
+	EntityModel::Buffer block_buf;
 	glm::mat4 block_transform;
 
 	FixedText block_label;

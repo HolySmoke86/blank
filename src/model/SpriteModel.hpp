@@ -1,6 +1,8 @@
 #ifndef BLANK_MODEL_SPRITEMODEL_HPP_
 #define BLANK_MODEL_SPRITEMODEL_HPP_
 
+#include "../graphics/VertexArray.hpp"
+
 #include <vector>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
@@ -19,36 +21,6 @@ public:
 	using TexCoords = std::vector<TexCoord>;
 	using Indices = std::vector<Index>;
 
-public:
-	Positions vertices;
-	TexCoords coords;
-	Indices indices;
-
-public:
-	SpriteModel() noexcept;
-	~SpriteModel() noexcept;
-
-	SpriteModel(const SpriteModel &) = delete;
-	SpriteModel &operator =(const SpriteModel &) = delete;
-
-	void Invalidate() noexcept { dirty = true; }
-
-	void Clear() noexcept;
-	void Reserve(int vtx_count, int idx_count);
-
-	void LoadRect(
-		float w, float h,
-		const glm::vec2 &pivot = glm::vec2(0.0f),
-		const glm::vec2 &tex_begin = glm::vec2(0.0f),
-		const glm::vec2 &tex_end = glm::vec2(1.0f, 1.0f)
-	);
-
-	void Draw() noexcept;
-
-private:
-	void Update() noexcept;
-
-private:
 	enum Attribute {
 		ATTRIB_VERTEX,
 		ATTRIB_TEXCOORD,
@@ -56,9 +28,42 @@ private:
 		ATTRIB_COUNT,
 	};
 
-	GLuint va;
-	GLuint handle[ATTRIB_COUNT];
-	bool dirty;
+	struct Buffer {
+
+		Positions vertices;
+		TexCoords coords;
+		Indices indices;
+
+		void Clear() noexcept {
+			vertices.clear();
+			coords.clear();
+			indices.clear();
+		}
+
+		void Reserve(size_t p, size_t i) {
+			vertices.reserve(p);
+			coords.reserve(p);
+			indices.reserve(i);
+		}
+
+		void LoadRect(
+			float w, float h,
+			const glm::vec2 &pivot = glm::vec2(0.0f),
+			const glm::vec2 &tex_begin = glm::vec2(0.0f),
+			const glm::vec2 &tex_end = glm::vec2(1.0f, 1.0f)
+		);
+
+	};
+
+	using VAO = VertexArray<ATTRIB_COUNT>;
+
+public:
+	void Update(const Buffer &) noexcept;
+
+	void Draw() noexcept;
+
+private:
+	VAO vao;
 
 };
 

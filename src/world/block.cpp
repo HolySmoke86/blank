@@ -88,10 +88,10 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
 
 }
 
-void BlockType::FillModel(
-	Model::Buffer &buf,
+void BlockType::FillEntityModel(
+	EntityModel::Buffer &buf,
 	const glm::mat4 &transform,
-	Model::Index idx_offset
+	EntityModel::Index idx_offset
 ) const noexcept {
 	shape->Vertices(buf.vertices, buf.normals, buf.indices, transform, idx_offset);
 	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
@@ -107,12 +107,12 @@ void BlockType::FillBlockModel(
 }
 
 void BlockType::FillOutlineModel(
-	OutlineModel &model,
+	OutlineModel::Buffer &buf,
 	const glm::vec3 &pos_offset,
 	OutlineModel::Index idx_offset
 ) const noexcept {
-	shape->Outline(model.vertices, model.indices, pos_offset, idx_offset);
-	model.colors.insert(model.colors.end(), shape->OutlineCount(), outline_color);
+	shape->Outline(buf.vertices, buf.indices, pos_offset, idx_offset);
+	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
 }
 
 
