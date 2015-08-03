@@ -111,9 +111,6 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 					}
 				}
 			}
-		} else if (isdigit(arg[0])) {
-			// positional number interpreted as -n
-			n = strtoul(arg, nullptr, 10);
 		} else {
 			cerr << "unable to interpret argument "
 				<< i << " (" << arg << ")" << endl;

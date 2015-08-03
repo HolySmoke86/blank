@@ -4,14 +4,14 @@ Arguments
 Runtime
 -------
 
-[-n] <n>
+-n <n>
 	terminate after <n> frames
 
 -t <t>
 	terminate after <t> milliseconds
 
-[-n] <n> -t <t>
-	terminate after n frames, assume <t> milliseconds pass each frame
+if both n and t are given, terminate after n frames and
+assume <t> milliseconds pass each frame
 
 Application
 -----------
