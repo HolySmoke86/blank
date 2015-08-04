@@ -36,24 +36,13 @@ Application::Application(Window &win, const Config &config)
 , counter()
 , world(config.world)
 , interface(config.interface, assets, audio, counter, world)
-, test_controller(MakeTestEntity(world))
+, spawner(world)
 , running(false) {
 	viewport.VSync(config.vsync);
 }
 
 Application::~Application() {
 	audio.StopAll();
-}
-
-Entity &Application::MakeTestEntity(World &world) {
-	Entity &e = world.AddEntity();
-	e.Name("test");
-	e.Position({ 0.0f, 0.0f, 0.0f });
-	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
-	e.WorldCollidable(true);
-	e.SetShape(world.BlockTypes()[1].shape, { 1.0f, 1.0f, 0.0f });
-	e.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
-	return e;
 }
 
 
@@ -161,7 +150,7 @@ void Application::Handle(const SDL_WindowEvent &event) {
 void Application::Update(int dt) {
 	counter.EnterUpdate();
 	interface.Update(dt);
-	test_controller.Update(dt);
+	spawner.Update(dt);
 	world.Update(dt);
 
 	glm::mat4 trans = world.Player().Transform(Chunk::Pos(0, 0, 0));

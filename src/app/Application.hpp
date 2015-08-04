@@ -3,7 +3,7 @@
 
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
-#include "../ai/RandomWalk.hpp"
+#include "../ai/Spawner.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../ui/Interface.hpp"
@@ -54,8 +54,6 @@ public:
 	/// push the current state to display
 	void Render();
 
-	static Entity &MakeTestEntity(World &);
-
 private:
 	Window &window;
 	Viewport viewport;
@@ -66,7 +64,7 @@ private:
 	World world;
 	Interface interface;
 
-	RandomWalk test_controller;
+	Spawner spawner;
 
 	bool running;
 
