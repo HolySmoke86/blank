@@ -1,5 +1,7 @@
 #include "Runtime.hpp"
 
+#include "init.hpp"
+
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
@@ -141,7 +143,8 @@ int Runtime::Execute() {
 		return 1;
 	}
 
-	Application app(config);
+	Init init(config.doublebuf, config.multisampling);
+	Application app(init.window, config);
 	switch (mode) {
 		default:
 		case NORMAL:

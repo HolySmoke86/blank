@@ -3,7 +3,6 @@
 
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
-#include "init.hpp"
 #include "RandomWalk.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
@@ -14,6 +13,8 @@
 
 
 namespace blank {
+
+class Window;
 
 class Application {
 
@@ -27,7 +28,7 @@ public:
 		World::Config world = World::Config();
 	};
 
-	explicit Application(const Config &);
+	Application(Window &, const Config &);
 	~Application();
 
 	Application(const Application &) = delete;
@@ -56,7 +57,7 @@ public:
 	static Entity &MakeTestEntity(World &);
 
 private:
-	Init init;
+	Window &window;
 	Viewport viewport;
 	Assets assets;
 	Audio audio;

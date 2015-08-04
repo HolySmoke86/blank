@@ -2,6 +2,7 @@
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
 
+#include "init.hpp"
 #include "../audio/Sound.hpp"
 #include "../graphics/Font.hpp"
 #include "../world/BlockType.hpp"
@@ -27,8 +28,8 @@ string get_asset_path() {
 
 namespace blank {
 
-Application::Application(const Config &config)
-: init(config.doublebuf, config.multisampling)
+Application::Application(Window &win, const Config &config)
+: window(win)
 , viewport()
 , assets(get_asset_path())
 , audio()
@@ -87,7 +88,7 @@ void Application::RunS(size_t n, size_t t) {
 void Application::Run() {
 	running = true;
 	Uint32 last = SDL_GetTicks();
-	init.window.GrabMouse();
+	window.GrabMouse();
 	while (running) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
@@ -144,10 +145,10 @@ void Application::HandleEvents() {
 void Application::Handle(const SDL_WindowEvent &event) {
 	switch (event.event) {
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			init.window.GrabMouse();
+			window.GrabMouse();
 			break;
 		case SDL_WINDOWEVENT_FOCUS_LOST:
-			init.window.ReleaseMouse();
+			window.ReleaseMouse();
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
 			viewport.Resize(event.data1, event.data2);
@@ -183,7 +184,7 @@ void Application::Render() {
 	interface.Render(viewport);
 
 	counter.ExitRender();
-	init.window.Flip();
+	window.Flip();
 }
 
 
