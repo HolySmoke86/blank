@@ -57,6 +57,9 @@ public:
 	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const noexcept;
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
+	void Remove() noexcept { remove = true; }
+	bool CanRemove() const noexcept { return remove; }
+
 	void Update(int dt) noexcept;
 
 	void Draw() noexcept;
@@ -77,6 +80,7 @@ private:
 	glm::mat4 rotation;
 
 	bool world_collision;
+	bool remove;
 
 };
 

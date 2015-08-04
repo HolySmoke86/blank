@@ -257,6 +257,13 @@ void World::Update(int dt) {
 			Resolve(entity, col);
 		}
 	}
+	for (auto iter = entities.begin(), end = entities.end(); iter != end;) {
+		if (iter->CanRemove()) {
+			iter = entities.erase(iter);
+		} else {
+			++iter;
+		}
+	}
 	chunks.Rebase(player->ChunkCoords());
 	chunks.Update(dt);
 }

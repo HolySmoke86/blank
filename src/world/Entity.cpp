@@ -23,7 +23,8 @@ Entity::Entity() noexcept
 , chunk(0, 0, 0)
 , angular_velocity(1.0f, 0.0f, 0.0f, 0.0f)
 , rotation(1.0f)
-, world_collision(false) {
+, world_collision(false)
+, remove(false) {
 
 }
 
