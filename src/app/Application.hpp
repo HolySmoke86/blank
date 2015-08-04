@@ -3,7 +3,7 @@
 
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
-#include "RandomWalk.hpp"
+#include "../ai/RandomWalk.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../ui/Interface.hpp"
