@@ -46,6 +46,11 @@ void Entity::Velocity(const glm::vec3 &vel) noexcept {
 	velocity = vel;
 }
 
+void Entity::Position(const Chunk::Pos &c, const Block::Pos &pos) noexcept {
+	chunk = c;
+	position = pos;
+}
+
 void Entity::Position(const Block::Pos &pos) noexcept {
 	position = pos;
 	while (position.x >= Chunk::width) {

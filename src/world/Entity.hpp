@@ -38,6 +38,7 @@ public:
 	void Velocity(const glm::vec3 &) noexcept;
 
 	const Block::Pos &Position() const noexcept { return position; }
+	void Position(const Chunk::Pos &, const Block::Pos &) noexcept;
 	void Position(const Block::Pos &) noexcept;
 	void Move(const glm::vec3 &delta) noexcept;
 
@@ -45,6 +46,9 @@ public:
 
 	glm::vec3 AbsolutePosition() const noexcept {
 		return glm::vec3(chunk * Chunk::Extent()) + position;
+	}
+	glm::vec3 AbsoluteDifference(const Entity &other) const noexcept {
+		return glm::vec3((chunk - other.chunk) * Chunk::Extent()) + position - other.position;
 	}
 
 	const glm::quat &AngularVelocity() const noexcept { return angular_velocity; }

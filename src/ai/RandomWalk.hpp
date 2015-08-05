@@ -14,6 +14,9 @@ class RandomWalk {
 public:
 	explicit RandomWalk(Entity &) noexcept;
 
+	Entity &Controlled() noexcept { return entity; }
+	const Entity &Controlled() const noexcept { return entity; }
+
 	void Update(int dt) noexcept;
 
 private:
