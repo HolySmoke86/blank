@@ -2,6 +2,7 @@
 #include "Interface.hpp"
 
 #include "../app/Assets.hpp"
+#include "../app/Environment.hpp"
 #include "../app/FrameCounter.hpp"
 #include "../app/init.hpp"
 #include "../audio/Audio.hpp"
@@ -92,15 +93,12 @@ void HUD::Render(Viewport &viewport) noexcept {
 
 Interface::Interface(
 	const Config &config,
-	const Assets &assets,
-	Audio &audio,
-	const FrameCounter &counter,
+	Environment &env,
 	World &world)
-: audio(audio)
-, counter(counter)
+: env(env)
 , world(world)
 , ctrl(world.Player())
-, font(assets.LoadFont("DejaVuSans", 16))
+, font(env.assets.LoadFont("DejaVuSans", 16))
 , hud(world.BlockTypes(), font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_chunk(nullptr)
@@ -116,8 +114,8 @@ Interface::Interface(
 , remove_timer(256)
 , remove(0)
 , selection(1)
-, place_sound(assets.LoadSound("thump"))
-, remove_sound(assets.LoadSound("plop"))
+, place_sound(env.assets.LoadSound("thump"))
+, remove_sound(env.assets.LoadSound("plop"))
 , fwd(0)
 , rev(0) {
 	counter_text.Hide();
@@ -354,8 +352,8 @@ void Interface::ToggleDebug() {
 void Interface::UpdateCounter() {
 	std::stringstream s;
 	s << std::setprecision(3) <<
-		"avg: " << counter.Average().running << "ms, "
-		"peak: " << counter.Peak().running << "ms";
+		"avg: " << env.counter.Average().running << "ms, "
+		"peak: " << env.counter.Peak().running << "ms";
 	std::string text = s.str();
 	counter_text.Set(font, text);
 }
@@ -416,7 +414,7 @@ void Interface::PlaceBlock() {
 
 	if (config.audio_disabled) return;
 	const Entity &player = ctrl.Controlled();
-	audio.Play(
+	env.audio.Play(
 		place_sound,
 		mod_chunk->ToSceneCoords(player.ChunkCoords(), next_pos)
 	);
@@ -429,7 +427,7 @@ void Interface::RemoveBlock() noexcept {
 
 	if (config.audio_disabled) return;
 	const Entity &player = ctrl.Controlled();
-	audio.Play(
+	env.audio.Play(
 		remove_sound,
 		aim_chunk->ToSceneCoords(player.ChunkCoords(), Chunk::ToCoords(aim_block))
 	);
@@ -496,7 +494,7 @@ void Interface::Update(int dt) {
 		CheckAim();
 	}
 
-	if (counter_text.Visible() && counter.Changed()) {
+	if (counter_text.Visible() && env.counter.Changed()) {
 		UpdateCounter();
 	}
 	if (position_text.Visible()) {

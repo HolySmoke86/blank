@@ -1,34 +1,20 @@
 #ifndef BLANK_APP_APPLICATION_HPP_
 #define BLANK_APP_APPLICATION_HPP_
 
-#include "Assets.hpp"
-#include "FrameCounter.hpp"
-#include "../ai/Spawner.hpp"
-#include "../audio/Audio.hpp"
-#include "../graphics/Viewport.hpp"
-#include "../ui/Interface.hpp"
-#include "../world/World.hpp"
-
 #include <SDL.h>
+#include <stack>
 
 
 namespace blank {
 
+class Environment;
+class State;
 class Window;
 
 class Application {
 
 public:
-	struct Config {
-		bool vsync = true;
-		bool doublebuf = true;
-		int multisampling = 1;
-
-		Interface::Config interface = Interface::Config();
-		World::Config world = World::Config();
-	};
-
-	Application(Window &, const Config &);
+	explicit Application(Environment &);
 	~Application();
 
 	Application(const Application &) = delete;
@@ -48,25 +34,22 @@ public:
 
 	/// process all events in SDL's queue
 	void HandleEvents();
+	void Handle(const SDL_Event &);
 	void Handle(const SDL_WindowEvent &);
 	/// integrate to the next step with dt milliseconds passed
 	void Update(int dt);
 	/// push the current state to display
 	void Render();
 
+	void PushState(State *);
+	State *PopState();
+	State *SwitchState(State *);
+	State &GetState();
+	bool HasState() const noexcept;
+
 private:
-	Window &window;
-	Viewport viewport;
-	Assets assets;
-	Audio audio;
-	FrameCounter counter;
-
-	World world;
-	Interface interface;
-
-	Spawner spawner;
-
-	bool running;
+	Environment &env;
+	std::stack<State *> states;
 
 };
 

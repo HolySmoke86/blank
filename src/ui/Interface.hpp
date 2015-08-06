@@ -18,10 +18,8 @@
 
 namespace blank {
 
-class Assets;
-class Audio;
 class Chunk;
-class FrameCounter;
+class Environment;
 class Viewport;
 class World;
 
@@ -39,7 +37,7 @@ public:
 		bool visual_disabled = false;
 	};
 
-	Interface(const Config &, const Assets &, Audio &, const FrameCounter &, World &);
+	Interface(const Config &, Environment &, World &);
 
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
@@ -86,8 +84,7 @@ private:
 	void CheckAim();
 
 private:
-	Audio &audio;
-	const FrameCounter &counter;
+	Environment &env;
 	World &world;
 	FPSController ctrl;
 	Font font;

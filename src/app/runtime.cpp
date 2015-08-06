@@ -1,15 +1,41 @@
+#include "Application.hpp"
+#include "Environment.hpp"
 #include "Runtime.hpp"
+#include "WorldState.hpp"
 
 #include "init.hpp"
 
 #include <cctype>
 #include <cstdlib>
 #include <iostream>
+#include <SDL.h>
 
 using namespace std;
 
 
+namespace {
+
+string get_asset_path() {
+	char *base = SDL_GetBasePath();
+	string assets(base);
+	assets += "assets/";
+	SDL_free(base);
+	return assets;
+}
+
+}
+
 namespace blank {
+
+Environment::Environment(Window &win)
+: audio()
+, viewport()
+, window(win)
+, assets(get_asset_path())
+, counter() {
+
+}
+
 
 Runtime::Runtime() noexcept
 : name("blank")
@@ -144,7 +170,15 @@ int Runtime::Execute() {
 	}
 
 	Init init(config.doublebuf, config.multisampling);
-	Application app(init.window, config);
+
+	Environment env(init.window);
+	env.viewport.VSync(config.vsync);
+
+	Application app(env);
+
+	WorldState state(env, config.interface, config.world);
+	app.PushState(&state);
+
 	switch (mode) {
 		default:
 		case NORMAL:
@@ -160,6 +194,7 @@ int Runtime::Execute() {
 			app.RunS(n, t);
 			break;
 	}
+
 	return 0;
 }
 

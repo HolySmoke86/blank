@@ -1,6 +1,9 @@
 #include "Application.hpp"
 #include "Assets.hpp"
+#include "Environment.hpp"
 #include "FrameCounter.hpp"
+#include "State.hpp"
+#include "StateControl.hpp"
 
 #include "init.hpp"
 #include "../audio/Sound.hpp"
@@ -14,41 +17,22 @@
 using std::string;
 
 
-namespace {
-
-string get_asset_path() {
-	char *base = SDL_GetBasePath();
-	string assets(base);
-	assets += "assets/";
-	SDL_free(base);
-	return assets;
-}
-
-}
-
 namespace blank {
 
-Application::Application(Window &win, const Config &config)
-: window(win)
-, viewport()
-, assets(get_asset_path())
-, audio()
-, counter()
-, world(config.world)
-, interface(config.interface, assets, audio, counter, world)
-, spawner(world)
-, running(false) {
-	viewport.VSync(config.vsync);
+Application::Application(Environment &e)
+: env(e)
+, states() {
+
 }
 
 Application::~Application() {
-	audio.StopAll();
+	env.audio.StopAll();
 }
 
 
 void Application::RunN(size_t n) {
 	Uint32 last = SDL_GetTicks();
-	for (size_t i = 0; i < n; ++i) {
+	for (size_t i = 0; HasState() && i < n; ++i) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
 		Loop(delta);
@@ -59,7 +43,7 @@ void Application::RunN(size_t n) {
 void Application::RunT(size_t t) {
 	Uint32 last = SDL_GetTicks();
 	Uint32 finish = last + t;
-	while (last < finish) {
+	while (HasState() && last < finish) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
 		Loop(delta);
@@ -68,17 +52,16 @@ void Application::RunT(size_t t) {
 }
 
 void Application::RunS(size_t n, size_t t) {
-	for (size_t i = 0; i < n; ++i) {
+	for (size_t i = 0; HasState() && i < n; ++i) {
 		Loop(t);
 	}
 }
 
 
 void Application::Run() {
-	running = true;
 	Uint32 last = SDL_GetTicks();
-	window.GrabMouse();
-	while (running) {
+	env.window.GrabMouse();
+	while (HasState()) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
 		Loop(delta);
@@ -87,60 +70,51 @@ void Application::Run() {
 }
 
 void Application::Loop(int dt) {
-	counter.EnterFrame();
+	env.counter.EnterFrame();
 	HandleEvents();
+	if (!HasState()) return;
 	Update(dt);
+	env.state.Commit(*this);
+	if (!HasState()) return;
 	Render();
-	counter.ExitFrame();
+	env.counter.ExitFrame();
 }
 
 
 void Application::HandleEvents() {
-	counter.EnterHandle();
+	env.counter.EnterHandle();
 	SDL_Event event;
-	while (SDL_PollEvent(&event)) {
-		switch (event.type) {
-			case SDL_KEYDOWN:
-				interface.HandlePress(event.key);
-				break;
-			case SDL_KEYUP:
-				interface.HandleRelease(event.key);
-				break;
-			case SDL_MOUSEBUTTONDOWN:
-				interface.HandlePress(event.button);
-				break;
-			case SDL_MOUSEBUTTONUP:
-				interface.HandleRelease(event.button);
-				break;
-			case SDL_MOUSEMOTION:
-				interface.Handle(event.motion);
-				break;
-			case SDL_MOUSEWHEEL:
-				interface.Handle(event.wheel);
-				break;
-			case SDL_QUIT:
-				running = false;
-				break;
-			case SDL_WINDOWEVENT:
-				Handle(event.window);
-				break;
-			default:
-				break;
-		}
+	while (HasState() && SDL_PollEvent(&event)) {
+		Handle(event);
+		env.state.Commit(*this);
 	}
-	counter.ExitHandle();
+	env.counter.ExitHandle();
+}
+
+void Application::Handle(const SDL_Event &event) {
+	switch (event.type) {
+		case SDL_QUIT:
+			env.state.PopAll();
+			break;
+		case SDL_WINDOWEVENT:
+			Handle(event.window);
+			break;
+		default:
+			GetState().Handle(event);
+			break;
+	}
 }
 
 void Application::Handle(const SDL_WindowEvent &event) {
 	switch (event.event) {
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			window.GrabMouse();
+			env.window.GrabMouse();
 			break;
 		case SDL_WINDOWEVENT_FOCUS_LOST:
-			window.ReleaseMouse();
+			env.window.ReleaseMouse();
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
-			viewport.Resize(event.data1, event.data2);
+			env.viewport.Resize(event.data1, event.data2);
 			break;
 		default:
 			break;
@@ -148,32 +122,74 @@ void Application::Handle(const SDL_WindowEvent &event) {
 }
 
 void Application::Update(int dt) {
-	counter.EnterUpdate();
-	interface.Update(dt);
-	spawner.Update(dt);
-	world.Update(dt);
-
-	glm::mat4 trans = world.Player().Transform(Chunk::Pos(0, 0, 0));
-	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
-	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	audio.Position(world.Player().Position());
-	audio.Velocity(world.Player().Velocity());
-	audio.Orientation(dir, up);
-
-	counter.ExitUpdate();
+	env.counter.EnterUpdate();
+	if (HasState()) {
+		GetState().Update(dt);
+	}
+	env.counter.ExitUpdate();
 }
 
 void Application::Render() {
 	// gl implementation may (and will probably) delay vsync blocking until
 	// the first write after flipping, which is this clear call
-	viewport.Clear();
-	counter.EnterRender();
+	env.viewport.Clear();
+	env.counter.EnterRender();
 
-	world.Render(viewport);
-	interface.Render(viewport);
+	if (HasState()) {
+		GetState().Render(env.viewport);
+	}
 
-	counter.ExitRender();
-	window.Flip();
+	env.counter.ExitRender();
+	env.window.Flip();
+}
+
+
+void Application::PushState(State *s) {
+	states.emplace(s);
+}
+
+State *Application::PopState() {
+	State *s = states.top();
+	states.pop();
+	return s;
+}
+
+State *Application::SwitchState(State *s_new) {
+	State *s_old = states.top();
+	states.top() = s_new;
+	return s_old;
+}
+
+State &Application::GetState() {
+	return *states.top();
+}
+
+bool Application::HasState() const noexcept {
+	return !states.empty();
+}
+
+
+void StateControl::Commit(Application &app) {
+	while (!cue.empty()) {
+		Memo m(cue.front());
+		cue.pop();
+		switch (m.cmd) {
+			case PUSH:
+				app.PushState(m.state);
+				break;
+			case SWITCH:
+				app.SwitchState(m.state);
+				break;
+			case POP:
+				app.PopState();
+				break;
+			case POP_ALL:
+				while (app.HasState()) {
+					app.PopState();
+				}
+				break;
+		}
+	}
 }
 
 

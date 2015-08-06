@@ -1,7 +1,8 @@
 #ifndef BLANK_RUNTIME_HPP_
 #define BLANK_RUNTIME_HPP_
 
-#include "Application.hpp"
+#include "../ui/Interface.hpp"
+#include "../world/World.hpp"
 
 #include <cstddef>
 
@@ -25,6 +26,15 @@ public:
 		ERROR,
 	};
 
+	struct Config {
+		bool vsync = true;
+		bool doublebuf = true;
+		int multisampling = 1;
+
+		Interface::Config interface = Interface::Config();
+		World::Config world = World::Config();
+	};
+
 	Runtime() noexcept;
 
 	void ReadArgs(int argc, const char *const *argv);
@@ -36,7 +46,7 @@ private:
 	Mode mode;
 	std::size_t n;
 	std::size_t t;
-	Application::Config config;
+	Config config;
 
 };
 
