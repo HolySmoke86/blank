@@ -1,5 +1,6 @@
 #include "Spawner.hpp"
 
+#include "Chaser.hpp"
 #include "RandomWalk.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/BlockTypeRegistry.hpp"
@@ -22,7 +23,9 @@ Spawner::Spawner(World &world)
 }
 
 Spawner::~Spawner() {
-
+	for (auto &ctrl : controllers) {
+		delete ctrl;
+	}
 }
 
 
@@ -33,7 +36,7 @@ void Spawner::Update(int dt) {
 		TrySpawn();
 	}
 	for (auto &ctrl : controllers) {
-		ctrl.Update(dt);
+		ctrl->Update(dt);
 	}
 }
 
@@ -41,10 +44,11 @@ void Spawner::Update(int dt) {
 void Spawner::CheckDespawn() noexcept {
 	const Entity &reference = world.Player();
 	for (auto iter = controllers.begin(), end = controllers.end(); iter != end;) {
-		Entity &e = iter->Controlled();
+		Entity &e = (*iter)->Controlled();
 		glm::vec3 diff(reference.AbsoluteDifference(e));
 		if (dot(diff, diff) > despawn_range) {
 			e.Remove();
+			delete *iter;
 			iter = controllers.erase(iter);
 		} else {
 			++iter;
@@ -103,7 +107,13 @@ void Spawner::Spawn(const glm::tvec3<int> &chunk, const glm::vec3 &pos) {
 	e.WorldCollidable(true);
 	e.SetShape(world.BlockTypes()[1].shape, color);
 	e.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
-	controllers.emplace_back(e);
+	Controller *ctrl;
+	if (rand() % 2) {
+		ctrl = new RandomWalk(e);
+	} else {
+		ctrl = new Chaser(e, world.Player());
+	}
+	controllers.emplace_back(ctrl);
 }
 
 }

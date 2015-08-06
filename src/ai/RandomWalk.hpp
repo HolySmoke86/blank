@@ -1,27 +1,22 @@
-#ifndef BLANK_APP_RANDOMWALK_HPP_
-#define BLANK_APP_RANDOMWALK_HPP_
+#ifndef BLANK_AI_RANDOMWALK_HPP_
+#define BLANK_AI_RANDOMWALK_HPP_
 
-#include <glm/glm.hpp>
+#include "Controller.hpp"
 
 
 namespace blank {
 
-class Entity;
-
 /// Randomly start or stop moving in axis directions every now and then.
-class RandomWalk {
+class RandomWalk
+: public Controller {
 
 public:
 	explicit RandomWalk(Entity &) noexcept;
+	~RandomWalk();
 
-	Entity &Controlled() noexcept { return entity; }
-	const Entity &Controlled() const noexcept { return entity; }
-
-	void Update(int dt) noexcept;
+	void Update(int dt) override;
 
 private:
-	Entity &entity;
-
 	int time_left;
 
 };

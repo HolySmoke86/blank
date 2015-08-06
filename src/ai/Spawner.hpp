@@ -3,13 +3,13 @@
 
 #include "../app/IntervalTimer.hpp"
 
-#include <list>
+#include <vector>
 #include <glm/glm.hpp>
 
 
 namespace blank {
 
-class RandomWalk;
+class Controller;
 class World;
 
 class Spawner {
@@ -27,7 +27,7 @@ private:
 
 private:
 	World &world;
-	std::list<RandomWalk> controllers;
+	std::vector<Controller *> controllers;
 
 	IntervalTimer timer;
 	float despawn_range;
