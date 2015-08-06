@@ -842,9 +842,20 @@ void ChunkLoader::Update(int dt) {
 	// check if a chunk generation is scheduled for this frame
 	// and if there's a chunk waiting to be generated
 	gen_timer.Update(dt);
-	if (!gen_timer.Hit() || to_generate.empty()) {
-		return;
+	if (gen_timer.Hit()) {
+		LoadOne();
 	}
+}
+
+void ChunkLoader::LoadN(std::size_t n) {
+	std::size_t end = std::min(n, ToLoad());
+	for (std::size_t i = 0; i < end; ++i) {
+		LoadOne();
+	}
+}
+
+void ChunkLoader::LoadOne() {
+	if (to_generate.empty()) return;
 
 	// take position of next chunk in queue
 	Chunk::Pos pos(to_generate.front());

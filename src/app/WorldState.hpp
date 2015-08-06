@@ -25,6 +25,8 @@ public:
 	void Update(int dt) override;
 	void Render(Viewport &) override;
 
+	World &GetWorld() noexcept { return world; }
+
 private:
 	Environment &env;
 	World world;

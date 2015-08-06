@@ -39,6 +39,10 @@ public:
 	void Rebase(const Chunk::Pos &);
 	void Update(int dt);
 
+	std::size_t ToLoad() const noexcept { return to_generate.size(); }
+	void LoadOne();
+	void LoadN(std::size_t n);
+
 private:
 	Chunk &Generate(const Chunk::Pos &pos);
 	// link given chunk to all loaded neighbors

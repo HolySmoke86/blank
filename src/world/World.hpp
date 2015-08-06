@@ -48,7 +48,8 @@ public:
 	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
 	void Resolve(Entity &e, std::vector<WorldCollision> &);
 
-	BlockTypeRegistry &BlockTypes() { return blockType; }
+	BlockTypeRegistry &BlockTypes() noexcept { return blockType; }
+	ChunkLoader &Loader() noexcept { return chunks; }
 
 	Entity &Player() { return *player; }
 	Entity &AddEntity() { entities.emplace_back(); return entities.back(); }
