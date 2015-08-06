@@ -3,6 +3,9 @@
 
 #include "State.hpp"
 
+#include "../ui/Progress.hpp"
+#include "../graphics/Font.hpp"
+
 #include <cstddef>
 
 
@@ -24,6 +27,9 @@ public:
 private:
 	Environment &env;
 	ChunkLoader &loader;
+	Font font;
+	Progress progress;
+	std::size_t total;
 	std::size_t per_update;
 
 };

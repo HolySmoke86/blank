@@ -1,8 +1,8 @@
-#ifndef BLANK_GRAPHICS_TEXT_HPP_
-#define BLANK_GRAPHICS_TEXT_HPP_
+#ifndef BLANK_UI_TEXT_HPP_
+#define BLANK_UI_TEXT_HPP_
 
-#include "align.hpp"
-#include "Texture.hpp"
+#include "../graphics/align.hpp"
+#include "../graphics/Texture.hpp"
 #include "../model/SpriteModel.hpp"
 
 #include <string>

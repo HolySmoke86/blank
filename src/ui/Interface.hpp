@@ -1,13 +1,13 @@
 #ifndef BLANK_UI_INTERFACE_HPP_
 #define BLANK_UI_INTERFACE_HPP_
 
+#include "FixedText.hpp"
 #include "HUD.hpp"
+#include "MessageBox.hpp"
 #include "../app/FPSController.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../audio/Sound.hpp"
-#include "../graphics/FixedText.hpp"
 #include "../graphics/Font.hpp"
-#include "../graphics/MessageBox.hpp"
 #include "../model/geometry.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"

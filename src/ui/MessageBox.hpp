@@ -1,8 +1,8 @@
-#ifndef BLANK_GRAPHICS_MESSAGEBOX_HPP_
-#define BLANK_GRAPHICS_MESSAGEBOX_HPP_
+#ifndef BLANK_UI_MESSAGEBOX_HPP_
+#define BLANK_UI_MESSAGEBOX_HPP_
 
-#include "align.hpp"
 #include "Text.hpp"
+#include "../graphics/align.hpp"
 
 #include <deque>
 #include <string>

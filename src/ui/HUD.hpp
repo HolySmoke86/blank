@@ -1,7 +1,7 @@
 #ifndef BLANK_UI_HUD_H_
 #define BLANK_UI_HUD_H_
 
-#include "../graphics/FixedText.hpp"
+#include "FixedText.hpp"
 #include "../model/EntityModel.hpp"
 #include "../model/OutlineModel.hpp"
 
