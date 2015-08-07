@@ -96,9 +96,9 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	color = color * 0.15f + 0.25f;
 
 	glm::vec3 rot(0.000001f);
-	rot.x *= (rand() % 32);
-	rot.y *= (rand() % 32);
-	rot.z *= (rand() % 32);
+	rot.x *= (rand() % 1024);
+	rot.y *= (rand() % 1024);
+	rot.z *= (rand() % 1024);
 
 	Entity &e = world.AddEntity();
 	e.Name("test");
