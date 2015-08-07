@@ -6,11 +6,13 @@
 
 namespace blank {
 
+class World;
+
 class Chaser
 : public Controller {
 
 public:
-	Chaser(Entity &ctrl, Entity &tgt) noexcept;
+	Chaser(World &, Entity &ctrl, Entity &tgt) noexcept;
 	~Chaser();
 
 	Entity &Target() noexcept { return tgt; }
@@ -19,8 +21,10 @@ public:
 	void Update(int dt) override;
 
 private:
+	World &world;
 	Entity &tgt;
-	float speed;
+	float chase_speed;
+	float flee_speed;
 	float stop_dist;
 	float flee_dist;
 

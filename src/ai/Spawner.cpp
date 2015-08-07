@@ -111,7 +111,7 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	if (rand() % 2) {
 		ctrl = new RandomWalk(e);
 	} else {
-		ctrl = new Chaser(e, world.Player());
+		ctrl = new Chaser(world, e, world.Player());
 	}
 	controllers.emplace_back(ctrl);
 }

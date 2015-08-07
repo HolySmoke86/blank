@@ -2,19 +2,23 @@
 #include "Controller.hpp"
 #include "RandomWalk.hpp"
 
+#include "../model/geometry.hpp"
 #include "../world/Entity.hpp"
+#include "../world/World.hpp"
 
 #include <glm/glm.hpp>
 
 
 namespace blank {
 
-Chaser::Chaser(Entity &ctrl, Entity &tgt) noexcept
+Chaser::Chaser(World &world, Entity &ctrl, Entity &tgt) noexcept
 : Controller(ctrl)
+, world(world)
 , tgt(tgt)
-, speed(0.002f)
-, stop_dist(5 * 5)
-, flee_dist(3 * 3) {
+, chase_speed(0.002f)
+, flee_speed(-0.005f)
+, stop_dist(10)
+, flee_dist(5) {
 
 }
 
@@ -24,12 +28,26 @@ Chaser::~Chaser() {
 
 void Chaser::Update(int dt) {
 	glm::vec3 diff(Target().AbsoluteDifference(Controlled()));
-	float dist = dot (diff, diff);
-	// TODO: line of sight test
-	if (dist > stop_dist) {
-		Controlled().Velocity(normalize(diff) * speed);
+	float dist = length(diff);
+	glm::vec3 norm_diff(diff / dist);
+
+	bool line_of_sight = true;
+	// FIXME: this only works if target is in the reference chunk (which is true for the player)
+	Ray aim{Target().Position() - diff, norm_diff};
+	Chunk *chunk;
+	int blkid;
+	float distance;
+	glm::vec3 normal;
+	if (world.Intersection(aim, glm::mat4(1.0f), chunk, blkid, distance, normal)) {
+		line_of_sight = distance > dist;
+	}
+
+	if (!line_of_sight) {
+		Controlled().Velocity(glm::vec3(0.0f));
+	} else if (dist > stop_dist) {
+		Controlled().Velocity(norm_diff * chase_speed);
 	} else if (dist < flee_dist) {
-		Controlled().Velocity(normalize(diff) * -speed);
+		Controlled().Velocity(norm_diff * flee_speed);
 	} else {
 		Controlled().Velocity(glm::vec3(0.0f));
 	}
