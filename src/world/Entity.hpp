@@ -51,11 +51,12 @@ public:
 		return glm::vec3((chunk - other.chunk) * Chunk::Extent()) + position - other.position;
 	}
 
-	const glm::quat &AngularVelocity() const noexcept { return angular_velocity; }
-	void AngularVelocity(const glm::quat &) noexcept;
+	/// direction is rotation axis, magnitude is speed in rad/ms
+	const glm::vec3 &AngularVelocity() const noexcept { return angular_velocity; }
+	void AngularVelocity(const glm::vec3 &) noexcept;
 
-	const glm::mat4 &Rotation() const noexcept { return rotation; }
-	void Rotation(const glm::mat4 &) noexcept;
+	const glm::quat &Rotation() const noexcept { return rotation; }
+	void Rotation(const glm::quat &) noexcept;
 	void Rotate(const glm::quat &delta) noexcept;
 
 	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const noexcept;
@@ -66,7 +67,9 @@ public:
 
 	void Update(int dt) noexcept;
 
-	void Draw() noexcept;
+	void Draw() noexcept {
+		model.Draw();
+	}
 
 private:
 	const Shape *shape;
@@ -80,8 +83,8 @@ private:
 	Block::Pos position;
 	Chunk::Pos chunk;
 
-	glm::quat angular_velocity;
-	glm::mat4 rotation;
+	glm::vec3 angular_velocity;
+	glm::quat rotation;
 
 	bool world_collision;
 	bool remove;

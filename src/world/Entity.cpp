@@ -3,6 +3,7 @@
 #include "../model/Shape.hpp"
 
 #include <cmath>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
 namespace {
@@ -21,8 +22,8 @@ Entity::Entity() noexcept
 , velocity(0, 0, 0)
 , position(0, 0, 0)
 , chunk(0, 0, 0)
-, angular_velocity(1.0f, 0.0f, 0.0f, 0.0f)
-, rotation(1.0f)
+, angular_velocity(0.0f)
+, rotation(1.0f, 0.0f, 0.0f, 0.0f)
 , world_collision(false)
 , remove(false) {
 
@@ -83,21 +84,25 @@ void Entity::Move(const glm::vec3 &delta) noexcept {
 	Position(position + delta);
 }
 
-void Entity::AngularVelocity(const glm::quat &v) noexcept {
+void Entity::AngularVelocity(const glm::vec3 &v) noexcept {
 	angular_velocity = v;
 }
 
-void Entity::Rotation(const glm::mat4 &rot) noexcept {
+void Entity::Rotation(const glm::quat &rot) noexcept {
 	rotation = rot;
 }
 
 void Entity::Rotate(const glm::quat &delta) noexcept {
-	Rotation(rotation * glm::mat4_cast(delta));
+	Rotation(delta * Rotation());
 }
 
 glm::mat4 Entity::Transform(const Chunk::Pos &chunk_offset) const noexcept {
-	const glm::vec3 chunk_pos = (chunk - chunk_offset) * Chunk::Extent();
-	return glm::translate(position + chunk_pos) * rotation;
+	const glm::vec3 translation = glm::vec3((chunk - chunk_offset) * Chunk::Extent()) + position;
+	glm::mat4 transform(toMat4(Rotation()));
+	transform[3].x = translation.x;
+	transform[3].y = translation.y;
+	transform[3].z = translation.z;
+	return transform;
 }
 
 Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
@@ -109,14 +114,25 @@ Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
 	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
 }
 
-void Entity::Update(int dt) noexcept {
-	Move(velocity * float(dt));
-	Rotate(angular_velocity * float(dt));
+namespace {
+
+glm::quat delta_rot(const glm::vec3 &av, float dt) {
+	glm::vec3 half(av * dt * 0.5f);
+	float mag = length(half);
+	if (mag > 0.0f) {
+		float smag = std::sin(mag) / mag;
+		return glm::quat(std::cos(mag), half * smag);
+	} else {
+		return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+	}
 }
 
+}
 
-void Entity::Draw() noexcept {
-	model.Draw();
+void Entity::Update(int dt) noexcept {
+	float fdt = float(dt);
+	Move(velocity * fdt);
+	Rotate(delta_rot(angular_velocity, fdt));
 }
 
 }

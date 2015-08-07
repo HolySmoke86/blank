@@ -106,7 +106,7 @@ void Spawner::Spawn(const glm::tvec3<int> &chunk, const glm::vec3 &pos) {
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
 	e.SetShape(world.BlockTypes()[1].shape, color);
-	e.AngularVelocity(glm::quat(glm::vec3{ 0.00001f, 0.000006f, 0.000013f }));
+	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (rand() % 2) {
 		ctrl = new RandomWalk(e);
