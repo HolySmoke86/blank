@@ -57,7 +57,7 @@ public:
 
 	bool HasGlyph(Uint16) const noexcept;
 
-	glm::tvec2<int> TextSize(const char *) const;
+	glm::ivec2 TextSize(const char *) const;
 
 	Texture Render(const char *) const;
 	void Render(const char *, Texture &) const;

@@ -234,7 +234,7 @@ Chunk &World::PlayerChunk() {
 	return chunks.ForceLoad(player->ChunkCoords());
 }
 
-Chunk &World::Next(const Chunk &to, const glm::tvec3<int> &dir) {
+Chunk &World::Next(const Chunk &to, const glm::ivec3 &dir) {
 	const Chunk::Pos tgt_pos = to.Position() + dir;
 	return chunks.ForceLoad(tgt_pos);
 }

@@ -55,7 +55,7 @@ public:
 	Entity &AddEntity() { entities.emplace_back(); return entities.back(); }
 
 	Chunk &PlayerChunk();
-	Chunk &Next(const Chunk &to, const glm::tvec3<int> &dir);
+	Chunk &Next(const Chunk &to, const glm::ivec3 &dir);
 
 	void Update(int dt);
 

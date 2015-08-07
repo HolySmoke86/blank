@@ -101,8 +101,8 @@ bool Font::HasGlyph(Uint16 c) const noexcept {
 }
 
 
-glm::tvec2<int> Font::TextSize(const char *text) const {
-	glm::tvec2<int> size;
+glm::ivec2 Font::TextSize(const char *text) const {
+	glm::ivec2 size;
 	if (TTF_SizeUTF8(handle, text, &size.x, &size.y) != 0) {
 		throw std::runtime_error(TTF_GetError());
 	}

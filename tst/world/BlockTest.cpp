@@ -74,27 +74,27 @@ void BlockTest::testFaceAxis() {
 void BlockTest::testFaceNormal() {
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[ 0, 1, 0 ] not normal of UP",
-		glm::tvec3<int>(0, 1, 0), Block::FaceNormal(Block::FACE_UP)
+		glm::ivec3(0, 1, 0), Block::FaceNormal(Block::FACE_UP)
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[ 0, -1, 0 ] not normal of DOWN",
-		glm::tvec3<int>(0, -1, 0), Block::FaceNormal(Block::FACE_DOWN)
+		glm::ivec3(0, -1, 0), Block::FaceNormal(Block::FACE_DOWN)
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[ 1, 0, 0 ] not normal of RIGHT",
-		glm::tvec3<int>(1, 0, 0), Block::FaceNormal(Block::FACE_RIGHT)
+		glm::ivec3(1, 0, 0), Block::FaceNormal(Block::FACE_RIGHT)
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[ -1, 0, 0 ] not normal of LEFT",
-		glm::tvec3<int>(-1, 0, 0), Block::FaceNormal(Block::FACE_LEFT)
+		glm::ivec3(-1, 0, 0), Block::FaceNormal(Block::FACE_LEFT)
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[ 0, 0, 1 ] not normal of FRONT",
-		glm::tvec3<int>(0, 0, 1), Block::FaceNormal(Block::FACE_FRONT)
+		glm::ivec3(0, 0, 1), Block::FaceNormal(Block::FACE_FRONT)
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"[ 0, 0, -1 ] not normal of BACK",
-		glm::tvec3<int>(0, 0, -1), Block::FaceNormal(Block::FACE_BACK)
+		glm::ivec3(0, 0, -1), Block::FaceNormal(Block::FACE_BACK)
 	);
 }
 

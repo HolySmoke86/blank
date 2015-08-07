@@ -66,15 +66,15 @@ void GLTraitsTest::testSize() {
 
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad number of components for vec2i",
-		2, gl_traits<glm::tvec2<int>>::size
+		2, gl_traits<glm::ivec2>::size
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad number of components for vec3i",
-		3, gl_traits<glm::tvec3<int>>::size
+		3, gl_traits<glm::ivec3>::size
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad number of components for vec4i",
-		4, gl_traits<glm::tvec4<int>>::size
+		4, gl_traits<glm::ivec4>::size
 	);
 }
 

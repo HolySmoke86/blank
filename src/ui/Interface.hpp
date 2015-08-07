@@ -114,7 +114,7 @@ private:
 	Sound place_sound;
 	Sound remove_sound;
 
-	glm::tvec3<int> fwd, rev;
+	glm::ivec3 fwd, rev;
 
 };
 

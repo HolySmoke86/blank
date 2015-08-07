@@ -59,13 +59,13 @@ void Spawner::CheckDespawn() noexcept {
 void Spawner::TrySpawn() {
 	if (controllers.size() >= max_entities) return;
 
-	glm::tvec3<int> chunk(
+	glm::ivec3 chunk(
 		(rand() % (chunk_range * 2 + 1)) - chunk_range,
 		(rand() % (chunk_range * 2 + 1)) - chunk_range,
 		(rand() % (chunk_range * 2 + 1)) - chunk_range
 	);
 
-	glm::tvec3<int> pos(
+	glm::ivec3 pos(
 		rand() % Chunk::width,
 		rand() % Chunk::height,
 		rand() % Chunk::depth
@@ -91,7 +91,7 @@ void Spawner::TrySpawn() {
 	Spawn(world.Player().ChunkCoords() + chunk, glm::vec3(pos) + glm::vec3(0.5f));
 }
 
-void Spawner::Spawn(const glm::tvec3<int> &chunk, const glm::vec3 &pos) {
+void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	glm::vec3 color(rand() % 6, rand() % 6, rand() % 6);
 	color = color * 0.15f + 0.25f;
 

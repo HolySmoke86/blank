@@ -20,7 +20,7 @@ class WorldCollision;
 class Chunk {
 
 public:
-	using Pos = glm::tvec3<int>;
+	using Pos = glm::ivec3;
 
 public:
 	explicit Chunk(const BlockTypeRegistry &) noexcept;

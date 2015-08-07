@@ -155,7 +155,7 @@ const glm::mat4 Block::orient2transform[ORIENT_COUNT] = {
 	{  0,  0,  1,  0,  1,  0,  0,  0,  0,  1,  0,  0,  0,  0,  0,  1, }, // face: back,  turn: right
 };
 
-const glm::tvec3<int> Block::face2normal[FACE_COUNT] = {
+const glm::ivec3 Block::face2normal[FACE_COUNT] = {
 	{  0,  1,  0 },
 	{  0, -1,  0 },
 	{  1,  0,  0 },

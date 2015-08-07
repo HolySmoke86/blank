@@ -66,7 +66,7 @@ struct Block {
 		}
 	}
 
-	static glm::tvec3<int> FaceNormal(Face face) noexcept {
+	static glm::ivec3 FaceNormal(Face face) noexcept {
 		return face2normal[face];
 	}
 
@@ -125,7 +125,7 @@ struct Block {
 	};
 
 private:
-	static const glm::tvec3<int> face2normal[6];
+	static const glm::ivec3 face2normal[6];
 	static const glm::mat4 orient2transform[ORIENT_COUNT];
 	static const Face orient2face[ORIENT_COUNT][FACE_COUNT];
 
