@@ -30,10 +30,10 @@ Entity::Entity() noexcept
 }
 
 
-void Entity::SetShape(const Shape *s, const glm::vec3 &color) {
+void Entity::SetShape(const Shape *s, const glm::vec3 &color, float texture) {
 	shape = s;
 	model_buffer.Clear();
-	shape->Vertices(model_buffer.vertices, model_buffer.normals, model_buffer.indices);
+	shape->Vertices(model_buffer, texture);
 	model_buffer.colors.resize(shape->VertexCount(), color);
 	model.Update(model_buffer);
 }

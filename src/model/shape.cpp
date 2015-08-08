@@ -5,65 +5,95 @@
 namespace blank {
 
 void Shape::Vertices(
-	EntityModel::Positions &vertex,
-	EntityModel::Normals &normal,
-	EntityModel::Indices &index
+	EntityModel::Buffer &out,
+	float tex_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
-		vertex.emplace_back(pos);
+		out.vertices.emplace_back(pos);
+	}
+	for (const auto &coord : vtx_tex_coords) {
+		out.tex_coords.emplace_back(coord.x, coord.y, coord.z + tex_offset);
 	}
 	for (const auto &nrm : vtx_nrm) {
-		normal.emplace_back(nrm);
+		out.normals.emplace_back(nrm);
 	}
 	for (auto idx : vtx_idx) {
-		index.emplace_back(idx);
+		out.indices.emplace_back(idx);
 	}
 }
 
 void Shape::Vertices(
-	EntityModel::Positions &vertex,
-	EntityModel::Normals &normal,
-	EntityModel::Indices &index,
+	EntityModel::Buffer &out,
 	const glm::mat4 &transform,
+	float tex_offset,
 	EntityModel::Index idx_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
-		vertex.emplace_back(transform * glm::vec4(pos, 1.0f));
+		out.vertices.emplace_back(transform * glm::vec4(pos, 1.0f));
+	}
+	for (const auto &coord : vtx_tex_coords) {
+		out.tex_coords.emplace_back(coord.x, coord.y, coord.z + tex_offset);
 	}
 	for (const auto &nrm : vtx_nrm) {
-		normal.emplace_back(transform * glm::vec4(nrm, 0.0f));
+		out.normals.emplace_back(transform * glm::vec4(nrm, 0.0f));
 	}
 	for (auto idx : vtx_idx) {
-		index.emplace_back(idx_offset + idx);
+		out.indices.emplace_back(idx_offset + idx);
 	}
 }
 
 void Shape::Vertices(
-	BlockModel::Positions &vertex,
-	BlockModel::Indices &index,
+	BlockModel::Buffer &out,
 	const glm::mat4 &transform,
+	float tex_offset,
 	BlockModel::Index idx_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
-		vertex.emplace_back(transform * glm::vec4(pos, 1.0f));
+		out.vertices.emplace_back(transform * glm::vec4(pos, 1.0f));
+	}
+	for (const auto &coord : vtx_tex_coords) {
+		out.tex_coords.emplace_back(coord.x, coord.y, coord.z + tex_offset);
 	}
 	for (auto idx : vtx_idx) {
-		index.emplace_back(idx_offset + idx);
+		out.indices.emplace_back(idx_offset + idx);
 	}
 }
 
 void Shape::Outline(
-	OutlineModel::Positions &vertex,
-	OutlineModel::Indices &index,
+	OutlineModel::Buffer &out,
 	const OutlineModel::Position &elem_offset,
 	OutlineModel::Index idx_offset
 ) const {
 	for (const auto &pos : out_pos) {
-		vertex.emplace_back(elem_offset + pos);
+		out.vertices.emplace_back(elem_offset + pos);
 	}
 	for (auto idx : out_idx) {
-		index.emplace_back(idx_offset + idx);
+		out.indices.emplace_back(idx_offset + idx);
 	}
+}
+
+void Shape::SetShape(
+	const EntityModel::Positions &pos,
+	const EntityModel::Normals &nrm,
+	const EntityModel::Indices &idx
+) {
+	vtx_pos = pos;
+	vtx_nrm = nrm;
+	vtx_idx = idx;
+}
+
+void Shape::SetTexture(
+	const BlockModel::TexCoords &tex_coords
+) {
+	vtx_tex_coords = tex_coords;
+}
+
+void Shape::SetOutline(
+	const OutlineModel::Positions &pos,
+	const OutlineModel::Indices &idx
+) {
+	out_pos = pos;
+	out_idx = idx;
 }
 
 
@@ -152,6 +182,32 @@ CuboidShape::CuboidShape(const AABB &b)
 		 12, 13, 14, 14, 13, 15, // bottom
 		 16, 17, 18, 18, 17, 19, // left
 		 20, 21, 22, 22, 21, 23, // right
+	});
+	SetTexture({
+		{ 0.0f, 1.0f, 0.0f }, // front
+		{ 1.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f }, // back
+		{ 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f }, // top
+		{ 0.0f, 1.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f }, // bottom
+		{ 0.0f, 0.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f }, // left
+		{ 1.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f }, // right
+		{ 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
 	});
 	SetOutline({
 		{ bb.min.x, bb.min.y, bb.min.z }, // back
@@ -285,6 +341,48 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		28, 29, 30, 30, 29, 31, // left, lower
 		32, 33, 34, 34, 33, 35, // right, upper
 		36, 37, 38, 38, 37, 39, // right, lower
+	});
+	SetTexture({
+		{ 0.0f, 0.5f, 0.0f }, // front, upper
+		{ 1.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f }, // front, lower
+		{ 1.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ 1.0f, 0.5f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f }, // back
+		{ 1.0f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f }, // top, upper
+		{ 0.0f, 0.5f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f },
+		{ 1.0f, 0.5f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f }, // top, lower
+		{ 0.0f, 1.0f, 0.0f },
+		{ 1.0f, 0.5f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f },
+		{ 1.0f, 0.0f, 0.0f }, // bottom
+		{ 0.0f, 0.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f }, // left, upper
+		{ 0.5f, 0.5f, 0.0f },
+		{ 0.0f, 0.0f, 0.0f },
+		{ 0.5f, 0.0f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f }, // left, lower
+		{ 1.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
+		{ 1.0f, 0.5f, 0.0f },
+		{ 1.0f, 0.5f, 0.0f }, // right, upper
+		{ 1.0f, 0.0f, 0.0f },
+		{ 0.5f, 0.5f, 0.0f },
+		{ 0.5f, 0.0f, 0.0f },
+		{ 1.0f, 1.0f, 0.0f }, // right, lower
+		{ 1.0f, 0.5f, 0.0f },
+		{ 0.0f, 1.0f, 0.0f },
+		{ 0.0f, 0.5f, 0.0f },
 	});
 	SetOutline({
 		{ bot.min.x, bot.min.y, bot.min.z }, // bottom

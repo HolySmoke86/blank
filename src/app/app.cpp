@@ -7,12 +7,15 @@
 
 #include "init.hpp"
 #include "../audio/Sound.hpp"
+#include "../graphics/ArrayTexture.hpp"
 #include "../graphics/Font.hpp"
+#include "../graphics/Texture.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/Entity.hpp"
 
 #include <iostream>
 #include <stdexcept>
+#include <SDL_image.h>
 
 using std::string;
 
@@ -195,7 +198,8 @@ void StateControl::Commit(Application &app) {
 
 Assets::Assets(const string &base)
 : fonts(base + "fonts/")
-, sounds(base + "sounds/") {
+, sounds(base + "sounds/")
+, textures(base + "textures/") {
 
 }
 
@@ -207,6 +211,35 @@ Font Assets::LoadFont(const string &name, int size) const {
 Sound Assets::LoadSound(const string &name) const {
 	string full = sounds + name + ".wav";
 	return Sound(full.c_str());
+}
+
+Texture Assets::LoadTexture(const string &name) const {
+	string full = textures + name + ".png";
+	Texture tex;
+	SDL_Surface *srf = IMG_Load(full.c_str());
+	if (!srf) {
+		throw SDLError("IMG_Load");
+	}
+	tex.Bind();
+	tex.Data(*srf);
+	SDL_FreeSurface(srf);
+	return tex;
+}
+
+void Assets::LoadTexture(const string &name, ArrayTexture &tex, int layer) const {
+	string full = textures + name + ".png";
+	SDL_Surface *srf = IMG_Load(full.c_str());
+	if (!srf) {
+		throw SDLError("IMG_Load");
+	}
+	tex.Bind();
+	try {
+		tex.Data(layer, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
+	SDL_FreeSurface(srf);
 }
 
 

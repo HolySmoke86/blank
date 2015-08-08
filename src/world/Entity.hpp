@@ -22,7 +22,7 @@ public:
 
 	bool HasShape() const noexcept { return shape; }
 	const Shape *GetShape() const noexcept { return shape; }
-	void SetShape(const Shape *, const glm::vec3 &color);
+	void SetShape(const Shape *, const glm::vec3 &color, float texture);
 	void SetShapeless() noexcept;
 
 	const std::string &Name() const noexcept { return name; }

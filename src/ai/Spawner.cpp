@@ -105,7 +105,7 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	e.SetShape(world.BlockTypes()[1].shape, color);
+	e.SetShape(world.BlockTypes()[1].shape, color, 2);
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (rand() % 2) {

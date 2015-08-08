@@ -1,14 +1,14 @@
 #ifndef BLANK_GRAPHICS_TEXTURE_HPP_
 #define BLANK_GRAPHICS_TEXTURE_HPP_
 
-#include "Format.hpp"
-
 #include <GL/glew.h>
 
 struct SDL_Surface;
 
 
 namespace blank {
+
+struct Format;
 
 class Texture {
 

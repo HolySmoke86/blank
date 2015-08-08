@@ -5,6 +5,7 @@
 #include "ChunkLoader.hpp"
 #include "Entity.hpp"
 #include "Generator.hpp"
+#include "../graphics/ArrayTexture.hpp"
 #include "../model/shapes.hpp"
 
 #include <list>
@@ -14,6 +15,7 @@
 
 namespace blank {
 
+class Assets;
 class Viewport;
 class WorldCollision;
 
@@ -35,7 +37,7 @@ public:
 		ChunkLoader::Config load = ChunkLoader::Config();
 	};
 
-	explicit World(const Config &);
+	World(const Assets &, const Config &);
 
 	bool Intersection(
 		const Ray &,
@@ -66,6 +68,8 @@ private:
 	CuboidShape blockShape;
 	StairShape stairShape;
 	CuboidShape slabShape;
+
+	ArrayTexture block_tex;
 
 	Generator generate;
 	ChunkLoader chunks;

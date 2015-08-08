@@ -5,7 +5,6 @@
 #include "EntityModel.hpp"
 #include "OutlineModel.hpp"
 
-#include <vector>
 #include <glm/glm.hpp>
 
 
@@ -31,21 +30,19 @@ struct Shape {
 	/// fill given buffers with this shape's elements with an
 	/// optional transform and offset
 	void Vertices(
-		EntityModel::Positions &vertex,
-		EntityModel::Normals &normal,
-		EntityModel::Indices &index
+		EntityModel::Buffer &out,
+		float tex_offset = 0.0f
 	) const;
 	void Vertices(
-		EntityModel::Positions &vertex,
-		EntityModel::Normals &normal,
-		EntityModel::Indices &index,
+		EntityModel::Buffer &out,
 		const glm::mat4 &transform,
+		float tex_offset = 0.0f,
 		EntityModel::Index idx_offset = 0
 	) const;
 	void Vertices(
-		BlockModel::Positions &vertex,
-		BlockModel::Indices &index,
+		BlockModel::Buffer &out,
 		const glm::mat4 &transform,
+		float tex_offset = 0.0f,
 		BlockModel::Index idx_offset = 0
 	) const;
 
@@ -57,8 +54,7 @@ struct Shape {
 	/// fill given buffers with this shape's outline's elements with
 	/// an optional offset
 	void Outline(
-		OutlineModel::Positions &vertex,
-		OutlineModel::Indices &index,
+		OutlineModel::Buffer &out,
 		const OutlineModel::Position &offset = { 0.0f, 0.0f, 0.0f },
 		OutlineModel::Index idx_offset = 0
 	) const;
@@ -85,20 +81,22 @@ struct Shape {
 	) const noexcept = 0;
 
 protected:
-	void SetShape(const EntityModel::Positions &pos, const EntityModel::Normals &nrm, const EntityModel::Indices &idx) {
-		vtx_pos = pos;
-		vtx_nrm = nrm;
-		vtx_idx = idx;
-	}
-	void SetOutline(const OutlineModel::Positions &pos, const OutlineModel::Indices &idx) {
-		out_pos = pos;
-		out_idx = idx;
-	}
+	void SetShape(
+		const EntityModel::Positions &pos,
+		const EntityModel::Normals &nrm,
+		const EntityModel::Indices &idx);
+	void SetTexture(
+		const BlockModel::TexCoords &tex_coords);
+	void SetOutline(
+		const OutlineModel::Positions &pos,
+		const OutlineModel::Indices &idx);
 
 private:
 	EntityModel::Positions vtx_pos;
 	EntityModel::Normals vtx_nrm;
 	EntityModel::Indices vtx_idx;
+
+	BlockModel::TexCoords vtx_tex_coords;
 
 	OutlineModel::Positions out_pos;
 	OutlineModel::Indices out_idx;

@@ -9,6 +9,8 @@
 
 namespace blank {
 
+class ArrayTexture;
+
 class BlockLighting {
 
 public:
@@ -16,6 +18,7 @@ public:
 
 	void Activate() noexcept;
 
+	void SetTexture(ArrayTexture &) noexcept;
 	void SetFogDensity(float) noexcept;
 
 	void SetM(const glm::mat4 &m) noexcept;
@@ -37,6 +40,7 @@ private:
 
 	GLuint mv_handle;
 	GLuint mvp_handle;
+	GLuint sampler_handle;
 	GLuint light_direction_handle;
 	GLuint light_color_handle;
 	GLuint fog_density_handle;

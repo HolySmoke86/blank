@@ -75,6 +75,7 @@ std::ostream &operator <<(std::ostream &out, const Block::Turn &turn) {
 
 BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
 : shape(s)
+, texture(0)
 , color(col)
 , outline_color(-1, -1, -1)
 , label("some block")
@@ -93,7 +94,7 @@ void BlockType::FillEntityModel(
 	const glm::mat4 &transform,
 	EntityModel::Index idx_offset
 ) const noexcept {
-	shape->Vertices(buf.vertices, buf.normals, buf.indices, transform, idx_offset);
+	shape->Vertices(buf, transform, texture, idx_offset);
 	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
 }
 
@@ -102,7 +103,7 @@ void BlockType::FillBlockModel(
 	const glm::mat4 &transform,
 	BlockModel::Index idx_offset
 ) const noexcept {
-	shape->Vertices(buf.vertices, buf.indices, transform, idx_offset);
+	shape->Vertices(buf, transform, texture, idx_offset);
 	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
 }
 
@@ -111,7 +112,7 @@ void BlockType::FillOutlineModel(
 	const glm::vec3 &pos_offset,
 	OutlineModel::Index idx_offset
 ) const noexcept {
-	shape->Outline(buf.vertices, buf.indices, pos_offset, idx_offset);
+	shape->Outline(buf, pos_offset, idx_offset);
 	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
 }
 

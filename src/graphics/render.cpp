@@ -1,8 +1,10 @@
-#include "BlendedSprite.hpp"
+#include "ArrayTexture.hpp"
 #include "Font.hpp"
 #include "Format.hpp"
 #include "Texture.hpp"
 #include "Viewport.hpp"
+
+#include "../app/init.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -126,8 +128,32 @@ void Font::Render(const char *text, Texture &tex) const {
 	SDL_FreeSurface(srf);
 }
 
+Format::Format()
+: format(GL_BGRA)
+, type(GL_UNSIGNED_INT_8_8_8_8_REV)
+, internal(GL_RGBA8) {
+	sdl_format.format = SDL_PIXELFORMAT_ARGB8888;
+	sdl_format.palette = nullptr;
+	sdl_format.BitsPerPixel = 32;
+	sdl_format.BytesPerPixel = 4;
+	sdl_format.Rmask = 0x00FF0000;
+	sdl_format.Gmask = 0x0000FF00;
+	sdl_format.Bmask = 0x000000FF;
+	sdl_format.Amask = 0xFF000000;
+	sdl_format.Rloss = 0;
+	sdl_format.Gloss = 0;
+	sdl_format.Bloss = 0;
+	sdl_format.Aloss = 0;
+	sdl_format.Rshift = 16;
+	sdl_format.Gshift = 8;
+	sdl_format.Bshift = 0;
+	sdl_format.Ashift = 24;
+	sdl_format.refcount = 1;
+	sdl_format.next = nullptr;
+}
 
-void Format::ReadPixelFormat(const SDL_PixelFormat &fmt) {
+Format::Format(const SDL_PixelFormat &fmt)
+: sdl_format(fmt) {
 	if (fmt.BytesPerPixel == 4) {
 		if (fmt.Amask == 0xFF) {
 			if (fmt.Rmask == 0xFF00) {
@@ -154,6 +180,10 @@ void Format::ReadPixelFormat(const SDL_PixelFormat &fmt) {
 		type = GL_UNSIGNED_BYTE;
 		internal = GL_RGB8;
 	}
+}
+
+bool Format::Compatible(const Format &other) const noexcept {
+	return format == other.format && type == other.type && internal == other.internal;
 }
 
 
@@ -197,8 +227,7 @@ namespace {
 }
 
 void Texture::Data(const SDL_Surface &srf, bool pad2) noexcept {
-	Format format;
-	format.ReadPixelFormat(*srf.format);
+	Format format(*srf.format);
 
 	if (!pad2 || (ispow2(srf.w) && ispow2(srf.h))) {
 		int align = UnpackAlignmentFromPitch(srf.pitch);
@@ -294,6 +323,112 @@ int Texture::UnpackAlignmentFromPitch(int pitch) noexcept {
 
 void Texture::UnpackRowLength(GLint i) noexcept {
 	glPixelStorei(GL_UNPACK_ROW_LENGTH, i);
+}
+
+
+ArrayTexture::ArrayTexture()
+: handle(0)
+, width(0)
+, height(0)
+, depth(0) {
+	glGenTextures(1, &handle);
+}
+
+ArrayTexture::~ArrayTexture() {
+	if (handle != 0) {
+		glDeleteTextures(1, &handle);
+	}
+}
+
+ArrayTexture::ArrayTexture(ArrayTexture &&other) noexcept
+: handle(other.handle) {
+	other.handle = 0;
+	width = other.width;
+	height = other.height;
+	depth = other.depth;
+}
+
+ArrayTexture &ArrayTexture::operator =(ArrayTexture &&other) noexcept {
+	std::swap(handle, other.handle);
+	width = other.width;
+	height = other.height;
+	depth = other.depth;
+	return *this;
+}
+
+
+void ArrayTexture::Bind() noexcept {
+	glBindTexture(GL_TEXTURE_2D_ARRAY, handle);
+}
+
+
+void ArrayTexture::Reserve(GLsizei w, GLsizei h, GLsizei d, const Format &f) noexcept {
+	glTexStorage3D(
+		GL_TEXTURE_2D_ARRAY, // which
+		1,                   // mipmap count
+		f.internal,          // format
+		w, h,                // dimensions
+		d                    // layer count
+	);
+	width = w;
+	height = h;
+	depth = d;
+	format = f;
+}
+
+void ArrayTexture::Data(GLsizei l, const SDL_Surface &srf) {
+	Format fmt(*srf.format);
+	if (format.Compatible(fmt)) {
+		Data(l, fmt, srf.pixels);
+	} else {
+		SDL_Surface *converted = SDL_ConvertSurface(
+			const_cast<SDL_Surface *>(&srf),
+			&format.sdl_format,
+			0
+		);
+		if (!converted) {
+			throw SDLError("SDL_ConvertSurface");
+		}
+		Format new_fmt(*converted->format);
+		if (!format.Compatible(new_fmt)) {
+			SDL_FreeSurface(converted);
+			throw std::runtime_error("unable to convert texture input");
+		}
+		Data(l, new_fmt, converted->pixels);
+		SDL_FreeSurface(converted);
+	}
+}
+
+void ArrayTexture::Data(GLsizei l, const Format &f, GLvoid *data) noexcept {
+	glTexSubImage3D(
+		GL_TEXTURE_2D_ARRAY, // which
+		0,                   // mipmap lavel
+		0, 0,                // dest X and Y offset
+		l,                   // layer offset
+		width, height,
+		1,                   // layer count
+		f.format, f.type,
+		data
+	);
+}
+
+
+void ArrayTexture::FilterNearest() noexcept {
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+}
+
+void ArrayTexture::FilterLinear() noexcept {
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+}
+
+void ArrayTexture::FilterTrilinear() noexcept {
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
 }
 
 }

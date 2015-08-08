@@ -11,6 +11,9 @@ namespace blank {
 
 void EntityModel::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
+	if (buf.tex_coords.size() < buf.vertices.size()) {
+		std::cerr << "EntityModel: not enough tex coords!" << std::endl;
+	}
 	if (buf.colors.size() < buf.vertices.size()) {
 		std::cerr << "EntityModel: not enough colors!" << std::endl;
 	}
@@ -21,6 +24,7 @@ void EntityModel::Update(const Buffer &buf) noexcept {
 
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
+	vao.PushAttribute(ATTRIB_TEXCOORD, buf.tex_coords);
 	vao.PushAttribute(ATTRIB_COLOR, buf.colors);
 	vao.PushAttribute(ATTRIB_NORMAL, buf.normals);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
@@ -34,6 +38,9 @@ void EntityModel::Draw() const noexcept {
 
 void BlockModel::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
+	if (buf.tex_coords.size() < buf.vertices.size()) {
+		std::cerr << "BlockModel: not enough tex coords!" << std::endl;
+	}
 	if (buf.colors.size() < buf.vertices.size()) {
 		std::cerr << "BlockModel: not enough colors!" << std::endl;
 	}
@@ -44,6 +51,7 @@ void BlockModel::Update(const Buffer &buf) noexcept {
 
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
+	vao.PushAttribute(ATTRIB_TEXCOORD, buf.tex_coords);
 	vao.PushAttribute(ATTRIB_COLOR, buf.colors);
 	vao.PushAttribute(ATTRIB_LIGHT, buf.lights);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);

@@ -17,6 +17,7 @@ namespace blank {
 struct BlockType {
 
 	const Shape *shape;
+	float texture;
 	glm::vec3 color;
 	glm::vec3 outline_color;
 

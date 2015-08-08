@@ -4,6 +4,7 @@
 #include "Program.hpp"
 #include "Shader.hpp"
 
+#include "ArrayTexture.hpp"
 #include "Texture.hpp"
 #include "../app/init.hpp"
 
@@ -181,11 +182,13 @@ DirectionalLighting::DirectionalLighting()
 		GL_VERTEX_SHADER,
 		"#version 330 core\n"
 		"layout(location = 0) in vec3 vtx_position;\n"
-		"layout(location = 1) in vec3 vtx_color;\n"
-		"layout(location = 2) in vec3 vtx_normal;\n"
+		"layout(location = 1) in vec3 vtx_tex_uv;\n"
+		"layout(location = 2) in vec3 vtx_color;\n"
+		"layout(location = 3) in vec3 vtx_normal;\n"
 		"uniform mat4 M;\n"
 		"uniform mat4 MV;\n"
 		"uniform mat4 MVP;\n"
+		"out vec3 frag_tex_uv;\n"
 		"out vec3 frag_color;\n"
 		"out vec3 vtx_viewspace;\n"
 		"out vec3 normal;\n"
@@ -193,28 +196,33 @@ DirectionalLighting::DirectionalLighting()
 			"gl_Position = MVP * vec4(vtx_position, 1);\n"
 			"vtx_viewspace = (MV * vec4(vtx_position, 1)).xyz;\n"
 			"normal = (M * vec4(vtx_normal, 0)).xyz;\n"
+			"frag_tex_uv = vtx_tex_uv;\n"
 			"frag_color = vtx_color;\n"
 		"}\n"
 	);
 	program.LoadShader(
 		GL_FRAGMENT_SHADER,
 		"#version 330 core\n"
+		"in vec3 frag_tex_uv;\n"
 		"in vec3 frag_color;\n"
 		"in vec3 vtx_viewspace;\n"
 		"in vec3 normal;\n"
+		"uniform sampler2DArray tex_sampler;\n"
 		"uniform vec3 light_direction;\n"
 		"uniform vec3 light_color;\n"
 		"uniform float fog_density;\n"
 		"out vec3 color;\n"
 		"void main() {\n"
-			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
+			"vec3 tex_color = texture(tex_sampler, frag_tex_uv).rgb;\n"
+			"vec3 base_color = tex_color * frag_color;\n"
+			"vec3 ambient = vec3(0.1, 0.1, 0.1) * base_color;\n"
 			// this should be the same as the clear color, otherwise looks really weird
 			"vec3 fog_color = vec3(0, 0, 0);\n"
 			"float e = 2.718281828;\n"
 			"vec3 n = normalize(normal);\n"
 			"vec3 l = normalize(light_direction);\n"
 			"float cos_theta = clamp(dot(n, l), 0, 1);\n"
-			"vec3 reflect_color = ambient + frag_color * light_color * cos_theta;\n"
+			"vec3 reflect_color = ambient + base_color * light_color * cos_theta;\n"
 			"float value = pow(e, -pow(fog_density * length(vtx_viewspace), 5));"
 			"color = mix(fog_color, reflect_color, value);\n"
 		"}\n"
@@ -228,6 +236,7 @@ DirectionalLighting::DirectionalLighting()
 	m_handle = program.UniformLocation("M");
 	mv_handle = program.UniformLocation("MV");
 	mvp_handle = program.UniformLocation("MVP");
+	sampler_handle = program.UniformLocation("tex_sampler");
 	light_direction_handle = program.UniformLocation("light_direction");
 	light_color_handle = program.UniformLocation("light_color");
 	fog_density_handle = program.UniformLocation("fog_density");
@@ -255,6 +264,12 @@ void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) noexcept {
 
 void DirectionalLighting::SetLightColor(const glm::vec3 &col) noexcept {
 	program.Uniform(light_color_handle, col);
+}
+
+void DirectionalLighting::SetTexture(ArrayTexture &tex) noexcept {
+	glActiveTexture(GL_TEXTURE0);
+	tex.Bind();
+	program.Uniform(sampler_handle, GLint(0));
 }
 
 void DirectionalLighting::SetFogDensity(float f) noexcept {
@@ -293,15 +308,18 @@ BlockLighting::BlockLighting()
 		GL_VERTEX_SHADER,
 		"#version 330 core\n"
 		"layout(location = 0) in vec3 vtx_position;\n"
-		"layout(location = 1) in vec3 vtx_color;\n"
-		"layout(location = 2) in float vtx_light;\n"
+		"layout(location = 1) in vec3 vtx_tex_uv;\n"
+		"layout(location = 2) in vec3 vtx_color;\n"
+		"layout(location = 3) in float vtx_light;\n"
 		"uniform mat4 MV;\n"
 		"uniform mat4 MVP;\n"
+		"out vec3 frag_tex_uv;\n"
 		"out vec3 frag_color;\n"
 		"out vec3 vtx_viewspace;\n"
 		"out float frag_light;\n"
 		"void main() {\n"
 			"gl_Position = MVP * vec4(vtx_position, 1);\n"
+			"frag_tex_uv = vtx_tex_uv;\n"
 			"frag_color = vtx_color;\n"
 			"vtx_viewspace = (MV * vec4(vtx_position, 1)).xyz;\n"
 			"frag_light = vtx_light;\n"
@@ -310,18 +328,20 @@ BlockLighting::BlockLighting()
 	program.LoadShader(
 		GL_FRAGMENT_SHADER,
 		"#version 330 core\n"
+		"in vec3 frag_tex_uv;\n"
 		"in vec3 frag_color;\n"
 		"in vec3 vtx_viewspace;\n"
 		"in float frag_light;\n"
+		"uniform sampler2DArray tex_sampler;\n"
 		"uniform float fog_density;\n"
 		"out vec3 color;\n"
 		"void main() {\n"
-			"vec3 ambient = vec3(0.1, 0.1, 0.1) * frag_color;\n"
+			"vec3 tex_color = texture(tex_sampler, frag_tex_uv).rgb;\n"
+			"vec3 base_color = tex_color * frag_color;\n"
 			"float light_power = clamp(pow(0.8, 15 - frag_light), 0, 1);\n"
 			"vec3 fog_color = vec3(0, 0, 0);\n"
 			"float e = 2.718281828;\n"
-			//"vec3 reflect_color = ambient + frag_color * light_power;\n"
-			"vec3 reflect_color = frag_color * light_power;\n"
+			"vec3 reflect_color = base_color * light_power;\n"
 			"float value = pow(e, -pow(fog_density * length(vtx_viewspace), 5));"
 			"color = mix(fog_color, reflect_color, value);\n"
 		"}\n"
@@ -334,6 +354,7 @@ BlockLighting::BlockLighting()
 
 	mv_handle = program.UniformLocation("MV");
 	mvp_handle = program.UniformLocation("MVP");
+	sampler_handle = program.UniformLocation("tex_sampler");
 	fog_density_handle = program.UniformLocation("fog_density");
 }
 
@@ -342,13 +363,19 @@ void BlockLighting::Activate() noexcept {
 	program.Use();
 }
 
-void BlockLighting::SetM(const glm::mat4 &m) noexcept {
-	program.Uniform(mv_handle, view * m);
-	program.Uniform(mvp_handle, vp * m);
+void BlockLighting::SetTexture(ArrayTexture &tex) noexcept {
+	glActiveTexture(GL_TEXTURE0);
+	tex.Bind();
+	program.Uniform(sampler_handle, GLint(0));
 }
 
 void BlockLighting::SetFogDensity(float f) noexcept {
 	program.Uniform(fog_density_handle, f);
+}
+
+void BlockLighting::SetM(const glm::mat4 &m) noexcept {
+	program.Uniform(mv_handle, view * m);
+	program.Uniform(mvp_handle, vp * m);
 }
 
 void BlockLighting::SetProjection(const glm::mat4 &p) noexcept {

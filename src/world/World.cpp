@@ -1,6 +1,8 @@
 #include "World.hpp"
 
 #include "WorldCollision.hpp"
+#include "../app/Assets.hpp"
+#include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
 #include <iostream>
@@ -11,11 +13,12 @@
 
 namespace blank {
 
-World::World(const Config &config)
+World::World(const Assets &assets, const Config &config)
 : blockType()
 , blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
 , stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
+, block_tex()
 , generate(config.gen)
 , chunks(config.load, blockType, generate)
 , player()
@@ -26,8 +29,17 @@ World::World(const Config &config)
 	BlockType::Faces slab_fill  = { false,  true, false, false, false, false };
 	BlockType::Faces stair_fill = { false,  true, false, false, false,  true };
 
+	block_tex.Bind();
+	block_tex.Reserve(16, 16, 4, Format());
+	assets.LoadTexture("debug", block_tex, 0);
+	assets.LoadTexture("rock-1", block_tex, 1);
+	assets.LoadTexture("rock-2", block_tex, 2);
+	assets.LoadTexture("rock-3", block_tex, 3);
+	block_tex.FilterNearest();
+
 	{ // white block
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
+		type.texture = 1;
 		type.label = "White Block";
 		type.block_light = true;
 		type.collision = true;
@@ -37,6 +49,7 @@ World::World(const Config &config)
 	}
 	{ // white slab
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &slabShape);
+		type.texture = 1;
 		type.label = "White Slab";
 		type.block_light = true;
 		type.collision = true;
@@ -46,6 +59,7 @@ World::World(const Config &config)
 	}
 	{ // white stair
 		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &stairShape);
+		type.texture = 1;
 		type.label = "White Stair";
 		type.block_light = true;
 		type.collision = true;
@@ -56,6 +70,7 @@ World::World(const Config &config)
 
 	{ // red block
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &blockShape);
+		type.texture = 3;
 		type.label = "Red Block";
 		type.block_light = true;
 		type.collision = true;
@@ -65,6 +80,7 @@ World::World(const Config &config)
 	}
 	{ // red slab
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &slabShape);
+		type.texture = 3;
 		type.label = "Red Slab";
 		type.block_light = true;
 		type.collision = true;
@@ -74,6 +90,7 @@ World::World(const Config &config)
 	}
 	{ // red stair
 		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &stairShape);
+		type.texture = 3;
 		type.label = "Red Stair";
 		type.block_light = true;
 		type.collision = true;
@@ -84,6 +101,7 @@ World::World(const Config &config)
 
 	{ // green block
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &blockShape);
+		type.texture = 1;
 		type.label = "Green Block";
 		type.block_light = true;
 		type.collision = true;
@@ -93,6 +111,7 @@ World::World(const Config &config)
 	}
 	{ // green slab
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &slabShape);
+		type.texture = 1;
 		type.label = "Green Slab";
 		type.block_light = true;
 		type.collision = true;
@@ -102,6 +121,7 @@ World::World(const Config &config)
 	}
 	{ // green stair
 		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &stairShape);
+		type.texture = 1;
 		type.label = "Green Stair";
 		type.block_light = true;
 		type.collision = true;
@@ -112,6 +132,7 @@ World::World(const Config &config)
 
 	{ // blue block
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &blockShape);
+		type.texture = 3;
 		type.label = "Blue Block";
 		type.block_light = true;
 		type.collision = true;
@@ -121,6 +142,7 @@ World::World(const Config &config)
 	}
 	{ // blue slab
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &slabShape);
+		type.texture = 3;
 		type.label = "Blue Slab";
 		type.block_light = true;
 		type.collision = true;
@@ -130,6 +152,7 @@ World::World(const Config &config)
 	}
 	{ // blue stair
 		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &stairShape);
+		type.texture = 3;
 		type.label = "Blue Stair";
 		type.block_light = true;
 		type.collision = true;
@@ -140,8 +163,21 @@ World::World(const Config &config)
 
 	{ // glowing yellow block
 		BlockType type(true, { 1.0f, 1.0f, 0.0f }, &blockShape);
+		type.texture = 2;
 		type.label = "Light";
 		type.luminosity = 15;
+		type.block_light = true;
+		type.collision = true;
+		type.collide_block = true;
+		type.fill = block_fill;
+		blockType.Add(type);
+	}
+
+	{ // the mysterious debug cube
+		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
+		type.texture = 0;
+		type.label = "Debug Cube";
+		type.luminosity = 0;
 		type.block_light = true;
 		type.collision = true;
 		type.collide_block = true;
@@ -305,6 +341,7 @@ void World::Render(Viewport &viewport) {
 	viewport.WorldPosition(player->Transform(player->ChunkCoords()));
 
 	BlockLighting &chunk_prog = viewport.ChunkProgram();
+	chunk_prog.SetTexture(block_tex);
 	chunk_prog.SetFogDensity(fog_density);
 
 	for (Chunk &chunk : chunks.Loaded()) {

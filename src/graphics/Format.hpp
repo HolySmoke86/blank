@@ -13,7 +13,12 @@ struct Format {
 	GLenum type;
 	GLenum internal;
 
-	void ReadPixelFormat(const SDL_PixelFormat &);
+	SDL_PixelFormat sdl_format;
+
+	Format();
+	explicit Format(const SDL_PixelFormat &);
+
+	bool Compatible(const Format &other) const noexcept;
 
 };
 

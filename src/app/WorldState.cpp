@@ -13,7 +13,7 @@ WorldState::WorldState(
 	const World::Config &wc
 )
 : env(env)
-, world(wc)
+, world(env.assets, wc)
 , spawner(world)
 , interface(ic, env, world) {
 

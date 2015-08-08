@@ -14,17 +14,20 @@ class BlockModel {
 
 public:
 	using Position = glm::vec3;
+	using TexCoord = glm::vec3;
 	using Color = glm::vec3;
 	using Light = float;
 	using Index = unsigned int;
 
 	using Positions = std::vector<Position>;
+	using TexCoords = std::vector<TexCoord>;
 	using Colors = std::vector<Color>;
 	using Lights = std::vector<Light>;
 	using Indices = std::vector<Index>;
 
 	enum Attribute {
 		ATTRIB_VERTEX,
+		ATTRIB_TEXCOORD,
 		ATTRIB_COLOR,
 		ATTRIB_LIGHT,
 		ATTRIB_INDEX,
@@ -34,12 +37,14 @@ public:
 	struct Buffer {
 
 		Positions vertices;
+		TexCoords tex_coords;
 		Colors colors;
 		Lights lights;
 		Indices indices;
 
 		void Clear() noexcept {
 			vertices.clear();
+			tex_coords.clear();
 			colors.clear();
 			lights.clear();
 			indices.clear();
@@ -47,6 +52,7 @@ public:
 
 		void Reserve(size_t p, size_t i) {
 			vertices.reserve(p);
+			tex_coords.reserve(p);
 			colors.reserve(p);
 			lights.reserve(p);
 			indices.reserve(i);
