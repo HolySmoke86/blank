@@ -16,7 +16,7 @@ using namespace std;
 
 namespace {
 
-string get_asset_path() {
+string default_asset_path() {
 	char *base = SDL_GetBasePath();
 	string assets(base);
 	assets += "assets/";
@@ -24,15 +24,30 @@ string get_asset_path() {
 	return assets;
 }
 
+string default_save_path() {
+#ifndef NDEBUG
+	char *base = SDL_GetBasePath();
+	string save(base);
+	save += "saves/";
+	SDL_free(base);
+	return save;
+#else
+	char *pref = SDL_GetPrefPath("localhorst", "blank");
+	string save(pref);
+	SDL_free(pref);
+	return save;
+#endif
+}
+
 }
 
 namespace blank {
 
-Environment::Environment(Window &win)
+Environment::Environment(Window &win, const string &asset_path)
 : audio()
 , viewport()
 , window(win)
-, assets(get_asset_path())
+, assets(asset_path)
 , counter() {
 
 }
@@ -69,17 +84,34 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 					// stopper
 					options = false;
 				} else {
+					const char *param = arg + 2;
 					// long option
-					if (strcmp(arg + 2, "no-vsync") == 0) {
+					if (strcmp(param, "no-vsync") == 0) {
 						config.vsync = false;
-					} else if (strcmp(arg + 2, "no-keyboard") == 0) {
+					} else if (strcmp(param, "no-keyboard") == 0) {
 						config.interface.keyboard_disabled = true;
-					} else if (strcmp(arg + 2, "no-mouse") == 0) {
+					} else if (strcmp(param, "no-mouse") == 0) {
 						config.interface.mouse_disabled = true;
-					} else if (strcmp(arg + 2, "no-hud") == 0) {
+					} else if (strcmp(param, "no-hud") == 0) {
 						config.interface.visual_disabled = true;
-					} else if (strcmp(arg + 2, "no-audio") == 0) {
+					} else if (strcmp(param, "no-audio") == 0) {
 						config.interface.audio_disabled = true;
+					} else if (strcmp(param, "asset-path") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --asset-path" << endl;
+							error = true;
+						} else {
+							config.asset_path = argv[i];
+						}
+					} else if (strcmp(param, "save-path") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --save-path" << endl;
+							error = true;
+						} else {
+							config.save_path = argv[i];
+						}
 					} else {
 						cerr << "unknown option " << arg << endl;
 						error = true;
@@ -152,6 +184,23 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 		return;
 	}
 
+	if (config.asset_path.empty()) {
+		config.asset_path = default_asset_path();
+	} else if (
+		config.asset_path[config.asset_path.size() - 1] != '/' &&
+		config.asset_path[config.asset_path.size() - 1] != '\\'
+	) {
+		config.asset_path += '/';
+	}
+	if (config.save_path.empty()) {
+		config.save_path = default_save_path();
+	} else if (
+		config.save_path[config.save_path.size() - 1] != '/' &&
+		config.save_path[config.save_path.size() - 1] != '\\'
+	) {
+		config.save_path += '/';
+	}
+
 	if (n > 0) {
 		if (t > 0) {
 			mode = FIXED_FRAME_LIMIT;
@@ -172,7 +221,7 @@ int Runtime::Execute() {
 
 	Init init(config.doublebuf, config.multisampling);
 
-	Environment env(init.window);
+	Environment env(init.window, config.asset_path);
 	env.viewport.VSync(config.vsync);
 
 	Application app(env);

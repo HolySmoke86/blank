@@ -5,6 +5,7 @@
 #include "../world/World.hpp"
 
 #include <cstddef>
+#include <string>
 
 
 namespace blank {
@@ -30,6 +31,9 @@ public:
 		bool vsync = true;
 		bool doublebuf = true;
 		int multisampling = 1;
+
+		std::string asset_path;
+		std::string save_path;
 
 		Interface::Config interface = Interface::Config();
 		World::Config world = World::Config();

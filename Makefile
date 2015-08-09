@@ -62,20 +62,20 @@ profile: $(PROFILE_BIN)
 tests: $(TEST_BIN)
 
 run: $(ASSET_DEP) blank
-	./blank
+	./blank --save-path saves/
 
 gdb: $(ASSET_DEP) blank.debug
 	gdb ./blank.debug
 
 cachegrind: $(ASSET_DEP) blank.profile
-	valgrind ./blank.profile
+	valgrind ./blank.profile --save-path saves/
 
 callgrind: $(ASSET_DEP) blank.profile
 	valgrind --tool=callgrind \
 		--branch-sim=yes --cacheuse=yes --cache-sim=yes \
 		--collect-bus=yes --collect-systime=yes --collect-jumps=yes \
 		--dump-instr=yes --simulate-hwpref=yes --simulate-wb=yes \
-		./blank.profile -n 128 -t 16 --no-keyboard --no-mouse -d --no-vsync
+		./blank.profile -n 128 -t 16 --no-keyboard --no-mouse -d --no-vsync --save-path saves/
 
 test: blank.test
 	./blank.test

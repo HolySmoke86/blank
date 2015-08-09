@@ -13,6 +13,15 @@ Runtime
 if both n and t are given, terminate after n frames and
 assume <t> milliseconds pass each frame
 
+--asset-path <path>
+	load assets from given path
+	default is application dir + "assets"
+
+--save-path <path>
+	store and load saves at given path
+	default is whatever SDL thinks is good
+	(should be ~/.local/share/localhorst/blank/)
+
 Application
 -----------
 
@@ -45,8 +54,9 @@ Interface
 World
 -----
 
-blank -s <seed>
-	use <seed> (unsigned integer) as the world seed. default is 0
+-s <seed>
+	use <seed> (unsigned integer) as the world seed
+	default is 0
 
 
 Controls

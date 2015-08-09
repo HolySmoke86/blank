@@ -7,6 +7,8 @@
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
 
+#include <string>
+
 
 namespace blank {
 
@@ -24,7 +26,7 @@ struct Environment {
 	StateControl state;
 
 
-	explicit Environment(Window &win);
+	explicit Environment(Window &win, const std::string &asset_path);
 
 };
 
