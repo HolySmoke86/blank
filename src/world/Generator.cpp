@@ -9,8 +9,8 @@
 namespace blank {
 
 Generator::Generator(const Config &config) noexcept
-: solidNoise(config.solid_seed)
-, typeNoise(config.type_seed)
+: solidNoise(config.seed)
+, typeNoise(config.seed)
 , stretch(1.0f/config.stretch)
 , solid_threshold(config.solid_threshold)
 , space(0)

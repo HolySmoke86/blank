@@ -85,6 +85,7 @@ clean:
 
 distclean: clean
 	rm -f $(BIN) cachegrind.out.* callgrind.out.*
+	rm -Rf build saves
 
 .PHONY: all release debug profile tests run gdb cachegrind callgrind test clean distclean
 

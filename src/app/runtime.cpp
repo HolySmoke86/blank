@@ -5,6 +5,7 @@
 #include "WorldState.hpp"
 
 #include "init.hpp"
+#include "../world/WorldSave.hpp"
 
 #include <cctype>
 #include <cstdlib>
@@ -112,6 +113,14 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 						} else {
 							config.save_path = argv[i];
 						}
+					} else if (strcmp(param, "world-name") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --world-name" << endl;
+							error = true;
+						} else {
+							config.world_name = argv[i];
+						}
 					} else {
 						cerr << "unknown option " << arg << endl;
 						error = true;
@@ -148,8 +157,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 								cerr << "missing argument to -s" << endl;
 								error = true;
 							} else {
-								config.world.gen.solid_seed = strtoul(argv[i], nullptr, 10);
-								config.world.gen.type_seed = config.world.gen.solid_seed;
+								config.world.gen.seed = strtoul(argv[i], nullptr, 10);
 							}
 							break;
 						case 't':
@@ -223,6 +231,13 @@ int Runtime::Execute() {
 
 	Environment env(init.window, config.asset_path);
 	env.viewport.VSync(config.vsync);
+
+	WorldSave save(config.save_path + config.world_name + '/');
+	if (save.Exists()) {
+		save.Read(config.world);
+	} else {
+		save.Create(config.world);
+	}
 
 	Application app(env);
 

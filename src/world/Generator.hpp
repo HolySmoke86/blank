@@ -16,8 +16,7 @@ class Generator {
 
 public:
 	struct Config {
-		unsigned int solid_seed = 0;
-		unsigned int type_seed = 0;
+		unsigned int seed = 0;
 		float stretch = 64.0f;
 		float solid_threshold = 0.5f;
 	};

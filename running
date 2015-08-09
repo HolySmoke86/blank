@@ -56,7 +56,13 @@ World
 
 -s <seed>
 	use <seed> (unsigned integer) as the world seed
+	only used for newly created worlds
 	default is 0
+
+--world-name <name>
+	use given name for the world save
+	no checks are being done right now, so make sure it can be
+	used as a directory name
 
 
 Controls

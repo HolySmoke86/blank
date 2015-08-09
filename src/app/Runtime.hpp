@@ -34,6 +34,7 @@ public:
 
 		std::string asset_path;
 		std::string save_path;
+		std::string world_name = "default";
 
 		Interface::Config interface = Interface::Config();
 		World::Config world = World::Config();
