@@ -46,7 +46,8 @@ public:
 	void Update(int dt);
 
 	std::size_t ToLoad() const noexcept { return to_load.size(); }
-	void LoadOne();
+	// returns true if the chunk was generated
+	bool LoadOne();
 	void LoadN(std::size_t n);
 
 private:

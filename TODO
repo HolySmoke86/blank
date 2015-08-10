@@ -25,6 +25,12 @@ command line
 
 	usefull for development and later on world administration
 
+persistence
+
+	add world shutdown state to save dirty chunks when exiting
+
+	store some kind of byte order mark?
+
 networking
 
 	exchange of chunks and entities

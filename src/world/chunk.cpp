@@ -854,11 +854,23 @@ void ChunkLoader::QueueSurrounding(const Chunk::Pos &pos) {
 }
 
 void ChunkLoader::Update(int dt) {
-	// check if a chunk generation is scheduled for this frame
-	// and if there's a chunk waiting to be generated
+	// check if a chunk load is scheduled for this frame
+	// and if there's chunks waiting to be loaded
 	gen_timer.Update(dt);
 	if (gen_timer.Hit()) {
-		LoadOne();
+		// we may
+		// load until one of load or generation limits was hit
+		constexpr int max_load = 10;
+		constexpr int max_gen = 1;
+		int loaded = 0;
+		int generated = 0;
+		while (!to_load.empty() && loaded < max_load && generated < max_gen) {
+			if (LoadOne()) {
+				++generated;
+			} else {
+				++loaded;
+			}
+		}
 	}
 
 	constexpr int max_save = 10;
@@ -881,8 +893,8 @@ void ChunkLoader::LoadN(std::size_t n) {
 	}
 }
 
-void ChunkLoader::LoadOne() {
-	if (to_load.empty()) return;
+bool ChunkLoader::LoadOne() {
+	if (to_load.empty()) return false;
 
 	// take position of next chunk in queue
 	Chunk::Pos pos(to_load.front());
@@ -893,7 +905,7 @@ void ChunkLoader::LoadOne() {
 		if (iter->Position() == pos) {
 			loaded.splice(loaded.end(), to_free, iter);
 			Insert(loaded.back());
-			return;
+			return false;
 		}
 	}
 
@@ -906,14 +918,17 @@ void ChunkLoader::LoadOne() {
 		loaded.splice(loaded.end(), to_free, to_free.begin());
 	}
 
+	bool generated = false;
 	Chunk &chunk = loaded.back();
 	chunk.Position(pos);
 	if (save.Exists(pos)) {
 		save.Read(chunk);
 	} else {
 		gen(chunk);
+		generated = true;
 	}
 	Insert(chunk);
+	return generated;
 }
 
 }
