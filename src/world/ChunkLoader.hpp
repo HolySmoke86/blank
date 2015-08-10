@@ -33,6 +33,7 @@ public:
 	void QueueSurrounding(const Chunk::Pos &);
 
 	std::list<Chunk> &Loaded() noexcept { return loaded; }
+	const WorldSave &SaveFile() const noexcept { return save; }
 
 	Chunk *Loaded(const Chunk::Pos &) noexcept;
 	bool Queued(const Chunk::Pos &) noexcept;

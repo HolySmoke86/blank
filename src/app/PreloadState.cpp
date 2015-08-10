@@ -3,8 +3,6 @@
 #include "Environment.hpp"
 #include "../world/ChunkLoader.hpp"
 
-#include <iostream>
-
 
 namespace blank {
 
@@ -20,7 +18,10 @@ PreloadState::PreloadState(Environment &env, ChunkLoader &loader)
 }
 
 
-void PreloadState::Handle(const SDL_Event &) {
+void PreloadState::Handle(const SDL_Event &e) {
+	if (e.type == SDL_QUIT) {
+		env.state.PopAll();
+	}
 }
 
 void PreloadState::Update(int dt) {

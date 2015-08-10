@@ -96,9 +96,6 @@ void Application::HandleEvents() {
 
 void Application::Handle(const SDL_Event &event) {
 	switch (event.type) {
-		case SDL_QUIT:
-			env.state.PopAll();
-			break;
 		case SDL_WINDOWEVENT:
 			Handle(event.window);
 			break;

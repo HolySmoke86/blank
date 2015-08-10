@@ -1,6 +1,7 @@
 #include "WorldState.hpp"
 
 #include "Environment.hpp"
+#include "UnloadState.hpp"
 
 #include <SDL.h>
 
@@ -40,6 +41,10 @@ void WorldState::Handle(const SDL_Event &event) {
 			break;
 		case SDL_MOUSEWHEEL:
 			interface.Handle(event.wheel);
+			break;
+		case SDL_QUIT:
+			// don't care about this leak just now
+			env.state.Switch(new UnloadState(env, world.Loader()));
 			break;
 		default:
 			break;

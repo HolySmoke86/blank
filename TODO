@@ -27,7 +27,8 @@ command line
 
 persistence
 
-	add world shutdown state to save dirty chunks when exiting
+	merge IO counters, so number of operations per frame is kept
+	low, no matter what exactly is done
 
 	store some kind of byte order mark?
 

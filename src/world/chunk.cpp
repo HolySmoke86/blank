@@ -772,6 +772,10 @@ std::list<Chunk>::iterator ChunkLoader::Remove(std::list<Chunk>::iterator chunk)
 	++next;
 	// unlink neighbors so they won't reference a dead chunk
 	chunk->ClearNeighbors();
+	// if it should be saved, do it now
+	if (chunk->ShouldUpdateSave()) {
+		save.Write(*chunk);
+	}
 	// and move it from loaded to free list
 	to_free.splice(to_free.end(), loaded, chunk);
 	return next;
