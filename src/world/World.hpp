@@ -37,7 +37,7 @@ public:
 		ChunkLoader::Config load = ChunkLoader::Config();
 	};
 
-	World(const Assets &, const Config &);
+	World(const Assets &, const Config &, const WorldSave &);
 
 	bool Intersection(
 		const Ray &,

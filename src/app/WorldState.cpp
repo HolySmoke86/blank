@@ -10,10 +10,11 @@ namespace blank {
 WorldState::WorldState(
 	Environment &env,
 	const Interface::Config &ic,
-	const World::Config &wc
+	const World::Config &wc,
+	const WorldSave &save
 )
 : env(env)
-, world(env.assets, wc)
+, world(env.assets, wc, save)
 , spawner(world)
 , interface(ic, env, world) {
 

@@ -110,8 +110,6 @@ public:
 	// check which faces of a block at given index are obstructed (and therefore invisible)
 	Block::FaceSet Obstructed(const Pos &) const noexcept;
 
-	void Invalidate() noexcept { dirty = true; }
-
 	void SetBlock(int index, const Block &) noexcept;
 	void SetBlock(const Block::Pos &pos, const Block &block) noexcept { SetBlock(ToIndex(pos), block); }
 	void SetBlock(const Pos &pos, const Block &block) noexcept { SetBlock(ToIndex(pos), block); }
@@ -160,6 +158,17 @@ public:
 		return glm::translate((position - offset) * Extent());
 	}
 
+	void *BlockData() noexcept { return &blocks[0]; }
+	const void *BlockData() const noexcept { return &blocks[0]; }
+	static constexpr std::size_t BlockSize() noexcept { return sizeof(blocks) + sizeof(light); }
+
+	void Invalidate() noexcept { dirty_model = dirty_save = true; }
+	void InvalidateModel() noexcept { dirty_model = true; }
+	void ClearModel() noexcept { dirty_model = false; }
+	void ClearSave() noexcept { dirty_save = false; }
+	bool ShouldUpdateModel() const noexcept { return dirty_model; }
+	bool ShouldUpdateSave() const noexcept { return dirty_save; }
+
 	void CheckUpdate() noexcept;
 	void Draw() noexcept;
 
@@ -173,7 +182,8 @@ private:
 	unsigned char light[size];
 	BlockModel model;
 	Pos position;
-	bool dirty;
+	bool dirty_model;
+	bool dirty_save;
 
 };
 

@@ -236,12 +236,12 @@ int Runtime::Execute() {
 	if (save.Exists()) {
 		save.Read(config.world);
 	} else {
-		save.Create(config.world);
+		save.Write(config.world);
 	}
 
 	Application app(env);
 
-	WorldState world_state(env, config.interface, config.world);
+	WorldState world_state(env, config.interface, config.world, save);
 	app.PushState(&world_state);
 
 	PreloadState preloader(env, world_state.GetWorld().Loader());

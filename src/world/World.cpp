@@ -5,7 +5,6 @@
 #include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
-#include <iostream>
 #include <limits>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/transform.hpp>
@@ -13,14 +12,14 @@
 
 namespace blank {
 
-World::World(const Assets &assets, const Config &config)
+World::World(const Assets &assets, const Config &config, const WorldSave &save)
 : blockType()
 , blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
 , stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
 , slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
 , block_tex()
 , generate(config.gen)
-, chunks(config.load, blockType, generate)
+, chunks(config.load, blockType, generate, save)
 , player()
 , entities()
 , light_direction(config.light_direction)
@@ -195,7 +194,7 @@ World::World(const Assets &assets, const Config &config)
 	player->WorldCollidable(true);
 	player->Position(config.spawn);
 
-	chunks.GenerateSurrounding(player->ChunkCoords());
+	chunks.QueueSurrounding(player->ChunkCoords());
 }
 
 

@@ -11,6 +11,7 @@ namespace blank {
 
 class BlockTypeRegistry;
 class Generator;
+class WorldSave;
 
 class ChunkLoader {
 
@@ -21,10 +22,15 @@ public:
 		int gen_limit = 16;
 	};
 
-	ChunkLoader(const Config &, const BlockTypeRegistry &, const Generator &) noexcept;
+	ChunkLoader(
+		const Config &,
+		const BlockTypeRegistry &,
+		const Generator &,
+		const WorldSave &
+	) noexcept;
 
-	void Generate(const Chunk::Pos &from, const Chunk::Pos &to);
-	void GenerateSurrounding(const Chunk::Pos &);
+	void Queue(const Chunk::Pos &from, const Chunk::Pos &to);
+	void QueueSurrounding(const Chunk::Pos &);
 
 	std::list<Chunk> &Loaded() noexcept { return loaded; }
 
@@ -39,12 +45,12 @@ public:
 	void Rebase(const Chunk::Pos &);
 	void Update(int dt);
 
-	std::size_t ToLoad() const noexcept { return to_generate.size(); }
+	std::size_t ToLoad() const noexcept { return to_load.size(); }
 	void LoadOne();
 	void LoadN(std::size_t n);
 
 private:
-	Chunk &Generate(const Chunk::Pos &pos);
+	Chunk &Load(const Chunk::Pos &pos);
 	// link given chunk to all loaded neighbors
 	void Insert(Chunk &) noexcept;
 	// remove a loaded chunk
@@ -59,9 +65,10 @@ private:
 
 	const BlockTypeRegistry &reg;
 	const Generator &gen;
+	const WorldSave &save;
 
 	std::list<Chunk> loaded;
-	std::list<Chunk::Pos> to_generate;
+	std::list<Chunk::Pos> to_load;
 	std::list<Chunk> to_free;
 
 	IntervalTimer gen_timer;

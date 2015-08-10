@@ -47,8 +47,7 @@ void Generator::operator ()(Chunk &chunk) const noexcept {
 			}
 		}
 	}
-	chunk.Invalidate();
-	chunk.CheckUpdate();
+	//chunk.CheckUpdate();
 }
 
 }

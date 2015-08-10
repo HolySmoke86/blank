@@ -410,7 +410,6 @@ void Interface::PlaceBlock() {
 		next_pos -= aim_normal * glm::vec3(Chunk::Extent());
 	}
 	mod_chunk->SetBlock(next_pos, selection);
-	mod_chunk->Invalidate();
 
 	if (config.audio_disabled) return;
 	const Entity &player = ctrl.Controlled();
@@ -423,7 +422,6 @@ void Interface::PlaceBlock() {
 void Interface::RemoveBlock() noexcept {
 	if (!aim_chunk) return;
 	aim_chunk->SetBlock(aim_block, remove);
-	aim_chunk->Invalidate();
 
 	if (config.audio_disabled) return;
 	const Entity &player = ctrl.Controlled();

@@ -5,7 +5,9 @@
 #include <cctype>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
+#include <zlib.h>
 
 using namespace std;
 
@@ -14,7 +16,10 @@ namespace blank {
 
 WorldSave::WorldSave(const string &path)
 : root_path(path)
-, conf_path(path + "world.conf") {
+, conf_path(path + "world.conf")
+, chunk_path(path + "chunks/%d/%d/%d.gz")
+, chunk_bufsiz(chunk_path.length() + 3 * std::numeric_limits<int>::digits10)
+, chunk_buf(new char[chunk_bufsiz]) {
 
 }
 
@@ -23,22 +28,6 @@ bool WorldSave::Exists() const noexcept {
 	return is_dir(root_path) && is_file(conf_path);
 }
 
-
-void WorldSave::Create(const World::Config &conf) const {
-	cout << "creating world save" << endl;
-
-	if (!make_dirs(root_path)) {
-		throw runtime_error("failed to create world save directory");
-	}
-
-	ofstream out(conf_path);
-	out << "seed = " << conf.gen.seed << endl;
-	out.close();
-
-	if (!out) {
-		throw runtime_error("failed to write world config");
-	}
-}
 
 void WorldSave::Read(World::Config &conf) const {
 	cout << "reading world save" << endl;
@@ -79,6 +68,78 @@ void WorldSave::Read(World::Config &conf) const {
 	if (in.bad()) {
 		throw runtime_error("IO error reading world config");
 	}
+}
+
+void WorldSave::Write(const World::Config &conf) const {
+	cout << "writing world save" << endl;
+
+	if (!make_dirs(root_path)) {
+		throw runtime_error("failed to create world save directory");
+	}
+
+	ofstream out(conf_path);
+	out << "seed = " << conf.gen.seed << endl;
+	out.close();
+
+	if (!out) {
+		throw runtime_error("failed to write world config");
+	}
+}
+
+
+bool WorldSave::Exists(const Chunk::Pos &pos) const noexcept {
+	return is_file(ChunkPath(pos));
+}
+
+void WorldSave::Read(Chunk &chunk) const {
+	const char *path = ChunkPath(chunk.Position());
+	gzFile file = gzopen(path, "r");
+	if (!file) {
+		throw runtime_error("failed to open chunk file");
+	}
+	if (gzread(file, chunk.BlockData(), Chunk::BlockSize()) != Chunk::BlockSize()) {
+		throw runtime_error("failed to read chunk from file");
+	}
+	if (gzclose(file) != Z_OK) {
+		throw runtime_error("failed to read chunk file");
+	}
+	chunk.InvalidateModel();
+	chunk.ClearSave();
+}
+
+void WorldSave::Write(Chunk &chunk) const {
+	const char *path = ChunkPath(chunk.Position());
+	gzFile file = gzopen(path, "w");
+	if (!file) {
+		// check if it's because of a missing path component
+		if (errno != ENOENT) {
+			// nope, fatal
+			throw runtime_error(strerror(errno));
+		}
+		string dir_path(path);
+		dir_path.erase(dir_path.find_last_of("\\/"));
+		if (!make_dirs(dir_path)) {
+			throw runtime_error("failed to create dir for chunk file");
+		}
+		file = gzopen(path, "w");
+		if (!file) {
+			throw runtime_error("failed to open chunk file");
+		}
+	}
+	if (gzwrite(file, chunk.BlockData(), Chunk::BlockSize()) == 0) {
+		gzclose(file); // if this fails, it can't be helped
+		throw runtime_error("failed to write chunk to file");
+	}
+	if (gzclose(file) != Z_OK) {
+		throw runtime_error("failed to write chunk file");
+	}
+	chunk.ClearSave();
+}
+
+
+const char *WorldSave::ChunkPath(const Chunk::Pos &pos) const {
+	snprintf(chunk_buf.get(), chunk_bufsiz, chunk_path.c_str(), pos.x, pos.y, pos.z);
+	return chunk_buf.get();
 }
 
 }

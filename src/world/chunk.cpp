@@ -4,10 +4,11 @@
 
 #include "Generator.hpp"
 #include "WorldCollision.hpp"
+#include "WorldSave.hpp"
 
 #include <algorithm>
-#include <iostream>
 #include <limits>
+#include <ostream>
 #include <queue>
 
 
@@ -26,7 +27,8 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 , light{0}
 , model()
 , position(0, 0, 0)
-, dirty(false) {
+, dirty_model(false)
+, dirty_save(false) {
 
 }
 
@@ -34,7 +36,8 @@ Chunk::Chunk(Chunk &&other) noexcept
 : types(other.types)
 , model(std::move(other.model))
 , position(other.position)
-, dirty(other.dirty) {
+, dirty_model(other.dirty_model)
+, dirty_save(other.dirty_save) {
 	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
 	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
 	std::copy(other.light, other.light + sizeof(light), light);
@@ -47,7 +50,8 @@ Chunk &Chunk::operator =(Chunk &&other) noexcept {
 	std::copy(other.light, other.light + sizeof(light), light);
 	model = std::move(other.model);
 	position = other.position;
-	dirty = other.dirty;
+	dirty_model = other.dirty_save;
+	dirty_save = other.dirty_save;
 	return *this;
 }
 
@@ -148,6 +152,7 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	const BlockType &new_type = Type(block);
 
 	blocks[index] = block;
+	Invalidate();
 
 	if (&old_type == &new_type) return;
 
@@ -425,7 +430,7 @@ bool Chunk::IsSurface(const Pos &pos) const noexcept {
 
 
 void Chunk::Draw() noexcept {
-	if (dirty) {
+	if (ShouldUpdateModel()) {
 		Update();
 	}
 	model.Draw();
@@ -508,7 +513,7 @@ BlockModel::Buffer buf;
 }
 
 void Chunk::CheckUpdate() noexcept {
-	if (dirty) {
+	if (ShouldUpdateModel()) {
 		Update();
 	}
 }
@@ -549,7 +554,7 @@ void Chunk::Update() noexcept {
 	}
 
 	model.Update(buf);
-	dirty = false;
+	ClearModel();
 }
 
 Block::FaceSet Chunk::Obstructed(const Pos &pos) const noexcept {
@@ -639,12 +644,18 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face) noexce
 }
 
 
-ChunkLoader::ChunkLoader(const Config &config, const BlockTypeRegistry &reg, const Generator &gen) noexcept
+ChunkLoader::ChunkLoader(
+	const Config &config,
+	const BlockTypeRegistry &reg,
+	const Generator &gen,
+	const WorldSave &save
+) noexcept
 : base(0, 0, 0)
 , reg(reg)
 , gen(gen)
+, save(save)
 , loaded()
-, to_generate()
+, to_load()
 , to_free()
 , gen_timer(config.gen_limit)
 , load_dist(config.load_dist)
@@ -673,7 +684,7 @@ struct ChunkLess {
 
 }
 
-void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
+void ChunkLoader::Queue(const Chunk::Pos &from, const Chunk::Pos &to) {
 	for (int z = from.z; z < to.z; ++z) {
 		for (int y = from.y; y < to.y; ++y) {
 			for (int x = from.x; x < to.x; ++x) {
@@ -681,7 +692,7 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 				if (Known(pos)) {
 					continue;
 				} else if (pos == base) {
-					Generate(pos);
+					Load(pos);
 
 				//	light testing
 				//	for (int i = 0; i < 16; ++i) {
@@ -728,19 +739,23 @@ void ChunkLoader::Generate(const Chunk::Pos &from, const Chunk::Pos &to) {
 				//	loaded.back().Invalidate();
 				//	loaded.back().CheckUpdate();
 				} else {
-					to_generate.emplace_back(pos);
+					to_load.emplace_back(pos);
 				}
 			}
 		}
 	}
-	to_generate.sort(ChunkLess(base));
+	to_load.sort(ChunkLess(base));
 }
 
-Chunk &ChunkLoader::Generate(const Chunk::Pos &pos) {
+Chunk &ChunkLoader::Load(const Chunk::Pos &pos) {
 	loaded.emplace_back(reg);
 	Chunk &chunk = loaded.back();
 	chunk.Position(pos);
-	gen(chunk);
+	if (save.Exists(pos)) {
+		save.Read(chunk);
+	} else {
+		gen(chunk);
+	}
 	Insert(chunk);
 	return chunk;
 }
@@ -772,7 +787,7 @@ Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) noexcept {
 }
 
 bool ChunkLoader::Queued(const Chunk::Pos &pos) noexcept {
-	for (const Chunk::Pos &chunk : to_generate) {
+	for (const Chunk::Pos &chunk : to_load) {
 		if (chunk == pos) {
 			return true;
 		}
@@ -791,14 +806,14 @@ Chunk &ChunkLoader::ForceLoad(const Chunk::Pos &pos) {
 		return *chunk;
 	}
 
-	for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end; ++iter) {
+	for (auto iter(to_load.begin()), end(to_load.end()); iter != end; ++iter) {
 		if (*iter == pos) {
-			to_generate.erase(iter);
+			to_load.erase(iter);
 			break;
 		}
 	}
 
-	return Generate(pos);
+	return Load(pos);
 }
 
 bool ChunkLoader::OutOfRange(const Chunk::Pos &pos) const noexcept {
@@ -822,20 +837,20 @@ void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
 		}
 	}
 	// abort far away queued chunks
-	for (auto iter(to_generate.begin()), end(to_generate.end()); iter != end;) {
+	for (auto iter(to_load.begin()), end(to_load.end()); iter != end;) {
 		if (OutOfRange(*iter)) {
-			iter = to_generate.erase(iter);
+			iter = to_load.erase(iter);
 		} else {
 			++iter;
 		}
 	}
 	// add missing new chunks
-	GenerateSurrounding(base);
+	QueueSurrounding(base);
 }
 
-void ChunkLoader::GenerateSurrounding(const Chunk::Pos &pos) {
+void ChunkLoader::QueueSurrounding(const Chunk::Pos &pos) {
 	const Chunk::Pos offset(load_dist, load_dist, load_dist);
-	Generate(pos - offset, pos + offset);
+	Queue(pos - offset, pos + offset);
 }
 
 void ChunkLoader::Update(int dt) {
@@ -844,6 +859,18 @@ void ChunkLoader::Update(int dt) {
 	gen_timer.Update(dt);
 	if (gen_timer.Hit()) {
 		LoadOne();
+	}
+
+	constexpr int max_save = 10;
+	int saved = 0;
+	for (Chunk &chunk : loaded) {
+		if (chunk.ShouldUpdateSave()) {
+			save.Write(chunk);
+			++saved;
+			if (saved >= max_save) {
+				break;
+			}
+		}
 	}
 }
 
@@ -855,11 +882,11 @@ void ChunkLoader::LoadN(std::size_t n) {
 }
 
 void ChunkLoader::LoadOne() {
-	if (to_generate.empty()) return;
+	if (to_load.empty()) return;
 
 	// take position of next chunk in queue
-	Chunk::Pos pos(to_generate.front());
-	to_generate.pop_front();
+	Chunk::Pos pos(to_load.front());
+	to_load.pop_front();
 
 	// look if the same chunk was already generated and still lingering
 	for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
@@ -881,7 +908,11 @@ void ChunkLoader::LoadOne() {
 
 	Chunk &chunk = loaded.back();
 	chunk.Position(pos);
-	gen(chunk);
+	if (save.Exists(pos)) {
+		save.Read(chunk);
+	} else {
+		gen(chunk);
+	}
 	Insert(chunk);
 }
 

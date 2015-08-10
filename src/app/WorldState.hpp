@@ -18,7 +18,8 @@ public:
 	WorldState(
 		Environment &,
 		const Interface::Config &,
-		const World::Config &
+		const World::Config &,
+		const WorldSave &
 	);
 
 	void Handle(const SDL_Event &) override;

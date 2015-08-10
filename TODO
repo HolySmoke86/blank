@@ -29,11 +29,6 @@ networking
 
 	exchange of chunks and entities
 
-persistence
-
-	unloaded chunks should be saved to disk and restored when they
-	are loaded again
-
 launcher ui
 
 	select or create a world with configurable parameters

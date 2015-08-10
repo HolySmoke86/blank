@@ -1,7 +1,7 @@
 CXX = g++ --std=c++11
 LDXX = g++
 
-LIBS = sdl2 SDL2_image SDL2_ttf glew openal freealut
+LIBS = sdl2 SDL2_image SDL2_ttf glew openal freealut zlib
 
 PKGFLAGS := $(shell pkg-config --cflags $(LIBS))
 PKGLIBS := $(shell pkg-config --libs $(LIBS))
