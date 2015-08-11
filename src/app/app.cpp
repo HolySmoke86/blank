@@ -145,18 +145,41 @@ void Application::Render() {
 
 
 void Application::PushState(State *s) {
+	if (!states.empty()) {
+		states.top()->OnPause();
+	}
 	states.emplace(s);
+	++s->ref_count;
+	if (s->ref_count == 1) {
+		s->OnEnter();
+	}
+	s->OnResume();
 }
 
 State *Application::PopState() {
 	State *s = states.top();
 	states.pop();
+	s->OnPause();
+	s->OnExit();
+	if (!states.empty()) {
+		states.top()->OnResume();
+	}
 	return s;
 }
 
 State *Application::SwitchState(State *s_new) {
 	State *s_old = states.top();
 	states.top() = s_new;
+	--s_old->ref_count;
+	++s_new->ref_count;
+	s_old->OnPause();
+	if (s_old->ref_count == 0) {
+		s_old->OnExit();
+	}
+	if (s_new->ref_count == 1) {
+		s_new->OnEnter();
+	}
+	s_new->OnResume();
 	return s_old;
 }
 

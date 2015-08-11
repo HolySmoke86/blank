@@ -1,7 +1,6 @@
 #include "WorldState.hpp"
 
 #include "Environment.hpp"
-#include "UnloadState.hpp"
 
 #include <SDL.h>
 
@@ -17,8 +16,15 @@ WorldState::WorldState(
 : env(env)
 , world(env.assets, wc, save)
 , spawner(world)
-, interface(ic, env, world) {
+, interface(ic, env, world)
+, preload(env, world.Loader())
+, unload(env, world.Loader()) {
 
+}
+
+
+void WorldState::OnEnter() {
+	env.state.Push(&preload);
 }
 
 
@@ -43,8 +49,7 @@ void WorldState::Handle(const SDL_Event &event) {
 			interface.Handle(event.wheel);
 			break;
 		case SDL_QUIT:
-			// don't care about this leak just now
-			env.state.Switch(new UnloadState(env, world.Loader()));
+			env.state.Switch(&unload);
 			break;
 		default:
 			break;

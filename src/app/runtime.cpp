@@ -1,6 +1,5 @@
 #include "Application.hpp"
 #include "Environment.hpp"
-#include "PreloadState.hpp"
 #include "Runtime.hpp"
 #include "WorldState.hpp"
 
@@ -243,9 +242,6 @@ int Runtime::Execute() {
 
 	WorldState world_state(env, config.interface, config.world, save);
 	app.PushState(&world_state);
-
-	PreloadState preloader(env, world_state.GetWorld().Loader());
-	app.PushState(&preloader);
 
 	switch (mode) {
 		default:

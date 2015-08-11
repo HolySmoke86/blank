@@ -1,5 +1,5 @@
-#ifndef BLANK_APP_PRELOADSTATE_HPP_
-#define BLANK_APP_PRELOADSTATE_HPP_
+#ifndef BLANK_APP_UNLOADSTATE_HPP_
+#define BLANK_APP_UNLOADSTATE_HPP_
 
 #include "State.hpp"
 
@@ -21,6 +21,8 @@ class UnloadState
 
 public:
 	UnloadState(Environment &, ChunkLoader &);
+
+	void OnResume();
 
 	void Handle(const SDL_Event &) override;
 	void Update(int dt) override;

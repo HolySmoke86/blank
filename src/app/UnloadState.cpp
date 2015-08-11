@@ -22,6 +22,14 @@ UnloadState::UnloadState(Environment &env, ChunkLoader &loader)
 }
 
 
+void UnloadState::OnResume() {
+	cur = loader.Loaded().begin();
+	end = loader.Loaded().end();
+	done = 0;
+	total = loader.Loaded().size();
+}
+
+
 void UnloadState::Handle(const SDL_Event &) {
 	// ignore everything
 }

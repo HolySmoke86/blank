@@ -6,15 +6,27 @@
 
 namespace blank {
 
+class Application;
 class Viewport;
 
 struct State {
+
+	friend class Application;
 
 	virtual void Handle(const SDL_Event &) = 0;
 
 	virtual void Update(int dt) = 0;
 
 	virtual void Render(Viewport &) = 0;
+
+
+private:
+	int ref_count = 0;
+
+	virtual void OnEnter() { }
+	virtual void OnResume() { }
+	virtual void OnPause() { }
+	virtual void OnExit() { }
 
 };
 
