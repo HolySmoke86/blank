@@ -1,10 +1,9 @@
 #ifndef BLANK_WORLD_ENTITY_HPP_
 #define BLANK_WORLD_ENTITY_HPP_
 
-#include "Block.hpp"
 #include "Chunk.hpp"
+#include "../model/CompositeModel.hpp"
 #include "../model/geometry.hpp"
-#include "../model/EntityModel.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
@@ -13,6 +12,7 @@
 
 namespace blank {
 
+class DirectionalLighting;
 class Shape;
 
 class Entity {
@@ -20,10 +20,8 @@ class Entity {
 public:
 	Entity() noexcept;
 
-	bool HasShape() const noexcept { return shape; }
-	const Shape *GetShape() const noexcept { return shape; }
-	void SetShape(const Shape *, const glm::vec3 &color, float texture);
-	void SetShapeless() noexcept;
+	CompositeModel &GetModel() noexcept { return model; }
+	const CompositeModel &GetModel() const noexcept { return model; }
 
 	const std::string &Name() const noexcept { return name; }
 	void Name(const std::string &n) { name = n; }
@@ -35,30 +33,31 @@ public:
 	void WorldCollidable(bool b) noexcept { world_collision = b; }
 
 	const glm::vec3 &Velocity() const noexcept { return velocity; }
-	void Velocity(const glm::vec3 &) noexcept;
+	void Velocity(const glm::vec3 &v) noexcept { velocity = v; }
 
-	const Block::Pos &Position() const noexcept { return position; }
-	void Position(const Chunk::Pos &, const Block::Pos &) noexcept;
-	void Position(const Block::Pos &) noexcept;
+	const glm::vec3 &Position() const noexcept { return model.Position(); }
+	void Position(const Chunk::Pos &, const glm::vec3 &) noexcept;
+	void Position(const glm::vec3 &) noexcept;
 	void Move(const glm::vec3 &delta) noexcept;
 
 	const Chunk::Pos ChunkCoords() const noexcept { return chunk; }
 
 	glm::vec3 AbsolutePosition() const noexcept {
-		return glm::vec3(chunk * Chunk::Extent()) + position;
+		return glm::vec3(chunk * Chunk::Extent()) + Position();
 	}
 	glm::vec3 AbsoluteDifference(const Entity &other) const noexcept {
-		return glm::vec3((chunk - other.chunk) * Chunk::Extent()) + position - other.position;
+		return glm::vec3((chunk - other.chunk) * Chunk::Extent()) + Position() - other.Position();
 	}
 
 	/// direction is rotation axis, magnitude is speed in rad/ms
 	const glm::vec3 &AngularVelocity() const noexcept { return angular_velocity; }
-	void AngularVelocity(const glm::vec3 &) noexcept;
+	void AngularVelocity(const glm::vec3 &v) noexcept { angular_velocity = v; }
 
-	const glm::quat &Rotation() const noexcept { return rotation; }
-	void Rotation(const glm::quat &) noexcept;
+	const glm::quat &Orientation() const noexcept { return model.Orientation(); }
+	void Orientation(const glm::quat &o) noexcept { model.Orientation(o); }
 	void Rotate(const glm::quat &delta) noexcept;
 
+	glm::mat4 ChunkTransform(const Chunk::Pos &chunk_offset) const noexcept;
 	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const noexcept;
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
@@ -67,24 +66,21 @@ public:
 
 	void Update(int dt) noexcept;
 
-	void Draw() noexcept {
-		model.Draw();
+	void Render(const glm::mat4 &M, DirectionalLighting &prog) noexcept {
+		model.Render(M, prog);
 	}
 
 private:
-	const Shape *shape;
-	EntityModel model;
+	CompositeModel model;
 
 	std::string name;
 
 	AABB bounds;
 
 	glm::vec3 velocity;
-	Block::Pos position;
 	Chunk::Pos chunk;
 
 	glm::vec3 angular_velocity;
-	glm::quat rotation;
 
 	bool world_collision;
 	bool remove;

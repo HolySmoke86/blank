@@ -18,6 +18,13 @@ Spawner::Spawner(World &world)
 , spawn_distance(16 * 16)
 , max_entities(16)
 , chunk_range(4) {
+	EntityModel::Buffer buf;
+	for (size_t i = 0; i < 14; ++i) {
+		world.BlockTypes()[i + 1].FillEntityModel(buf);
+		models[i].Update(buf);
+		buf.Clear();
+	}
+
 	timer.Start();
 	Spawn(world.Player().ChunkCoords(), { 0.5f, 0.5f, 0.5f });
 }
@@ -92,9 +99,6 @@ void Spawner::TrySpawn() {
 }
 
 void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
-	glm::vec3 color(rand() % 6, rand() % 6, rand() % 6);
-	color = color * 0.15f + 0.25f;
-
 	glm::vec3 rot(0.000001f);
 	rot.x *= (rand() % 1024);
 	rot.y *= (rand() % 1024);
@@ -105,7 +109,7 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	e.SetShape(world.BlockTypes()[1].shape, color, 2);
+	e.GetModel().SetNodeModel(&models[rand() % 14]);
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (rand() % 2) {

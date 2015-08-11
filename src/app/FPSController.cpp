@@ -42,7 +42,7 @@ void FPSController::RotateYaw(float delta) noexcept {
 
 
 void FPSController::Update(int dt) noexcept {
-	entity.Rotation(glm::quat(glm::vec3(pitch, yaw, 0.0f)));
+	entity.Orientation(glm::quat(glm::vec3(pitch, yaw, 0.0f)));
 	entity.Velocity(glm::rotateY(velocity, yaw));
 }
 

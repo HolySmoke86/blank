@@ -357,10 +357,7 @@ void World::Render(Viewport &viewport) {
 	entity_prog.SetFogDensity(fog_density);
 
 	for (Entity &entity : entities) {
-		if (entity.HasShape()) {
-			entity_prog.SetM(entity.Transform(player->ChunkCoords()));
-			entity.Draw();
-		}
+		entity.Render(entity.ChunkTransform(player->ChunkCoords()), entity_prog);
 	}
 }
 

@@ -2,6 +2,7 @@
 #define BLANK_AI_SPAWNER_HPP_
 
 #include "../app/IntervalTimer.hpp"
+#include "../model/EntityModel.hpp"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -28,6 +29,8 @@ private:
 private:
 	World &world;
 	std::vector<Controller *> controllers;
+
+	EntityModel models[14];
 
 	IntervalTimer timer;
 	float despawn_range;

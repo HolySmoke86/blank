@@ -15,45 +15,25 @@ blank::EntityModel::Buffer model_buffer;
 namespace blank {
 
 Entity::Entity() noexcept
-: shape(nullptr)
-, model()
+: model()
 , name("anonymous")
 , bounds()
 , velocity(0, 0, 0)
-, position(0, 0, 0)
 , chunk(0, 0, 0)
 , angular_velocity(0.0f)
-, rotation(1.0f, 0.0f, 0.0f, 0.0f)
 , world_collision(false)
 , remove(false) {
 
 }
 
 
-void Entity::SetShape(const Shape *s, const glm::vec3 &color, float texture) {
-	shape = s;
-	model_buffer.Clear();
-	shape->Vertices(model_buffer, texture);
-	model_buffer.colors.resize(shape->VertexCount(), color);
-	model.Update(model_buffer);
-}
-
-void Entity::SetShapeless() noexcept {
-	shape = nullptr;
-}
-
-
-void Entity::Velocity(const glm::vec3 &vel) noexcept {
-	velocity = vel;
-}
-
-void Entity::Position(const Chunk::Pos &c, const Block::Pos &pos) noexcept {
+void Entity::Position(const Chunk::Pos &c, const glm::vec3 &pos) noexcept {
 	chunk = c;
-	position = pos;
+	model.Position(pos);
 }
 
-void Entity::Position(const Block::Pos &pos) noexcept {
-	position = pos;
+void Entity::Position(const glm::vec3 &pos) noexcept {
+	glm::vec3 position(pos);
 	while (position.x >= Chunk::width) {
 		position.x -= Chunk::width;
 		++chunk.x;
@@ -78,27 +58,25 @@ void Entity::Position(const Block::Pos &pos) noexcept {
 		position.z += Chunk::depth;
 		--chunk.z;
 	}
+	model.Position(position);
 }
 
 void Entity::Move(const glm::vec3 &delta) noexcept {
-	Position(position + delta);
-}
-
-void Entity::AngularVelocity(const glm::vec3 &v) noexcept {
-	angular_velocity = v;
-}
-
-void Entity::Rotation(const glm::quat &rot) noexcept {
-	rotation = rot;
+	Position(Position() + delta);
 }
 
 void Entity::Rotate(const glm::quat &delta) noexcept {
-	Rotation(delta * Rotation());
+	Orientation(delta * Orientation());
+}
+
+glm::mat4 Entity::ChunkTransform(const Chunk::Pos &chunk_offset) const noexcept {
+	const glm::vec3 translation = glm::vec3((chunk - chunk_offset) * Chunk::Extent());
+	return glm::translate(translation);
 }
 
 glm::mat4 Entity::Transform(const Chunk::Pos &chunk_offset) const noexcept {
-	const glm::vec3 translation = glm::vec3((chunk - chunk_offset) * Chunk::Extent()) + position;
-	glm::mat4 transform(toMat4(Rotation()));
+	const glm::vec3 translation = glm::vec3((chunk - chunk_offset) * Chunk::Extent()) + Position();
+	glm::mat4 transform(toMat4(Orientation()));
 	transform[3].x = translation.x;
 	transform[3].y = translation.y;
 	transform[3].z = translation.z;
