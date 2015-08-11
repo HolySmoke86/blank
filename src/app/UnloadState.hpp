@@ -4,7 +4,6 @@
 #include "State.hpp"
 
 #include "../ui/Progress.hpp"
-#include "../graphics/Font.hpp"
 
 #include <cstddef>
 #include <list>
@@ -31,7 +30,6 @@ public:
 private:
 	Environment &env;
 	ChunkLoader &loader;
-	Font font;
 	Progress progress;
 	std::list<Chunk>::iterator cur;
 	std::list<Chunk>::iterator end;

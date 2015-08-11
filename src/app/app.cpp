@@ -219,7 +219,9 @@ void StateControl::Commit(Application &app) {
 Assets::Assets(const string &base)
 : fonts(base + "fonts/")
 , sounds(base + "sounds/")
-, textures(base + "textures/") {
+, textures(base + "textures/")
+, large_ui_font(LoadFont("DejaVuSans", 24))
+, small_ui_font(LoadFont("DejaVuSans", 16)) {
 
 }
 

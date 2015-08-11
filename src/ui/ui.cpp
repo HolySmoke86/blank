@@ -98,8 +98,7 @@ Interface::Interface(
 : env(env)
 , world(world)
 , ctrl(world.Player())
-, font(env.assets.LoadFont("DejaVuSans", 16))
-, hud(world.BlockTypes(), font)
+, hud(world.BlockTypes(), env.assets.small_ui_font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_chunk(nullptr)
 , aim_block(0)
@@ -107,7 +106,7 @@ Interface::Interface(
 , outline()
 , outline_transform(1.0f)
 , counter_text()
-, messages(font)
+, messages(env.assets.small_ui_font)
 , msg_timer(5000)
 , config(config)
 , place_timer(256)
@@ -123,7 +122,7 @@ Interface::Interface(
 	counter_text.Foreground(glm::vec4(1.0f));
 	counter_text.Background(glm::vec4(0.5f));
 	position_text.Hide();
-	position_text.Position(glm::vec3(-25.0f, 25.0f + font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	position_text.Position(glm::vec3(-25.0f, 25.0f + env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
 	position_text.Foreground(glm::vec4(1.0f));
 	position_text.Background(glm::vec4(0.5f));
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
@@ -355,13 +354,13 @@ void Interface::UpdateCounter() {
 		"avg: " << env.counter.Average().running << "ms, "
 		"peak: " << env.counter.Peak().running << "ms";
 	std::string text = s.str();
-	counter_text.Set(font, text);
+	counter_text.Set(env.assets.small_ui_font, text);
 }
 
 void Interface::UpdatePosition() {
 	std::stringstream s;
 	s << std::setprecision(3) << "pos: " << ctrl.Controlled().AbsolutePosition();
-	position_text.Set(font, s.str());
+	position_text.Set(env.assets.small_ui_font, s.str());
 }
 
 

@@ -9,8 +9,7 @@ namespace blank {
 PreloadState::PreloadState(Environment &env, ChunkLoader &loader)
 : env(env)
 , loader(loader)
-, font(env.assets.LoadFont("DejaVuSans", 24))
-, progress(font)
+, progress(env.assets.large_ui_font)
 , total(loader.ToLoad())
 , per_update(64) {
 	progress.Position(glm::vec3(0.0f), Gravity::CENTER);

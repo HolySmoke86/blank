@@ -1,13 +1,14 @@
 #ifndef BLANK_APP_ASSETS_HPP_
 #define BLANK_APP_ASSETS_HPP_
 
+#include "../graphics/Font.hpp"
+
 #include <string>
 
 
 namespace blank {
 
 class ArrayTexture;
-class Font;
 class Sound;
 class Texture;
 
@@ -25,6 +26,11 @@ private:
 	std::string fonts;
 	std::string sounds;
 	std::string textures;
+
+public:
+	// common assets shared by may states
+	Font large_ui_font;
+	Font small_ui_font;
 
 };
 

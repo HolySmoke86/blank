@@ -7,13 +7,13 @@
 #include "../app/FPSController.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../audio/Sound.hpp"
-#include "../graphics/Font.hpp"
 #include "../model/geometry.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
+#include <SDL.h>
 
 
 namespace blank {
@@ -87,7 +87,6 @@ private:
 	Environment &env;
 	World &world;
 	FPSController ctrl;
-	Font font;
 	HUD hud;
 
 	Ray aim;
