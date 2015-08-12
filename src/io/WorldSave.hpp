@@ -1,8 +1,8 @@
-#ifndef BLANK_WORLD_WORLDSAVE_HPP_
-#define BLANK_WORLD_WORLDSAVE_HPP_
+#ifndef BLANK_IO_WORLDSAVE_HPP_
+#define BLANK_IO_WORLDSAVE_HPP_
 
-#include "Chunk.hpp"
-#include "World.hpp"
+#include "../world/Chunk.hpp"
+#include "../world/World.hpp"
 
 #include <memory>
 #include <string>

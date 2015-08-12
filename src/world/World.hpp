@@ -6,7 +6,6 @@
 #include "Entity.hpp"
 #include "Generator.hpp"
 #include "../graphics/ArrayTexture.hpp"
-#include "../model/shapes.hpp"
 
 #include <list>
 #include <vector>
@@ -50,7 +49,7 @@ public:
 	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
 	void Resolve(Entity &e, std::vector<WorldCollision> &);
 
-	BlockTypeRegistry &BlockTypes() noexcept { return blockType; }
+	BlockTypeRegistry &BlockTypes() noexcept { return block_type; }
 	ChunkLoader &Loader() noexcept { return chunks; }
 
 	Entity &Player() { return *player; }
@@ -64,10 +63,7 @@ public:
 	void Render(Viewport &);
 
 private:
-	BlockTypeRegistry blockType;
-	CuboidShape blockShape;
-	StairShape stairShape;
-	CuboidShape slabShape;
+	BlockTypeRegistry block_type;
 
 	ArrayTexture block_tex;
 

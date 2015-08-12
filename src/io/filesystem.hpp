@@ -1,5 +1,5 @@
-#ifndef BLANK_APP_IO_HPP_
-#define BLANK_APP_IO_HPP_
+#ifndef BLANK_IO_FILESYSTEM_HPP_
+#define BLANK_IO_FILESYSTEM_HPP_
 
 #include <string>
 

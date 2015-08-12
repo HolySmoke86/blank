@@ -4,7 +4,7 @@
 #include "WorldState.hpp"
 
 #include "init.hpp"
-#include "../world/WorldSave.hpp"
+#include "../io/WorldSave.hpp"
 
 #include <cctype>
 #include <cstdlib>

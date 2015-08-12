@@ -25,12 +25,26 @@ command line
 
 	usefull for development and later on world administration
 
+audio
+
+	do the sources thing right™
+	(or at least in a way that it doesn't error out on shutdown :P )
+
 persistence
 
 	merge IO counters, so number of operations per frame is kept
 	low, no matter what exactly is done
 
 	store some kind of byte order mark?
+
+block asset loading
+
+	block type loader can determine which textures are needed in the array
+	it should compose a map while loading, assigning an ID to each
+	individual texture and after all types are loaded, load the appropriate
+	textures into the array
+
+	also, parameterization of chunk generator should be less static/dangerous
 
 networking
 

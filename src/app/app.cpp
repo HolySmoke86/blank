@@ -10,13 +10,18 @@
 #include "../graphics/ArrayTexture.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/Texture.hpp"
+#include "../io/TokenStreamReader.hpp"
+#include "../model/shapes.hpp"
 #include "../world/BlockType.hpp"
+#include "../world/BlockTypeRegistry.hpp"
 #include "../world/Entity.hpp"
 
+#include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <SDL_image.h>
 
+using std::runtime_error;
 using std::string;
 
 
@@ -220,9 +225,93 @@ Assets::Assets(const string &base)
 : fonts(base + "fonts/")
 , sounds(base + "sounds/")
 , textures(base + "textures/")
+, data(base + "data/")
 , large_ui_font(LoadFont("DejaVuSans", 24))
 , small_ui_font(LoadFont("DejaVuSans", 16)) {
 
+}
+
+namespace {
+
+CuboidShape block_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }});
+StairShape stair_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f });
+CuboidShape slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
+
+}
+
+void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg) const {
+	string full = data + set_name + ".types";
+	std::ifstream file(full);
+	if (!file) {
+		throw std::runtime_error("failed to open block type file " + full);
+	}
+	TokenStreamReader in(file);
+	string type_name;
+	string name;
+	string tex_name;
+	string shape_name;
+	while (in.HasMore()) {
+		in.ReadIdentifier(type_name);
+		in.Skip(Token::EQUALS);
+		BlockType type;
+
+		// read block type
+		in.Skip(Token::ANGLE_BRACKET_OPEN);
+		while (in.Peek().type != Token::ANGLE_BRACKET_CLOSE) {
+			in.ReadIdentifier(name);
+			in.Skip(Token::EQUALS);
+			if (name == "visible") {
+				type.visible = in.GetBool();
+			} else if (name == "texture") {
+				// TODO: load textures as requested
+				in.ReadString(tex_name);
+				if (tex_name == "rock-1") {
+					type.texture = 1;
+				} else if (tex_name == "rock-2") {
+					type.texture = 2;
+				} else if (tex_name == "rock-3") {
+					type.texture = 3;
+				} else if (tex_name == "debug") {
+					type.texture = 0;
+				} else {
+					throw runtime_error("unknown texture: " + tex_name);
+				}
+			} else if (name == "color") {
+				in.ReadVec(type.color);
+			} else if (name == "label") {
+				in.ReadString(type.label);
+			} else if (name == "luminosity") {
+				type.luminosity = in.GetInt();
+			} else if (name == "block_light") {
+				type.block_light = in.GetBool();
+			} else if (name == "collision") {
+				type.collision = in.GetBool();
+			} else if (name == "collide_block") {
+				type.collide_block = in.GetBool();
+			} else if (name == "shape") {
+				in.ReadIdentifier(shape_name);
+				if (shape_name == "block") {
+					type.shape = &block_shape;
+					type.fill = {  true,  true,  true,  true,  true,  true };
+				} else if (shape_name == "slab") {
+					type.shape = &slab_shape;
+					type.fill = { false,  true, false, false, false, false };
+				} else if (shape_name == "stair") {
+					type.shape = &stair_shape;
+					type.fill = { false,  true, false, false, false,  true };
+				} else {
+					throw runtime_error("unknown block shape: " + shape_name);
+				}
+			} else {
+				throw runtime_error("unknown block property: " + name);
+			}
+			in.Skip(Token::SEMICOLON);
+		}
+		in.Skip(Token::ANGLE_BRACKET_CLOSE);
+		in.Skip(Token::SEMICOLON);
+
+		reg.Add(type);
+	}
 }
 
 Font Assets::LoadFont(const string &name, int size) const {

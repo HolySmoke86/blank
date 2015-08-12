@@ -9,6 +9,7 @@
 namespace blank {
 
 class ArrayTexture;
+class BlockTypeRegistry;
 class Sound;
 class Texture;
 
@@ -17,6 +18,7 @@ class Assets {
 public:
 	explicit Assets(const std::string &base);
 
+	void LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &) const;
 	Font LoadFont(const std::string &name, int size) const;
 	Sound LoadSound(const std::string &name) const;
 	Texture LoadTexture(const std::string &name) const;
@@ -26,6 +28,7 @@ private:
 	std::string fonts;
 	std::string sounds;
 	std::string textures;
+	std::string data;
 
 public:
 	// common assets shared by may states

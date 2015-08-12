@@ -4,7 +4,7 @@
 
 #include "Generator.hpp"
 #include "WorldCollision.hpp"
-#include "WorldSave.hpp"
+#include "../io/WorldSave.hpp"
 
 #include <algorithm>
 #include <limits>

@@ -13,21 +13,14 @@
 namespace blank {
 
 World::World(const Assets &assets, const Config &config, const WorldSave &save)
-: blockType()
-, blockShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }})
-, stairShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f })
-, slabShape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }})
+: block_type()
 , block_tex()
 , generate(config.gen)
-, chunks(config.load, blockType, generate, save)
+, chunks(config.load, block_type, generate, save)
 , player()
 , entities()
 , light_direction(config.light_direction)
 , fog_density(config.fog_density) {
-	BlockType::Faces block_fill = {  true,  true,  true,  true,  true,  true };
-	BlockType::Faces slab_fill  = { false,  true, false, false, false, false };
-	BlockType::Faces stair_fill = { false,  true, false, false, false,  true };
-
 	block_tex.Bind();
 	block_tex.Reserve(16, 16, 4, Format());
 	assets.LoadTexture("debug", block_tex, 0);
@@ -36,153 +29,7 @@ World::World(const Assets &assets, const Config &config, const WorldSave &save)
 	assets.LoadTexture("rock-3", block_tex, 3);
 	block_tex.FilterNearest();
 
-	{ // white block
-		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
-		type.texture = 1;
-		type.label = "White Block";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = block_fill;
-		blockType.Add(type);
-	}
-	{ // white slab
-		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &slabShape);
-		type.texture = 1;
-		type.label = "White Slab";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = slab_fill;
-		blockType.Add(type);
-	}
-	{ // white stair
-		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &stairShape);
-		type.texture = 1;
-		type.label = "White Stair";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = stair_fill;
-		blockType.Add(type);
-	}
-
-	{ // red block
-		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &blockShape);
-		type.texture = 3;
-		type.label = "Red Block";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = block_fill;
-		blockType.Add(type);
-	}
-	{ // red slab
-		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &slabShape);
-		type.texture = 3;
-		type.label = "Red Slab";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = slab_fill;
-		blockType.Add(type);
-	}
-	{ // red stair
-		BlockType type(true, { 1.0f, 0.0f, 0.0f }, &stairShape);
-		type.texture = 3;
-		type.label = "Red Stair";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = stair_fill;
-		blockType.Add(type);
-	}
-
-	{ // green block
-		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &blockShape);
-		type.texture = 1;
-		type.label = "Green Block";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = block_fill;
-		blockType.Add(type);
-	}
-	{ // green slab
-		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &slabShape);
-		type.texture = 1;
-		type.label = "Green Slab";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = slab_fill;
-		blockType.Add(type);
-	}
-	{ // green stair
-		BlockType type(true, { 0.0f, 1.0f, 0.0f }, &stairShape);
-		type.texture = 1;
-		type.label = "Green Stair";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = stair_fill;
-		blockType.Add(type);
-	}
-
-	{ // blue block
-		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &blockShape);
-		type.texture = 3;
-		type.label = "Blue Block";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = block_fill;
-		blockType.Add(type);
-	}
-	{ // blue slab
-		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &slabShape);
-		type.texture = 3;
-		type.label = "Blue Slab";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = slab_fill;
-		blockType.Add(type);
-	}
-	{ // blue stair
-		BlockType type(true, { 0.0f, 0.0f, 1.0f }, &stairShape);
-		type.texture = 3;
-		type.label = "Blue Stair";
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = stair_fill;
-		blockType.Add(type);
-	}
-
-	{ // glowing yellow block
-		BlockType type(true, { 1.0f, 1.0f, 0.0f }, &blockShape);
-		type.texture = 2;
-		type.label = "Light";
-		type.luminosity = 15;
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = block_fill;
-		blockType.Add(type);
-	}
-
-	{ // the mysterious debug cube
-		BlockType type(true, { 1.0f, 1.0f, 1.0f }, &blockShape);
-		type.texture = 0;
-		type.label = "Debug Cube";
-		type.luminosity = 0;
-		type.block_light = true;
-		type.collision = true;
-		type.collide_block = true;
-		type.fill = block_fill;
-		blockType.Add(type);
-	}
+	assets.LoadBlockTypes("default", block_type);
 
 	generate.Space(0);
 	generate.Light(13);
