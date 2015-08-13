@@ -49,7 +49,8 @@ Environment::Environment(Window &win, const string &asset_path)
 , window(win)
 , assets(asset_path)
 , counter() {
-
+	viewport.Clear();
+	window.Flip();
 }
 
 
