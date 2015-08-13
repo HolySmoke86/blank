@@ -39,12 +39,7 @@ persistence
 
 block asset loading
 
-	block type loader can determine which textures are needed in the array
-	it should compose a map while loading, assigning an ID to each
-	individual texture and after all types are loaded, load the appropriate
-	textures into the array
-
-	also, parameterization of chunk generator should be less static/dangerous
+	parameterization of chunk generator should be less static/dangerous
 
 networking
 

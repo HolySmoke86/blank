@@ -12,17 +12,19 @@ class ArrayTexture;
 class BlockTypeRegistry;
 class Sound;
 class Texture;
+class TextureIndex;
 
 class Assets {
 
 public:
 	explicit Assets(const std::string &base);
 
-	void LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &) const;
+	void LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &, TextureIndex &) const;
 	Font LoadFont(const std::string &name, int size) const;
 	Sound LoadSound(const std::string &name) const;
 	Texture LoadTexture(const std::string &name) const;
 	void LoadTexture(const std::string &name, ArrayTexture &, int layer) const;
+	void LoadTextures(const TextureIndex &, ArrayTexture &) const;
 
 private:
 	std::string fonts;

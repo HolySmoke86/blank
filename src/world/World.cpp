@@ -2,6 +2,7 @@
 
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
+#include "../app/TextureIndex.hpp"
 #include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
@@ -21,15 +22,12 @@ World::World(const Assets &assets, const Config &config, const WorldSave &save)
 , entities()
 , light_direction(config.light_direction)
 , fog_density(config.fog_density) {
-	block_tex.Bind();
-	block_tex.Reserve(16, 16, 4, Format());
-	assets.LoadTexture("debug", block_tex, 0);
-	assets.LoadTexture("rock-1", block_tex, 1);
-	assets.LoadTexture("rock-2", block_tex, 2);
-	assets.LoadTexture("rock-3", block_tex, 3);
-	block_tex.FilterNearest();
+	TextureIndex tex_index;
+	assets.LoadBlockTypes("default", block_type, tex_index);
 
-	assets.LoadBlockTypes("default", block_type);
+	block_tex.Bind();
+	assets.LoadTextures(tex_index, block_tex);
+	block_tex.FilterNearest();
 
 	generate.Space(0);
 	generate.Light(13);

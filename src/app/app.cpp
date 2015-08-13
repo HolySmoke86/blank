@@ -4,6 +4,7 @@
 #include "FrameCounter.hpp"
 #include "State.hpp"
 #include "StateControl.hpp"
+#include "TextureIndex.hpp"
 
 #include "init.hpp"
 #include "../audio/Sound.hpp"
@@ -239,7 +240,7 @@ CuboidShape slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 
 }
 
-void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg) const {
+void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg, TextureIndex &tex_index) const {
 	string full = data + set_name + ".types";
 	std::ifstream file(full);
 	if (!file) {
@@ -263,19 +264,8 @@ void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg)
 			if (name == "visible") {
 				type.visible = in.GetBool();
 			} else if (name == "texture") {
-				// TODO: load textures as requested
 				in.ReadString(tex_name);
-				if (tex_name == "rock-1") {
-					type.texture = 1;
-				} else if (tex_name == "rock-2") {
-					type.texture = 2;
-				} else if (tex_name == "rock-3") {
-					type.texture = 3;
-				} else if (tex_name == "debug") {
-					type.texture = 0;
-				} else {
-					throw runtime_error("unknown texture: " + tex_name);
-				}
+				type.texture = tex_index.GetID(tex_name);
 			} else if (name == "color") {
 				in.ReadVec(type.color);
 			} else if (name == "label") {
@@ -351,6 +341,30 @@ void Assets::LoadTexture(const string &name, ArrayTexture &tex, int layer) const
 		throw;
 	}
 	SDL_FreeSurface(srf);
+}
+
+void Assets::LoadTextures(const TextureIndex &index, ArrayTexture &tex) const {
+	// TODO: where the hell should that size come from?
+	tex.Reserve(16, 16, index.Size(), Format());
+	for (const auto &entry : index.Entries()) {
+		LoadTexture(entry.first, tex, entry.second);
+	}
+}
+
+
+TextureIndex::TextureIndex()
+: id_map() {
+
+}
+
+int TextureIndex::GetID(const string &name) {
+	auto entry = id_map.find(name);
+	if (entry == id_map.end()) {
+		auto result = id_map.emplace(name, Size());
+		return result.first->second;
+	} else {
+		return entry->second;
+	}
 }
 
 
