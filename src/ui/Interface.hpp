@@ -70,6 +70,7 @@ public:
 	void ToggleDebug();
 	void UpdateCounter();
 	void UpdatePosition();
+	void UpdateOrientation();
 
 	void PostMessage(const char *);
 	void PostMessage(const std::string &msg) {
@@ -99,6 +100,7 @@ private:
 
 	FixedText counter_text;
 	FixedText position_text;
+	FixedText orientation_text;
 	MessageBox messages;
 	IntervalTimer msg_timer;
 
@@ -114,6 +116,8 @@ private:
 	Sound remove_sound;
 
 	glm::ivec3 fwd, rev;
+
+	bool debug;
 
 };
 

@@ -13,6 +13,18 @@ constexpr float PI_0p5 = PI * 0.5f;
 constexpr float PI_1p5 = PI * 1.5f;
 constexpr float PI_2p0 = PI * 2.0f;
 
+constexpr float DEG_RAD_FACTOR = PI / 180.0f;
+constexpr float RAD_DEG_FACTOR = 180.0f / PI;
+
+constexpr float deg2rad(float d) {
+	return d * DEG_RAD_FACTOR;
+}
+
+constexpr float rad2deg(float r) {
+	return r * RAD_DEG_FACTOR;
+}
+
+
 struct AABB {
 	glm::vec3 min;
 	glm::vec3 max;

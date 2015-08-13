@@ -107,6 +107,8 @@ Interface::Interface(
 , outline()
 , outline_transform(1.0f)
 , counter_text()
+, position_text()
+, orientation_text()
 , messages(env.assets.small_ui_font)
 , msg_timer(5000)
 , config(config)
@@ -117,15 +119,17 @@ Interface::Interface(
 , place_sound(env.assets.LoadSound("thump"))
 , remove_sound(env.assets.LoadSound("plop"))
 , fwd(0)
-, rev(0) {
-	counter_text.Hide();
+, rev(0)
+, debug(false) {
 	counter_text.Position(glm::vec3(-25.0f, 25.0f, 0.0f), Gravity::NORTH_EAST);
 	counter_text.Foreground(glm::vec4(1.0f));
 	counter_text.Background(glm::vec4(0.5f));
-	position_text.Hide();
 	position_text.Position(glm::vec3(-25.0f, 25.0f + env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
 	position_text.Foreground(glm::vec4(1.0f));
 	position_text.Background(glm::vec4(0.5f));
+	orientation_text.Position(glm::vec3(-25.0f, 25.0f + 2 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	orientation_text.Foreground(glm::vec4(1.0f));
+	orientation_text.Background(glm::vec4(0.5f));
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
@@ -341,11 +345,11 @@ void Interface::ToggleVisual() {
 }
 
 void Interface::ToggleDebug() {
-	counter_text.Toggle();
-	position_text.Toggle();
-	if (counter_text.Visible()) {
+	debug = !debug;
+	if (debug) {
 		UpdateCounter();
 		UpdatePosition();
+		UpdateOrientation();
 	}
 }
 
@@ -362,6 +366,13 @@ void Interface::UpdatePosition() {
 	std::stringstream s;
 	s << std::setprecision(3) << "pos: " << ctrl.Controlled().AbsolutePosition();
 	position_text.Set(env.assets.small_ui_font, s.str());
+}
+
+void Interface::UpdateOrientation() {
+	std::stringstream s;
+	s << std::setprecision(3) << "pitch: " << rad2deg(ctrl.Pitch())
+		<< ", yaw: " << rad2deg(ctrl.Yaw());
+	orientation_text.Set(env.assets.small_ui_font, s.str());
 }
 
 
@@ -492,11 +503,12 @@ void Interface::Update(int dt) {
 		CheckAim();
 	}
 
-	if (counter_text.Visible() && env.counter.Changed()) {
-		UpdateCounter();
-	}
-	if (position_text.Visible()) {
+	if (debug) {
+		if (env.counter.Changed()) {
+			UpdateCounter();
+		}
 		UpdatePosition();
+		UpdateOrientation();
 	}
 }
 
@@ -530,11 +542,10 @@ void Interface::Render(Viewport &viewport) noexcept {
 		outline.Draw();
 	}
 
-	if (counter_text.Visible()) {
+	if (debug) {
 		counter_text.Render(viewport);
-	}
-	if (position_text.Visible()) {
 		position_text.Render(viewport);
+		orientation_text.Render(viewport);
 	}
 
 	if (msg_timer.Running()) {
