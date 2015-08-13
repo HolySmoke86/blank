@@ -200,6 +200,24 @@ DirectionalLighting &Viewport::HUDProgram() noexcept {
 	return entity_prog;
 }
 
+PlainColor &Viewport::WorldOutlineProgram() noexcept {
+	if (active_prog != OUTLINE_WORLD) {
+		outline_prog.Activate();
+		outline_prog.SetVP(cam.View(), cam.Projection());
+		active_prog = OUTLINE_WORLD;
+	}
+	return outline_prog;
+}
+
+PlainColor &Viewport::HUDOutlineProgram() noexcept {
+	if (active_prog != OUTLINE_HUD) {
+		outline_prog.Activate();
+		outline_prog.SetVP(canv.View(), canv.Projection());
+		active_prog = OUTLINE_HUD;
+	}
+	return outline_prog;
+}
+
 BlendedSprite &Viewport::SpriteProgram() noexcept {
 	if (active_prog != SPRITE) {
 		sprite_prog.Activate();

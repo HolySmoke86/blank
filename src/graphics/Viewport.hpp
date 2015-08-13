@@ -7,6 +7,7 @@
 #include "Camera.hpp"
 #include "Canvas.hpp"
 #include "DirectionalLighting.hpp"
+#include "PlainColor.hpp"
 
 #include <glm/glm.hpp>
 
@@ -49,6 +50,8 @@ public:
 	BlockLighting &ChunkProgram() noexcept;
 	DirectionalLighting &EntityProgram() noexcept;
 	DirectionalLighting &HUDProgram() noexcept;
+	PlainColor &WorldOutlineProgram() noexcept;
+	PlainColor &HUDOutlineProgram() noexcept;
 	BlendedSprite &SpriteProgram() noexcept;
 
 	void WorldPosition(const glm::mat4 &) noexcept;
@@ -64,6 +67,7 @@ private:
 
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;
+	PlainColor outline_prog;
 	BlendedSprite sprite_prog;
 
 	enum {
@@ -71,6 +75,8 @@ private:
 		CHUNK,
 		ENTITY,
 		HUD,
+		OUTLINE_WORLD,
+		OUTLINE_HUD,
 		SPRITE,
 	} active_prog;
 

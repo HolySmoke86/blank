@@ -8,10 +8,6 @@ composite entity animations
 	complex entities are made up of part which have their own local
 	transform that can be animated (like e.g. an arm or head)
 
-textures
-
-	okay, now I need a better solution for the crosshair ^^
-
 font rendering
 
 	with background now being a thing, a padding might be nice

@@ -72,17 +72,18 @@ void HUD::Display(const Block &b) {
 void HUD::Render(Viewport &viewport) noexcept {
 	viewport.ClearDepth();
 
-	DirectionalLighting &world_prog = viewport.HUDProgram();
-	world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
-	// disable distance fog
-	world_prog.SetFogDensity(0.0f);
-
+	PlainColor &outline_prog = viewport.HUDOutlineProgram();
 	viewport.EnableInvertBlending();
 	viewport.SetCursor(glm::vec3(0.0f), Gravity::CENTER);
-	world_prog.SetM(viewport.Cursor());
+	outline_prog.SetM(viewport.Cursor());
 	crosshair.Draw();
 
 	if (block_visible) {
+		DirectionalLighting &world_prog = viewport.HUDProgram();
+		world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
+		// disable distance fog
+		world_prog.SetFogDensity(0.0f);
+
 		viewport.DisableBlending();
 		world_prog.SetM(block_transform);
 		block.Draw();
@@ -511,9 +512,9 @@ void Interface::CheckAim() {
 		outl_buf.Clear();
 		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outl_buf);
 		outline.Update(outl_buf);
-		outline_transform = glm::scale(glm::vec3(1.0002f));
-		outline_transform *= aim_chunk->Transform(world.Player().ChunkCoords());
+		outline_transform = aim_chunk->Transform(world.Player().ChunkCoords());
 		outline_transform *= aim_chunk->ToTransform(Chunk::ToPos(aim_block), aim_block);
+		outline_transform *= glm::scale(glm::vec3(1.005f));
 	} else {
 		aim_chunk = nullptr;
 	}
@@ -524,8 +525,8 @@ void Interface::Render(Viewport &viewport) noexcept {
 	if (config.visual_disabled) return;
 
 	if (aim_chunk) {
-		DirectionalLighting &world_prog = viewport.EntityProgram();
-		world_prog.SetM(outline_transform);
+		PlainColor &outline_prog = viewport.WorldOutlineProgram();
+		outline_prog.SetM(outline_transform);
 		outline.Draw();
 	}
 

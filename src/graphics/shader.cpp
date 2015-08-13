@@ -1,6 +1,7 @@
 #include "BlendedSprite.hpp"
 #include "BlockLighting.hpp"
 #include "DirectionalLighting.hpp"
+#include "PlainColor.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
 
@@ -490,6 +491,71 @@ void BlendedSprite::SetFG(const glm::vec4 &v) noexcept {
 
 void BlendedSprite::SetBG(const glm::vec4 &v) noexcept {
 	program.Uniform(bg_handle, v);
+}
+
+
+PlainColor::PlainColor()
+: program()
+, vp(1.0f)
+, mvp_handle(0) {
+	program.LoadShader(
+		GL_VERTEX_SHADER,
+		"#version 330 core\n"
+		"layout(location = 0) in vec3 vtx_position;\n"
+		"layout(location = 1) in vec3 vtx_color;\n"
+		"uniform mat4 MVP;\n"
+		"out vec3 frag_color;\n"
+		"void main() {\n"
+			"gl_Position = MVP * vec4(vtx_position, 1);\n"
+			"frag_color = vtx_color;\n"
+		"}\n"
+	);
+	program.LoadShader(
+		GL_FRAGMENT_SHADER,
+		"#version 330 core\n"
+		"in vec3 frag_color;\n"
+		"out vec3 color;\n"
+		"void main() {\n"
+			"color = frag_color;\n"
+		"}\n"
+	);
+	program.Link();
+	if (!program.Linked()) {
+		program.Log(std::cerr);
+		throw std::runtime_error("link program");
+	}
+
+	mvp_handle = program.UniformLocation("MVP");
+}
+
+
+void PlainColor::Activate() noexcept {
+	program.Use();
+}
+
+void PlainColor::SetM(const glm::mat4 &m) noexcept {
+	program.Uniform(mvp_handle, vp * m);
+}
+
+void PlainColor::SetProjection(const glm::mat4 &p) noexcept {
+	projection = p;
+	vp = p * view;
+}
+
+void PlainColor::SetView(const glm::mat4 &v) noexcept {
+	view = v;
+	vp = projection * v;
+}
+
+void PlainColor::SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept {
+	projection = p;
+	view = v;
+	vp = p * v;
+}
+
+void PlainColor::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept {
+	SetVP(v, p);
+	SetM(m);
 }
 
 }
