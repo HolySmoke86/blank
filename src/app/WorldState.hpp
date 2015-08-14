@@ -31,6 +31,7 @@ public:
 	void Render(Viewport &) override;
 
 	World &GetWorld() noexcept { return world; }
+	Interface &GetInterface() noexcept { return interface; }
 
 private:
 	Environment &env;

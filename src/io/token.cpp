@@ -191,6 +191,9 @@ TokenStreamReader::TokenStreamReader(istream &in)
 
 
 bool TokenStreamReader::HasMore() {
+	if (cached) {
+		return true;
+	}
 	while (in.HasMore()) {
 		if (in.Next().type != Token::COMMENT) {
 			cached = true;

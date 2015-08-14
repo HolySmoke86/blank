@@ -4,10 +4,12 @@
 #include "WorldState.hpp"
 
 #include "init.hpp"
+#include "../io/filesystem.hpp"
 #include "../io/WorldSave.hpp"
 
 #include <cctype>
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <SDL.h>
 
@@ -51,6 +53,7 @@ Environment::Environment(Window &win, const string &asset_path)
 , counter() {
 	viewport.Clear();
 	window.Flip();
+	keymap.LoadDefault();
 }
 
 
@@ -231,6 +234,16 @@ int Runtime::Execute() {
 
 	Environment env(init.window, config.asset_path);
 	env.viewport.VSync(config.vsync);
+
+	std::string keys_path = config.save_path + "keys.conf";
+	if (!is_file(keys_path)) {
+		std::ofstream file(keys_path);
+		env.keymap.Save(file);
+	} else {
+		std::ifstream file(keys_path);
+		env.keymap.Load(file);
+	}
+
 
 	WorldSave save(config.save_path + config.world_name + '/');
 	if (save.Exists()) {

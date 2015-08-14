@@ -6,6 +6,7 @@
 #include "StateControl.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
+#include "../ui/Keymap.hpp"
 
 #include <string>
 
@@ -21,6 +22,7 @@ struct Environment {
 	Window &window;
 
 	Assets assets;
+	Keymap keymap;
 	FrameCounter counter;
 
 	StateControl state;

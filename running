@@ -88,3 +88,10 @@ Press N to toggle player/world collision.
 F1 toggles UI rendering.
 F3 toggles a display telling how long on average it takes to compute a frame.
 F4 toggles audio.
+
+Controls are interpreted by scancode, meaning you don't have to break your
+fingers when you're on an AZERTY. WSAD will be ZSQD there and the above
+description is just wrong.
+
+Also I've added a plethora of alternate keys that can be used, like arrow
+keys for movement, ins/del for placing/removing blocks, etc.

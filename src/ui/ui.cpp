@@ -1,5 +1,6 @@
 #include "HUD.hpp"
 #include "Interface.hpp"
+#include "Keymap.hpp"
 
 #include "../app/Assets.hpp"
 #include "../app/Environment.hpp"
@@ -8,6 +9,7 @@
 #include "../audio/Audio.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/Viewport.hpp"
+#include "../io/TokenStreamReader.hpp"
 #include "../model/shapes.hpp"
 #include "../world/World.hpp"
 
@@ -140,58 +142,81 @@ Interface::Interface(
 void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 	if (config.keyboard_disabled) return;
 
-	switch (event.keysym.sym) {
-		case SDLK_w:
+	switch (env.keymap.Lookup(event)) {
+		case Keymap::MOVE_FORWARD:
 			rev.z = 1;
 			break;
-		case SDLK_s:
+		case Keymap::MOVE_BACKWARD:
 			fwd.z = 1;
 			break;
-		case SDLK_a:
+		case Keymap::MOVE_LEFT:
 			rev.x = 1;
 			break;
-		case SDLK_d:
+		case Keymap::MOVE_RIGHT:
 			fwd.x = 1;
 			break;
-		case SDLK_SPACE:
+		case Keymap::MOVE_UP:
 			fwd.y = 1;
 			break;
-		case SDLK_LSHIFT:
+		case Keymap::MOVE_DOWN:
 			rev.y = 1;
 			break;
 
-		case SDLK_q:
+		case Keymap::BLOCK_FACE:
 			FaceBlock();
 			break;
-		case SDLK_e:
+		case Keymap::BLOCK_TURN:
 			TurnBlock();
 			break;
+		case Keymap::BLOCK_NEXT:
+			SelectNext();
+			break;
+		case Keymap::BLOCK_PREV:
+			SelectPrevious();
+			break;
 
-		case SDLK_n:
+		case Keymap::BLOCK_PLACE:
+			PlaceBlock();
+			break;
+		case Keymap::BLOCK_PICK:
+			PickBlock();
+			break;
+		case Keymap::BLOCK_REMOVE:
+			RemoveBlock();
+			break;
+
+		case Keymap::TOGGLE_COLLISION:
 			ToggleCollision();
 			break;
 
-		case SDLK_b:
+		case Keymap::PRINT_BLOCK:
 			PrintBlockInfo();
 			break;
-		case SDLK_c:
+		case Keymap::PRINT_CHUNK:
 			PrintChunkInfo();
 			break;
-		case SDLK_l:
+		case Keymap::PRINT_LIGHT:
 			PrintLightInfo();
 			break;
-		case SDLK_p:
+		case Keymap::PRINT_SELECTION:
 			PrintSelectionInfo();
 			break;
 
-		case SDLK_F1:
+		case Keymap::TOGGLE_VISUAL:
 			ToggleVisual();
 			break;
-		case SDLK_F3:
+		case Keymap::TOGGLE_DEBUG:
 			ToggleDebug();
 			break;
-		case SDLK_F4:
+		case Keymap::TOGGLE_AUDIO:
 			ToggleAudio();
+			break;
+
+		case Keymap::EXIT:
+			env.state.Pop();
+			break;
+
+		default:
 			break;
 	}
 }
@@ -199,24 +224,27 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 void Interface::HandleRelease(const SDL_KeyboardEvent &event) {
 	if (config.keyboard_disabled) return;
 
-	switch (event.keysym.sym) {
-		case SDLK_w:
+	switch (env.keymap.Lookup(event)) {
+		case Keymap::MOVE_FORWARD:
 			rev.z = 0;
 			break;
-		case SDLK_s:
+		case Keymap::MOVE_BACKWARD:
 			fwd.z = 0;
 			break;
-		case SDLK_a:
+		case Keymap::MOVE_LEFT:
 			rev.x = 0;
 			break;
-		case SDLK_d:
+		case Keymap::MOVE_RIGHT:
 			fwd.x = 0;
 			break;
-		case SDLK_SPACE:
+		case Keymap::MOVE_UP:
 			fwd.y = 0;
 			break;
-		case SDLK_LSHIFT:
+		case Keymap::MOVE_DOWN:
 			rev.y = 0;
+			break;
+
+		default:
 			break;
 	}
 }
@@ -553,6 +581,219 @@ void Interface::Render(Viewport &viewport) noexcept {
 	}
 
 	hud.Render(viewport);
+}
+
+
+Keymap::Keymap()
+: codemap{ NONE } {
+
+}
+
+void Keymap::Map(SDL_Scancode scancode, Action action) {
+	if (scancode > MAX_SCANCODE) {
+		throw std::runtime_error("refusing to map scancode: too damn high");
+	}
+	codemap[scancode] = action;
+}
+
+Keymap::Action Keymap::Lookup(SDL_Scancode scancode) {
+	if (scancode < NUM_SCANCODES) {
+		return codemap[scancode];
+	} else {
+		return NONE;
+	}
+}
+
+
+void Keymap::LoadDefault() {
+	Map(SDL_SCANCODE_UP, MOVE_FORWARD);
+	Map(SDL_SCANCODE_W, MOVE_FORWARD);
+	Map(SDL_SCANCODE_DOWN, MOVE_BACKWARD);
+	Map(SDL_SCANCODE_S, MOVE_BACKWARD);
+	Map(SDL_SCANCODE_LEFT, MOVE_LEFT);
+	Map(SDL_SCANCODE_A, MOVE_LEFT);
+	Map(SDL_SCANCODE_RIGHT, MOVE_RIGHT);
+	Map(SDL_SCANCODE_D, MOVE_RIGHT);
+	Map(SDL_SCANCODE_SPACE, MOVE_UP);
+	Map(SDL_SCANCODE_RSHIFT, MOVE_UP);
+	Map(SDL_SCANCODE_LSHIFT, MOVE_DOWN);
+	Map(SDL_SCANCODE_LCTRL, MOVE_DOWN);
+	Map(SDL_SCANCODE_RCTRL, MOVE_DOWN);
+
+	Map(SDL_SCANCODE_Q, BLOCK_FACE);
+	Map(SDL_SCANCODE_E, BLOCK_TURN);
+	Map(SDL_SCANCODE_TAB, BLOCK_NEXT);
+	Map(SDL_SCANCODE_RIGHTBRACKET, BLOCK_NEXT);
+	Map(SDL_SCANCODE_LEFTBRACKET, BLOCK_PREV);
+
+	Map(SDL_SCANCODE_INSERT, BLOCK_PLACE);
+	Map(SDL_SCANCODE_RETURN, BLOCK_PLACE);
+	Map(SDL_SCANCODE_MENU, BLOCK_PICK);
+	Map(SDL_SCANCODE_DELETE, BLOCK_REMOVE);
+	Map(SDL_SCANCODE_BACKSPACE, BLOCK_REMOVE);
+
+	Map(SDL_SCANCODE_N, TOGGLE_COLLISION);
+	Map(SDL_SCANCODE_F1, TOGGLE_VISUAL);
+	Map(SDL_SCANCODE_F3, TOGGLE_DEBUG);
+	Map(SDL_SCANCODE_F4, TOGGLE_AUDIO);
+
+	Map(SDL_SCANCODE_B, PRINT_BLOCK);
+	Map(SDL_SCANCODE_C, PRINT_CHUNK);
+	Map(SDL_SCANCODE_L, PRINT_LIGHT);
+	Map(SDL_SCANCODE_P, PRINT_SELECTION);
+
+	Map(SDL_SCANCODE_ESCAPE, EXIT);
+}
+
+
+void Keymap::Load(std::istream &is) {
+	TokenStreamReader in(is);
+	std::string key_name;
+	std::string action_name;
+	SDL_Scancode key;
+	Action action;
+	while (in.HasMore()) {
+		if (in.Peek().type == Token::STRING) {
+			in.ReadString(key_name);
+			key = SDL_GetScancodeFromName(key_name.c_str());
+		} else {
+			key = SDL_Scancode(in.GetInt());
+		}
+		in.Skip(Token::EQUALS);
+		in.ReadIdentifier(action_name);
+		action = StringToAction(action_name);
+		if (in.HasMore() && in.Peek().type == Token::SEMICOLON) {
+			in.Skip(Token::SEMICOLON);
+		}
+		Map(key, action);
+	}
+}
+
+void Keymap::Save(std::ostream &out) {
+	for (unsigned int i = 0; i < NUM_SCANCODES; ++i) {
+		if (codemap[i] == NONE) continue;
+
+		const char *str = SDL_GetScancodeName(SDL_Scancode(i));
+		if (str && *str) {
+			out << '"';
+			while (*str) {
+				if (*str == '"') {
+					out << "\\\"";
+				} else {
+					out << *str;
+				}
+				++str;
+			}
+			out << '"';
+		} else {
+			out << i;
+		}
+
+		out << " = " << ActionToString(codemap[i]) << std::endl;;
+	}
+}
+
+
+const char *Keymap::ActionToString(Action action) {
+	switch (action) {
+		default:
+		case NONE:
+			return "none";
+		case MOVE_FORWARD:
+			return "move_forward";
+		case MOVE_BACKWARD:
+			return "move_backward";
+		case MOVE_LEFT:
+			return "move_left";
+		case MOVE_RIGHT:
+			return "move_right";
+		case MOVE_UP:
+			return "move_up";
+		case MOVE_DOWN:
+			return "move_down";
+		case BLOCK_FACE:
+			return "block_face";
+		case BLOCK_TURN:
+			return "block_turn";
+		case BLOCK_NEXT:
+			return "block_next";
+		case BLOCK_PREV:
+			return "block_prev";
+		case BLOCK_PLACE:
+			return "block_place";
+		case BLOCK_PICK:
+			return "block_pick";
+		case BLOCK_REMOVE:
+			return "block_remove";
+		case TOGGLE_COLLISION:
+			return "toggle_collision";
+		case TOGGLE_AUDIO:
+			return "toggle_audio";
+		case TOGGLE_VISUAL:
+			return "toggle_visual";
+		case TOGGLE_DEBUG:
+			return "toggle_debug";
+		case PRINT_BLOCK:
+			return "print_block";
+		case PRINT_CHUNK:
+			return "print_chunk";
+		case PRINT_LIGHT:
+			return "print_light";
+		case PRINT_SELECTION:
+			return "print_selection";
+		case EXIT:
+			return "exit";
+	}
+}
+
+Keymap::Action Keymap::StringToAction(const std::string &str) {
+	if (str == "move_forward") {
+		return MOVE_FORWARD;
+	} else if (str == "move_backward") {
+		return MOVE_BACKWARD;
+	} else if (str == "move_left") {
+		return MOVE_LEFT;
+	} else if (str == "move_right") {
+		return MOVE_RIGHT;
+	} else if (str == "move_up") {
+		return MOVE_UP;
+	} else if (str == "move_down") {
+		return MOVE_DOWN;
+	} else if (str == "block_face") {
+		return BLOCK_FACE;
+	} else if (str == "block_turn") {
+		return BLOCK_TURN;
+	} else if (str == "block_next") {
+		return BLOCK_NEXT;
+	} else if (str == "block_prev") {
+		return BLOCK_PREV;
+	} else if (str == "block_place") {
+		return BLOCK_PLACE;
+	} else if (str == "block_pick") {
+		return BLOCK_PICK;
+	} else if (str == "block_remove") {
+		return BLOCK_REMOVE;
+	} else if (str == "toggle_collision") {
+		return TOGGLE_COLLISION;
+	} else if (str == "toggle_audio") {
+		return TOGGLE_AUDIO;
+	} else if (str == "toggle_visual") {
+		return TOGGLE_VISUAL;
+	} else if (str == "toggle_debug") {
+		return TOGGLE_DEBUG;
+	} else if (str == "print_block") {
+		return PRINT_BLOCK;
+	} else if (str == "print_chunk") {
+		return PRINT_CHUNK;
+	} else if (str == "print_light") {
+		return PRINT_LIGHT;
+	} else if (str == "print_selection") {
+		return PRINT_SELECTION;
+	} else if (str == "exit") {
+		return EXIT;
+	} else {
+		return NONE;
+	}
 }
 
 }
