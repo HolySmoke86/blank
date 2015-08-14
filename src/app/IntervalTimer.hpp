@@ -13,7 +13,7 @@ class IntervalTimer {
 public:
 	/// Create a timer that hits every interval_ms milliseconds.
 	/// Initial state is stopped.
-	explicit IntervalTimer(int interval_ms) noexcept
+	explicit IntervalTimer(int interval_ms = 0) noexcept
 	: intv(interval_ms) { }
 
 	void Start() noexcept {
@@ -35,7 +35,7 @@ public:
 		return Running() && value % intv < last_dt;
 	}
 	bool HitOnce() const noexcept {
-		return value >= intv;
+		return Running() && value >= intv;
 	}
 	int Elapsed() const noexcept {
 		return value;

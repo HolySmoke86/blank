@@ -22,8 +22,12 @@ public:
 public:
 	void Bind(ALuint src) const;
 
+	/// full duration in milliseconds
+	int Duration() const noexcept { return duration; }
+
 private:
 	ALuint handle;
+	int duration;
 
 };
 

@@ -92,14 +92,23 @@ void Audio::Play(
 	const glm::vec3 &vel,
 	const glm::vec3 &dir
 ) noexcept {
-	// TODO: find next free source
-	ALuint src = source[0];
+	int i = NextFree();
+	if (i < 0) {
+		std::cerr << "unable to find free audio source" << std::endl;
+		return;
+	}
+
+	ALuint src = source[i];
+	IntervalTimer &t = timer[i];
 
 	sound.Bind(src);
 	alSourcefv(src, AL_POSITION, glm::value_ptr(pos));
 	alSourcefv(src, AL_VELOCITY, glm::value_ptr(vel));
 	alSourcefv(src, AL_DIRECTION, glm::value_ptr(dir));
 	alSourcePlay(src);
+
+	t = IntervalTimer(sound.Duration());
+	t.Start();
 }
 
 void Audio::StopAll() noexcept {
@@ -109,9 +118,35 @@ void Audio::StopAll() noexcept {
 	}
 }
 
+void Audio::Update(int dt) noexcept {
+	for (std::size_t i = 0; i < NUM_SRC; ++i) {
+		timer[i].Update(dt);
+		if (timer[i].HitOnce()) {
+			timer[i].Stop();
+			alSourceStop(source[i]);
+			alSourcei(source[i], AL_BUFFER, AL_NONE);
+			last_free = i;
+		}
+	}
+}
+
+int Audio::NextFree() noexcept {
+	if (!timer[last_free].Running()) {
+		return last_free;
+	}
+	for (int i = (last_free + 1) % NUM_SRC; i != last_free; i = (i + 1) % NUM_SRC) {
+		if (!timer[i].Running()) {
+			last_free = i;
+			return i;
+		}
+	}
+	return -1;
+}
+
 
 Sound::Sound()
-: handle(AL_NONE) {
+: handle(AL_NONE)
+, duration(0) {
 	alGenBuffers(1, &handle);
 	ALenum err = alGetError();
 	if (err != AL_NO_ERROR) {
@@ -124,6 +159,14 @@ Sound::Sound(const char *file)
 	if (handle == AL_NONE) {
 		throw ALError(alGetError(), "alutCreateBufferFromFile");
 	}
+
+	ALint size, channels, bits, freq;
+	alGetBufferi(handle, AL_SIZE, &size);
+	alGetBufferi(handle, AL_CHANNELS, &channels);
+	alGetBufferi(handle, AL_BITS, &bits);
+	alGetBufferi(handle, AL_FREQUENCY, &freq);
+
+	duration = size * 8 * 1000 / (channels * bits * freq);
 }
 
 Sound::~Sound() {

@@ -129,6 +129,7 @@ void Application::Handle(const SDL_WindowEvent &event) {
 
 void Application::Update(int dt) {
 	env.counter.EnterUpdate();
+	env.audio.Update(dt);
 	if (HasState()) {
 		GetState().Update(dt);
 	}

@@ -1,6 +1,8 @@
 #ifndef BLANK_AUDIO_AUDIO_HPP_
 #define BLANK_AUDIO_AUDIO_HPP_
 
+#include "../app/IntervalTimer.hpp"
+
 #include <al.h>
 #include <glm/glm.hpp>
 
@@ -32,9 +34,16 @@ public:
 
 	void StopAll() noexcept;
 
+	void Update(int dt) noexcept;
+
 private:
-	static constexpr std::size_t NUM_SRC = 1;
+	int NextFree() noexcept;
+
+private:
+	static constexpr std::size_t NUM_SRC = 16;
 	ALuint source[NUM_SRC];
+	IntervalTimer timer[NUM_SRC];
+	int last_free;
 
 };
 

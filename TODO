@@ -21,11 +21,6 @@ command line
 
 	usefull for development and later on world administration
 
-audio
-
-	do the sources thing right™
-	(or at least in a way that it doesn't error out on shutdown :P )
-
 persistence
 
 	merge IO counters, so number of operations per frame is kept
