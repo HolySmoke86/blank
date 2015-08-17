@@ -131,7 +131,13 @@ private:
 
 };
 
-bool operator ==(const Block &, const Block &);
+inline bool operator ==(const Block &a, const Block &b) {
+	return a.type == b.type && a.orient == b.orient;
+}
+
+inline bool operator !=(const Block &a, const Block &b) {
+	return !(a == b);
+}
 
 std::ostream &operator <<(std::ostream &, const Block &);
 std::ostream &operator <<(std::ostream &, const Block::Face &);

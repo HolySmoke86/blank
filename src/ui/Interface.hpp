@@ -19,6 +19,7 @@
 namespace blank {
 
 class Chunk;
+class Entity;
 class Environment;
 class Viewport;
 class World;
@@ -71,6 +72,7 @@ public:
 	void UpdateCounter();
 	void UpdatePosition();
 	void UpdateOrientation();
+	void UpdateBlockInfo();
 
 	void PostMessage(const char *);
 	void PostMessage(const std::string &msg) {
@@ -83,6 +85,7 @@ public:
 
 private:
 	void CheckAim();
+	void UpdateOutline();
 
 private:
 	Environment &env;
@@ -92,6 +95,7 @@ private:
 
 	Ray aim;
 	Chunk *aim_chunk;
+	Entity *aim_entity;
 	int aim_block;
 	glm::vec3 aim_normal;
 
@@ -101,6 +105,8 @@ private:
 	FixedText counter_text;
 	FixedText position_text;
 	FixedText orientation_text;
+	FixedText block_text;
+	Block last_displayed;
 	MessageBox messages;
 	IntervalTimer msg_timer;
 

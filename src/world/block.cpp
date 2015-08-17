@@ -14,10 +14,6 @@ namespace blank {
 const NullShape BlockType::DEFAULT_SHAPE;
 
 
-bool operator ==(const Block &a, const Block &b) {
-	return a.type == b.type && a.orient == b.orient;
-}
-
 std::ostream &operator <<(std::ostream &out, const Block &block) {
 	return out << "Block(" << block.type << ", " << block.GetFace() << ", " << block.GetTurn() << ')';
 }

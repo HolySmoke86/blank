@@ -95,6 +95,35 @@ bool World::Intersection(
 	return chunk;
 }
 
+bool World::Intersection(
+	const Ray &ray,
+	const glm::mat4 &M,
+	Entity *&entity,
+	float &dist,
+	glm::vec3 &normal
+) {
+	entity = nullptr;
+	dist = std::numeric_limits<float>::infinity();
+	for (Entity &cur_entity : entities) {
+		// TODO: better check for skipping self (because the check might not be for the player)
+		if (&cur_entity == player) {
+			continue;
+		}
+		float cur_dist;
+		glm::vec3 cur_normal;
+		if (blank::Intersection(ray, cur_entity.Bounds(), M * cur_entity.Transform(player->ChunkCoords()), &cur_dist, &cur_normal)) {
+			// TODO: fine grained check goes here? maybe?
+			if (cur_dist < dist) {
+				entity = &cur_entity;
+				dist = cur_dist;
+				normal = cur_normal;
+			}
+		}
+	}
+
+	return entity;
+}
+
 bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
 	glm::mat4 M = e.Transform(player->ChunkCoords());

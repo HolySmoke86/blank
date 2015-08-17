@@ -111,6 +111,8 @@ Interface::Interface(
 , counter_text()
 , position_text()
 , orientation_text()
+, block_text()
+, last_displayed()
 , messages(env.assets.small_ui_font)
 , msg_timer(5000)
 , config(config)
@@ -132,6 +134,10 @@ Interface::Interface(
 	orientation_text.Position(glm::vec3(-25.0f, 25.0f + 2 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
 	orientation_text.Foreground(glm::vec4(1.0f));
 	orientation_text.Background(glm::vec4(0.5f));
+	block_text.Position(glm::vec3(-25.0f, 25.0f + 4 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	block_text.Foreground(glm::vec4(1.0f));
+	block_text.Background(glm::vec4(0.5f));
+	block_text.Set(env.assets.small_ui_font, "Block: none");
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
@@ -378,6 +384,7 @@ void Interface::ToggleDebug() {
 		UpdateCounter();
 		UpdatePosition();
 		UpdateOrientation();
+		UpdateBlockInfo();
 	}
 }
 
@@ -401,6 +408,28 @@ void Interface::UpdateOrientation() {
 	s << std::setprecision(3) << "pitch: " << rad2deg(ctrl.Pitch())
 		<< ", yaw: " << rad2deg(ctrl.Yaw());
 	orientation_text.Set(env.assets.small_ui_font, s.str());
+}
+
+void Interface::UpdateBlockInfo() {
+	if (aim_chunk) {
+		const Block &block = aim_chunk->BlockAt(aim_block);
+		if (last_displayed != block) {
+			std::stringstream s;
+			s << "Block: "
+				<< aim_chunk->Type(block).label
+				<< ", face: " << block.GetFace()
+				<< ", turn: " << block.GetTurn();
+			block_text.Set(env.assets.small_ui_font, s.str());
+			last_displayed = block;
+		}
+	} else {
+		if (last_displayed != Block()) {
+			std::stringstream s;
+			s << "Block: none";
+			block_text.Set(env.assets.small_ui_font, s.str());
+			last_displayed = Block();
+		}
+	}
 }
 
 
@@ -547,17 +576,45 @@ OutlineModel::Buffer outl_buf;
 }
 
 void Interface::CheckAim() {
-	float dist;
-	if (world.Intersection(aim, glm::mat4(1.0f), aim_chunk, aim_block, dist, aim_normal)) {
-		outl_buf.Clear();
-		aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outl_buf);
-		outline.Update(outl_buf);
-		outline_transform = aim_chunk->Transform(world.Player().ChunkCoords());
-		outline_transform *= aim_chunk->ToTransform(Chunk::ToPos(aim_block), aim_block);
-		outline_transform *= glm::scale(glm::vec3(1.005f));
+	float chunk_dist;
+	glm::vec3 chunk_normal;
+	if (world.Intersection(aim, glm::mat4(1.0f), aim_chunk, aim_block, chunk_dist, chunk_normal)) {
 	} else {
 		aim_chunk = nullptr;
 	}
+	float entity_dist;
+	glm::vec3 entity_normal;
+	if (!world.Intersection(aim, glm::mat4(1.0f), aim_entity, entity_dist, entity_normal)) {
+		aim_entity = nullptr;
+	}
+	if (aim_chunk && aim_entity) {
+		// got both, pick the closest one
+		if (chunk_dist < entity_dist) {
+			aim_normal = chunk_normal;
+			UpdateOutline();
+			aim_entity = nullptr;
+		} else {
+			aim_normal = entity_normal;
+			aim_chunk = nullptr;
+		}
+	} else if (aim_chunk) {
+		aim_normal = chunk_normal;
+		UpdateOutline();
+	} else if (aim_entity) {
+		aim_normal = entity_normal;
+	}
+	if (debug) {
+		UpdateBlockInfo();
+	}
+}
+
+void Interface::UpdateOutline() {
+	outl_buf.Clear();
+	aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outl_buf);
+	outline.Update(outl_buf);
+	outline_transform = aim_chunk->Transform(world.Player().ChunkCoords());
+	outline_transform *= aim_chunk->ToTransform(Chunk::ToPos(aim_block), aim_block);
+	outline_transform *= glm::scale(glm::vec3(1.005f));
 }
 
 
@@ -574,6 +631,7 @@ void Interface::Render(Viewport &viewport) noexcept {
 		counter_text.Render(viewport);
 		position_text.Render(viewport);
 		orientation_text.Render(viewport);
+		block_text.Render(viewport);
 	}
 
 	if (msg_timer.Running()) {

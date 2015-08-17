@@ -38,11 +38,20 @@ public:
 
 	World(const Assets &, const Config &, const WorldSave &);
 
+	// check if this ray hits a block
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
 		Chunk *&chunk,
 		int &blkid,
+		float &dist,
+		glm::vec3 &normal);
+
+	// check if this ray hits an entity
+	bool Intersection(
+		const Ray &,
+		const glm::mat4 &M,
+		Entity *&entity,
 		float &dist,
 		glm::vec3 &normal);
 
