@@ -99,9 +99,12 @@ bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
 	glm::mat4 M = e.Transform(player->ChunkCoords());
 	bool any = false;
-	// TODO: this only needs to check the chunks surrounding the entity's chunk position
-	//       need find out if that is quicker than the rough chunk bounds test
 	for (Chunk &cur_chunk : chunks.Loaded()) {
+		if (manhattan_radius(cur_chunk.Position() - e.ChunkCoords()) > 1) {
+			// chunk is not one of the 3x3x3 surrounding the entity
+			// since there's no entity which can extent over 16 blocks, they can be skipped
+			continue;
+		}
 		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()), col)) {
 			any = true;
 		}

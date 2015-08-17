@@ -403,8 +403,6 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 		 8,  9,  9, 11, 11, 10, 10 , 8, // top
 		 0,  8,  4, 10,  2,  6, // verticals, btf
 		 1,  9,  5, 11,  3,  7,
-	//	 5,  8,  7, 10,
-	//	 1,  9,  3, 11,
 	});
 }
 
@@ -448,11 +446,34 @@ bool StairShape::Intersects(
 	const glm::mat4 &M,
 	const AABB &box,
 	const glm::mat4 &box_M,
-	float &depth,
+	float &dist,
 	glm::vec3 &normal
 ) const noexcept {
-	// TODO: this is wrong, but simple. so for now will have to do
-	return Intersection(bot, M, box, box_M, depth, normal) || Intersection(top, M, box, box_M, depth, normal);
+	bool top_hit, bot_hit;
+	float top_dist, bot_dist;
+	glm::vec3 top_normal, bot_normal;
+
+	top_hit = Intersection(bot, M, box, box_M, top_dist, top_normal);
+	bot_hit = Intersection(top, M, box, box_M, bot_dist, bot_normal);
+
+	if (top_hit) {
+		if (bot_hit && bot_dist < top_dist) {
+			dist = bot_dist;
+			normal = bot_normal;
+			return true;
+		} else {
+			dist = top_dist;
+			normal = top_normal;
+			return true;
+		}
+		return true;
+	} else if (bot_hit) {
+		dist = bot_dist;
+		normal = bot_normal;
+		return true;
+	} else {
+		return false;
+	}
 }
 
 }

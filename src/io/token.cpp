@@ -32,7 +32,7 @@ void Tokenizer::ReadToken() {
 
 	istream::sentry s(in);
 	if (!s) {
-		// TODO: error?
+		throw runtime_error("read past the end of stream");
 		return;
 	}
 
@@ -47,7 +47,7 @@ void Tokenizer::ReadToken() {
 		case ',': case '=':
 			current.type = Token::Type(c);
 			break;
-		case '+': case '-':
+		case '+': case '-': case '.':
 		case '0': case '1': case '2': case '3': case '4':
 		case '5': case '6': case '7': case '8': case '9':
 			in.putback(c);
@@ -71,7 +71,7 @@ void Tokenizer::ReadToken() {
 namespace {
 
 bool is_num_char(istream::char_type c) {
-	return isdigit(c)
+	return isxdigit(c)
 		|| c == '.'
 		|| c == '-'
 		|| c == '+'

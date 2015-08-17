@@ -2,6 +2,7 @@
 
 #include "Chaser.hpp"
 #include "RandomWalk.hpp"
+#include "../world/BlockLookup.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/Entity.hpp"
@@ -13,7 +14,7 @@ namespace blank {
 Spawner::Spawner(World &world)
 : world(world)
 , controllers()
-, timer(8096)
+, timer(64)
 , despawn_range(128 * 128)
 , spawn_distance(16 * 16)
 , max_entities(16)
@@ -86,12 +87,14 @@ void Spawner::TrySpawn() {
 		return;
 	}
 
-	// block check
-	// TODO: avoid force load, abort spawn if chunk unavailble
-	Chunk &tgt_chunk = world.Next(world.PlayerChunk(), chunk);
-	// TODO: don't use visibility for spawn check
-	//       also, check for more than one block space
-	if (tgt_chunk.Type(tgt_chunk.BlockAt(pos)).visible) {
+	// check if the spawn block and the one above it are loaded and inhabitable
+	BlockLookup spawn_block(&world.PlayerChunk(), chunk * Chunk::Extent() + pos);
+	if (!spawn_block || spawn_block.GetType().collide_block) {
+		return;
+	}
+
+	BlockLookup head_block(spawn_block.Next(Block::FACE_UP));
+	if (!head_block || head_block.GetType().collide_block) {
 		return;
 	}
 

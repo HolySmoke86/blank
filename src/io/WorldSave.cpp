@@ -30,8 +30,6 @@ bool WorldSave::Exists() const noexcept {
 
 
 void WorldSave::Read(World::Config &conf) const {
-	cout << "reading world save" << endl;
-
 	ifstream in(conf_path);
 	if (!in) {
 		throw runtime_error("failed to open world config");
@@ -71,8 +69,6 @@ void WorldSave::Read(World::Config &conf) const {
 }
 
 void WorldSave::Write(const World::Config &conf) const {
-	cout << "writing world save" << endl;
-
 	if (!make_dirs(root_path)) {
 		throw runtime_error("failed to create world save directory");
 	}

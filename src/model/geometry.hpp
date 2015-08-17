@@ -25,6 +25,19 @@ constexpr float rad2deg(float r) {
 }
 
 
+template<class T>
+T manhattan_distance(const glm::tvec3<T> &a, const glm::tvec3<T> &b) {
+	glm::tvec3<T> diff(abs(a - b));
+	return diff.x + diff.y + diff.z;
+}
+
+template<class T>
+T manhattan_radius(const glm::tvec3<T> &v) {
+	glm::tvec3<T> a(abs(v));
+	return std::max(a.x, std::max(a.y, a.z));
+}
+
+
 struct AABB {
 	glm::vec3 min;
 	glm::vec3 max;
