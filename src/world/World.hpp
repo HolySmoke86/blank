@@ -15,6 +15,7 @@
 namespace blank {
 
 class Assets;
+class EntityCollision;
 class Viewport;
 class WorldCollision;
 
@@ -38,23 +39,21 @@ public:
 
 	World(const Assets &, const Config &, const WorldSave &);
 
-	// check if this ray hits a block
+	/// check if this ray hits a block
+	/// depth in the collision is the distance between the ray's
+	/// origin and the intersection point
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
-		Chunk *&chunk,
-		int &blkid,
-		float &dist,
-		glm::vec3 &normal);
+		WorldCollision &);
 
-	// check if this ray hits an entity
+	/// check if this ray hits an entity
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
-		Entity *&entity,
-		float &dist,
-		glm::vec3 &normal);
+		EntityCollision &);
 
+	/// check if given entity intersects with the world
 	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
 	void Resolve(Entity &e, std::vector<WorldCollision> &);
 

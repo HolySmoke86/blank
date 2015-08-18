@@ -11,6 +11,7 @@
 #include "../graphics/Viewport.hpp"
 #include "../io/TokenStreamReader.hpp"
 #include "../model/shapes.hpp"
+#include "../world/BlockLookup.hpp"
 #include "../world/World.hpp"
 
 #include <algorithm>
@@ -103,9 +104,8 @@ Interface::Interface(
 , ctrl(world.Player())
 , hud(world.BlockTypes(), env.assets.small_ui_font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
-, aim_chunk(nullptr)
-, aim_block(0)
-, aim_normal()
+, aim_world()
+, aim_entity()
 , outline()
 , outline_transform(1.0f)
 , counter_text()
@@ -276,7 +276,7 @@ void Interface::ToggleCollision() {
 
 void Interface::PrintBlockInfo() {
 	std::cout << std::endl;
-	if (!aim_chunk) {
+	if (!aim_world) {
 		PostMessage("not looking at any block");
 		Ray aim = ctrl.Aim();
 		std::stringstream s;
@@ -285,53 +285,53 @@ void Interface::PrintBlockInfo() {
 		return;
 	}
 	std::stringstream s;
-	s << "looking at block " << aim_block
-		<< " " << Chunk::ToCoords(aim_block)
-		<< " of chunk " << aim_chunk->Position()
+	s << "looking at block " << aim_world.block
+		<< " " << aim_world.BlockCoords()
+		<< " of chunk " << aim_world.GetChunk().Position()
 	;
 	PostMessage(s.str());
-	Print(aim_chunk->BlockAt(aim_block));
+	Print(aim_world.GetBlock());
 }
 
 void Interface::PrintChunkInfo() {
 	std::cout << std::endl;
-	if (!aim_chunk) {
+	if (!aim_world) {
 		PostMessage("not looking at any block");
 		return;
 	}
 	std::stringstream s;
-	s << "looking at chunk " << aim_chunk->Position();
+	s << "looking at chunk " << aim_world.GetChunk().Position();
 	PostMessage(s.str());
 
 	PostMessage("  neighbors:");
-	if (aim_chunk->HasNeighbor(Block::FACE_LEFT)) {
+	if (aim_world.GetChunk().HasNeighbor(Block::FACE_LEFT)) {
 		s.str("");
-		s << " left  " << aim_chunk->GetNeighbor(Block::FACE_LEFT).Position();
+		s << " left  " << aim_world.GetChunk().GetNeighbor(Block::FACE_LEFT).Position();
 		PostMessage(s.str());
 	}
-	if (aim_chunk->HasNeighbor(Block::FACE_RIGHT)) {
+	if (aim_world.GetChunk().HasNeighbor(Block::FACE_RIGHT)) {
 		s.str("");
-		s << " right " << aim_chunk->GetNeighbor(Block::FACE_RIGHT).Position();
+		s << " right " << aim_world.GetChunk().GetNeighbor(Block::FACE_RIGHT).Position();
 		PostMessage(s.str());
 	}
-	if (aim_chunk->HasNeighbor(Block::FACE_UP)) {
+	if (aim_world.GetChunk().HasNeighbor(Block::FACE_UP)) {
 		s.str("");
-		s << " up    " << aim_chunk->GetNeighbor(Block::FACE_UP).Position();
+		s << " up    " << aim_world.GetChunk().GetNeighbor(Block::FACE_UP).Position();
 		PostMessage(s.str());
 	}
-	if (aim_chunk->HasNeighbor(Block::FACE_DOWN)) {
+	if (aim_world.GetChunk().HasNeighbor(Block::FACE_DOWN)) {
 		s.str("");
-		s << " down  " << aim_chunk->GetNeighbor(Block::FACE_DOWN).Position();
+		s << " down  " << aim_world.GetChunk().GetNeighbor(Block::FACE_DOWN).Position();
 		PostMessage(s.str());
 	}
-	if (aim_chunk->HasNeighbor(Block::FACE_FRONT)) {
+	if (aim_world.GetChunk().HasNeighbor(Block::FACE_FRONT)) {
 		s.str("");
-		s << " front " << aim_chunk->GetNeighbor(Block::FACE_FRONT).Position();
+		s << " front " << aim_world.GetChunk().GetNeighbor(Block::FACE_FRONT).Position();
 		PostMessage(s.str());
 	}
-	if (aim_chunk->HasNeighbor(Block::FACE_BACK)) {
+	if (aim_world.GetChunk().HasNeighbor(Block::FACE_BACK)) {
 		s.str("");
-		s << " back  " << aim_chunk->GetNeighbor(Block::FACE_BACK).Position();
+		s << " back  " << aim_world.GetChunk().GetNeighbor(Block::FACE_BACK).Position();
 		PostMessage(s.str());
 	}
 	std::cout << std::endl;
@@ -411,12 +411,12 @@ void Interface::UpdateOrientation() {
 }
 
 void Interface::UpdateBlockInfo() {
-	if (aim_chunk) {
-		const Block &block = aim_chunk->BlockAt(aim_block);
+	if (aim_world) {
+		const Block &block = aim_world.GetBlock();
 		if (last_displayed != block) {
 			std::stringstream s;
 			s << "Block: "
-				<< aim_chunk->Type(block).label
+				<< aim_world.GetType().label
 				<< ", face: " << block.GetFace()
 				<< ", turn: " << block.GetTurn();
 			block_text.Set(env.assets.small_ui_font, s.str());
@@ -464,38 +464,37 @@ void Interface::HandleRelease(const SDL_MouseButtonEvent &event) {
 }
 
 void Interface::PickBlock() {
-	if (!aim_chunk) return;
-	selection = aim_chunk->BlockAt(aim_block);
+	if (!aim_world) return;
+	selection = aim_world.GetBlock();
 	hud.Display(selection);
 }
 
 void Interface::PlaceBlock() {
-	if (!aim_chunk) return;
-	Chunk *mod_chunk = aim_chunk;
-	glm::vec3 next_pos = Chunk::ToCoords(aim_block) + aim_normal;
-	if (!Chunk::InBounds(next_pos)) {
-		mod_chunk = &world.Next(*aim_chunk, aim_normal);
-		next_pos -= aim_normal * glm::vec3(Chunk::Extent());
+	if (!aim_world) return;
+
+	glm::vec3 next_pos = aim_world.BlockCoords() + aim_world.normal;
+	BlockLookup next_block(&aim_world.GetChunk(), next_pos);
+	if (next_block) {
 	}
-	mod_chunk->SetBlock(next_pos, selection);
+	next_block.SetBlock(selection);
 
 	if (config.audio_disabled) return;
 	const Entity &player = ctrl.Controlled();
 	env.audio.Play(
 		place_sound,
-		mod_chunk->ToSceneCoords(player.ChunkCoords(), next_pos)
+		aim_world.GetChunk().ToSceneCoords(player.ChunkCoords(), next_pos)
 	);
 }
 
 void Interface::RemoveBlock() noexcept {
-	if (!aim_chunk) return;
-	aim_chunk->SetBlock(aim_block, remove);
+	if (!aim_world) return;
+	aim_world.SetBlock(remove);
 
 	if (config.audio_disabled) return;
 	const Entity &player = ctrl.Controlled();
 	env.audio.Play(
 		remove_sound,
-		aim_chunk->ToSceneCoords(player.ChunkCoords(), Chunk::ToCoords(aim_block))
+		aim_world.GetChunk().ToSceneCoords(player.ChunkCoords(), aim_world.BlockCoords())
 	);
 }
 
@@ -576,32 +575,22 @@ OutlineModel::Buffer outl_buf;
 }
 
 void Interface::CheckAim() {
-	float chunk_dist;
-	glm::vec3 chunk_normal;
-	if (world.Intersection(aim, glm::mat4(1.0f), aim_chunk, aim_block, chunk_dist, chunk_normal)) {
-	} else {
-		aim_chunk = nullptr;
+	if (!world.Intersection(aim, glm::mat4(1.0f), aim_world)) {
+		aim_world = WorldCollision();
 	}
-	float entity_dist;
-	glm::vec3 entity_normal;
-	if (!world.Intersection(aim, glm::mat4(1.0f), aim_entity, entity_dist, entity_normal)) {
-		aim_entity = nullptr;
+	if (!world.Intersection(aim, glm::mat4(1.0f), aim_entity)) {
+		aim_entity = EntityCollision();
 	}
-	if (aim_chunk && aim_entity) {
+	if (aim_world && aim_entity) {
 		// got both, pick the closest one
-		if (chunk_dist < entity_dist) {
-			aim_normal = chunk_normal;
+		if (aim_world.depth < aim_entity.depth) {
 			UpdateOutline();
-			aim_entity = nullptr;
+			aim_entity = EntityCollision();
 		} else {
-			aim_normal = entity_normal;
-			aim_chunk = nullptr;
+			aim_world = WorldCollision();
 		}
-	} else if (aim_chunk) {
-		aim_normal = chunk_normal;
+	} else if (aim_world) {
 		UpdateOutline();
-	} else if (aim_entity) {
-		aim_normal = entity_normal;
 	}
 	if (debug) {
 		UpdateBlockInfo();
@@ -610,10 +599,10 @@ void Interface::CheckAim() {
 
 void Interface::UpdateOutline() {
 	outl_buf.Clear();
-	aim_chunk->Type(aim_chunk->BlockAt(aim_block)).FillOutlineModel(outl_buf);
+	aim_world.GetType().FillOutlineModel(outl_buf);
 	outline.Update(outl_buf);
-	outline_transform = aim_chunk->Transform(world.Player().ChunkCoords());
-	outline_transform *= aim_chunk->ToTransform(Chunk::ToPos(aim_block), aim_block);
+	outline_transform = aim_world.GetChunk().Transform(world.Player().ChunkCoords());
+	outline_transform *= aim_world.BlockTransform();
 	outline_transform *= glm::scale(glm::vec3(1.005f));
 }
 
@@ -621,7 +610,7 @@ void Interface::UpdateOutline() {
 void Interface::Render(Viewport &viewport) noexcept {
 	if (config.visual_disabled) return;
 
-	if (aim_chunk) {
+	if (aim_world) {
 		PlainColor &outline_prog = viewport.WorldOutlineProgram();
 		outline_prog.SetM(outline_transform);
 		outline.Draw();

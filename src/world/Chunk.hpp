@@ -142,15 +142,13 @@ public:
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
-		int &blkid,
-		float &dist,
-		glm::vec3 &normal) const noexcept;
+		WorldCollision &) noexcept;
 
 	bool Intersection(
 		const AABB &box,
 		const glm::mat4 &Mbox,
 		const glm::mat4 &Mchunk,
-		std::vector<WorldCollision> &) const noexcept;
+		std::vector<WorldCollision> &) noexcept;
 
 	void Position(const Pos &pos) noexcept { position = pos; }
 	const Pos &Position() const noexcept { return position; }

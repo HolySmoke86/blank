@@ -10,6 +10,8 @@
 #include "../model/geometry.hpp"
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
+#include "../world/EntityCollision.hpp"
+#include "../world/WorldCollision.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
@@ -18,8 +20,6 @@
 
 namespace blank {
 
-class Chunk;
-class Entity;
 class Environment;
 class Viewport;
 class World;
@@ -94,10 +94,8 @@ private:
 	HUD hud;
 
 	Ray aim;
-	Chunk *aim_chunk;
-	Entity *aim_entity;
-	int aim_block;
-	glm::vec3 aim_normal;
+	WorldCollision aim_world;
+	EntityCollision aim_entity;
 
 	OutlineModel outline;
 	glm::mat4 outline_transform;

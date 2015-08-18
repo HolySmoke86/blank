@@ -1,5 +1,6 @@
 #include "World.hpp"
 
+#include "EntityCollision.hpp"
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
 #include "../app/TextureIndex.hpp"
@@ -57,10 +58,7 @@ std::vector<Candidate> candidates;
 bool World::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
-	Chunk *&chunk,
-	int &blkid,
-	float &dist,
-	glm::vec3 &normal
+	WorldCollision &coll
 ) {
 	candidates.clear();
 
@@ -73,37 +71,30 @@ bool World::Intersection(
 
 	if (candidates.empty()) return false;
 
-	chunk = nullptr;
-	dist = std::numeric_limits<float>::infinity();
-	blkid = -1;
+	coll.chunk = nullptr;
+	coll.block = -1;
+	coll.depth = std::numeric_limits<float>::infinity();
 
 	for (Candidate &cand : candidates) {
-		if (cand.dist > dist) continue;
-		int cur_blkid;
-		float cur_dist;
-		glm::vec3 cur_normal;
-		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player->ChunkCoords()), cur_blkid, cur_dist, cur_normal)) {
-			if (cur_dist < dist) {
-				chunk = cand.chunk;
-				blkid = cur_blkid;
-				dist = cur_dist;
-				normal = cur_normal;
+		if (cand.dist > coll.depth) continue;
+		WorldCollision cur_coll;
+		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player->ChunkCoords()), cur_coll)) {
+			if (cur_coll.depth < coll.depth) {
+				coll = cur_coll;
 			}
 		}
 	}
 
-	return chunk;
+	return coll.chunk;
 }
 
 bool World::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
-	Entity *&entity,
-	float &dist,
-	glm::vec3 &normal
+	EntityCollision &coll
 ) {
-	entity = nullptr;
-	dist = std::numeric_limits<float>::infinity();
+	coll.entity = nullptr;
+	coll.depth = std::numeric_limits<float>::infinity();
 	for (Entity &cur_entity : entities) {
 		// TODO: better check for skipping self (because the check might not be for the player)
 		if (&cur_entity == player) {
@@ -113,15 +104,15 @@ bool World::Intersection(
 		glm::vec3 cur_normal;
 		if (blank::Intersection(ray, cur_entity.Bounds(), M * cur_entity.Transform(player->ChunkCoords()), &cur_dist, &cur_normal)) {
 			// TODO: fine grained check goes here? maybe?
-			if (cur_dist < dist) {
-				entity = &cur_entity;
-				dist = cur_dist;
-				normal = cur_normal;
+			if (cur_dist < coll.depth) {
+				coll.entity = &cur_entity;
+				coll.depth = cur_dist;
+				coll.normal = cur_normal;
 			}
 		}
 	}
 
-	return entity;
+	return coll.entity;
 }
 
 bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {

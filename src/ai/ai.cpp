@@ -5,6 +5,7 @@
 #include "../model/geometry.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
+#include "../world/WorldCollision.hpp"
 
 #include <glm/glm.hpp>
 
@@ -34,12 +35,9 @@ void Chaser::Update(int dt) {
 	bool line_of_sight = true;
 	// FIXME: this only works if target is in the reference chunk (which is true for the player)
 	Ray aim{Target().Position() - diff, norm_diff};
-	Chunk *chunk;
-	int blkid;
-	float distance;
-	glm::vec3 normal;
-	if (world.Intersection(aim, glm::mat4(1.0f), chunk, blkid, distance, normal)) {
-		line_of_sight = distance > dist;
+	WorldCollision coll;
+	if (world.Intersection(aim, glm::mat4(1.0f), coll)) {
+		line_of_sight = coll.depth > dist;
 	}
 
 	if (!line_of_sight) {

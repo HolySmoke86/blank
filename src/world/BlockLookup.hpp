@@ -10,13 +10,13 @@ namespace blank {
 class BlockLookup {
 
 public:
-	// resolve chunk/position from oob coordinates
+	/// resolve chunk/position from oob coordinates
 	BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept;
 
-	// resolve chunk/position from ib coordinates and direction
+	/// resolve chunk/position from ib coordinates and direction
 	BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face dir) noexcept;
 
-	// check if lookup was successful
+	/// check if lookup was successful
 	operator bool() const { return chunk; }
 
 	// only valid if lookup was successful
@@ -25,6 +25,8 @@ public:
 	const Block &GetBlock() const noexcept { return GetChunk().BlockAt(GetBlockPos()); }
 	const BlockType &GetType() const noexcept { return GetChunk().Type(GetBlock()); }
 	int GetLight() const noexcept { return GetChunk().GetLight(GetBlockPos()); }
+
+	void SetBlock(const Block &b) noexcept { GetChunk().SetBlock(GetBlockPos(), b); }
 
 	// traverse in given direction
 	BlockLookup Next(Block::Face f) const { return BlockLookup(chunk, pos, f); }

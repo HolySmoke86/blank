@@ -440,13 +440,12 @@ void Chunk::Draw() noexcept {
 bool Chunk::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
-	int &blkid,
-	float &dist,
-	glm::vec3 &normal
-) const noexcept {
+	WorldCollision &coll
+) noexcept {
 	int idx = 0;
-	blkid = -1;
-	dist = std::numeric_limits<float>::infinity();
+	coll.chunk = this;
+	coll.block = -1;
+	coll.depth = std::numeric_limits<float>::infinity();
 	for (int z = 0; z < depth; ++z) {
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x, ++idx) {
@@ -457,20 +456,20 @@ bool Chunk::Intersection(
 				float cur_dist;
 				glm::vec3 cur_norm;
 				if (type.shape->Intersects(ray, M * ToTransform(Pos(x, y, z), idx), cur_dist, cur_norm)) {
-					if (cur_dist < dist) {
-						blkid = idx;
-						dist = cur_dist;
-						normal = cur_norm;
+					if (cur_dist < coll.depth) {
+						coll.block = idx;
+						coll.depth = cur_dist;
+						coll.normal = cur_norm;
 					}
 				}
 			}
 		}
 	}
 
-	if (blkid < 0) {
+	if (coll.block < 0) {
 		return false;
 	} else {
-		normal = glm::vec3(BlockAt(blkid).Transform() * glm::vec4(normal, 0.0f));
+		coll.normal = glm::vec3(BlockAt(coll.block).Transform() * glm::vec4(coll.normal, 0.0f));
 		return true;
 	}
 }
@@ -480,7 +479,7 @@ bool Chunk::Intersection(
 	const glm::mat4 &Mbox,
 	const glm::mat4 &Mchunk,
 	std::vector<WorldCollision> &col
-) const noexcept {
+) noexcept {
 	bool any = false;
 	float penetration;
 	glm::vec3 normal;
