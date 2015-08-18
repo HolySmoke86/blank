@@ -112,7 +112,8 @@ Interface::Interface(
 , position_text()
 , orientation_text()
 , block_text()
-, last_displayed()
+, last_block()
+, last_entity(nullptr)
 , messages(env.assets.small_ui_font)
 , msg_timer(5000)
 , config(config)
@@ -138,6 +139,10 @@ Interface::Interface(
 	block_text.Foreground(glm::vec4(1.0f));
 	block_text.Background(glm::vec4(0.5f));
 	block_text.Set(env.assets.small_ui_font, "Block: none");
+	entity_text.Position(glm::vec3(-25.0f, 25.0f + 4 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	entity_text.Foreground(glm::vec4(1.0f));
+	entity_text.Background(glm::vec4(0.5f));
+	entity_text.Set(env.assets.small_ui_font, "Entity: none");
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
@@ -385,6 +390,7 @@ void Interface::ToggleDebug() {
 		UpdatePosition();
 		UpdateOrientation();
 		UpdateBlockInfo();
+		UpdateEntityInfo();
 	}
 }
 
@@ -413,21 +419,32 @@ void Interface::UpdateOrientation() {
 void Interface::UpdateBlockInfo() {
 	if (aim_world) {
 		const Block &block = aim_world.GetBlock();
-		if (last_displayed != block) {
+		if (last_block != block) {
 			std::stringstream s;
 			s << "Block: "
 				<< aim_world.GetType().label
 				<< ", face: " << block.GetFace()
 				<< ", turn: " << block.GetTurn();
 			block_text.Set(env.assets.small_ui_font, s.str());
-			last_displayed = block;
+			last_block = block;
 		}
 	} else {
-		if (last_displayed != Block()) {
+		if (last_block != Block()) {
 			std::stringstream s;
 			s << "Block: none";
 			block_text.Set(env.assets.small_ui_font, s.str());
-			last_displayed = Block();
+			last_block = Block();
+		}
+	}
+}
+
+void Interface::UpdateEntityInfo() {
+	if (aim_entity) {
+		if (last_entity != aim_entity.entity) {
+			std::stringstream s;
+			s << "Entity: " << aim_entity.entity->Name();
+			entity_text.Set(env.assets.small_ui_font, s.str());
+			last_entity = aim_entity.entity;
 		}
 	}
 }
@@ -594,6 +611,7 @@ void Interface::CheckAim() {
 	}
 	if (debug) {
 		UpdateBlockInfo();
+		UpdateEntityInfo();
 	}
 }
 
@@ -620,7 +638,11 @@ void Interface::Render(Viewport &viewport) noexcept {
 		counter_text.Render(viewport);
 		position_text.Render(viewport);
 		orientation_text.Render(viewport);
-		block_text.Render(viewport);
+		if (aim_world) {
+			block_text.Render(viewport);
+		} else if (aim_entity) {
+			entity_text.Render(viewport);
+		}
 	}
 
 	if (msg_timer.Running()) {

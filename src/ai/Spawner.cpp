@@ -108,7 +108,7 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	rot.z *= (rand() % 1024);
 
 	Entity &e = world.AddEntity();
-	e.Name("test");
+	e.Name("spawned");
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);

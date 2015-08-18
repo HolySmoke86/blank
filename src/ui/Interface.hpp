@@ -73,6 +73,7 @@ public:
 	void UpdatePosition();
 	void UpdateOrientation();
 	void UpdateBlockInfo();
+	void UpdateEntityInfo();
 
 	void PostMessage(const char *);
 	void PostMessage(const std::string &msg) {
@@ -104,7 +105,9 @@ private:
 	FixedText position_text;
 	FixedText orientation_text;
 	FixedText block_text;
-	Block last_displayed;
+	FixedText entity_text;
+	Block last_block;
+	Entity *last_entity;
 	MessageBox messages;
 	IntervalTimer msg_timer;
 
