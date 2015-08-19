@@ -74,11 +74,7 @@ struct BlockType {
 		const glm::mat4 &transform = glm::mat4(1.0f),
 		BlockModel::Index idx_offset = 0
 	) const noexcept;
-	void FillOutlineModel(
-		OutlineModel::Buffer &m,
-		const glm::vec3 &pos_offset = { 0, 0, 0 },
-		OutlineModel::Index idx_offset = 0
-	) const noexcept;
+	void FillOutlineModel(OutlineModel::Buffer &m) const noexcept;
 
 };
 

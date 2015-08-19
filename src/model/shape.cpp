@@ -59,17 +59,9 @@ void Shape::Vertices(
 	}
 }
 
-void Shape::Outline(
-	OutlineModel::Buffer &out,
-	const OutlineModel::Position &elem_offset,
-	OutlineModel::Index idx_offset
-) const {
-	for (const auto &pos : out_pos) {
-		out.vertices.emplace_back(elem_offset + pos);
-	}
-	for (auto idx : out_idx) {
-		out.indices.emplace_back(idx_offset + idx);
-	}
+void Shape::Outline(OutlineModel::Buffer &out) const {
+	out.vertices.insert(out.vertices.end(), out_pos.begin(), out_pos.end());
+	out.indices.insert(out.indices.end(), out_idx.begin(), out_idx.end());
 }
 
 void Shape::SetShape(

@@ -269,6 +269,8 @@ void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg,
 				type.texture = tex_index.GetID(tex_name);
 			} else if (name == "color") {
 				in.ReadVec(type.color);
+			} else if (name == "outline") {
+				in.ReadVec(type.outline_color);
 			} else if (name == "label") {
 				in.ReadString(type.label);
 			} else if (name == "luminosity") {

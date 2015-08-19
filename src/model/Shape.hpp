@@ -51,13 +51,8 @@ struct Shape {
 	/// the number of vertex indices this shape's outline has
 	size_t OutlineIndexCount() const { return out_idx.size(); }
 
-	/// fill given buffers with this shape's outline's elements with
-	/// an optional offset
-	void Outline(
-		OutlineModel::Buffer &out,
-		const OutlineModel::Position &offset = { 0.0f, 0.0f, 0.0f },
-		OutlineModel::Index idx_offset = 0
-	) const;
+	/// fill given buffers with this shape's outline's elements
+	void Outline(OutlineModel::Buffer &out) const;
 
 	/// Check if given ray would pass though this shape if it were
 	/// transformed with given matrix.

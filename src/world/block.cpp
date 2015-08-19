@@ -103,12 +103,8 @@ void BlockType::FillBlockModel(
 	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
 }
 
-void BlockType::FillOutlineModel(
-	OutlineModel::Buffer &buf,
-	const glm::vec3 &pos_offset,
-	OutlineModel::Index idx_offset
-) const noexcept {
-	shape->Outline(buf, pos_offset, idx_offset);
+void BlockType::FillOutlineModel(OutlineModel::Buffer &buf) const noexcept {
+	shape->Outline(buf);
 	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
 }
 
