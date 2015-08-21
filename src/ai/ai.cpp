@@ -33,10 +33,9 @@ void Chaser::Update(int dt) {
 	glm::vec3 norm_diff(diff / dist);
 
 	bool line_of_sight = true;
-	// FIXME: this only works if target is in the reference chunk (which is true for the player)
 	Ray aim{Target().Position() - diff, norm_diff};
 	WorldCollision coll;
-	if (world.Intersection(aim, glm::mat4(1.0f), coll)) {
+	if (world.Intersection(aim, glm::mat4(1.0f), Target().ChunkCoords(), coll)) {
 		line_of_sight = coll.depth > dist;
 	}
 

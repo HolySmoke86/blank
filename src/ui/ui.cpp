@@ -592,10 +592,10 @@ OutlineModel::Buffer outl_buf;
 }
 
 void Interface::CheckAim() {
-	if (!world.Intersection(aim, glm::mat4(1.0f), aim_world)) {
+	if (!world.Intersection(aim, glm::mat4(1.0f), ctrl.Controlled().ChunkCoords(), aim_world)) {
 		aim_world = WorldCollision();
 	}
-	if (!world.Intersection(aim, glm::mat4(1.0f), aim_entity)) {
+	if (!world.Intersection(aim, glm::mat4(1.0f), ctrl.Controlled(), aim_entity)) {
 		aim_entity = EntityCollision();
 	}
 	if (aim_world && aim_entity) {

@@ -58,13 +58,14 @@ std::vector<Candidate> candidates;
 bool World::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
+	const Chunk::Pos &reference,
 	WorldCollision &coll
 ) {
 	candidates.clear();
 
 	for (Chunk &cur_chunk : chunks.Loaded()) {
 		float cur_dist;
-		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(player->ChunkCoords()), cur_dist)) {
+		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(reference), cur_dist)) {
 			candidates.push_back({ &cur_chunk, cur_dist });
 		}
 	}
@@ -78,7 +79,7 @@ bool World::Intersection(
 	for (Candidate &cand : candidates) {
 		if (cand.dist > coll.depth) continue;
 		WorldCollision cur_coll;
-		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(player->ChunkCoords()), cur_coll)) {
+		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(reference), cur_coll)) {
 			if (cur_coll.depth < coll.depth) {
 				coll = cur_coll;
 			}
@@ -91,18 +92,18 @@ bool World::Intersection(
 bool World::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
+	const Entity &reference,
 	EntityCollision &coll
 ) {
 	coll.entity = nullptr;
 	coll.depth = std::numeric_limits<float>::infinity();
 	for (Entity &cur_entity : entities) {
-		// TODO: better check for skipping self (because the check might not be for the player)
-		if (&cur_entity == player) {
+		if (&cur_entity == &reference) {
 			continue;
 		}
 		float cur_dist;
 		glm::vec3 cur_normal;
-		if (blank::Intersection(ray, cur_entity.Bounds(), M * cur_entity.Transform(player->ChunkCoords()), &cur_dist, &cur_normal)) {
+		if (blank::Intersection(ray, cur_entity.Bounds(), M * cur_entity.Transform(reference.ChunkCoords()), &cur_dist, &cur_normal)) {
 			// TODO: fine grained check goes here? maybe?
 			if (cur_dist < coll.depth) {
 				coll.entity = &cur_entity;
@@ -117,7 +118,8 @@ bool World::Intersection(
 
 bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
-	glm::mat4 M = e.Transform(player->ChunkCoords());
+	Chunk::Pos reference = e.ChunkCoords();
+	glm::mat4 M = e.Transform(reference);
 	bool any = false;
 	for (Chunk &cur_chunk : chunks.Loaded()) {
 		if (manhattan_radius(cur_chunk.Position() - e.ChunkCoords()) > 1) {
@@ -125,7 +127,7 @@ bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 			// since there's no entity which can extent over 16 blocks, they can be skipped
 			continue;
 		}
-		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(player->ChunkCoords()), col)) {
+		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(reference), col)) {
 			any = true;
 		}
 	}
@@ -135,11 +137,6 @@ bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 
 Chunk &World::PlayerChunk() {
 	return chunks.ForceLoad(player->ChunkCoords());
-}
-
-Chunk &World::Next(const Chunk &to, const glm::ivec3 &dir) {
-	const Chunk::Pos tgt_pos = to.Position() + dir;
-	return chunks.ForceLoad(tgt_pos);
 }
 
 

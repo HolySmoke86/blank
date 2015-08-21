@@ -42,15 +42,20 @@ public:
 	/// check if this ray hits a block
 	/// depth in the collision is the distance between the ray's
 	/// origin and the intersection point
+	/// M is the global transform for given reference chunk
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
+		const Chunk::Pos &reference,
 		WorldCollision &);
 
 	/// check if this ray hits an entity
+	/// intersections with the reference are not tested
+	/// M is the global transform for the chunk of given reference entity
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
+		const Entity &reference,
 		EntityCollision &);
 
 	/// check if given entity intersects with the world
@@ -64,7 +69,6 @@ public:
 	Entity &AddEntity() { entities.emplace_back(); return entities.back(); }
 
 	Chunk &PlayerChunk();
-	Chunk &Next(const Chunk &to, const glm::ivec3 &dir);
 
 	void Update(int dt);
 
