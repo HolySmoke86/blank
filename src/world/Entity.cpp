@@ -21,8 +21,9 @@ Entity::Entity() noexcept
 , velocity(0, 0, 0)
 , chunk(0, 0, 0)
 , angular_velocity(0.0f)
+, ref_count(0)
 , world_collision(false)
-, remove(false) {
+, dead(false) {
 
 }
 

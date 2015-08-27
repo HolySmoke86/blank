@@ -20,11 +20,11 @@ Chaser::Chaser(World &world, Entity &ctrl, Entity &tgt) noexcept
 , flee_speed(-0.005f)
 , stop_dist(10)
 , flee_dist(5) {
-
+	tgt.Ref();
 }
 
 Chaser::~Chaser() {
-
+	tgt.UnRef();
 }
 
 void Chaser::Update(int dt) {
@@ -53,11 +53,11 @@ void Chaser::Update(int dt) {
 
 Controller::Controller(Entity &e) noexcept
 : entity(e) {
-
+	entity.Ref();
 }
 
 Controller::~Controller() {
-
+	entity.UnRef();
 }
 
 

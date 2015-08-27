@@ -10,7 +10,11 @@ FPSController::FPSController(Entity &entity) noexcept
 : entity(entity)
 , pitch(0)
 , yaw(0) {
+	entity.Ref();
+}
 
+FPSController::~FPSController() {
+	entity.UnRef();
 }
 
 

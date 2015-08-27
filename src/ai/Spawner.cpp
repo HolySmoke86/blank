@@ -68,9 +68,14 @@ void Spawner::CheckDespawn() noexcept {
 	const Entity &reference = world.Player();
 	for (auto iter = controllers.begin(), end = controllers.end(); iter != end;) {
 		Entity &e = (*iter)->Controlled();
+		if (e.Dead()) {
+			delete *iter;
+			iter = controllers.erase(iter);
+			continue;
+		}
 		glm::vec3 diff(reference.AbsoluteDifference(e));
 		if (dot(diff, diff) > despawn_range) {
-			e.Remove();
+			e.Kill();
 			delete *iter;
 			iter = controllers.erase(iter);
 		} else {

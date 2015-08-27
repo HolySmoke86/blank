@@ -61,8 +61,12 @@ public:
 	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const noexcept;
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
-	void Remove() noexcept { remove = true; }
-	bool CanRemove() const noexcept { return remove; }
+	void Ref() noexcept { ++ref_count; }
+	void UnRef() noexcept { --ref_count; }
+	void Kill() noexcept { dead = true; }
+	bool Referenced() const noexcept { return ref_count > 0; }
+	bool Dead() const noexcept { return dead; }
+	bool CanRemove() const noexcept { return dead && ref_count <= 0; }
 
 	void Update(int dt) noexcept;
 
@@ -82,8 +86,10 @@ private:
 
 	glm::vec3 angular_velocity;
 
+	int ref_count;
+
 	bool world_collision;
-	bool remove;
+	bool dead;
 
 };
 

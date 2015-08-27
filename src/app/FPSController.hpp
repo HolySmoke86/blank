@@ -17,6 +17,7 @@ class FPSController {
 
 public:
 	explicit FPSController(Entity &) noexcept;
+	~FPSController();
 
 	Entity &Controlled() noexcept { return entity; }
 	const Entity &Controlled() const noexcept { return entity; }
