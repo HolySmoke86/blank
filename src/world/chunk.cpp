@@ -25,7 +25,6 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 , neighbor{0}
 , blocks{}
 , light{0}
-, model()
 , position(0, 0, 0)
 , dirty_model(false)
 , dirty_save(false) {
@@ -34,7 +33,6 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 
 Chunk::Chunk(Chunk &&other) noexcept
 : types(other.types)
-, model(std::move(other.model))
 , position(other.position)
 , dirty_model(other.dirty_model)
 , dirty_save(other.dirty_save) {
@@ -48,7 +46,6 @@ Chunk &Chunk::operator =(Chunk &&other) noexcept {
 	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
 	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
 	std::copy(other.light, other.light + sizeof(light), light);
-	model = std::move(other.model);
 	position = other.position;
 	dirty_model = other.dirty_save;
 	dirty_save = other.dirty_save;
@@ -429,14 +426,6 @@ bool Chunk::IsSurface(const Pos &pos) const noexcept {
 }
 
 
-void Chunk::Draw() noexcept {
-	if (ShouldUpdateModel()) {
-		Update();
-	}
-	model.Draw();
-}
-
-
 bool Chunk::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
@@ -511,13 +500,7 @@ BlockModel::Buffer buf;
 
 }
 
-void Chunk::CheckUpdate() noexcept {
-	if (ShouldUpdateModel()) {
-		Update();
-	}
-}
-
-void Chunk::Update() noexcept {
+void Chunk::Update(BlockModel &model) noexcept {
 	int vtx_count = 0, idx_count = 0;
 	for (const auto &block : blocks) {
 		const Shape *shape = Type(block).shape;

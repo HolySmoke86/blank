@@ -59,6 +59,10 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 }
 
 
+void HUD::DisplayNone() {
+	block_visible = false;
+}
+
 void HUD::Display(const Block &b) {
 	const BlockType &type = types.Get(b.type);
 
@@ -120,7 +124,7 @@ Interface::Interface(
 , place_timer(256)
 , remove_timer(256)
 , remove(0)
-, selection(1)
+, selection(0)
 , place_sound(env.assets.LoadSound("thump"))
 , remove_sound(env.assets.LoadSound("plop"))
 , fwd(0)
@@ -146,7 +150,7 @@ Interface::Interface(
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
-	hud.Display(selection);
+	hud.DisplayNone();
 }
 
 

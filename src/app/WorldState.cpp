@@ -1,6 +1,7 @@
 #include "WorldState.hpp"
 
 #include "Environment.hpp"
+#include "TextureIndex.hpp"
 
 #include <SDL.h>
 
@@ -14,12 +15,19 @@ WorldState::WorldState(
 	const WorldSave &save
 )
 : env(env)
-, world(env.assets, wc, save)
+, block_types()
+, world(block_types, wc, save)
+, chunk_renderer(world, wc.load.load_dist)
 , spawner(world)
 , interface(ic, env, world)
-, preload(env, world.Loader())
+, preload(env, world.Loader(), chunk_renderer)
 , unload(env, world.Loader()) {
-
+	TextureIndex tex_index;
+	env.assets.LoadBlockTypes("default", block_types, tex_index);
+	chunk_renderer.LoadTextures(env.assets, tex_index);
+	chunk_renderer.FogDensity(wc.fog_density);
+	// TODO: better solution for initializing HUD
+	interface.SelectNext();
 }
 
 
@@ -60,8 +68,10 @@ void WorldState::Update(int dt) {
 	interface.Update(dt);
 	spawner.Update(dt);
 	world.Update(dt);
+	chunk_renderer.Rebase(world.Player().ChunkCoords());
+	chunk_renderer.Update(dt);
 
-	glm::mat4 trans = world.Player().Transform(Chunk::Pos(0, 0, 0));
+	glm::mat4 trans = world.Player().Transform(world.Player().ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
 	env.audio.Position(world.Player().Position());
@@ -71,6 +81,8 @@ void WorldState::Update(int dt) {
 }
 
 void WorldState::Render(Viewport &viewport) {
+	viewport.WorldPosition(world.Player().Transform(world.Player().ChunkCoords()));
+	chunk_renderer.Render(viewport);
 	world.Render(viewport);
 	interface.Render(viewport);
 }

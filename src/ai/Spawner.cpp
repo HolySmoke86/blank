@@ -2,9 +2,9 @@
 
 #include "Chaser.hpp"
 #include "RandomWalk.hpp"
+#include "../model/shapes.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/BlockType.hpp"
-#include "../world/BlockTypeRegistry.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
 
@@ -20,10 +20,25 @@ Spawner::Spawner(World &world)
 , max_entities(16)
 , chunk_range(4) {
 	EntityModel::Buffer buf;
-	for (size_t i = 0; i < 14; ++i) {
-		world.BlockTypes()[i + 1].FillEntityModel(buf);
-		models[i].Update(buf);
+	{
+		CuboidShape shape({{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }});
+		shape.Vertices(buf, 1.0f);
+		buf.colors.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
+		models[0].Update(buf);
+	}
+	{
+		CuboidShape shape({{ -0.5f, -0.25f, -0.5f }, { 0.5f, 0.25f, 0.5f }});
 		buf.Clear();
+		shape.Vertices(buf, 2.0f);
+		buf.colors.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		models[1].Update(buf);
+	}
+	{
+		StairShape shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.4f, 0.4f });
+		buf.Clear();
+		shape.Vertices(buf, 3.0f);
+		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
+		models[2].Update(buf);
 	}
 
 	timer.Start();
@@ -112,7 +127,7 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	e.GetModel().SetNodeModel(&models[rand() % 14]);
+	e.GetModel().SetNodeModel(&models[rand() % 3]);
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (rand() % 2) {

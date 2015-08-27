@@ -23,6 +23,7 @@ public:
 	HUD(const HUD &) = delete;
 	HUD &operator =(const HUD &) = delete;
 
+	void DisplayNone();
 	void Display(const Block &);
 
 	void Render(Viewport &) noexcept;

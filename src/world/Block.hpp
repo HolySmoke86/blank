@@ -66,6 +66,22 @@ struct Block {
 		}
 	}
 
+	/// returns 1 for pro-axis, -1 for retro-axis, 0 for invalid faces
+	static int Direction(Face f) noexcept {
+		switch (f) {
+			case FACE_RIGHT:
+			case FACE_UP:
+			case FACE_FRONT:
+				return 1;
+			case FACE_LEFT:
+			case FACE_DOWN:
+			case FACE_BACK:
+				return -1;
+			default:
+				return 0;
+		}
+	}
+
 	static glm::ivec3 FaceNormal(Face face) noexcept {
 		return face2normal[face];
 	}

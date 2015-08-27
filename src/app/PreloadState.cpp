@@ -2,13 +2,15 @@
 
 #include "Environment.hpp"
 #include "../world/ChunkLoader.hpp"
+#include "../world/ChunkRenderer.hpp"
 
 
 namespace blank {
 
-PreloadState::PreloadState(Environment &env, ChunkLoader &loader)
+PreloadState::PreloadState(Environment &env, ChunkLoader &loader, ChunkRenderer &render)
 : env(env)
 , loader(loader)
+, render(render)
 , progress(env.assets.large_ui_font)
 , total(loader.ToLoad())
 , per_update(64) {
@@ -26,10 +28,8 @@ void PreloadState::Handle(const SDL_Event &e) {
 void PreloadState::Update(int dt) {
 	loader.LoadN(per_update);
 	if (loader.ToLoad() == 0) {
-		for (auto &chunk : loader.Loaded()) {
-			chunk.CheckUpdate();
-		}
 		env.state.Pop();
+		render.Update(render.MissingChunks());
 	} else {
 		progress.Update(total - loader.ToLoad(), total);
 	}

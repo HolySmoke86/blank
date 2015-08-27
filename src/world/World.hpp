@@ -1,11 +1,9 @@
 #ifndef BLANK_WORLD_WORLD_HPP_
 #define BLANK_WORLD_WORLD_HPP_
 
-#include "BlockTypeRegistry.hpp"
 #include "ChunkLoader.hpp"
 #include "Entity.hpp"
 #include "Generator.hpp"
-#include "../graphics/ArrayTexture.hpp"
 
 #include <list>
 #include <vector>
@@ -14,7 +12,7 @@
 
 namespace blank {
 
-class Assets;
+class BlockTypeRegistry;
 class EntityCollision;
 class Viewport;
 class WorldCollision;
@@ -37,7 +35,7 @@ public:
 		ChunkLoader::Config load = ChunkLoader::Config();
 	};
 
-	World(const Assets &, const Config &, const WorldSave &);
+	World(const BlockTypeRegistry &, const Config &, const WorldSave &);
 
 	/// check if this ray hits a block
 	/// depth in the collision is the distance between the ray's
@@ -62,7 +60,7 @@ public:
 	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
 	void Resolve(Entity &e, std::vector<WorldCollision> &);
 
-	BlockTypeRegistry &BlockTypes() noexcept { return block_type; }
+	const BlockTypeRegistry &BlockTypes() noexcept { return block_type; }
 	ChunkLoader &Loader() noexcept { return chunks; }
 
 	Entity &Player() { return *player; }
@@ -75,9 +73,7 @@ public:
 	void Render(Viewport &);
 
 private:
-	BlockTypeRegistry block_type;
-
-	ArrayTexture block_tex;
+	const BlockTypeRegistry &block_type;
 
 	Generator generate;
 	ChunkLoader chunks;

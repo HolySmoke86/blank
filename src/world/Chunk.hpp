@@ -3,7 +3,6 @@
 
 #include "Block.hpp"
 #include "BlockTypeRegistry.hpp"
-#include "../model/BlockModel.hpp"
 #include "../model/geometry.hpp"
 
 #include <vector>
@@ -167,18 +166,13 @@ public:
 	bool ShouldUpdateModel() const noexcept { return dirty_model; }
 	bool ShouldUpdateSave() const noexcept { return dirty_save; }
 
-	void CheckUpdate() noexcept;
-	void Draw() noexcept;
-
-private:
-	void Update() noexcept;
+	void Update(BlockModel &) noexcept;
 
 private:
 	const BlockTypeRegistry *types;
 	Chunk *neighbor[Block::FACE_COUNT];
 	Block blocks[size];
 	unsigned char light[size];
-	BlockModel model;
 	Pos position;
 	bool dirty_model;
 	bool dirty_save;

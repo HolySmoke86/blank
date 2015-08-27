@@ -3,6 +3,7 @@
 #include "filesystem.hpp"
 
 #include <cctype>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <limits>

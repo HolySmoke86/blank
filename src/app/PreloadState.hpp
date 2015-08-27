@@ -11,13 +11,14 @@
 namespace blank {
 
 class ChunkLoader;
+class ChunkRenderer;
 class Environment;
 
 class PreloadState
 : public State {
 
 public:
-	PreloadState(Environment &, ChunkLoader &);
+	PreloadState(Environment &, ChunkLoader &, ChunkRenderer &);
 
 	void Handle(const SDL_Event &) override;
 	void Update(int dt) override;
@@ -26,6 +27,7 @@ public:
 private:
 	Environment &env;
 	ChunkLoader &loader;
+	ChunkRenderer &render;
 	Progress progress;
 	std::size_t total;
 	std::size_t per_update;

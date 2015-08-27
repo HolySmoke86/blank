@@ -6,6 +6,8 @@
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
 #include "../ui/Interface.hpp"
+#include "../world/BlockTypeRegistry.hpp"
+#include "../world/ChunkRenderer.hpp"
 #include "../world/World.hpp"
 
 
@@ -35,7 +37,9 @@ public:
 
 private:
 	Environment &env;
+	BlockTypeRegistry block_types;
 	World world;
+	ChunkRenderer chunk_renderer;
 	Spawner spawner;
 	Interface interface;
 

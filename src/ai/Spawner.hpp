@@ -30,7 +30,7 @@ private:
 	World &world;
 	std::vector<Controller *> controllers;
 
-	EntityModel models[14];
+	EntityModel models[3];
 
 	IntervalTimer timer;
 	float despawn_range;

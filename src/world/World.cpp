@@ -3,7 +3,6 @@
 #include "EntityCollision.hpp"
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
-#include "../app/TextureIndex.hpp"
 #include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
@@ -14,22 +13,14 @@
 
 namespace blank {
 
-World::World(const Assets &assets, const Config &config, const WorldSave &save)
-: block_type()
-, block_tex()
+World::World(const BlockTypeRegistry &types, const Config &config, const WorldSave &save)
+: block_type(types)
 , generate(config.gen)
-, chunks(config.load, block_type, generate, save)
+, chunks(config.load, types, generate, save)
 , player()
 , entities()
 , light_direction(config.light_direction)
 , fog_density(config.fog_density) {
-	TextureIndex tex_index;
-	assets.LoadBlockTypes("default", block_type, tex_index);
-
-	block_tex.Bind();
-	assets.LoadTextures(tex_index, block_tex);
-	block_tex.FilterNearest();
-
 	generate.Space(0);
 	generate.Light(13);
 	generate.Solids({ 1, 4, 7, 10 });
@@ -202,21 +193,6 @@ void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
 
 
 void World::Render(Viewport &viewport) {
-	viewport.WorldPosition(player->Transform(player->ChunkCoords()));
-
-	BlockLighting &chunk_prog = viewport.ChunkProgram();
-	chunk_prog.SetTexture(block_tex);
-	chunk_prog.SetFogDensity(fog_density);
-
-	for (Chunk &chunk : chunks.Loaded()) {
-		glm::mat4 m(chunk.Transform(player->ChunkCoords()));
-		chunk_prog.SetM(m);
-		glm::mat4 mvp(chunk_prog.GetVP() * m);
-		if (!CullTest(Chunk::Bounds(), mvp)) {
-			chunk.Draw();
-		}
-	}
-
 	DirectionalLighting &entity_prog = viewport.EntityProgram();
 	entity_prog.SetLightDirection(light_direction);
 	entity_prog.SetFogDensity(fog_density);
