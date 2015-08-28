@@ -1,6 +1,8 @@
 #ifndef BLANK_MODEL_COMPOSITEMODEL_HPP_
 #define BLANK_MODEL_COMPOSITEMODEL_HPP_
 
+#include "geometry.hpp"
+
 #include <list>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -8,7 +10,7 @@
 
 namespace blank {
 
-class DirectionalLighting;
+class CompositeInstance;
 class EntityModel;
 
 class CompositeModel {
@@ -18,6 +20,9 @@ public:
 
 	CompositeModel(const CompositeModel &) = delete;
 	CompositeModel &operator =(const CompositeModel &) = delete;
+
+	const AABB &Bounds() const noexcept { return bounds; }
+	void Bounds(const AABB &b) noexcept { bounds = b; }
 
 	const glm::vec3 &Position() const noexcept { return position; }
 	void Position(const glm::vec3 &p) noexcept { position = p; }
@@ -38,11 +43,13 @@ public:
 	glm::mat4 LocalTransform() const noexcept;
 	glm::mat4 GlobalTransform() const noexcept;
 
-	void Render(const glm::mat4 &, DirectionalLighting &) const;
+	void Instantiate(CompositeInstance &) const;
 
 private:
 	CompositeModel *parent;
 	const EntityModel *node_model;
+
+	AABB bounds;
 
 	glm::vec3 position;
 	glm::quat orientation;

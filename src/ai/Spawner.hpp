@@ -2,6 +2,7 @@
 #define BLANK_AI_SPAWNER_HPP_
 
 #include "../app/IntervalTimer.hpp"
+#include "../model/CompositeModel.hpp"
 #include "../model/EntityModel.hpp"
 
 #include <vector>
@@ -31,6 +32,7 @@ private:
 	std::vector<Controller *> controllers;
 
 	EntityModel models[3];
+	CompositeModel skeletons[3];
 
 	IntervalTimer timer;
 	float despawn_range;

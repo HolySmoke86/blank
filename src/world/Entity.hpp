@@ -2,7 +2,7 @@
 #define BLANK_WORLD_ENTITY_HPP_
 
 #include "Chunk.hpp"
-#include "../model/CompositeModel.hpp"
+#include "../model/CompositeInstance.hpp"
 #include "../model/geometry.hpp"
 
 #include <string>
@@ -20,8 +20,8 @@ class Entity {
 public:
 	Entity() noexcept;
 
-	CompositeModel &GetModel() noexcept { return model; }
-	const CompositeModel &GetModel() const noexcept { return model; }
+	CompositeInstance &GetModel() noexcept { return model; }
+	const CompositeInstance &GetModel() const noexcept { return model; }
 
 	const std::string &Name() const noexcept { return name; }
 	void Name(const std::string &n) { name = n; }
@@ -71,11 +71,11 @@ public:
 	void Update(int dt) noexcept;
 
 	void Render(const glm::mat4 &M, DirectionalLighting &prog) noexcept {
-		model.Render(M, prog);
+		if (model) model.Render(M, prog);
 	}
 
 private:
-	CompositeModel model;
+	CompositeInstance model;
 
 	std::string name;
 
