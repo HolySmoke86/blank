@@ -68,7 +68,13 @@ Controller::~Controller() {
 RandomWalk::RandomWalk(Entity &e, std::uint64_t seed) noexcept
 : Controller(e)
 , random(seed)
-, time_left(0) {
+, start_vel(e.Velocity())
+, target_vel(start_vel)
+, start_rot(e.AngularVelocity())
+, target_rot(start_rot)
+, switch_time(0)
+, lerp_max(1.0f)
+, lerp_time(0.0f) {
 
 }
 
@@ -77,45 +83,36 @@ RandomWalk::~RandomWalk() {
 }
 
 void RandomWalk::Update(int dt) {
-	time_left -= dt;
-	if (time_left > 0) return;
-	time_left += 2500 + (random.Next<unsigned short>() % 5000);
-
-	constexpr float move_vel = 0.0005f;
-
-	glm::vec3 new_vel = Controlled().Velocity();
-
-	switch (random.Next<unsigned char>() % 9) {
-		case 0:
-			new_vel.x = -move_vel;
-			break;
-		case 1:
-			new_vel.x = 0.0f;
-			break;
-		case 2:
-			new_vel.x = move_vel;
-			break;
-		case 3:
-			new_vel.y = -move_vel;
-			break;
-		case 4:
-			new_vel.y = 0.0f;
-			break;
-		case 5:
-			new_vel.y = move_vel;
-			break;
-		case 6:
-			new_vel.z = -move_vel;
-			break;
-		case 7:
-			new_vel.z = 0.0f;
-			break;
-		case 8:
-			new_vel.z = move_vel;
-			break;
+	switch_time -= dt;
+	lerp_time -= dt;
+	if (switch_time < 0) {
+		switch_time += 2500 + (random.Next<unsigned short>() % 5000);
+		lerp_max = 1500 + (random.Next<unsigned short>() % 1000);
+		lerp_time = lerp_max;
+		Change();
+	} else if (lerp_time > 0) {
+		float a = std::min(lerp_time / lerp_max, 1.0f);
+		Controlled().Velocity(mix(target_vel, start_vel, a));
+		Controlled().AngularVelocity(mix(target_rot, start_rot, a));
+	} else {
+		Controlled().Velocity(target_vel);
+		Controlled().AngularVelocity(target_rot);
 	}
+}
 
-	Controlled().Velocity(new_vel);
+void RandomWalk::Change() noexcept {
+	start_vel = target_vel;
+	start_rot = target_rot;
+
+	constexpr float base = 0.000001f;
+
+	target_vel.x = base * (random.Next<short>() % 1024);
+	target_vel.y = base * (random.Next<short>() % 1024);
+	target_vel.z = base * (random.Next<short>() % 1024);
+
+	target_rot.x = base * (random.Next<short>() % 1024);
+	target_rot.y = base * (random.Next<short>() % 1024);
+	target_rot.z = base * (random.Next<short>() % 1024);
 }
 
 }

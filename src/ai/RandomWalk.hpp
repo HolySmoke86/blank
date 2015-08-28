@@ -5,6 +5,8 @@
 
 #include "../rand/GaloisLFSR.hpp"
 
+#include <glm/glm.hpp>
+
 
 namespace blank {
 
@@ -19,8 +21,20 @@ public:
 	void Update(int dt) override;
 
 private:
+	void Change() noexcept;
+
+private:
 	GaloisLFSR random;
-	int time_left;
+
+	glm::vec3 start_vel;
+	glm::vec3 target_vel;
+
+	glm::vec3 start_rot;
+	glm::vec3 target_rot;
+
+	int switch_time;
+	float lerp_max;
+	float lerp_time;
 
 };
 
