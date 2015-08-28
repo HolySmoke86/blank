@@ -18,6 +18,7 @@
 #include "../world/Entity.hpp"
 
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <stdexcept>
 #include <SDL_image.h>
@@ -63,6 +64,12 @@ void Application::RunT(size_t t) {
 void Application::RunS(size_t n, size_t t) {
 	for (size_t i = 0; HasState() && i < n; ++i) {
 		Loop(t);
+		std::cout << '.';
+		if (i % 16 == 15) {
+			std::cout << std::setfill(' ') << std::setw(5) << std::right << (i + 1) << std::endl;
+		} else {
+			std::cout << std::flush;
+		}
 	}
 }
 
