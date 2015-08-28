@@ -30,6 +30,10 @@ Chaser::~Chaser() {
 void Chaser::Update(int dt) {
 	glm::vec3 diff(Target().AbsoluteDifference(Controlled()));
 	float dist = length(diff);
+	if (dist < std::numeric_limits<float>::epsilon()) {
+		Controlled().Velocity(glm::vec3(0.0f));
+		return;
+	}
 	glm::vec3 norm_diff(diff / dist);
 
 	bool line_of_sight = true;
