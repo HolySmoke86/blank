@@ -11,9 +11,10 @@
 
 namespace blank {
 
-Spawner::Spawner(World &world)
+Spawner::Spawner(World &world, std::uint64_t seed)
 : world(world)
 , controllers()
+, random(seed)
 , timer(64)
 , despawn_range(128 * 128)
 , spawn_distance(16 * 16)
@@ -97,15 +98,15 @@ void Spawner::TrySpawn() {
 	if (controllers.size() >= max_entities) return;
 
 	glm::ivec3 chunk(
-		(rand() % (chunk_range * 2 + 1)) - chunk_range,
-		(rand() % (chunk_range * 2 + 1)) - chunk_range,
-		(rand() % (chunk_range * 2 + 1)) - chunk_range
+		(random.Next<unsigned char>() % (chunk_range * 2 + 1)) - chunk_range,
+		(random.Next<unsigned char>() % (chunk_range * 2 + 1)) - chunk_range,
+		(random.Next<unsigned char>() % (chunk_range * 2 + 1)) - chunk_range
 	);
 
 	glm::ivec3 pos(
-		rand() % Chunk::width,
-		rand() % Chunk::height,
-		rand() % Chunk::depth
+		random.Next<unsigned char>() % Chunk::width,
+		random.Next<unsigned char>() % Chunk::height,
+		random.Next<unsigned char>() % Chunk::depth
 	);
 
 
@@ -132,20 +133,20 @@ void Spawner::TrySpawn() {
 
 void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	glm::vec3 rot(0.000001f);
-	rot.x *= (rand() % 1024);
-	rot.y *= (rand() % 1024);
-	rot.z *= (rand() % 1024);
+	rot.x *= (random.Next<unsigned short>() % 1024);
+	rot.y *= (random.Next<unsigned short>() % 1024);
+	rot.z *= (random.Next<unsigned short>() % 1024);
 
 	Entity &e = world.AddEntity();
 	e.Name("spawned");
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	skeletons[rand() % 3].Instantiate(e.GetModel());
+	skeletons[random.Next<unsigned char>() % 3].Instantiate(e.GetModel());
 	e.AngularVelocity(rot);
 	Controller *ctrl;
-	if (rand() % 2) {
-		ctrl = new RandomWalk(e);
+	if (random()) {
+		ctrl = new RandomWalk(e, random.Next<std::uint64_t>());
 	} else {
 		ctrl = new Chaser(world, e, world.Player());
 	}

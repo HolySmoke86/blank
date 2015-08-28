@@ -4,6 +4,7 @@
 #include "../app/IntervalTimer.hpp"
 #include "../model/CompositeModel.hpp"
 #include "../model/EntityModel.hpp"
+#include "../rand/GaloisLFSR.hpp"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -17,7 +18,7 @@ class World;
 class Spawner {
 
 public:
-	explicit Spawner(World &);
+	Spawner(World &, std::uint64_t seed);
 	~Spawner();
 
 	void Update(int dt);
@@ -33,6 +34,8 @@ private:
 
 	EntityModel models[3];
 	CompositeModel skeletons[3];
+
+	GaloisLFSR random;
 
 	IntervalTimer timer;
 	float despawn_range;

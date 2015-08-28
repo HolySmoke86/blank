@@ -61,8 +61,9 @@ Controller::~Controller() {
 }
 
 
-RandomWalk::RandomWalk(Entity &e) noexcept
+RandomWalk::RandomWalk(Entity &e, std::uint64_t seed) noexcept
 : Controller(e)
+, random(seed)
 , time_left(0) {
 
 }
@@ -74,13 +75,13 @@ RandomWalk::~RandomWalk() {
 void RandomWalk::Update(int dt) {
 	time_left -= dt;
 	if (time_left > 0) return;
-	time_left += 2500 + (rand() % 5000);
+	time_left += 2500 + (random.Next<unsigned short>() % 5000);
 
 	constexpr float move_vel = 0.0005f;
 
 	glm::vec3 new_vel = Controlled().Velocity();
 
-	switch (rand() % 9) {
+	switch (random.Next<unsigned char>() % 9) {
 		case 0:
 			new_vel.x = -move_vel;
 			break;

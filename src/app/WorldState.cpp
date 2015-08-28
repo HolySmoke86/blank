@@ -18,7 +18,7 @@ WorldState::WorldState(
 , block_types()
 , world(block_types, wc, save)
 , chunk_renderer(world, wc.load.load_dist)
-, spawner(world)
+, spawner(world, wc.gen.seed)
 , interface(ic, env, world)
 , preload(env, world.Loader(), chunk_renderer)
 , unload(env, world.Loader()) {

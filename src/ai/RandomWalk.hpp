@@ -3,6 +3,8 @@
 
 #include "Controller.hpp"
 
+#include "../rand/GaloisLFSR.hpp"
+
 
 namespace blank {
 
@@ -11,12 +13,13 @@ class RandomWalk
 : public Controller {
 
 public:
-	explicit RandomWalk(Entity &) noexcept;
+	RandomWalk(Entity &, std::uint64_t seed) noexcept;
 	~RandomWalk();
 
 	void Update(int dt) override;
 
 private:
+	GaloisLFSR random;
 	int time_left;
 
 };

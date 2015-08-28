@@ -14,24 +14,6 @@ constexpr float one_sixth = 1.0f/6.0f;
 
 namespace blank {
 
-GaloisLFSR::GaloisLFSR(std::uint64_t seed) noexcept
-: state(seed) {
-
-}
-
-bool GaloisLFSR::operator ()() noexcept {
-	bool result = state & 1;
-	state >>= 1;
-	if (result) {
-		state |= 0x8000000000000000;
-		state ^= mask;
-	} else {
-		state &= 0x7FFFFFFFFFFFFFFF;
-	}
-	return result;
-}
-
-
 SimplexNoise::SimplexNoise(unsigned int seed) noexcept
 : grad({
 	{  1.0f,  1.0f,  0.0f },
