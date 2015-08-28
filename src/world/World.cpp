@@ -6,6 +6,7 @@
 #include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/transform.hpp>
@@ -42,6 +43,10 @@ struct Candidate {
 	float dist;
 };
 
+bool CandidateLess(const Candidate &a, const Candidate &b) {
+	return a.dist < b.dist;
+}
+
 std::vector<Candidate> candidates;
 
 }
@@ -62,6 +67,8 @@ bool World::Intersection(
 	}
 
 	if (candidates.empty()) return false;
+
+	std::sort(candidates.begin(), candidates.end(), CandidateLess);
 
 	coll.chunk = nullptr;
 	coll.block = -1;
