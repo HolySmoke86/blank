@@ -1,8 +1,10 @@
 #ifndef BLANK_NET_CONNECTION_HPP_
 #define BLANK_NET_CONNECTION_HPP_
 
+#include "Packet.hpp"
 #include "../app/IntervalTimer.hpp"
 
+#include <cstdint>
 #include <SDL_net.h>
 
 
@@ -17,23 +19,26 @@ public:
 
 	bool Matches(const IPaddress &) const noexcept;
 
-	void FlagSend() noexcept;
-	void FlagRecv() noexcept;
-
 	bool ShouldPing() const noexcept;
 	bool TimedOut() const noexcept;
 
 	void Update(int dt);
 
-
 	void SendPing(UDPpacket &, UDPsocket);
 
 	void Send(UDPpacket &, UDPsocket);
+	void Received(const UDPpacket &);
+
+private:
+	void FlagSend() noexcept;
+	void FlagRecv() noexcept;
 
 private:
 	IPaddress addr;
 	IntervalTimer send_timer;
 	IntervalTimer recv_timer;
+
+	Packet::TControl ctrl;
 
 };
 

@@ -75,7 +75,7 @@ void Client::HandlePacket(const UDPpacket &udp_pack) {
 		return;
 	}
 
-	conn.FlagRecv();
+	conn.Received(udp_pack);
 	cout << "I got something!" << endl;
 }
 
@@ -102,7 +102,8 @@ void Client::SendLogin(const string &name) {
 Connection::Connection(const IPaddress &addr)
 : addr(addr)
 , send_timer(5000)
-, recv_timer(10000) {
+, recv_timer(10000)
+, ctrl{ 0, 0xFFFF, 0xFFFF } {
 	send_timer.Start();
 	recv_timer.Start();
 }
@@ -133,12 +134,51 @@ void Connection::Update(int dt) {
 }
 
 
-void Connection::Send(UDPpacket &pack, UDPsocket sock) {
-	pack.address = addr;
-	if (SDLNet_UDP_Send(sock, -1, &pack) == 0) {
+void Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
+	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
+	pack.header.ctrl = ctrl;
+
+	udp_pack.address = addr;
+	if (SDLNet_UDP_Send(sock, -1, &udp_pack) == 0) {
 		throw NetError("SDLNet_UDP_Send");
 	}
+
 	FlagSend();
+}
+
+void Connection::Received(const UDPpacket &udp_pack) {
+	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
+
+	int diff = std::int16_t(pack.header.ctrl.seq) - std::int16_t(ctrl.ack);
+
+	if (diff > 0) {
+		// incoming more recent than last acked
+
+		// TODO: packets considered lost are detected here
+		//       this should have ones for all of them:
+		//       ~hist & ((1 << dist) - 1) if dist is < 32
+
+		if (diff >= 32) {
+			// missed more than the last 32 oO
+			ctrl.hist = 0;
+		} else {
+			ctrl.hist >>= diff;
+			ctrl.hist |= 1 << (32 - diff);
+		}
+	} else if (diff < 0) {
+		// incoming older than acked
+		if (diff > -32) {
+			// too late :/
+		} else {
+			ctrl.hist |= 1 << (32 + diff);
+		}
+	} else {
+		// incoming the same as last acked oO
+	}
+
+	ctrl.ack = pack.header.ctrl.seq;
+
+	FlagRecv();
 }
 
 void Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
@@ -230,7 +270,7 @@ void Server::HandlePacket(const UDPpacket &udp_pack) {
 	}
 
 	Connection &client = GetClient(udp_pack.address);
-	client.FlagRecv();
+	client.Received(udp_pack);
 
 	switch (pack.header.type) {
 		case Packet::PING:

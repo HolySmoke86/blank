@@ -16,8 +16,15 @@ struct Packet {
 		LOGIN = 1,
 	};
 
+	struct TControl {
+		std::uint16_t seq;
+		std::uint16_t ack;
+		std::uint32_t hist;
+	};
+
 	struct Header {
 		std::uint32_t tag;
+		TControl ctrl;
 		std::uint8_t type;
 	} header;
 
