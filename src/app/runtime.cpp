@@ -1,6 +1,8 @@
 #include "Application.hpp"
+#include "ClientState.hpp"
 #include "Environment.hpp"
 #include "Runtime.hpp"
+#include "ServerState.hpp"
 #include "WorldState.hpp"
 
 #include "init.hpp"
@@ -45,12 +47,20 @@ string default_save_path() {
 
 namespace blank {
 
+HeadlessEnvironment::HeadlessEnvironment(const string &asset_path)
+: loader(asset_path)
+, counter()
+, state() {
+
+}
+
 Environment::Environment(Window &win, const string &asset_path)
-: audio()
+: HeadlessEnvironment(asset_path)
+, assets(loader)
+, audio()
 , viewport()
 , window(win)
-, assets(asset_path)
-, counter() {
+, keymap() {
 	viewport.Clear();
 	window.Flip();
 	keymap.LoadDefault();
@@ -60,6 +70,7 @@ Environment::Environment(Window &win, const string &asset_path)
 Runtime::Runtime() noexcept
 : name("blank")
 , mode(NORMAL)
+, target(STANDALONE)
 , n(0)
 , t(0)
 , config() {
@@ -100,6 +111,12 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 						config.interface.visual_disabled = true;
 					} else if (strcmp(param, "no-audio") == 0) {
 						config.interface.audio_disabled = true;
+					} else if (strcmp(param, "standalone") == 0) {
+						target = STANDALONE;
+					} else if (strcmp(param, "server") == 0) {
+						target = SERVER;
+					} else if (strcmp(param, "client") == 0) {
+						target = CLIENT;
 					} else if (strcmp(param, "asset-path") == 0) {
 						++i;
 						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
@@ -107,6 +124,23 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							error = true;
 						} else {
 							config.asset_path = argv[i];
+						}
+					} else if (strcmp(param, "host") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --host" << endl;
+							error = true;
+						} else {
+							config.client.host = argv[i];
+						}
+					} else if (strcmp(param, "port") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --port" << endl;
+							error = true;
+						} else {
+							config.server.port = strtoul(argv[i], nullptr, 10);
+							config.client.port = config.server.port;
 						}
 					} else if (strcmp(param, "save-path") == 0) {
 						++i;
@@ -230,10 +264,36 @@ int Runtime::Execute() {
 		return 1;
 	}
 
+	InitHeadless init_headless;
+
+	switch (target) {
+		default:
+		case STANDALONE:
+			RunStandalone();
+			break;
+		case SERVER:
+			RunServer();
+			break;
+		case CLIENT:
+			RunClient();
+			break;
+	}
+
+	return 0;
+}
+
+void Runtime::RunStandalone() {
 	Init init(config.doublebuf, config.multisampling);
 
 	Environment env(init.window, config.asset_path);
 	env.viewport.VSync(config.vsync);
+
+	WorldSave save(config.save_path + config.world_name + '/');
+	if (save.Exists()) {
+		save.Read(config.world);
+	} else {
+		save.Write(config.world);
+	}
 
 	std::string keys_path = config.save_path + "keys.conf";
 	if (!is_file(keys_path)) {
@@ -244,6 +304,14 @@ int Runtime::Execute() {
 		env.keymap.Load(file);
 	}
 
+	Application app(env);
+	WorldState world_state(env, config.interface, config.world, save);
+	app.PushState(&world_state);
+	Run(app);
+}
+
+void Runtime::RunServer() {
+	HeadlessEnvironment env(config.asset_path);
 
 	WorldSave save(config.save_path + config.world_name + '/');
 	if (save.Exists()) {
@@ -252,11 +320,41 @@ int Runtime::Execute() {
 		save.Write(config.world);
 	}
 
+	HeadlessApplication app(env);
+	ServerState server_state(env, config.world, save, config.server);
+	app.PushState(&server_state);
+	Run(app);
+}
+
+void Runtime::RunClient() {
+	Init init(config.doublebuf, config.multisampling);
+
+	Environment env(init.window, config.asset_path);
+	env.viewport.VSync(config.vsync);
+
+	WorldSave save(config.save_path + config.world_name + '/');
+	if (save.Exists()) {
+		save.Read(config.world);
+	} else {
+		save.Write(config.world);
+	}
+
+	std::string keys_path = config.save_path + "keys.conf";
+	if (!is_file(keys_path)) {
+		std::ofstream file(keys_path);
+		env.keymap.Save(file);
+	} else {
+		std::ifstream file(keys_path);
+		env.keymap.Load(file);
+	}
+
 	Application app(env);
+	ClientState client_state(env, config.world, save, config.client);
+	app.PushState(&client_state);
+	Run(app);
+}
 
-	WorldState world_state(env, config.interface, config.world, save);
-	app.PushState(&world_state);
-
+void Runtime::Run(HeadlessApplication &app) {
 	switch (mode) {
 		default:
 		case NORMAL:
@@ -272,8 +370,6 @@ int Runtime::Execute() {
 			app.RunS(n, t);
 			break;
 	}
-
-	return 0;
 }
 
 }

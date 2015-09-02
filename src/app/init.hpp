@@ -27,6 +27,15 @@ public:
 
 };
 
+class NetError
+: public std::runtime_error {
+
+public:
+	NetError();
+	explicit NetError(const std::string &);
+
+};
+
 
 class InitSDL {
 
@@ -40,6 +49,18 @@ public:
 };
 
 
+class InitVideo {
+
+public:
+	InitVideo();
+	~InitVideo();
+
+	InitVideo(const InitVideo &) = delete;
+	InitVideo &operator =(const InitVideo &) = delete;
+
+};
+
+
 class InitIMG {
 
 public:
@@ -48,6 +69,18 @@ public:
 
 	InitIMG(const InitIMG &) = delete;
 	InitIMG &operator =(const InitIMG &) = delete;
+
+};
+
+
+class InitNet {
+
+public:
+	InitNet();
+	~InitNet();
+
+	InitNet(const InitNet &) = delete;
+	InitNet &operator =(const InitNet &) = delete;
 
 };
 
@@ -138,11 +171,20 @@ public:
 };
 
 
+struct InitHeadless {
+
+	InitHeadless();
+
+	InitSDL init_sdl;
+	InitNet init_net;
+
+};
+
 struct Init {
 
 	Init(bool double_buffer = true, int sample_size = 1);
 
-	InitSDL init_sdl;
+	InitVideo init_video;
 	InitIMG init_img;
 	InitTTF init_ttf;
 	InitAL init_al;

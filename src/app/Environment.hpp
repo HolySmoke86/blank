@@ -15,20 +15,33 @@ namespace blank {
 
 class Window;
 
-struct Environment {
+struct HeadlessEnvironment {
 
-	Audio audio;
-	Viewport viewport;
-	Window &window;
+	AssetLoader loader;
 
-	Assets assets;
-	Keymap keymap;
 	FrameCounter counter;
 
 	StateControl state;
 
 
-	explicit Environment(Window &win, const std::string &asset_path);
+	explicit HeadlessEnvironment(const std::string &asset_path);
+
+};
+
+
+struct Environment
+: public HeadlessEnvironment {
+
+	Assets assets;
+
+	Audio audio;
+	Viewport viewport;
+	Window &window;
+
+	Keymap keymap;
+
+
+	Environment(Window &win, const std::string &asset_path);
 
 };
 

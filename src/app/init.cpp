@@ -4,6 +4,7 @@
 #include <alut.h>
 #include <SDL.h>
 #include <SDL_image.h>
+#include <SDL_net.h>
 #include <SDL_ttf.h>
 #include <GL/glew.h>
 
@@ -16,6 +17,15 @@ std::string sdl_error_append(std::string msg) {
 		msg += ": ";
 		msg += error;
 		SDL_ClearError();
+	}
+	return msg;
+}
+
+std::string net_error_append(std::string msg) {
+	const char *error = SDLNet_GetError();
+	if (*error != '\0') {
+		msg += ": ";
+		msg += error;
 	}
 	return msg;
 }
@@ -44,6 +54,17 @@ AlutError::AlutError(ALenum num, const std::string &msg)
 }
 
 
+NetError::NetError()
+: std::runtime_error(SDLNet_GetError()) {
+
+}
+
+NetError::NetError(const std::string &msg)
+: std::runtime_error(net_error_append(msg)) {
+
+}
+
+
 SDLError::SDLError()
 : std::runtime_error(SDL_GetError()) {
 
@@ -56,13 +77,24 @@ SDLError::SDLError(const std::string &msg)
 
 
 InitSDL::InitSDL() {
-	if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-		throw SDLError("SDL_Init(SDL_INIT_VIDEO)");
+	if (SDL_Init(0) != 0) {
+		throw SDLError("SDL_Init(0)");
 	}
 }
 
 InitSDL::~InitSDL() {
 	SDL_Quit();
+}
+
+
+InitVideo::InitVideo() {
+	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+		throw SDLError("SDL_InitSubSystem(SDL_INIT_VIDEO)");
+	}
+}
+
+InitVideo::~InitVideo() {
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }
 
 
@@ -74,6 +106,17 @@ InitIMG::InitIMG() {
 
 InitIMG::~InitIMG() {
 	IMG_Quit();
+}
+
+
+InitNet::InitNet() {
+	if (SDLNet_Init() != 0) {
+		throw SDLError("SDLNet_Init()");
+	}
+}
+
+InitNet::~InitNet() {
+	SDLNet_Quit();
 }
 
 
@@ -198,8 +241,14 @@ InitGLEW::InitGLEW() {
 }
 
 
-Init::Init(bool double_buffer, int sample_size)
+InitHeadless::InitHeadless()
 : init_sdl()
+, init_net() {
+
+}
+
+Init::Init(bool double_buffer, int sample_size)
+: init_video()
 , init_img()
 , init_ttf()
 , init_gl(double_buffer, sample_size)

@@ -34,6 +34,15 @@ Application
 --no-vsync
 	disable vsync
 
+--standalone
+	run as standalone (the default)
+
+--client
+	run as client
+
+--server
+	run as server
+
 Interface
 ---------
 
@@ -50,6 +59,15 @@ Interface
 	disable audio
 	the audio device and sounds will still be allocated
 	it just stops the interface from queueing buffers
+
+Network
+-------
+
+--host <hostname>
+	hostname to connect to in client mode
+
+--port <number>
+	port number to connection to (client) or listen on (server)
 
 World
 -----

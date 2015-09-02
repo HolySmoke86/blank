@@ -125,8 +125,8 @@ Interface::Interface(
 , remove_timer(256)
 , remove(0)
 , selection(0)
-, place_sound(env.assets.LoadSound("thump"))
-, remove_sound(env.assets.LoadSound("plop"))
+, place_sound(env.loader.LoadSound("thump"))
+, remove_sound(env.loader.LoadSound("plop"))
 , fwd(0)
 , rev(0)
 , debug(false) {

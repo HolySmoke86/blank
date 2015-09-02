@@ -1,11 +1,11 @@
 Dependencies
 ============
 
-	GLEW, GLM, SDL2, SDL2_image, SDL2_ttf, OpenAL, freealut, zlib
+	GLEW, GLM, SDL2, SDL2_image, SDL2_net, SDL2_ttf, OpenAL, freealut, zlib
 
 	CppUnit for tests
 
-archlinux: pacman -S glew glm sdl2 sdl2_image sdl2_ttf openal freealut zlib cppunit
+archlinux: pacman -S glew glm sdl2 sdl2_image sdl2_net sdl2_ttf openal freealut zlib cppunit
 
 manual:
 	CppUnit http://sourceforge.net/projects/cppunit/
@@ -29,7 +29,10 @@ release (default), debug, profile:
 	build executables tuned for running, debugging, and profiling
 
 run:
-	build and execute the main binary
+	build and execute the main binary with state path set to ./saves
+
+server:
+	same as run, only in server mode
 
 test:
 	build and run unittests

@@ -14,10 +14,10 @@ class Sound;
 class Texture;
 class TextureIndex;
 
-class Assets {
+class AssetLoader {
 
 public:
-	explicit Assets(const std::string &base);
+	explicit AssetLoader(const std::string &base);
 
 	void LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &, TextureIndex &) const;
 	Font LoadFont(const std::string &name, int size) const;
@@ -32,10 +32,14 @@ private:
 	std::string textures;
 	std::string data;
 
-public:
-	// common assets shared by may states
+};
+
+struct Assets {
+
 	Font large_ui_font;
 	Font small_ui_font;
+
+	Assets(const AssetLoader &);
 
 };
 

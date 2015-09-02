@@ -1,6 +1,8 @@
 #ifndef BLANK_RUNTIME_HPP_
 #define BLANK_RUNTIME_HPP_
 
+#include "../net/Client.hpp"
+#include "../net/Server.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/World.hpp"
 
@@ -9,6 +11,8 @@
 
 
 namespace blank {
+
+class HeadlessApplication;
 
 /// Parse and interpret arguemnts, then set up the environment and execute.
 class Runtime {
@@ -27,6 +31,12 @@ public:
 		ERROR,
 	};
 
+	enum Target {
+		STANDALONE,
+		SERVER,
+		CLIENT,
+	};
+
 	struct Config {
 		bool vsync = true;
 		bool doublebuf = true;
@@ -36,7 +46,9 @@ public:
 		std::string save_path;
 		std::string world_name = "default";
 
+		Client::Config client = Client::Config();
 		Interface::Config interface = Interface::Config();
+		Server::Config server = Server::Config();
 		World::Config world = World::Config();
 	};
 
@@ -47,8 +59,16 @@ public:
 	int Execute();
 
 private:
+	void RunStandalone();
+	void RunServer();
+	void RunClient();
+
+	void Run(HeadlessApplication &);
+
+private:
 	const char *name;
 	Mode mode;
+	Target target;
 	std::size_t n;
 	std::size_t t;
 	Config config;

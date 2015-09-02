@@ -11,7 +11,7 @@
 
 namespace blank {
 
-class Assets;
+class AssetLoader;
 class TextureIndex;
 class Viewport;
 class World;
@@ -22,7 +22,7 @@ public:
 	/// render_distance in chunks, excluding the base chunk which is always rendered
 	ChunkRenderer(World &, int render_distance);
 
-	void LoadTextures(const Assets &, const TextureIndex &);
+	void LoadTextures(const AssetLoader &, const TextureIndex &);
 	void FogDensity(float d) noexcept { fog_density = d; }
 
 	bool InRange(const Chunk::Pos &) const noexcept;

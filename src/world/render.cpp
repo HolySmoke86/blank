@@ -24,9 +24,9 @@ ChunkRenderer::ChunkRenderer(World &world, int rd)
 }
 
 
-void ChunkRenderer::LoadTextures(const Assets &assets, const TextureIndex &tex_index) {
+void ChunkRenderer::LoadTextures(const AssetLoader &loader, const TextureIndex &tex_index) {
 	block_tex.Bind();
-	assets.LoadTextures(tex_index, block_tex);
+	loader.LoadTextures(tex_index, block_tex);
 	block_tex.FilterNearest();
 }
 

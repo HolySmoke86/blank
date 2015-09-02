@@ -1,7 +1,7 @@
 CXX = g++ --std=c++11
 LDXX = g++
 
-LIBS = sdl2 SDL2_image SDL2_ttf glew openal freealut zlib
+LIBS = sdl2 SDL2_image SDL2_net SDL2_ttf glew openal freealut zlib
 
 PKGFLAGS := $(shell pkg-config --cflags $(LIBS))
 PKGLIBS := $(shell pkg-config --libs $(LIBS))
@@ -63,6 +63,9 @@ tests: $(TEST_BIN)
 
 run: $(ASSET_DEP) blank
 	./blank --save-path saves/
+
+server: $(ASSET_DEP) blank
+	./blank --server --save-path saves/
 
 gdb: $(ASSET_DEP) blank.debug
 	gdb ./blank.debug

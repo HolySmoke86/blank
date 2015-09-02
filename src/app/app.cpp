@@ -29,9 +29,20 @@ using std::string;
 
 namespace blank {
 
-Application::Application(Environment &e)
+HeadlessApplication::HeadlessApplication(HeadlessEnvironment &e)
 : env(e)
 , states() {
+
+}
+
+HeadlessApplication::~HeadlessApplication() {
+
+}
+
+
+Application::Application(Environment &e)
+: HeadlessApplication(e)
+, env(e) {
 
 }
 
@@ -40,7 +51,7 @@ Application::~Application() {
 }
 
 
-void Application::RunN(size_t n) {
+void HeadlessApplication::RunN(size_t n) {
 	Uint32 last = SDL_GetTicks();
 	for (size_t i = 0; HasState() && i < n; ++i) {
 		Uint32 now = SDL_GetTicks();
@@ -50,7 +61,7 @@ void Application::RunN(size_t n) {
 	}
 }
 
-void Application::RunT(size_t t) {
+void HeadlessApplication::RunT(size_t t) {
 	Uint32 last = SDL_GetTicks();
 	Uint32 finish = last + t;
 	while (HasState() && last < finish) {
@@ -61,7 +72,7 @@ void Application::RunT(size_t t) {
 	}
 }
 
-void Application::RunS(size_t n, size_t t) {
+void HeadlessApplication::RunS(size_t n, size_t t) {
 	for (size_t i = 0; HasState() && i < n; ++i) {
 		Loop(t);
 		std::cout << '.';
@@ -74,9 +85,8 @@ void Application::RunS(size_t n, size_t t) {
 }
 
 
-void Application::Run() {
+void HeadlessApplication::Run() {
 	Uint32 last = SDL_GetTicks();
-	env.window.GrabMouse();
 	while (HasState()) {
 		Uint32 now = SDL_GetTicks();
 		int delta = now - last;
@@ -85,15 +95,38 @@ void Application::Run() {
 	}
 }
 
+void HeadlessApplication::Loop(int dt) {
+	env.counter.EnterFrame();
+	Update(dt);
+	CommitStates();
+	if (!HasState()) return;
+	env.counter.ExitFrame();
+}
+
 void Application::Loop(int dt) {
 	env.counter.EnterFrame();
 	HandleEvents();
 	if (!HasState()) return;
 	Update(dt);
-	env.state.Commit(*this);
+	CommitStates();
 	if (!HasState()) return;
 	Render();
 	env.counter.ExitFrame();
+}
+
+
+void HeadlessApplication::HandleEvents() {
+	env.counter.EnterHandle();
+	SDL_Event event;
+	while (HasState() && SDL_PollEvent(&event)) {
+		Handle(event);
+		CommitStates();
+	}
+	env.counter.ExitHandle();
+}
+
+void HeadlessApplication::Handle(const SDL_Event &event) {
+	GetState().Handle(event);
 }
 
 
@@ -102,7 +135,7 @@ void Application::HandleEvents() {
 	SDL_Event event;
 	while (HasState() && SDL_PollEvent(&event)) {
 		Handle(event);
-		env.state.Commit(*this);
+		CommitStates();
 	}
 	env.counter.ExitHandle();
 }
@@ -134,6 +167,14 @@ void Application::Handle(const SDL_WindowEvent &event) {
 	}
 }
 
+void HeadlessApplication::Update(int dt) {
+	env.counter.EnterUpdate();
+	if (HasState()) {
+		GetState().Update(dt);
+	}
+	env.counter.ExitUpdate();
+}
+
 void Application::Update(int dt) {
 	env.counter.EnterUpdate();
 	env.audio.Update(dt);
@@ -158,7 +199,7 @@ void Application::Render() {
 }
 
 
-void Application::PushState(State *s) {
+void HeadlessApplication::PushState(State *s) {
 	if (!states.empty()) {
 		states.top()->OnPause();
 	}
@@ -170,7 +211,7 @@ void Application::PushState(State *s) {
 	s->OnResume();
 }
 
-State *Application::PopState() {
+State *HeadlessApplication::PopState() {
 	State *s = states.top();
 	states.pop();
 	s->OnPause();
@@ -181,7 +222,7 @@ State *Application::PopState() {
 	return s;
 }
 
-State *Application::SwitchState(State *s_new) {
+State *HeadlessApplication::SwitchState(State *s_new) {
 	State *s_old = states.top();
 	states.top() = s_new;
 	--s_old->ref_count;
@@ -197,16 +238,20 @@ State *Application::SwitchState(State *s_new) {
 	return s_old;
 }
 
-State &Application::GetState() {
+State &HeadlessApplication::GetState() {
 	return *states.top();
 }
 
-bool Application::HasState() const noexcept {
+void HeadlessApplication::CommitStates() {
+	env.state.Commit(*this);
+}
+
+bool HeadlessApplication::HasState() const noexcept {
 	return !states.empty();
 }
 
 
-void StateControl::Commit(Application &app) {
+void StateControl::Commit(HeadlessApplication &app) {
 	while (!cue.empty()) {
 		Memo m(cue.front());
 		cue.pop();
@@ -230,13 +275,17 @@ void StateControl::Commit(Application &app) {
 }
 
 
-Assets::Assets(const string &base)
+AssetLoader::AssetLoader(const string &base)
 : fonts(base + "fonts/")
 , sounds(base + "sounds/")
 , textures(base + "textures/")
-, data(base + "data/")
-, large_ui_font(LoadFont("DejaVuSans", 24))
-, small_ui_font(LoadFont("DejaVuSans", 16)) {
+, data(base + "data/") {
+
+}
+
+Assets::Assets(const AssetLoader &loader)
+: large_ui_font(loader.LoadFont("DejaVuSans", 24))
+, small_ui_font(loader.LoadFont("DejaVuSans", 16)) {
 
 }
 
@@ -248,7 +297,7 @@ CuboidShape slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 
 }
 
-void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg, TextureIndex &tex_index) const {
+void AssetLoader::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg, TextureIndex &tex_index) const {
 	string full = data + set_name + ".types";
 	std::ifstream file(full);
 	if (!file) {
@@ -314,17 +363,17 @@ void Assets::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg,
 	}
 }
 
-Font Assets::LoadFont(const string &name, int size) const {
+Font AssetLoader::LoadFont(const string &name, int size) const {
 	string full = fonts + name + ".ttf";
 	return Font(full.c_str(), size);
 }
 
-Sound Assets::LoadSound(const string &name) const {
+Sound AssetLoader::LoadSound(const string &name) const {
 	string full = sounds + name + ".wav";
 	return Sound(full.c_str());
 }
 
-Texture Assets::LoadTexture(const string &name) const {
+Texture AssetLoader::LoadTexture(const string &name) const {
 	string full = textures + name + ".png";
 	Texture tex;
 	SDL_Surface *srf = IMG_Load(full.c_str());
@@ -337,7 +386,7 @@ Texture Assets::LoadTexture(const string &name) const {
 	return tex;
 }
 
-void Assets::LoadTexture(const string &name, ArrayTexture &tex, int layer) const {
+void AssetLoader::LoadTexture(const string &name, ArrayTexture &tex, int layer) const {
 	string full = textures + name + ".png";
 	SDL_Surface *srf = IMG_Load(full.c_str());
 	if (!srf) {
@@ -353,7 +402,7 @@ void Assets::LoadTexture(const string &name, ArrayTexture &tex, int layer) const
 	SDL_FreeSurface(srf);
 }
 
-void Assets::LoadTextures(const TextureIndex &index, ArrayTexture &tex) const {
+void AssetLoader::LoadTextures(const TextureIndex &index, ArrayTexture &tex) const {
 	// TODO: where the hell should that size come from?
 	tex.Reserve(16, 16, index.Size(), Format());
 	for (const auto &entry : index.Entries()) {

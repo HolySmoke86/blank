@@ -6,12 +6,12 @@
 
 namespace blank {
 
-class Application;
+class HeadlessApplication;
 class Viewport;
 
 struct State {
 
-	friend class Application;
+	friend class HeadlessApplication;
 
 	virtual void Handle(const SDL_Event &) = 0;
 

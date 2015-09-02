@@ -6,7 +6,7 @@
 
 namespace blank {
 
-class Application;
+class HeadlessApplication;
 class State;
 
 class StateControl {
@@ -29,7 +29,7 @@ public:
 	}
 
 
-	void Commit(Application &);
+	void Commit(HeadlessApplication &);
 
 private:
 	enum Command {

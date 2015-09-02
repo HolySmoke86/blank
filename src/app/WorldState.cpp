@@ -1,6 +1,7 @@
 #include "WorldState.hpp"
 
 #include "Environment.hpp"
+#include "init.hpp"
 #include "TextureIndex.hpp"
 
 #include <SDL.h>
@@ -23,8 +24,8 @@ WorldState::WorldState(
 , preload(env, world.Loader(), chunk_renderer)
 , unload(env, world.Loader()) {
 	TextureIndex tex_index;
-	env.assets.LoadBlockTypes("default", block_types, tex_index);
-	chunk_renderer.LoadTextures(env.assets, tex_index);
+	env.loader.LoadBlockTypes("default", block_types, tex_index);
+	chunk_renderer.LoadTextures(env.loader, tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
@@ -33,6 +34,7 @@ WorldState::WorldState(
 
 void WorldState::OnEnter() {
 	env.state.Push(&preload);
+	env.window.GrabMouse();
 }
 
 
