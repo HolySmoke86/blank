@@ -67,6 +67,9 @@ run: $(ASSET_DEP) blank
 server: $(ASSET_DEP) blank
 	./blank --server --save-path saves/
 
+client: $(ASSET_DEP) blank
+	./blank --client --save-path client-saves/
+
 gdb: $(ASSET_DEP) blank.debug
 	gdb ./blank.debug
 
@@ -88,7 +91,7 @@ clean:
 
 distclean: clean
 	rm -f $(BIN) cachegrind.out.* callgrind.out.*
-	rm -Rf build saves
+	rm -Rf build client-saves saves
 
 .PHONY: all release debug profile tests run gdb cachegrind callgrind test clean distclean
 

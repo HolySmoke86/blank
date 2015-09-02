@@ -1,0 +1,25 @@
+Packets
+=======
+
+Ping
+----
+
+To tell the other side we're still alive.
+Both server and client will send this if they haven't sent something in
+a while.
+
+Code: 0
+Payload: none
+
+
+Login
+-----
+
+Sent from client to serveri as a request to join. The server may
+respond negatively if the player name is already taken or some cap has
+been reached.
+
+Code: 1
+Payload:
+	player name, max 32 byte UTF-8 string,
+	shorter names should be zero terminated

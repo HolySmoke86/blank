@@ -33,6 +33,8 @@ private:
 	void OnConnect(Connection &);
 	void OnDisconnect(Connection &);
 
+	void HandleLogin(Connection &client, const UDPpacket &);
+
 private:
 	UDPsocket serv_sock;
 	UDPpacket serv_pack;

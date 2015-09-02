@@ -7,4 +7,5 @@ blank.test
 build
 cachegrind.out.*
 callgrind.out.*
+client-saves
 saves

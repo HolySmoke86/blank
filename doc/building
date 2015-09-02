@@ -34,6 +34,10 @@ run:
 server:
 	same as run, only in server mode
 
+server:
+	same as run, only in client mode and the save path is set to
+	./client-saved to prevent clashes with a running `make server`
+
 test:
 	build and run unittests
 

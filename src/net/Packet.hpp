@@ -2,6 +2,7 @@
 #define BLANK_NET_PACKET_HPP_
 
 #include <cstdint>
+#include <string>
 
 
 namespace blank {
@@ -11,7 +12,8 @@ struct Packet {
 	static constexpr std::uint32_t TAG = 0xFB1AB1AF;
 
 	enum Type {
-		PING,
+		PING = 0,
+		LOGIN = 1,
 	};
 
 	struct Header {
@@ -25,6 +27,7 @@ struct Packet {
 	void Tag() noexcept;
 
 	std::size_t Ping() noexcept;
+	std::size_t Login(const std::string &name) noexcept;
 
 };
 

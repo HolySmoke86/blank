@@ -29,6 +29,9 @@ public:
 
 	bool TimedOut() { return conn.TimedOut(); }
 
+	void SendPing();
+	void SendLogin(const std::string &);
+
 private:
 	void HandlePacket(const UDPpacket &);
 

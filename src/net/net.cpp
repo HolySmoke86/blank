@@ -5,6 +5,7 @@
 #include "Server.hpp"
 
 #include "../app/init.hpp"
+#include "../world/World.hpp"
 
 #include <cstring>
 #include <iostream>
@@ -42,7 +43,7 @@ Client::Client(const Config &conf, World &world)
 	client_pack.data = new Uint8[sizeof(Packet)];
 	client_pack.maxlen = sizeof(Packet);
 	// establish connection
-	conn.SendPing(client_pack, client_sock);
+	SendPing();
 }
 
 Client::~Client() {
@@ -83,8 +84,18 @@ void Client::Update(int dt) {
 	if (conn.TimedOut()) {
 		cout << "connection timed out :(" << endl;
 	} else if (conn.ShouldPing()) {
-		conn.SendPing(client_pack, client_sock);
+		SendPing();
 	}
+}
+
+void Client::SendPing() {
+	conn.SendPing(client_pack, client_sock);
+}
+
+void Client::SendLogin(const string &name) {
+	Packet &pack = *reinterpret_cast<Packet *>(client_pack.data);
+	client_pack.len = pack.Login(name);
+	conn.Send(client_pack, client_sock);
 }
 
 
@@ -160,6 +171,20 @@ size_t Packet::Ping() noexcept {
 	return sizeof(Header);
 }
 
+size_t Packet::Login(const string &name) noexcept {
+	constexpr size_t maxname = 32;
+
+	Tag();
+	header.type = LOGIN;
+	if (name.size() < maxname) {
+		memset(payload, '\0', maxname);
+		memcpy(payload, name.c_str(), name.size());
+	} else {
+		memcpy(payload, name.c_str(), maxname);
+	}
+	return sizeof(Header) + maxname;
+}
+
 
 Server::Server(const Config &conf, World &world)
 : serv_sock(nullptr)
@@ -206,6 +231,18 @@ void Server::HandlePacket(const UDPpacket &udp_pack) {
 
 	Connection &client = GetClient(udp_pack.address);
 	client.FlagRecv();
+
+	switch (pack.header.type) {
+		case Packet::PING:
+			// already done all that's supposed to do
+			break;
+		case Packet::LOGIN:
+			HandleLogin(client, udp_pack);
+			break;
+		default:
+			// just drop packets of unknown type
+			break;
+	}
 }
 
 Connection &Server::GetClient(const IPaddress &addr) {
@@ -242,6 +279,27 @@ void Server::Update(int dt) {
 
 void Server::OnDisconnect(Connection &client) {
 	cout << "connection timeout from " << client.Address() << endl;
+}
+
+
+void Server::HandleLogin(Connection &client, const UDPpacket &udp_pack) {
+	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
+	size_t maxlen = min(udp_pack.len - int(sizeof(Packet::Header)), 32);
+	string name;
+	name.reserve(maxlen);
+	for (size_t i = 0; i < maxlen && pack.payload[i] != '\0'; ++i) {
+		name.push_back(pack.payload[i]);
+	}
+	cout << "got login request from player \"" << name << '"' << endl;
+
+	Entity *player = world.AddPlayer(name);
+	if (player) {
+		// success!
+		cout << "\taccepted" << endl;
+	} else {
+		// aw no :(
+		cout << "\trejected" << endl;
+	}
 }
 
 }

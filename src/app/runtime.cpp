@@ -357,7 +357,7 @@ void Runtime::RunClient() {
 	}
 
 	Application app(env);
-	ClientState client_state(env, config.world, save, config.client);
+	ClientState client_state(env, config.world, save, config.interface, config.client);
 	app.PushState(&client_state);
 	Run(app);
 }

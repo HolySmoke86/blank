@@ -79,7 +79,6 @@ void WorldState::Update(int dt) {
 	env.audio.Position(interface.Player().Position());
 	env.audio.Velocity(interface.Player().Velocity());
 	env.audio.Orientation(dir, up);
-
 }
 
 void WorldState::Render(Viewport &viewport) {
