@@ -70,20 +70,20 @@ void WorldState::Update(int dt) {
 	interface.Update(dt);
 	spawner.Update(dt);
 	world.Update(dt);
-	chunk_renderer.Rebase(world.Player().ChunkCoords());
+	chunk_renderer.Rebase(interface.Player().ChunkCoords());
 	chunk_renderer.Update(dt);
 
-	glm::mat4 trans = world.Player().Transform(world.Player().ChunkCoords());
+	glm::mat4 trans = interface.Player().Transform(interface.Player().ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	env.audio.Position(world.Player().Position());
-	env.audio.Velocity(world.Player().Velocity());
+	env.audio.Position(interface.Player().Position());
+	env.audio.Velocity(interface.Player().Velocity());
 	env.audio.Orientation(dir, up);
 
 }
 
 void WorldState::Render(Viewport &viewport) {
-	viewport.WorldPosition(world.Player().Transform(world.Player().ChunkCoords()));
+	viewport.WorldPosition(interface.Player().Transform(interface.Player().ChunkCoords()));
 	chunk_renderer.Render(viewport);
 	world.Render(viewport);
 	interface.Render(viewport);

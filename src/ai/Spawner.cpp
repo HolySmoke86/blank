@@ -52,7 +52,6 @@ Spawner::Spawner(World &world, std::uint64_t seed)
 	}
 
 	timer.Start();
-	Spawn(world.Player().ChunkCoords(), { 0.5f, 0.5f, 0.5f });
 }
 
 Spawner::~Spawner() {
@@ -75,7 +74,7 @@ void Spawner::Update(int dt) {
 
 
 void Spawner::CheckDespawn() noexcept {
-	const Entity &reference = world.Player();
+	const auto &refs = world.Players();
 	for (auto iter = controllers.begin(), end = controllers.end(); iter != end;) {
 		Entity &e = (*iter)->Controlled();
 		if (e.Dead()) {
@@ -83,8 +82,15 @@ void Spawner::CheckDespawn() noexcept {
 			iter = controllers.erase(iter);
 			continue;
 		}
-		glm::vec3 diff(reference.AbsoluteDifference(e));
-		if (dot(diff, diff) > despawn_range) {
+		bool safe = false;
+		for (const Entity *ref : refs) {
+			glm::vec3 diff(ref->AbsoluteDifference(e));
+			if (dot(diff, diff) < despawn_range) {
+				safe = true;
+				break;
+			}
+		}
+		if (!safe) {
 			e.Kill();
 			delete *iter;
 			iter = controllers.erase(iter);
@@ -96,6 +102,11 @@ void Spawner::CheckDespawn() noexcept {
 
 void Spawner::TrySpawn() {
 	if (controllers.size() >= max_entities) return;
+
+	// select random player to punish
+	auto &players = world.Players();
+	if (players.size() == 0) return;
+	Entity &player = *players[random.Next<unsigned short>() % players.size()];
 
 	glm::ivec3 chunk(
 		(random.Next<unsigned char>() % (chunk_range * 2 + 1)) - chunk_range,
@@ -111,14 +122,16 @@ void Spawner::TrySpawn() {
 
 
 	// distance check
-	glm::vec3 diff(glm::vec3(chunk * Chunk::Extent() - pos) + world.Player().Position());
+	glm::vec3 diff(glm::vec3(chunk * Chunk::Extent() - pos) + player.Position());
 	float dist = dot(diff, diff);
 	if (dist > despawn_range || dist < spawn_distance) {
 		return;
 	}
 
 	// check if the spawn block and the one above it are loaded and inhabitable
-	BlockLookup spawn_block(&world.PlayerChunk(), chunk * Chunk::Extent() + pos);
+	BlockLookup spawn_block(
+		world.Loader().Loaded(player.ChunkCoords()),
+		chunk * Chunk::Extent() + pos);
 	if (!spawn_block || spawn_block.GetType().collide_block) {
 		return;
 	}
@@ -128,10 +141,10 @@ void Spawner::TrySpawn() {
 		return;
 	}
 
-	Spawn(world.Player().ChunkCoords() + chunk, glm::vec3(pos) + glm::vec3(0.5f));
+	Spawn(player, player.ChunkCoords() + chunk, glm::vec3(pos) + glm::vec3(0.5f));
 }
 
-void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
+void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	glm::vec3 rot(0.000001f);
 	rot.x *= (random.Next<unsigned short>() % 1024);
 	rot.y *= (random.Next<unsigned short>() % 1024);
@@ -148,7 +161,7 @@ void Spawner::Spawn(const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	if (random()) {
 		ctrl = new RandomWalk(e, random.Next<std::uint64_t>());
 	} else {
-		ctrl = new Chaser(world, e, world.Player());
+		ctrl = new Chaser(world, e, reference);
 	}
 	controllers.emplace_back(ctrl);
 }

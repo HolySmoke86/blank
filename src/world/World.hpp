@@ -63,22 +63,27 @@ public:
 	const BlockTypeRegistry &BlockTypes() noexcept { return block_type; }
 	ChunkLoader &Loader() noexcept { return chunks; }
 
-	Entity &Player() { return *player; }
+	/// add player with given name
+	/// returns nullptr if the name is already taken
+	Entity *AddPlayer(const std::string &name);
 	Entity &AddEntity() { entities.emplace_back(); return entities.back(); }
 
-	Chunk &PlayerChunk();
+	const std::vector<Entity *> &Players() const noexcept { return players; }
+	const std::list<Entity> &Entities() const noexcept { return entities; }
 
 	void Update(int dt);
 
 	void Render(Viewport &);
 
 private:
+	Config config;
+
 	const BlockTypeRegistry &block_type;
 
 	Generator generate;
 	ChunkLoader chunks;
 
-	Entity *player;
+	std::vector<Entity *> players;
 	std::list<Entity> entities;
 
 	glm::vec3 light_direction;

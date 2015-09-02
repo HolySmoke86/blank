@@ -13,6 +13,7 @@
 namespace blank {
 
 class Controller;
+class Entity;
 class World;
 
 class Spawner {
@@ -26,7 +27,7 @@ public:
 private:
 	void CheckDespawn() noexcept;
 	void TrySpawn();
-	void Spawn(const glm::ivec3 &, const glm::vec3 &);
+	void Spawn(Entity &reference, const glm::ivec3 &, const glm::vec3 &);
 
 private:
 	World &world;

@@ -105,7 +105,8 @@ Interface::Interface(
 	World &world)
 : env(env)
 , world(world)
-, ctrl(world.Player())
+// let's assume this succeeds and hope for the best for now
+, ctrl(*world.AddPlayer(config.player_name))
 , hud(world.BlockTypes(), env.assets.small_ui_font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_world()
@@ -204,19 +205,6 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 			ToggleCollision();
 			break;
 
-		case Keymap::PRINT_BLOCK:
-			PrintBlockInfo();
-			break;
-		case Keymap::PRINT_CHUNK:
-			PrintChunkInfo();
-			break;
-		case Keymap::PRINT_LIGHT:
-			PrintLightInfo();
-			break;
-		case Keymap::PRINT_SELECTION:
-			PrintSelectionInfo();
-			break;
-
 		case Keymap::TOGGLE_VISUAL:
 			ToggleVisual();
 			break;
@@ -281,92 +269,6 @@ void Interface::ToggleCollision() {
 	} else {
 		PostMessage("collision off");
 	}
-}
-
-void Interface::PrintBlockInfo() {
-	std::cout << std::endl;
-	if (!aim_world) {
-		PostMessage("not looking at any block");
-		Ray aim = ctrl.Aim();
-		std::stringstream s;
-		s << "aim ray: " << aim.orig << ", " << aim.dir;
-		PostMessage(s.str());
-		return;
-	}
-	std::stringstream s;
-	s << "looking at block " << aim_world.block
-		<< " " << aim_world.BlockCoords()
-		<< " of chunk " << aim_world.GetChunk().Position()
-	;
-	PostMessage(s.str());
-	Print(aim_world.GetBlock());
-}
-
-void Interface::PrintChunkInfo() {
-	std::cout << std::endl;
-	if (!aim_world) {
-		PostMessage("not looking at any block");
-		return;
-	}
-	std::stringstream s;
-	s << "looking at chunk " << aim_world.GetChunk().Position();
-	PostMessage(s.str());
-
-	PostMessage("  neighbors:");
-	if (aim_world.GetChunk().HasNeighbor(Block::FACE_LEFT)) {
-		s.str("");
-		s << " left  " << aim_world.GetChunk().GetNeighbor(Block::FACE_LEFT).Position();
-		PostMessage(s.str());
-	}
-	if (aim_world.GetChunk().HasNeighbor(Block::FACE_RIGHT)) {
-		s.str("");
-		s << " right " << aim_world.GetChunk().GetNeighbor(Block::FACE_RIGHT).Position();
-		PostMessage(s.str());
-	}
-	if (aim_world.GetChunk().HasNeighbor(Block::FACE_UP)) {
-		s.str("");
-		s << " up    " << aim_world.GetChunk().GetNeighbor(Block::FACE_UP).Position();
-		PostMessage(s.str());
-	}
-	if (aim_world.GetChunk().HasNeighbor(Block::FACE_DOWN)) {
-		s.str("");
-		s << " down  " << aim_world.GetChunk().GetNeighbor(Block::FACE_DOWN).Position();
-		PostMessage(s.str());
-	}
-	if (aim_world.GetChunk().HasNeighbor(Block::FACE_FRONT)) {
-		s.str("");
-		s << " front " << aim_world.GetChunk().GetNeighbor(Block::FACE_FRONT).Position();
-		PostMessage(s.str());
-	}
-	if (aim_world.GetChunk().HasNeighbor(Block::FACE_BACK)) {
-		s.str("");
-		s << " back  " << aim_world.GetChunk().GetNeighbor(Block::FACE_BACK).Position();
-		PostMessage(s.str());
-	}
-	std::cout << std::endl;
-}
-
-void Interface::PrintLightInfo() {
-	std::stringstream s;
-	s
-		<< "light level " << world.PlayerChunk().GetLight(world.Player().Position())
-		<< " at position " << world.Player().Position()
-	;
-	PostMessage(s.str());
-}
-
-void Interface::PrintSelectionInfo() {
-	std::cout << std::endl;
-	Print(selection);
-}
-
-void Interface::Print(const Block &block) {
-	std::stringstream s;
-	s << "type: " << block.type
-		<< ", face: " << block.GetFace()
-		<< ", turn: " << block.GetTurn()
-	;
-	PostMessage(s.str());
 }
 
 void Interface::ToggleAudio() {
@@ -623,7 +525,7 @@ void Interface::UpdateOutline() {
 	outl_buf.Clear();
 	aim_world.GetType().FillOutlineModel(outl_buf);
 	outline.Update(outl_buf);
-	outline_transform = aim_world.GetChunk().Transform(world.Player().ChunkCoords());
+	outline_transform = aim_world.GetChunk().Transform(Player().ChunkCoords());
 	outline_transform *= aim_world.BlockTransform();
 	outline_transform *= glm::scale(glm::vec3(1.005f));
 }
@@ -709,11 +611,6 @@ void Keymap::LoadDefault() {
 	Map(SDL_SCANCODE_F1, TOGGLE_VISUAL);
 	Map(SDL_SCANCODE_F3, TOGGLE_DEBUG);
 	Map(SDL_SCANCODE_F4, TOGGLE_AUDIO);
-
-	Map(SDL_SCANCODE_B, PRINT_BLOCK);
-	Map(SDL_SCANCODE_C, PRINT_CHUNK);
-	Map(SDL_SCANCODE_L, PRINT_LIGHT);
-	Map(SDL_SCANCODE_P, PRINT_SELECTION);
 
 	Map(SDL_SCANCODE_ESCAPE, EXIT);
 }
@@ -806,14 +703,6 @@ const char *Keymap::ActionToString(Action action) {
 			return "toggle_visual";
 		case TOGGLE_DEBUG:
 			return "toggle_debug";
-		case PRINT_BLOCK:
-			return "print_block";
-		case PRINT_CHUNK:
-			return "print_chunk";
-		case PRINT_LIGHT:
-			return "print_light";
-		case PRINT_SELECTION:
-			return "print_selection";
 		case EXIT:
 			return "exit";
 	}
@@ -854,14 +743,6 @@ Keymap::Action Keymap::StringToAction(const std::string &str) {
 		return TOGGLE_VISUAL;
 	} else if (str == "toggle_debug") {
 		return TOGGLE_DEBUG;
-	} else if (str == "print_block") {
-		return PRINT_BLOCK;
-	} else if (str == "print_chunk") {
-		return PRINT_CHUNK;
-	} else if (str == "print_light") {
-		return PRINT_LIGHT;
-	} else if (str == "print_selection") {
-		return PRINT_SELECTION;
 	} else if (str == "exit") {
 		return EXIT;
 	} else {

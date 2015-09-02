@@ -28,6 +28,8 @@ class Interface {
 
 public:
 	struct Config {
+		std::string player_name = "default";
+
 		float move_velocity = 0.005f;
 		float pitch_sensitivity = -0.0025f;
 		float yaw_sensitivity = -0.001f;
@@ -39,6 +41,9 @@ public:
 	};
 
 	Interface(const Config &, Environment &, World &);
+
+	Entity &Player() noexcept { return ctrl.Controlled(); }
+	const Entity &Player() const noexcept { return ctrl.Controlled(); }
 
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
@@ -55,12 +60,6 @@ public:
 	void PickBlock();
 	void PlaceBlock();
 	void RemoveBlock() noexcept;
-
-	void PrintBlockInfo();
-	void PrintChunkInfo();
-	void PrintLightInfo();
-	void PrintSelectionInfo();
-	void Print(const Block &);
 
 	void SelectNext();
 	void SelectPrevious();

@@ -15,24 +15,35 @@
 namespace blank {
 
 World::World(const BlockTypeRegistry &types, const Config &config, const WorldSave &save)
-: block_type(types)
+: config(config)
+, block_type(types)
 , generate(config.gen)
 , chunks(config.load, types, generate, save)
-, player()
+, players()
 , entities()
 , light_direction(config.light_direction)
 , fog_density(config.fog_density) {
 	generate.Space(0);
 	generate.Light(13);
 	generate.Solids({ 1, 4, 7, 10 });
+}
 
-	player = &AddEntity();
-	player->Name("player");
-	player->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
-	player->WorldCollidable(true);
-	player->Position(config.spawn);
 
-	chunks.QueueSurrounding(player->ChunkCoords());
+Entity *World::AddPlayer(const std::string &name) {
+	for (Entity *e : players) {
+		if (e->Name() == name) {
+			return nullptr;
+		}
+	}
+	Entity &player = AddEntity();
+	player.Name(name);
+	// TODO: load from save file here
+	player.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	player.WorldCollidable(true);
+	player.Position(config.spawn);
+	players.push_back(&player);
+	chunks.QueueSurrounding(player.ChunkCoords());
+	return &player;
 }
 
 
@@ -133,11 +144,6 @@ bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 }
 
 
-Chunk &World::PlayerChunk() {
-	return chunks.ForceLoad(player->ChunkCoords());
-}
-
-
 namespace {
 
 std::vector<WorldCollision> col;
@@ -162,7 +168,8 @@ void World::Update(int dt) {
 			++iter;
 		}
 	}
-	chunks.Rebase(player->ChunkCoords());
+	// TODO: make flexible
+	chunks.Rebase(players[0]->ChunkCoords());
 	chunks.Update(dt);
 }
 
@@ -205,7 +212,7 @@ void World::Render(Viewport &viewport) {
 	entity_prog.SetFogDensity(fog_density);
 
 	for (Entity &entity : entities) {
-		entity.Render(entity.ChunkTransform(player->ChunkCoords()), entity_prog);
+		entity.Render(entity.ChunkTransform(players[0]->ChunkCoords()), entity_prog);
 	}
 }
 

@@ -142,6 +142,14 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							config.server.port = strtoul(argv[i], nullptr, 10);
 							config.client.port = config.server.port;
 						}
+					} else if (strcmp(param, "player-name") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --player-name" << endl;
+							error = true;
+						} else {
+							config.interface.player_name = argv[i];
+						}
 					} else if (strcmp(param, "save-path") == 0) {
 						++i;
 						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
