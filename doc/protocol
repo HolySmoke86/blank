@@ -21,5 +21,31 @@ been reached.
 
 Code: 1
 Payload:
-	player name, max 32 byte UTF-8 string,
-	shorter names should be zero terminated
+	0 player name, max 32 byte UTF-8 string,
+	  shorter names should be zero terminated
+
+
+Join
+----
+
+Sent by the server either as a response to a successful login or when
+it's changing worlds.
+
+Code: 2
+Payload:
+	 0 entity ID of the player, 32bit unsigned int
+	 4 chunk coords of the player, 3x 32bit signed int
+	16 pos/vel/rot/ang of the player, 13x 32bit float
+	68 name of the world the server's currently running
+	   max 32 byte UTF-8 string
+
+
+Part
+----
+
+Sent by the server either as a respons to a failed login or when the
+client was kicked.
+Optionally sent by the client on disconnect.
+
+Code: 3
+Payload: none

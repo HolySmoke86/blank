@@ -164,7 +164,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							cerr << "missing argument to --world-name" << endl;
 							error = true;
 						} else {
-							config.world_name = argv[i];
+							config.world.name = argv[i];
 						}
 					} else {
 						cerr << "unknown option " << arg << endl;
@@ -296,7 +296,7 @@ void Runtime::RunStandalone() {
 	Environment env(init.window, config.asset_path);
 	env.viewport.VSync(config.vsync);
 
-	WorldSave save(config.save_path + config.world_name + '/');
+	WorldSave save(config.save_path + config.world.name + '/');
 	if (save.Exists()) {
 		save.Read(config.world);
 	} else {
@@ -321,7 +321,7 @@ void Runtime::RunStandalone() {
 void Runtime::RunServer() {
 	HeadlessEnvironment env(config.asset_path);
 
-	WorldSave save(config.save_path + config.world_name + '/');
+	WorldSave save(config.save_path + config.world.name + '/');
 	if (save.Exists()) {
 		save.Read(config.world);
 	} else {
@@ -340,7 +340,7 @@ void Runtime::RunClient() {
 	Environment env(init.window, config.asset_path);
 	env.viewport.VSync(config.vsync);
 
-	WorldSave save(config.save_path + config.world_name + '/');
+	WorldSave save(config.save_path + config.world.name + '/');
 	if (save.Exists()) {
 		save.Read(config.world);
 	} else {

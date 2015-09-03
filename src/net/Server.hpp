@@ -34,6 +34,7 @@ private:
 	void OnDisconnect(Connection &);
 
 	void HandleLogin(Connection &client, const UDPpacket &);
+	void HandlePart(Connection &client, const UDPpacket &);
 
 private:
 	UDPsocket serv_sock;

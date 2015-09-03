@@ -22,6 +22,9 @@ public:
 	bool ShouldPing() const noexcept;
 	bool TimedOut() const noexcept;
 
+	void Close() noexcept { closed = true; }
+	bool Closed() const noexcept { return closed || TimedOut(); }
+
 	void Update(int dt);
 
 	void SendPing(UDPpacket &, UDPsocket);
@@ -39,6 +42,8 @@ private:
 	IntervalTimer recv_timer;
 
 	Packet::TControl ctrl;
+
+	bool closed;
 
 };
 

@@ -76,7 +76,6 @@ void Client::HandlePacket(const UDPpacket &udp_pack) {
 	}
 
 	conn.Received(udp_pack);
-	cout << "I got something!" << endl;
 }
 
 void Client::Update(int dt) {
@@ -94,16 +93,17 @@ void Client::SendPing() {
 
 void Client::SendLogin(const string &name) {
 	Packet &pack = *reinterpret_cast<Packet *>(client_pack.data);
-	client_pack.len = pack.Login(name);
+	client_pack.len = pack.MakeLogin(name);
 	conn.Send(client_pack, client_sock);
 }
 
 
 Connection::Connection(const IPaddress &addr)
 : addr(addr)
-, send_timer(5000)
+, send_timer(3000)
 , recv_timer(10000)
-, ctrl{ 0, 0xFFFF, 0xFFFF } {
+, ctrl{ 0, 0xFFFF, 0xFFFF }
+, closed(false) {
 	send_timer.Start();
 	recv_timer.Start();
 }
@@ -138,6 +138,8 @@ void Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
 	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
 	pack.header.ctrl = ctrl;
 
+	cout << "sending " << pack.GetType() << " to " << Address() << endl;
+
 	udp_pack.address = addr;
 	if (SDLNet_UDP_Send(sock, -1, &udp_pack) == 0) {
 		throw NetError("SDLNet_UDP_Send");
@@ -148,6 +150,8 @@ void Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
 
 void Connection::Received(const UDPpacket &udp_pack) {
 	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
+
+	cout << "received " << pack.GetType() << " from " << Address() << endl;
 
 	int diff = std::int16_t(pack.header.ctrl.seq) - std::int16_t(ctrl.ack);
 
@@ -183,7 +187,7 @@ void Connection::Received(const UDPpacket &udp_pack) {
 
 void Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
 	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
-	udp_pack.len = pack.Ping();
+	udp_pack.len = pack.MakePing();
 	Send(udp_pack, sock);
 }
 
@@ -201,17 +205,32 @@ ostream &operator <<(ostream &out, const IPaddress &addr) {
 }
 
 
+const char *Packet::Type2String(Type t) noexcept {
+	switch (t) {
+		case PING:
+			return "PING";
+		case LOGIN:
+			return "LOGIN";
+		case JOIN:
+			return "JOIN";
+		case PART:
+			return "PART";
+		default:
+			return "UNKNOWN";
+	}
+}
+
 void Packet::Tag() noexcept {
 	header.tag = TAG;
 }
 
-size_t Packet::Ping() noexcept {
+size_t Packet::MakePing() noexcept {
 	Tag();
 	header.type = PING;
 	return sizeof(Header);
 }
 
-size_t Packet::Login(const string &name) noexcept {
+size_t Packet::MakeLogin(const string &name) noexcept {
 	constexpr size_t maxname = 32;
 
 	Tag();
@@ -223,6 +242,48 @@ size_t Packet::Login(const string &name) noexcept {
 		memcpy(payload, name.c_str(), maxname);
 	}
 	return sizeof(Header) + maxname;
+}
+
+size_t Packet::MakeJoin(const Entity &player, const string &world_name) noexcept {
+	constexpr size_t maxname = 32;
+
+	Tag();
+	header.type = JOIN;
+
+	uint8_t *cursor = &payload[0];
+
+	// TODO: generate entity IDs
+	*reinterpret_cast<uint32_t *>(cursor) = 1;
+	cursor += 4;
+
+	*reinterpret_cast<glm::ivec3 *>(cursor) = player.ChunkCoords();
+	cursor += 12;
+
+	*reinterpret_cast<glm::vec3 *>(cursor) = player.Position();
+	cursor += 12;
+	*reinterpret_cast<glm::vec3 *>(cursor) = player.Velocity();
+	cursor += 12;
+
+	*reinterpret_cast<glm::quat *>(cursor) = player.Orientation();
+	cursor += 16;
+	*reinterpret_cast<glm::vec3 *>(cursor) = player.AngularVelocity();
+	cursor += 12;
+
+	if (world_name.size() < maxname) {
+		memset(cursor, '\0', maxname);
+		memcpy(cursor, world_name.c_str(), world_name.size());
+	} else {
+		memcpy(cursor, world_name.c_str(), maxname);
+	}
+	cursor += maxname;
+
+	return sizeof(Header) + (cursor - &payload[0]);
+}
+
+size_t Packet::MakePart() noexcept {
+	Tag();
+	header.type = PART;
+	return sizeof(Header);
 }
 
 
@@ -273,14 +334,14 @@ void Server::HandlePacket(const UDPpacket &udp_pack) {
 	client.Received(udp_pack);
 
 	switch (pack.header.type) {
-		case Packet::PING:
-			// already done all that's supposed to do
-			break;
 		case Packet::LOGIN:
 			HandleLogin(client, udp_pack);
 			break;
+		case Packet::PART:
+			HandlePart(client, udp_pack);
+			break;
 		default:
-			// just drop packets of unknown type
+			// just drop packets of unknown or unhandled type
 			break;
 	}
 }
@@ -305,7 +366,7 @@ void Server::OnConnect(Connection &client) {
 void Server::Update(int dt) {
 	for (list<Connection>::iterator client(clients.begin()), end(clients.end()); client != end;) {
 		client->Update(dt);
-		if (client->TimedOut()) {
+		if (client->Closed()) {
 			OnDisconnect(*client);
 			client = clients.erase(client);
 		} else {
@@ -330,16 +391,26 @@ void Server::HandleLogin(Connection &client, const UDPpacket &udp_pack) {
 	for (size_t i = 0; i < maxlen && pack.payload[i] != '\0'; ++i) {
 		name.push_back(pack.payload[i]);
 	}
-	cout << "got login request from player \"" << name << '"' << endl;
 
 	Entity *player = world.AddPlayer(name);
+	Packet &response = *reinterpret_cast<Packet *>(serv_pack.data);
+
 	if (player) {
 		// success!
-		cout << "\taccepted" << endl;
+		cout << "accepted login from player \"" << name << '"' << endl;
+		response.MakeJoin(*player, world.Name());
+		client.Send(serv_pack, serv_sock);
 	} else {
 		// aw no :(
-		cout << "\trejected" << endl;
+		cout << "rejected login from player \"" << name << '"' << endl;
+		response.MakePart();
+		client.Send(serv_pack, serv_sock);
+		client.Close();
 	}
+}
+
+void Server::HandlePart(Connection &client, const UDPpacket &udp_pack) {
+	client.Close();
 }
 
 }

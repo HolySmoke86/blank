@@ -44,7 +44,6 @@ public:
 
 		std::string asset_path;
 		std::string save_path;
-		std::string world_name = "default";
 
 		Client::Config client = Client::Config();
 		Interface::Config interface = Interface::Config();

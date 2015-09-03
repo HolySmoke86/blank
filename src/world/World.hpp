@@ -6,6 +6,7 @@
 #include "Generator.hpp"
 
 #include <list>
+#include <string>
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -21,6 +22,7 @@ class World {
 
 public:
 	struct Config {
+		std::string name = "default";
 		// initial player position
 		glm::vec3 spawn = { 0.0f, 0.0f, 0.0f };
 		// direction facing towards(!) the light
@@ -36,6 +38,8 @@ public:
 	};
 
 	World(const BlockTypeRegistry &, const Config &, const WorldSave &);
+
+	const std::string &Name() const noexcept { return config.name; }
 
 	/// check if this ray hits a block
 	/// depth in the collision is the distance between the ray's
