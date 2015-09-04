@@ -105,7 +105,7 @@ struct Packet {
 		pack.Tag();
 		pack.Type(PayloadType::TYPE);
 
-		udp_pack.len = sizeof(Header) + PayloadType::TYPE;
+		udp_pack.len = sizeof(Header) + PayloadType::MAX_LEN;
 
 		PayloadType result;
 		result.length = PayloadType::MAX_LEN;
