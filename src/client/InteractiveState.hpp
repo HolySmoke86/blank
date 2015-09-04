@@ -21,7 +21,7 @@ class InteractiveState
 : public State {
 
 public:
-	explicit InteractiveState(MasterState &);
+	explicit InteractiveState(MasterState &, std::uint32_t player_id);
 
 	World &GetWorld() noexcept { return world; }
 	Interface &GetInterface() noexcept { return interface; }

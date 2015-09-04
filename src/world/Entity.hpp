@@ -5,6 +5,7 @@
 #include "../model/CompositeInstance.hpp"
 #include "../model/geometry.hpp"
 
+#include <cstdint>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -22,6 +23,9 @@ public:
 
 	CompositeInstance &GetModel() noexcept { return model; }
 	const CompositeInstance &GetModel() const noexcept { return model; }
+
+	std::uint32_t ID() const noexcept { return id; }
+	void ID(std::uint32_t i) noexcept { id = i; }
 
 	const std::string &Name() const noexcept { return name; }
 	void Name(const std::string &n) { name = n; }
@@ -77,6 +81,7 @@ public:
 private:
 	CompositeInstance model;
 
+	std::uint32_t id;
 	std::string name;
 
 	AABB bounds;

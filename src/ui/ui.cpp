@@ -102,11 +102,12 @@ void HUD::Render(Viewport &viewport) noexcept {
 Interface::Interface(
 	const Config &config,
 	Environment &env,
-	World &world)
+	World &world,
+	Entity &player)
 : env(env)
 , world(world)
 // let's assume this succeeds and hope for the best for now
-, ctrl(*world.AddPlayer(config.player_name))
+, ctrl(player)
 , hud(world.BlockTypes(), env.assets.small_ui_font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_world()

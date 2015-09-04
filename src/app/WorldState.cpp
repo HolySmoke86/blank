@@ -20,7 +20,7 @@ WorldState::WorldState(
 , world(block_types, wc, save)
 , chunk_renderer(world, wc.load.load_dist)
 , spawner(world, wc.gen.seed)
-, interface(ic, env, world)
+, interface(ic, env, world, *world.AddPlayer(ic.player_name))
 , preload(env, world.Loader(), chunk_renderer)
 , unload(env, world.Loader()) {
 	TextureIndex tex_index;

@@ -46,6 +46,70 @@ Entity *World::AddPlayer(const std::string &name) {
 	return &player;
 }
 
+Entity *World::AddPlayer(const std::string &name, std::uint32_t id) {
+	for (Entity *e : players) {
+		if (e->Name() == name) {
+			return nullptr;
+		}
+	}
+	Entity *player = AddEntity(id);
+	if (!player) {
+		return nullptr;
+	}
+	player->Name(name);
+	// TODO: load from save file here
+	player->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	player->WorldCollidable(true);
+	player->Position(config.spawn);
+	players.push_back(player);
+	chunks.QueueSurrounding(player->ChunkCoords());
+	return player;
+}
+
+Entity &World::AddEntity() {
+	if (entities.empty()) {
+		entities.emplace_back();
+		entities.back().ID(1);
+		return entities.back();
+	}
+	if (entities.back().ID() < std::numeric_limits<std::uint32_t>::max()) {
+		std::uint32_t id = entities.back().ID() + 1;
+		entities.emplace_back();
+		entities.back().ID(id);
+		return entities.back();
+	}
+	std::uint32_t id = 1;
+	auto position = entities.begin();
+	auto end = entities.end();
+	while (position != end && position->ID() == id) {
+		++id;
+		++position;
+	}
+	auto entity = entities.emplace(position);
+	entity->ID(id);
+	return *entity;
+}
+
+Entity *World::AddEntity(std::uint32_t id) {
+	if (entities.empty() || entities.back().ID() < id) {
+		entities.emplace_back();
+		entities.back().ID(id);
+		return &entities.back();
+	}
+
+	auto position = entities.begin();
+	auto end = entities.end();
+	while (position != end && position->ID() < id) {
+		++position;
+	}
+	if (position != end && position->ID() == id) {
+		return nullptr;
+	}
+	auto entity = entities.emplace(position);
+	entity->ID(id);
+	return &*entity;
+}
+
 
 namespace {
 

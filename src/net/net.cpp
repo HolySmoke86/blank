@@ -282,8 +282,7 @@ void Packet::Login::ReadPlayerName(string &name) const noexcept {
 }
 
 void Packet::Join::WritePlayer(const Entity &player) noexcept {
-	// TODO: generate entity IDs
-	Write(uint32_t(1), 0);
+	Write(player.ID(), 0);
 	Write(player.ChunkCoords(), 4);
 	Write(player.Position(), 16);
 	Write(player.Velocity(), 28);
@@ -291,15 +290,17 @@ void Packet::Join::WritePlayer(const Entity &player) noexcept {
 	Write(player.AngularVelocity(), 56);
 }
 
+void Packet::Join::ReadPlayerID(uint32_t &id) const noexcept {
+	Read(id, 0);
+}
+
 void Packet::Join::ReadPlayer(Entity &player) const noexcept {
-	uint32_t id = 0;
 	glm::ivec3 chunk_coords(0);
 	glm::vec3 pos;
 	glm::vec3 vel;
 	glm::quat rot;
 	glm::vec3 ang;
 
-	Read(id, 0);
 	Read(chunk_coords, 4);
 	Read(pos, 16);
 	Read(vel, 28);

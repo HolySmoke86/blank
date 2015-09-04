@@ -20,6 +20,7 @@
 
 namespace blank {
 
+class Entity;
 class Environment;
 class Viewport;
 class World;
@@ -40,7 +41,7 @@ public:
 		bool visual_disabled = false;
 	};
 
-	Interface(const Config &, Environment &, World &);
+	Interface(const Config &, Environment &, World &, Entity &);
 
 	Entity &Player() noexcept { return ctrl.Controlled(); }
 	const Entity &Player() const noexcept { return ctrl.Controlled(); }

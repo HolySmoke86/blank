@@ -72,6 +72,7 @@ struct Packet {
 		static constexpr std::size_t MAX_LEN = 100;
 
 		void WritePlayer(const Entity &) noexcept;
+		void ReadPlayerID(std::uint32_t &) const noexcept;
 		void ReadPlayer(Entity &) const noexcept;
 		void WriteWorldName(const std::string &) noexcept;
 		void ReadWorldName(std::string &) const noexcept;

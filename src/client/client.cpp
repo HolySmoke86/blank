@@ -38,13 +38,19 @@ void InitialState::Render(Viewport &viewport) {
 }
 
 
-InteractiveState::InteractiveState(MasterState &master)
+// TODO: this clutter is a giant mess
+InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
 , block_types()
 , save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetClientConf().host))
 , world(block_types, master.GetWorldConf(), save)
 , chunk_renderer(world, master.GetWorldConf().load.load_dist)
-, interface(master.GetInterfaceConf(), master.GetEnv(), world) {
+, interface(
+	master.GetInterfaceConf(),
+	master.GetEnv(),
+	world,
+	*world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
+) {
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
@@ -175,7 +181,10 @@ void MasterState::On(const Packet::Join &pack) {
 		// joining game
 		std::cout << "joined game" << std::endl;
 	}
-	state.reset(new InteractiveState(*this));
+
+	uint32_t player_id;
+	pack.ReadPlayerID(player_id);
+	state.reset(new InteractiveState(*this, player_id));
 
 	pack.ReadPlayer(state->GetInterface().Player());
 

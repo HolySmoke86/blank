@@ -16,6 +16,7 @@ namespace blank {
 
 Entity::Entity() noexcept
 : model()
+, id(-1)
 , name("anonymous")
 , bounds()
 , velocity(0, 0, 0)
