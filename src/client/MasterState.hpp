@@ -5,7 +5,7 @@
 #include "InteractiveState.hpp"
 #include "../app/State.hpp"
 #include "../net/Client.hpp"
-#include "../net/PacketHandler.hpp"
+#include "../net/ConnectionHandler.hpp"
 
 #include <memory>
 
@@ -20,7 +20,7 @@ class InteractiveState;
 
 class MasterState
 : public State
-, public PacketHandler {
+, public ConnectionHandler {
 
 public:
 	MasterState(
@@ -46,6 +46,9 @@ public:
 	void Update(int dt) override;
 	void Render(Viewport &) override;
 
+	void OnPacketLost(std::uint16_t) override;
+	void OnTimeout() override;
+
 	void On(const Packet::Join &) override;
 	void On(const Packet::Part &) override;
 
@@ -58,6 +61,8 @@ private:
 	Client client;
 
 	InitialState init_state;
+
+	int login_packet;
 
 };
 

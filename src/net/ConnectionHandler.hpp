@@ -1,5 +1,5 @@
-#ifndef BLANK_NET_PACKETHANDLER_HPP_
-#define BLANK_NET_PACKETHANDLER_HPP_
+#ifndef BLANK_NET_CONNECTIONHANDLER_HPP_
+#define BLANK_NET_CONNECTIONHANDLER_HPP_
 
 #include "Packet.hpp"
 
@@ -8,10 +8,14 @@
 
 namespace blank {
 
-class PacketHandler {
+class ConnectionHandler {
 
 public:
 	void Handle(const UDPpacket &);
+
+	virtual void OnPacketLost(std::uint16_t) { }
+
+	virtual void OnTimeout() { }
 
 private:
 	virtual void On(const Packet::Ping &) { }

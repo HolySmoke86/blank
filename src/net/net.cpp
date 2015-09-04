@@ -1,8 +1,8 @@
 #include "Client.hpp"
 #include "Connection.hpp"
+#include "ConnectionHandler.hpp"
 #include "io.hpp"
 #include "Packet.hpp"
-#include "PacketHandler.hpp"
 #include "Server.hpp"
 
 #include "../app/init.hpp"
@@ -15,6 +15,11 @@ using namespace std;
 
 
 namespace blank {
+
+constexpr size_t Packet::Ping::MAX_LEN;
+constexpr size_t Packet::Login::MAX_LEN;
+constexpr size_t Packet::Join::MAX_LEN;
+constexpr size_t Packet::Part::MAX_LEN;
 
 namespace {
 
@@ -80,30 +85,29 @@ void Client::HandlePacket(const UDPpacket &udp_pack) {
 
 void Client::Update(int dt) {
 	conn.Update(dt);
-	if (conn.TimedOut()) {
-		cout << "connection timed out :(" << endl;
-	} else if (conn.ShouldPing()) {
+	if (conn.ShouldPing()) {
 		SendPing();
 	}
 }
 
-void Client::SendPing() {
-	conn.SendPing(client_pack, client_sock);
+uint16_t Client::SendPing() {
+	return conn.SendPing(client_pack, client_sock);
 }
 
-void Client::SendLogin(const string &name) {
+uint16_t Client::SendLogin(const string &name) {
 	auto pack = Packet::Make<Packet::Login>(client_pack);
 	pack.WritePlayerName(name);
-	conn.Send(client_pack, client_sock);
+	return conn.Send(client_pack, client_sock);
 }
 
 
 Connection::Connection(const IPaddress &addr)
 : handler(nullptr)
 , addr(addr)
-, send_timer(3000)
+, send_timer(500)
 , recv_timer(10000)
-, ctrl{ 0, 0xFFFF, 0xFFFF }
+, ctrl_out{ 0, 0xFFFF, 0xFFFFFFFF }
+, ctrl_in{ 0, 0xFFFF, 0xFFFFFFFF }
 , closed(false) {
 	send_timer.Start();
 	recv_timer.Start();
@@ -122,7 +126,7 @@ void Connection::FlagRecv() noexcept {
 }
 
 bool Connection::ShouldPing() const noexcept {
-	return send_timer.HitOnce();
+	return !closed && send_timer.HitOnce();
 }
 
 bool Connection::TimedOut() const noexcept {
@@ -132,15 +136,19 @@ bool Connection::TimedOut() const noexcept {
 void Connection::Update(int dt) {
 	send_timer.Update(dt);
 	recv_timer.Update(dt);
+	if (TimedOut()) {
+		Close();
+		if (HasHandler()) {
+			Handler().OnTimeout();
+		}
+	}
 }
 
 
-void Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
+uint16_t Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
 	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
-	pack.header.ctrl = ctrl;
-	++ctrl.seq;
-
-	cout << "sending " << pack.TypeString() << " to " << Address() << endl;
+	pack.header.ctrl = ctrl_out;
+	uint16_t seq = ctrl_out.seq++;
 
 	udp_pack.address = addr;
 	if (SDLNet_UDP_Send(sock, -1, &udp_pack) == 0) {
@@ -148,52 +156,53 @@ void Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
 	}
 
 	FlagSend();
+	return seq;
 }
 
 void Connection::Received(const UDPpacket &udp_pack) {
 	Packet &pack = *reinterpret_cast<Packet *>(udp_pack.data);
 
-	cout << "received " << pack.TypeString() << " from " << Address() << endl;
+	// ack to the remote
+	int16_t diff = int16_t(pack.header.ctrl.seq) - int16_t(ctrl_out.ack);
+	if (diff > 0) {
+		if (diff >= 32) {
+			ctrl_out.hist = 0;
+		} else {
+			ctrl_out.hist <<= diff;
+			ctrl_out.hist |= 1 << (diff - 1);
+		}
+	} else if (diff < 0 && diff >= -32) {
+		ctrl_out.hist |= 1 << (-diff - 1);
+	}
+	ctrl_out.ack = pack.header.ctrl.seq;
+	FlagRecv();
 
-	int diff = std::int16_t(pack.header.ctrl.seq) - std::int16_t(ctrl.ack);
+	if (!HasHandler()) {
+		return;
+	}
+
+	Packet::TControl ctrl_new = pack.header.ctrl;
+	Handler().Handle(udp_pack);
 
 	if (diff > 0) {
-		// incoming more recent than last acked
-
-		// TODO: packets considered lost are detected here
-		//       this should have ones for all of them:
-		//       ~hist & ((1 << dist) - 1) if dist is < 32
-
-		if (diff >= 32) {
-			// missed more than the last 32 oO
-			ctrl.hist = 0;
-		} else {
-			ctrl.hist >>= diff;
-			ctrl.hist |= 1 << (32 - diff);
+		// if the packet holds more recent information
+		// check if remote failed to ack one of our packets
+		diff = int16_t(ctrl_new.ack) - int16_t(ctrl_in.ack);
+		// should always be true, but you never know…
+		if (diff > 0) {
+			for (int i = 0; i < diff; ++i) {
+				if (i > 32 || (i < 32 && (ctrl_in.hist & (1 << (31 - i))) == 0)) {
+					Handler().OnPacketLost(ctrl_in.ack - 32 + i);
+				}
+			}
 		}
-	} else if (diff < 0) {
-		// incoming older than acked
-		if (diff > -32) {
-			// too late :/
-		} else {
-			ctrl.hist |= 1 << (32 + diff);
-		}
-	} else {
-		// incoming the same as last acked oO
+		ctrl_in = ctrl_new;
 	}
-
-	ctrl.ack = pack.header.ctrl.seq;
-
-	if (HasHandler()) {
-		Handler().Handle(udp_pack);
-	}
-
-	FlagRecv();
 }
 
-void Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
+uint16_t Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
 	Packet::Make<Packet::Ping>(udp_pack);
-	Send(udp_pack, sock);
+	return Send(udp_pack, sock);
 }
 
 
@@ -312,7 +321,7 @@ void Packet::Join::ReadWorldName(string &name) const noexcept {
 }
 
 
-void PacketHandler::Handle(const UDPpacket &udp_pack) {
+void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
 	switch (pack.Type()) {
 		case Packet::Ping::TYPE:

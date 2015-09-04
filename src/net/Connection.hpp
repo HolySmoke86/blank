@@ -10,17 +10,17 @@
 
 namespace blank {
 
-class PacketHandler;
+class ConnectionHandler;
 
 class Connection {
 
 public:
 	explicit Connection(const IPaddress &);
 
-	void SetHandler(PacketHandler *h) noexcept { handler = h; }
+	void SetHandler(ConnectionHandler *h) noexcept { handler = h; }
 	void RemoveHandler() noexcept { handler = nullptr; }
 	bool HasHandler() const noexcept { return handler; }
-	PacketHandler &Handler() noexcept { return *handler; }
+	ConnectionHandler &Handler() noexcept { return *handler; }
 
 	const IPaddress &Address() const noexcept { return addr; }
 
@@ -30,13 +30,13 @@ public:
 	bool TimedOut() const noexcept;
 
 	void Close() noexcept { closed = true; }
-	bool Closed() const noexcept { return closed || TimedOut(); }
+	bool Closed() const noexcept { return closed; }
 
 	void Update(int dt);
 
-	void SendPing(UDPpacket &, UDPsocket);
+	std::uint16_t SendPing(UDPpacket &, UDPsocket);
 
-	void Send(UDPpacket &, UDPsocket);
+	std::uint16_t Send(UDPpacket &, UDPsocket);
 	void Received(const UDPpacket &);
 
 private:
@@ -44,12 +44,13 @@ private:
 	void FlagRecv() noexcept;
 
 private:
-	PacketHandler *handler;
+	ConnectionHandler *handler;
 	IPaddress addr;
 	IntervalTimer send_timer;
 	IntervalTimer recv_timer;
 
-	Packet::TControl ctrl;
+	Packet::TControl ctrl_out;
+	Packet::TControl ctrl_in;
 
 	bool closed;
 

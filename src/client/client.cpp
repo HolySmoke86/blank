@@ -120,7 +120,8 @@ MasterState::MasterState(
 , client_conf(cc)
 , state()
 , client(cc)
-, init_state(*this) {
+, init_state(*this)
+, login_packet(-1) {
 	client.GetConnection().SetHandler(this);
 }
 
@@ -130,7 +131,7 @@ void MasterState::Quit() {
 
 
 void MasterState::OnEnter() {
-	client.SendLogin(intf_conf.player_name);
+	login_packet = client.SendLogin(intf_conf.player_name);
 	env.state.Push(&init_state);
 }
 
@@ -143,10 +144,6 @@ void MasterState::Handle(const SDL_Event &event) {
 void MasterState::Update(int dt) {
 	client.Handle();
 	client.Update(dt);
-	if (client.GetConnection().Closed()) {
-		Quit();
-		// TODO: push disconnected message
-	}
 }
 
 
@@ -154,6 +151,19 @@ void MasterState::Render(Viewport &) {
 
 }
 
+
+void MasterState::OnPacketLost(std::uint16_t id) {
+	if (id == login_packet) {
+		login_packet = client.SendLogin(intf_conf.player_name);
+	}
+}
+
+void MasterState::OnTimeout() {
+	if (client.GetConnection().Closed()) {
+		Quit();
+		// TODO: push disconnected message
+	}
+}
 
 void MasterState::On(const Packet::Join &pack) {
 	pack.ReadWorldName(world_conf.name);

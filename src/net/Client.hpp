@@ -30,8 +30,8 @@ public:
 	Connection &GetConnection() noexcept { return conn; }
 	const Connection &GetConnection() const noexcept { return conn; }
 
-	void SendPing();
-	void SendLogin(const std::string &);
+	std::uint16_t SendPing();
+	std::uint16_t SendLogin(const std::string &);
 
 private:
 	void HandlePacket(const UDPpacket &);
