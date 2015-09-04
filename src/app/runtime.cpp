@@ -1,11 +1,11 @@
 #include "Application.hpp"
-#include "ClientState.hpp"
 #include "Environment.hpp"
 #include "Runtime.hpp"
 #include "ServerState.hpp"
 #include "WorldState.hpp"
 
 #include "init.hpp"
+#include "../client/MasterState.hpp"
 #include "../io/filesystem.hpp"
 #include "../io/WorldSave.hpp"
 
@@ -47,15 +47,24 @@ string default_save_path() {
 
 namespace blank {
 
-HeadlessEnvironment::HeadlessEnvironment(const string &asset_path)
-: loader(asset_path)
+HeadlessEnvironment::HeadlessEnvironment(const Config &config)
+: config(config)
+, loader(config.asset_path)
 , counter()
 , state() {
 
 }
 
-Environment::Environment(Window &win, const string &asset_path)
-: HeadlessEnvironment(asset_path)
+string HeadlessEnvironment::Config::GetWorldPath(const string &world_name) const {
+	return save_path + "worlds/" + world_name + '/';
+}
+
+string HeadlessEnvironment::Config::GetWorldPath(const string &world_name, const string &host_name) const {
+	return save_path + "cache/" + host_name + '/' + world_name + '/';
+}
+
+Environment::Environment(Window &win, const Config &config)
+: HeadlessEnvironment(config)
 , assets(loader)
 , audio()
 , viewport()
@@ -64,6 +73,15 @@ Environment::Environment(Window &win, const string &asset_path)
 	viewport.Clear();
 	window.Flip();
 	keymap.LoadDefault();
+
+	string keys_path = config.save_path + "keys.conf";
+	if (!is_file(keys_path)) {
+		std::ofstream file(keys_path);
+		keymap.Save(file);
+	} else {
+		std::ifstream file(keys_path);
+		keymap.Load(file);
+	}
 }
 
 
@@ -123,7 +141,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							cerr << "missing argument to --asset-path" << endl;
 							error = true;
 						} else {
-							config.asset_path = argv[i];
+							config.env.asset_path = argv[i];
 						}
 					} else if (strcmp(param, "host") == 0) {
 						++i;
@@ -156,7 +174,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							cerr << "missing argument to --save-path" << endl;
 							error = true;
 						} else {
-							config.save_path = argv[i];
+							config.env.save_path = argv[i];
 						}
 					} else if (strcmp(param, "world-name") == 0) {
 						++i;
@@ -237,21 +255,21 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 		return;
 	}
 
-	if (config.asset_path.empty()) {
-		config.asset_path = default_asset_path();
+	if (config.env.asset_path.empty()) {
+		config.env.asset_path = default_asset_path();
 	} else if (
-		config.asset_path[config.asset_path.size() - 1] != '/' &&
-		config.asset_path[config.asset_path.size() - 1] != '\\'
+		config.env.asset_path[config.env.asset_path.size() - 1] != '/' &&
+		config.env.asset_path[config.env.asset_path.size() - 1] != '\\'
 	) {
-		config.asset_path += '/';
+		config.env.asset_path += '/';
 	}
-	if (config.save_path.empty()) {
-		config.save_path = default_save_path();
+	if (config.env.save_path.empty()) {
+		config.env.save_path = default_save_path();
 	} else if (
-		config.save_path[config.save_path.size() - 1] != '/' &&
-		config.save_path[config.save_path.size() - 1] != '\\'
+		config.env.save_path[config.env.save_path.size() - 1] != '/' &&
+		config.env.save_path[config.env.save_path.size() - 1] != '\\'
 	) {
-		config.save_path += '/';
+		config.env.save_path += '/';
 	}
 
 	if (n > 0) {
@@ -293,23 +311,14 @@ int Runtime::Execute() {
 void Runtime::RunStandalone() {
 	Init init(config.doublebuf, config.multisampling);
 
-	Environment env(init.window, config.asset_path);
+	Environment env(init.window, config.env);
 	env.viewport.VSync(config.vsync);
 
-	WorldSave save(config.save_path + config.world.name + '/');
+	WorldSave save(config.env.GetWorldPath(config.world.name));
 	if (save.Exists()) {
 		save.Read(config.world);
 	} else {
 		save.Write(config.world);
-	}
-
-	std::string keys_path = config.save_path + "keys.conf";
-	if (!is_file(keys_path)) {
-		std::ofstream file(keys_path);
-		env.keymap.Save(file);
-	} else {
-		std::ifstream file(keys_path);
-		env.keymap.Load(file);
 	}
 
 	Application app(env);
@@ -319,9 +328,9 @@ void Runtime::RunStandalone() {
 }
 
 void Runtime::RunServer() {
-	HeadlessEnvironment env(config.asset_path);
+	HeadlessEnvironment env(config.env);
 
-	WorldSave save(config.save_path + config.world.name + '/');
+	WorldSave save(config.env.GetWorldPath(config.world.name));
 	if (save.Exists()) {
 		save.Read(config.world);
 	} else {
@@ -337,27 +346,11 @@ void Runtime::RunServer() {
 void Runtime::RunClient() {
 	Init init(config.doublebuf, config.multisampling);
 
-	Environment env(init.window, config.asset_path);
+	Environment env(init.window, config.env);
 	env.viewport.VSync(config.vsync);
 
-	WorldSave save(config.save_path + config.world.name + '/');
-	if (save.Exists()) {
-		save.Read(config.world);
-	} else {
-		save.Write(config.world);
-	}
-
-	std::string keys_path = config.save_path + "keys.conf";
-	if (!is_file(keys_path)) {
-		std::ofstream file(keys_path);
-		env.keymap.Save(file);
-	} else {
-		std::ifstream file(keys_path);
-		env.keymap.Load(file);
-	}
-
 	Application app(env);
-	ClientState client_state(env, config.world, save, config.interface, config.client);
+	client::MasterState client_state(env, config.world, config.interface, config.client);
 	app.PushState(&client_state);
 	Run(app);
 }

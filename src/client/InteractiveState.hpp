@@ -1,8 +1,8 @@
-#ifndef BLANK_APP_CLIENTSTATE_HPP_
-#define BLANK_APP_CLIENTSTATE_HPP_
+#ifndef BLANK_CLIENT_INTERACTIVESTATE_HPP_
+#define BLANK_CLIENT_INTERACTIVESTATE_HPP_
 
-#include "State.hpp"
-#include "../net/Client.hpp"
+#include "../app/State.hpp"
+#include "../io/WorldSave.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"
@@ -13,17 +13,18 @@ namespace blank {
 
 class Environment;
 
-class ClientState
+namespace client {
+
+class MasterState;
+
+class InteractiveState
 : public State {
 
 public:
-	ClientState(
-		Environment &,
-		const World::Config &,
-		const WorldSave &,
-		const Interface::Config &,
-		const Client::Config &
-	);
+	explicit InteractiveState(MasterState &);
+
+	World &GetWorld() noexcept { return world; }
+	Interface &GetInterface() noexcept { return interface; }
 
 	void OnEnter() override;
 
@@ -32,15 +33,16 @@ public:
 	void Render(Viewport &) override;
 
 private:
-	Environment &env;
+	MasterState &master;
 	BlockTypeRegistry block_types;
+	WorldSave save;
 	World world;
 	ChunkRenderer chunk_renderer;
 	Interface interface;
-	Client client;
 
 };
 
+}
 }
 
 #endif

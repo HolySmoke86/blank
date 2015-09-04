@@ -10,10 +10,17 @@
 
 namespace blank {
 
+class PacketHandler;
+
 class Connection {
 
 public:
 	explicit Connection(const IPaddress &);
+
+	void SetHandler(PacketHandler *h) noexcept { handler = h; }
+	void RemoveHandler() noexcept { handler = nullptr; }
+	bool HasHandler() const noexcept { return handler; }
+	PacketHandler &Handler() noexcept { return *handler; }
 
 	const IPaddress &Address() const noexcept { return addr; }
 
@@ -37,6 +44,7 @@ private:
 	void FlagRecv() noexcept;
 
 private:
+	PacketHandler *handler;
 	IPaddress addr;
 	IntervalTimer send_timer;
 	IntervalTimer recv_timer;

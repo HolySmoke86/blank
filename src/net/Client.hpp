@@ -20,14 +20,15 @@ public:
 	};
 
 public:
-	Client(const Config &, World &);
+	explicit Client(const Config &);
 	~Client();
 
 	void Handle();
 
 	void Update(int dt);
 
-	bool TimedOut() { return conn.TimedOut(); }
+	Connection &GetConnection() noexcept { return conn; }
+	const Connection &GetConnection() const noexcept { return conn; }
 
 	void SendPing();
 	void SendLogin(const std::string &);
@@ -36,7 +37,6 @@ private:
 	void HandlePacket(const UDPpacket &);
 
 private:
-	World &world;
 	Connection conn;
 	UDPsocket client_sock;
 	UDPpacket client_pack;

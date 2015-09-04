@@ -270,6 +270,17 @@ void StateControl::Commit(HeadlessApplication &app) {
 					app.PopState();
 				}
 				break;
+			case POP_AFTER:
+				while (app.HasState() && &app.GetState() != m.state) {
+					app.PopState();
+				}
+				break;
+			case POP_UNTIL:
+				while (app.HasState()) {
+					if (app.PopState() == m.state) {
+						break;
+					}
+				}
 		}
 	}
 }

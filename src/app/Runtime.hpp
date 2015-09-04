@@ -1,6 +1,7 @@
 #ifndef BLANK_RUNTIME_HPP_
 #define BLANK_RUNTIME_HPP_
 
+#include "Environment.hpp"
 #include "../net/Client.hpp"
 #include "../net/Server.hpp"
 #include "../ui/Interface.hpp"
@@ -42,10 +43,8 @@ public:
 		bool doublebuf = true;
 		int multisampling = 1;
 
-		std::string asset_path;
-		std::string save_path;
-
 		Client::Config client = Client::Config();
+		HeadlessEnvironment::Config env = HeadlessEnvironment::Config();
 		Interface::Config interface = Interface::Config();
 		Server::Config server = Server::Config();
 		World::Config world = World::Config();

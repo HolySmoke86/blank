@@ -17,6 +17,19 @@ class Window;
 
 struct HeadlessEnvironment {
 
+	struct Config {
+		std::string asset_path;
+		std::string save_path;
+
+		std::string GetWorldPath(
+			const std::string &world_name
+		) const;
+		std::string GetWorldPath(
+			const std::string &world_name,
+			const std::string &hostname
+		) const;
+	} config;
+
 	AssetLoader loader;
 
 	FrameCounter counter;
@@ -24,7 +37,7 @@ struct HeadlessEnvironment {
 	StateControl state;
 
 
-	explicit HeadlessEnvironment(const std::string &asset_path);
+	explicit HeadlessEnvironment(const Config &);
 
 };
 
@@ -41,7 +54,7 @@ struct Environment
 	Keymap keymap;
 
 
-	Environment(Window &win, const std::string &asset_path);
+	Environment(Window &win, const Config &);
 
 };
 
