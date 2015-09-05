@@ -99,6 +99,8 @@ void InteractiveState::Update(int dt) {
 	chunk_renderer.Rebase(interface.Player().ChunkCoords());
 	chunk_renderer.Update(dt);
 
+	master.GetClient().SendPlayerUpdate(interface.Player());
+
 	glm::mat4 trans = interface.Player().Transform(interface.Player().ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));

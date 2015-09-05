@@ -30,6 +30,7 @@ a while.
 
 Code: 0
 Payload: none
+Length: 0
 
 
 Login
@@ -43,6 +44,7 @@ Code: 1
 Payload:
 	0 player name, max 32 byte UTF-8 string,
 	  shorter names should be zero terminated
+Length: 0-32
 
 
 Join
@@ -58,6 +60,7 @@ Payload:
 	16 pos/vel/rot/ang of the player, 13x 32bit float
 	68 name of the world the server's currently running
 	   max 32 byte UTF-8 string
+Length: 68-100
 
 
 Part
@@ -69,3 +72,16 @@ Optionally sent by the client on disconnect.
 
 Code: 3
 Payload: none
+Length: 0
+
+
+Player Update
+-------------
+
+Sent by clients to notify the server of their changes to the player.
+
+Code: 4
+Payload:
+	 0 chunk coords of the player, 3x 32bit signed int
+	12 pos/vel/rot/ang of the player, 13x 32bit float
+Length: 64

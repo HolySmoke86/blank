@@ -28,9 +28,12 @@ public:
 
 	void AttachPlayer(Entity &);
 	void DetachPlayer();
+	bool HasPlayer() const noexcept { return player; }
+	Entity &Player() noexcept { return *player; }
 
 	void On(const Packet::Login &) override;
 	void On(const Packet::Part &) override;
+	void On(const Packet::PlayerUpdate &) override;
 
 private:
 	Server &server;

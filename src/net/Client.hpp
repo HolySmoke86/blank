@@ -32,6 +32,7 @@ public:
 
 	std::uint16_t SendPing();
 	std::uint16_t SendLogin(const std::string &);
+	std::uint16_t SendPlayerUpdate(const Entity &);
 
 private:
 	void HandlePacket(const UDPpacket &);

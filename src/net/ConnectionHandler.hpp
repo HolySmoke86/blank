@@ -22,6 +22,7 @@ private:
 	virtual void On(const Packet::Login &) { }
 	virtual void On(const Packet::Join &) { }
 	virtual void On(const Packet::Part &) { }
+	virtual void On(const Packet::PlayerUpdate &) { }
 
 };
 

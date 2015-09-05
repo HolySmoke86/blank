@@ -86,6 +86,14 @@ struct Packet {
 		static constexpr std::size_t MAX_LEN = 0;
 	};
 
+	struct PlayerUpdate : public Payload {
+		static constexpr std::uint8_t TYPE = 4;
+		static constexpr std::size_t MAX_LEN = 64;
+
+		void WritePlayer(const Entity &) noexcept;
+		void ReadPlayer(Entity &) const noexcept;
+	};
+
 
 	template<class PayloadType>
 	PayloadType As() {

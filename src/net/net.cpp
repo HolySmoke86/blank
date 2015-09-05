@@ -11,6 +11,7 @@
 
 #include <cstring>
 #include <iostream>
+#include <glm/gtx/io.hpp>
 
 using namespace std;
 
@@ -21,6 +22,7 @@ constexpr size_t Packet::Ping::MAX_LEN;
 constexpr size_t Packet::Login::MAX_LEN;
 constexpr size_t Packet::Join::MAX_LEN;
 constexpr size_t Packet::Part::MAX_LEN;
+constexpr size_t Packet::PlayerUpdate::MAX_LEN;
 
 namespace {
 
@@ -101,6 +103,12 @@ uint16_t Client::SendLogin(const string &name) {
 	return conn.Send(client_pack, client_sock);
 }
 
+uint16_t Client::SendPlayerUpdate(const Entity &player) {
+	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
+	pack.WritePlayer(player);
+	return conn.Send(client_pack, client_sock);
+}
+
 
 ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 : server(server)
@@ -160,6 +168,11 @@ void ClientConnection::On(const Packet::Login &pack) {
 
 void ClientConnection::On(const Packet::Part &) {
 	conn.Close();
+}
+
+void ClientConnection::On(const Packet::PlayerUpdate &pack) {
+	if (!HasPlayer()) return;
+	pack.ReadPlayer(Player());
 }
 
 
@@ -291,6 +304,8 @@ const char *Packet::Type2String(uint8_t t) noexcept {
 			return "Join";
 		case Part::TYPE:
 			return "Part";
+		case PlayerUpdate::TYPE:
+			return "PlayerUpdate";
 		default:
 			return "Unknown";
 	}
@@ -383,6 +398,33 @@ void Packet::Join::ReadWorldName(string &name) const noexcept {
 	ReadString(name, 68, 32);
 }
 
+void Packet::PlayerUpdate::WritePlayer(const Entity &player) noexcept {
+	Write(player.ChunkCoords(), 0);
+	Write(player.Position(), 12);
+	Write(player.Velocity(), 24);
+	Write(player.Orientation(), 36);
+	Write(player.AngularVelocity(), 52);
+}
+
+void Packet::PlayerUpdate::ReadPlayer(Entity &player) const noexcept {
+	glm::ivec3 chunk_coords(0);
+	glm::vec3 pos;
+	glm::vec3 vel;
+	glm::quat rot;
+	glm::vec3 ang;
+
+	Read(chunk_coords, 0);
+	Read(pos, 12);
+	Read(vel, 24);
+	Read(rot, 36);
+	Read(ang, 52);
+
+	player.Position(chunk_coords, pos);
+	player.Velocity(vel);
+	player.Orientation(rot);
+	player.AngularVelocity(ang);
+}
+
 
 void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
@@ -398,6 +440,9 @@ void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 			break;
 		case Packet::Part::TYPE:
 			On(Packet::As<Packet::Part>(udp_pack));
+			break;
+		case Packet::PlayerUpdate::TYPE:
+			On(Packet::As<Packet::PlayerUpdate>(udp_pack));
 			break;
 		default:
 			// drop unknown or unhandled packets
