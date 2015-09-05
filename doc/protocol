@@ -1,3 +1,23 @@
+Structure
+=========
+
+Offset  Size   Type  Description
+ 0      4      data  protocol tag, must be 0xFB1AB1AF
+ 4      2      uint  sequence number
+ 6      2      uint  sequence ack
+ 8      4      data  bitfield with previous acks
+12      1      uint  type code for the payload
+13      3      none  padding, reserved for future use
+16      0-484  data  payload, contents and length vary,
+                     mostly depending on the type code
+
+all multibyte values are in LE
+the current code does no conversion, so only works on machines
+with native LE (or BE if the server and all clients are on that,
+but that's by accident and will break if conversion code is ever
+added)
+
+
 Packets
 =======
 

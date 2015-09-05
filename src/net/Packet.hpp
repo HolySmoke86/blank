@@ -27,6 +27,9 @@ struct Packet {
 		std::uint32_t tag;
 		TControl ctrl;
 		std::uint8_t type;
+		std::uint8_t reserved1;
+		std::uint8_t reserved2;
+		std::uint8_t reserved3;
 	} header;
 
 	static constexpr std::size_t MAX_PAYLOAD_LEN = 500 - sizeof(Header);
