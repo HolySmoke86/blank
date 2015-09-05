@@ -7,7 +7,7 @@
 
 namespace blank {
 
-class Connection;
+class ClientConnection;
 class World;
 
 class Server {
@@ -25,21 +25,20 @@ public:
 
 	void Update(int dt);
 
+	UDPsocket &GetSocket() noexcept { return serv_sock; }
+	UDPpacket &GetPacket() noexcept { return serv_pack; }
+
+	World &GetWorld() noexcept { return world; }
+
 private:
 	void HandlePacket(const UDPpacket &);
 
-	Connection &GetClient(const IPaddress &);
-
-	void OnConnect(Connection &);
-	void OnDisconnect(Connection &);
-
-	void HandleLogin(Connection &client, const UDPpacket &);
-	void HandlePart(Connection &client, const UDPpacket &);
+	ClientConnection &GetClient(const IPaddress &);
 
 private:
 	UDPsocket serv_sock;
 	UDPpacket serv_pack;
-	std::list<Connection> clients;
+	std::list<ClientConnection> clients;
 
 	World &world;
 

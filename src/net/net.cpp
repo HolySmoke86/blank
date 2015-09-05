@@ -1,4 +1,5 @@
 #include "Client.hpp"
+#include "ClientConnection.hpp"
 #include "Connection.hpp"
 #include "ConnectionHandler.hpp"
 #include "io.hpp"
@@ -98,6 +99,67 @@ uint16_t Client::SendLogin(const string &name) {
 	auto pack = Packet::Make<Packet::Login>(client_pack);
 	pack.WritePlayerName(name);
 	return conn.Send(client_pack, client_sock);
+}
+
+
+ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
+: server(server)
+, conn(addr)
+, player(nullptr) {
+	conn.SetHandler(this);
+}
+
+ClientConnection::~ClientConnection() {
+	DetachPlayer();
+}
+
+void ClientConnection::Update(int dt) {
+	conn.Update(dt);
+	if (Disconnected()) {
+		cout << "disconnect from " << conn.Address() << endl;
+	} else if (conn.ShouldPing()) {
+		conn.SendPing(server.GetPacket(), server.GetSocket());
+	}
+}
+
+void ClientConnection::AttachPlayer(Entity &new_player) {
+	DetachPlayer();
+	player = &new_player;
+	player->Ref();
+}
+
+void ClientConnection::DetachPlayer() {
+	if (!player) return;
+	player->Kill();
+	player->UnRef();
+	player = nullptr;
+}
+
+void ClientConnection::On(const Packet::Login &pack) {
+	string name;
+	pack.ReadPlayerName(name);
+
+	Entity *new_player = server.GetWorld().AddPlayer(name);
+
+	if (new_player) {
+		// success!
+		AttachPlayer(*new_player);
+		cout << "accepted login from player \"" << name << '"' << endl;
+		auto response = Packet::Make<Packet::Join>(server.GetPacket());
+		response.WritePlayer(*new_player);
+		response.WriteWorldName(server.GetWorld().Name());
+		conn.Send(server.GetPacket(), server.GetSocket());
+	} else {
+		// aw no :(
+		cout << "rejected login from player \"" << name << '"' << endl;
+		Packet::Make<Packet::Part>(server.GetPacket());
+		conn.Send(server.GetPacket(), server.GetSocket());
+		conn.Close();
+	}
+}
+
+void ClientConnection::On(const Packet::Part &) {
+	conn.Close();
 }
 
 
@@ -387,85 +449,29 @@ void Server::HandlePacket(const UDPpacket &udp_pack) {
 		return;
 	}
 
-	Connection &client = GetClient(udp_pack.address);
-	client.Received(udp_pack);
-
-	switch (pack.header.type) {
-		case Packet::Login::TYPE:
-			HandleLogin(client, udp_pack);
-			break;
-		case Packet::Part::TYPE:
-			HandlePart(client, udp_pack);
-			break;
-		default:
-			// just drop packets of unknown or unhandled type
-			break;
-	}
+	ClientConnection &client = GetClient(udp_pack.address);
+	client.GetConnection().Received(udp_pack);
 }
 
-Connection &Server::GetClient(const IPaddress &addr) {
-	for (Connection &client : clients) {
+ClientConnection &Server::GetClient(const IPaddress &addr) {
+	for (ClientConnection &client : clients) {
 		if (client.Matches(addr)) {
 			return client;
 		}
 	}
-	clients.emplace_back(addr);
-	OnConnect(clients.back());
+	clients.emplace_back(*this, addr);
 	return clients.back();
 }
 
-void Server::OnConnect(Connection &client) {
-	cout << "new connection from " << client.Address() << endl;
-	// tell it we're alive
-	client.SendPing(serv_pack, serv_sock);
-}
-
 void Server::Update(int dt) {
-	for (list<Connection>::iterator client(clients.begin()), end(clients.end()); client != end;) {
+	for (list<ClientConnection>::iterator client(clients.begin()), end(clients.end()); client != end;) {
 		client->Update(dt);
-		if (client->Closed()) {
-			OnDisconnect(*client);
+		if (client->Disconnected()) {
 			client = clients.erase(client);
 		} else {
-			if (client->ShouldPing()) {
-				client->SendPing(serv_pack, serv_sock);
-			}
 			++client;
 		}
 	}
-}
-
-void Server::OnDisconnect(Connection &client) {
-	cout << "connection timeout from " << client.Address() << endl;
-}
-
-
-void Server::HandleLogin(Connection &client, const UDPpacket &udp_pack) {
-	auto pack = Packet::As<Packet::Login>(udp_pack);
-
-	string name;
-	pack.ReadPlayerName(name);
-
-	Entity *player = world.AddPlayer(name);
-
-	if (player) {
-		// success!
-		cout << "accepted login from player \"" << name << '"' << endl;
-		auto response = Packet::Make<Packet::Join>(serv_pack);
-		response.WritePlayer(*player);
-		response.WriteWorldName(world.Name());
-		client.Send(serv_pack, serv_sock);
-	} else {
-		// aw no :(
-		cout << "rejected login from player \"" << name << '"' << endl;
-		Packet::Make<Packet::Part>(serv_pack);
-		client.Send(serv_pack, serv_sock);
-		client.Close();
-	}
-}
-
-void Server::HandlePart(Connection &client, const UDPpacket &udp_pack) {
-	client.Close();
 }
 
 }
