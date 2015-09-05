@@ -227,7 +227,7 @@ void World::Update(int dt) {
 	}
 	for (auto iter = entities.begin(), end = entities.end(); iter != end;) {
 		if (iter->CanRemove()) {
-			iter = entities.erase(iter);
+			iter = RemoveEntity(iter);
 		} else {
 			++iter;
 		}
@@ -267,6 +267,15 @@ void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
 		}
 	}
 	e.Move(final_disp);
+}
+
+World::EntityHandle World::RemoveEntity(EntityHandle &eh) {
+	// check for player
+	auto player = std::find(players.begin(), players.end(), &*eh);
+	if (player != players.end()) {
+		players.erase(player);
+	}
+	return entities.erase(eh);
 }
 
 

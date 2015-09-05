@@ -88,6 +88,10 @@ public:
 	void Render(Viewport &);
 
 private:
+	using EntityHandle = std::list<Entity>::iterator;
+	EntityHandle RemoveEntity(EntityHandle &);
+
+private:
 	Config config;
 
 	const BlockTypeRegistry &block_type;
