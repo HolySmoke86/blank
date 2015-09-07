@@ -13,6 +13,9 @@ class ConnectionHandler {
 public:
 	void Handle(const UDPpacket &);
 
+	// called as soon as the remote end ack'd given packet
+	virtual void OnPacketReceived(std::uint16_t) { }
+	// called if the remote end probably didn't get given packet
 	virtual void OnPacketLost(std::uint16_t) { }
 
 	virtual void OnTimeout() { }

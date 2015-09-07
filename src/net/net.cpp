@@ -271,8 +271,21 @@ void Connection::Received(const UDPpacket &udp_pack) {
 				}
 			}
 		}
+		// check for newly ack'd packets
+		for (uint16_t s = ctrl_new.AckBegin(); s != ctrl_new.AckEnd(); ++s) {
+			if (ctrl_new.Acks(s) && !ctrl_in.Acks(s)) {
+				Handler().OnPacketReceived(s);
+			}
+		}
 		ctrl_in = ctrl_new;
 	}
+}
+
+bool Packet::TControl::Acks(uint16_t s) const noexcept {
+	int16_t diff = int16_t(ack) - int16_t(s);
+	if (diff == 0) return true;
+	if (diff < 0 || diff > 32) return false;
+	return (hist & (1 << (diff - 1))) != 0;
 }
 
 uint16_t Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
