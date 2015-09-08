@@ -2,7 +2,8 @@
 
 #include "Chaser.hpp"
 #include "RandomWalk.hpp"
-#include "../model/shapes.hpp"
+#include "../model/CompositeModel.hpp"
+#include "../model/Skeletons.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/Entity.hpp"
@@ -11,8 +12,9 @@
 
 namespace blank {
 
-Spawner::Spawner(World &world, std::uint64_t seed)
+Spawner::Spawner(World &world, Skeletons &skeletons, std::uint64_t seed)
 : world(world)
+, skeletons(skeletons)
 , controllers()
 , random(seed)
 , timer(64)
@@ -20,37 +22,6 @@ Spawner::Spawner(World &world, std::uint64_t seed)
 , spawn_distance(16 * 16)
 , max_entities(16)
 , chunk_range(4) {
-	EntityModel::Buffer buf;
-	{
-		AABB bounds{{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }};
-		CuboidShape shape(bounds);
-		shape.Vertices(buf, 1.0f);
-		buf.colors.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
-		models[0].Update(buf);
-		skeletons[0].Bounds(bounds);
-		skeletons[0].SetNodeModel(&models[0]);
-	}
-	{
-		AABB bounds{{ -0.5f, -0.25f, -0.5f }, { 0.5f, 0.25f, 0.5f }};
-		CuboidShape shape(bounds);
-		buf.Clear();
-		shape.Vertices(buf, 2.0f);
-		buf.colors.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
-		models[1].Update(buf);
-		skeletons[1].Bounds(bounds);
-		skeletons[1].SetNodeModel(&models[1]);
-	}
-	{
-		AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
-		StairShape shape(bounds, { 0.4f, 0.4f });
-		buf.Clear();
-		shape.Vertices(buf, 3.0f);
-		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
-		models[2].Update(buf);
-		skeletons[2].Bounds(bounds);
-		skeletons[2].SetNodeModel(&models[2]);
-	}
-
 	timer.Start();
 }
 
@@ -120,7 +91,6 @@ void Spawner::TrySpawn() {
 		random.Next<unsigned char>() % Chunk::depth
 	);
 
-
 	// distance check
 	glm::vec3 diff(glm::vec3(chunk * Chunk::Extent() - pos) + player.Position());
 	float dist = dot(diff, diff);
@@ -155,7 +125,7 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	skeletons[random.Next<unsigned char>() % 3].Instantiate(e.GetModel());
+	skeletons[random.Next<unsigned char>() % skeletons.Size()].Instantiate(e.GetModel());
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (random()) {

@@ -19,7 +19,8 @@ WorldState::WorldState(
 , block_types()
 , world(block_types, wc, save)
 , chunk_renderer(world, wc.load.load_dist)
-, spawner(world, wc.gen.seed)
+, skeletons()
+, spawner(world, skeletons, wc.gen.seed)
 , interface(ic, env, world, *world.AddPlayer(ic.player_name))
 , preload(env, world.Loader(), chunk_renderer)
 , unload(env, world.Loader()) {
@@ -27,6 +28,7 @@ WorldState::WorldState(
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(env.loader, tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
+	skeletons.Load();
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
 }

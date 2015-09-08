@@ -18,10 +18,13 @@ ServerState::ServerState(
 : env(env)
 , block_types()
 , world(block_types, wc, ws)
+, skeletons()
+, spawner(world, skeletons, wc.gen.seed)
 , server(sc, world)
 , push_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
+	skeletons.LoadHeadless();
 
 	push_timer.Start();
 
@@ -38,8 +41,11 @@ void ServerState::Handle(const SDL_Event &event) {
 
 void ServerState::Update(int dt) {
 	push_timer.Update(dt);
-
 	server.Handle();
+	spawner.Update(dt);
+	if (!world.Players().empty()) {
+		world.Update(dt);
+	}
 	if (push_timer.Hit()) {
 		server.Update(dt);
 	}

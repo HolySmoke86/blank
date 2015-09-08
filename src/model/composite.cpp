@@ -1,7 +1,9 @@
 #include "CompositeModel.hpp"
 #include "CompositeInstance.hpp"
+#include "Skeletons.hpp"
 
 #include "EntityModel.hpp"
+#include "shapes.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 
 #include <glm/gtx/quaternion.hpp>
@@ -96,6 +98,66 @@ void CompositeInstance::Render(const glm::mat4 &M, DirectionalLighting &prog) co
 	}
 	for (const CompositeInstance &part : parts) {
 		part.Render(transform, prog);
+	}
+}
+
+
+Skeletons::Skeletons()
+: skeletons()
+, models() {
+
+}
+
+Skeletons::~Skeletons() {
+
+}
+
+void Skeletons::LoadHeadless() {
+	skeletons.clear();
+	skeletons.reserve(3);
+	{
+		AABB bounds{{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }};
+		skeletons.emplace_back(new CompositeModel);
+		skeletons[0]->Bounds(bounds);
+	}
+	{
+		AABB bounds{{ -0.5f, -0.25f, -0.5f }, { 0.5f, 0.25f, 0.5f }};
+		skeletons.emplace_back(new CompositeModel);
+		skeletons[1]->Bounds(bounds);
+	}
+	{
+		AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
+		skeletons.emplace_back(new CompositeModel);
+		skeletons[2]->Bounds(bounds);
+	}
+}
+
+void Skeletons::Load() {
+	LoadHeadless();
+	models.resize(3);
+	EntityModel::Buffer buf;
+	{
+		CuboidShape shape(skeletons[0]->Bounds());
+		shape.Vertices(buf, 1.0f);
+		buf.colors.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
+		models[0].Update(buf);
+		skeletons[0]->SetNodeModel(&models[0]);
+	}
+	{
+		CuboidShape shape(skeletons[1]->Bounds());
+		buf.Clear();
+		shape.Vertices(buf, 2.0f);
+		buf.colors.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		models[1].Update(buf);
+		skeletons[1]->SetNodeModel(&models[1]);
+	}
+	{
+		StairShape shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
+		buf.Clear();
+		shape.Vertices(buf, 3.0f);
+		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
+		models[2].Update(buf);
+		skeletons[2]->SetNodeModel(&models[2]);
 	}
 }
 

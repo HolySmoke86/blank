@@ -5,6 +5,7 @@
 #include "State.hpp"
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
+#include "../model/Skeletons.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"
@@ -40,6 +41,7 @@ private:
 	BlockTypeRegistry block_types;
 	World world;
 	ChunkRenderer chunk_renderer;
+	Skeletons skeletons;
 	Spawner spawner;
 	Interface interface;
 

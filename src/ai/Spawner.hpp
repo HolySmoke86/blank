@@ -2,8 +2,6 @@
 #define BLANK_AI_SPAWNER_HPP_
 
 #include "../app/IntervalTimer.hpp"
-#include "../model/CompositeModel.hpp"
-#include "../model/EntityModel.hpp"
 #include "../rand/GaloisLFSR.hpp"
 
 #include <vector>
@@ -14,12 +12,13 @@ namespace blank {
 
 class Controller;
 class Entity;
+class Skeletons;
 class World;
 
 class Spawner {
 
 public:
-	Spawner(World &, std::uint64_t seed);
+	Spawner(World &, Skeletons &, std::uint64_t seed);
 	~Spawner();
 
 	void Update(int dt);
@@ -31,10 +30,8 @@ private:
 
 private:
 	World &world;
+	Skeletons &skeletons;
 	std::vector<Controller *> controllers;
-
-	EntityModel models[3];
-	CompositeModel skeletons[3];
 
 	GaloisLFSR random;
 
