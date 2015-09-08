@@ -12,7 +12,11 @@ class GaloisLFSR {
 public:
 	// seed should be non-zero
 	explicit GaloisLFSR(std::uint64_t seed) noexcept
-	: state(seed) { }
+	: state(seed) {
+		if (state == 0) {
+			state = 1;
+		}
+	}
 
 	// get the next bit
 	bool operator ()() noexcept {
