@@ -18,9 +18,12 @@ ServerState::ServerState(
 : env(env)
 , block_types()
 , world(block_types, wc, ws)
-, server(sc, world) {
+, server(sc, world)
+, push_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
+
+	push_timer.Start();
 
 	std::cout << "listening on UDP port " << sc.port << std::endl;
 }
@@ -34,8 +37,12 @@ void ServerState::Handle(const SDL_Event &event) {
 
 
 void ServerState::Update(int dt) {
+	push_timer.Update(dt);
+
 	server.Handle();
-	server.Update(dt);
+	if (push_timer.Hit()) {
+		server.Update(dt);
+	}
 }
 
 

@@ -81,6 +81,7 @@ public:
 	Entity *AddEntity(std::uint32_t id);
 
 	const std::vector<Entity *> &Players() const noexcept { return players; }
+	std::list<Entity> &Entities() noexcept { return entities; }
 	const std::list<Entity> &Entities() const noexcept { return entities; }
 
 	void Update(int dt);

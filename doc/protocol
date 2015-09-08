@@ -85,3 +85,46 @@ Payload:
 	 0 chunk coords of the player, 3x 32bit signed int
 	12 pos/vel/rot/ang of the player, 13x 32bit float
 Length: 64
+
+
+Spawn Entity
+------------
+
+Sent by the server to notify the client of an entity entering spawn range.
+
+Code: 5
+Payload:
+	 0 entity ID, 32bit unsigned int
+	 4 chunk coords of the entity, 3x 32bit signed int
+	16 pos/vel/rot/ang of the entity, 13x 32bit float
+	68 bounding box of the entity, 6x 32bit float
+	92 flags, 32bit bitfield with boolean values
+	   1: world collision
+	96 entity name, max 32 byte UTF-8 string
+Length: 128
+
+
+Despawn Entity
+--------------
+
+Sent by the server to notify the client of an entity leaving spawn range.
+
+Code: 6
+Payload:
+	0 entity ID, 32bit unsigned int
+Length: 4
+
+
+Entity Update
+-------------
+
+Sent by the server to notify the client of updated entity properties.
+Contained entities must be ordered by ascending entity ID.
+
+Code: 7
+Payload:
+	 0 number of entities, 32bit int, 1-7
+	 4 chunk coords of the entity, 3x 32bit signed int
+	16 pos/vel/rot/ang of the entity, 13x 32bit float
+	68 next entity...
+Length: 4 + multiple of 64, max 452

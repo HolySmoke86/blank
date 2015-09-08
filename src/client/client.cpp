@@ -7,6 +7,9 @@
 #include "../app/TextureIndex.hpp"
 
 #include <iostream>
+#include <glm/gtx/io.hpp>
+
+using namespace std;
 
 
 namespace blank {
@@ -134,6 +137,9 @@ MasterState::MasterState(
 }
 
 void MasterState::Quit() {
+	if (!client.GetConnection().Closed()) {
+		client.SendPart();
+	}
 	env.state.PopUntil(this);
 }
 
@@ -160,7 +166,7 @@ void MasterState::Render(Viewport &) {
 }
 
 
-void MasterState::OnPacketLost(std::uint16_t id) {
+void MasterState::OnPacketLost(uint16_t id) {
 	if (id == login_packet) {
 		login_packet = client.SendLogin(intf_conf.player_name);
 	}
@@ -168,8 +174,9 @@ void MasterState::OnPacketLost(std::uint16_t id) {
 
 void MasterState::OnTimeout() {
 	if (client.GetConnection().Closed()) {
-		Quit();
 		// TODO: push disconnected message
+		cout << "connection timed out" << endl;
+		Quit();
 	}
 }
 
@@ -178,10 +185,10 @@ void MasterState::On(const Packet::Join &pack) {
 
 	if (state) {
 		// changing worlds
-		std::cout << "server changing worlds" << std::endl;
+		cout << "server changing worlds to \"" << world_conf.name << '"' << endl;
 	} else {
 		// joining game
-		std::cout << "joined game" << std::endl;
+		cout << "joined game \"" << world_conf.name << '"' << endl;
 	}
 
 	uint32_t player_id;
@@ -197,12 +204,77 @@ void MasterState::On(const Packet::Join &pack) {
 void MasterState::On(const Packet::Part &pack) {
 	if (state) {
 		// kicked
-		std::cout << "kicked by server" << std::endl;
+		cout << "kicked by server" << endl;
 	} else {
 		// join refused
-		std::cout << "login refused by server" << std::endl;
+		cout << "login refused by server" << endl;
 	}
 	Quit();
+}
+
+void MasterState::On(const Packet::SpawnEntity &pack) {
+	if (!state) {
+		cout << "got entity spawn before world was created" << endl;
+		Quit();
+		return;
+	}
+	uint32_t entity_id;
+	pack.ReadEntityID(entity_id);
+	Entity *entity = state->GetWorld().AddEntity(entity_id);
+	if (!entity) {
+		cout << "entity ID inconsistency" << endl;
+		Quit();
+		return;
+	}
+	pack.ReadEntity(*entity);
+	cout << "spawned entity " << entity->Name() << " at " << entity->AbsolutePosition() << endl;
+}
+
+void MasterState::On(const Packet::DespawnEntity &pack) {
+	if (!state) {
+		cout << "got entity despawn before world was created" << endl;
+		Quit();
+		return;
+	}
+	uint32_t entity_id;
+	pack.ReadEntityID(entity_id);
+	for (Entity &entity : state->GetWorld().Entities()) {
+		if (entity.ID() == entity_id) {
+			entity.Kill();
+			cout << "despawned entity " << entity.Name() << " at " << entity.AbsolutePosition() << endl;
+			return;
+		}
+	}
+}
+
+void MasterState::On(const Packet::EntityUpdate &pack) {
+	if (!state) {
+		cout << "got entity update before world was created" << endl;
+		Quit();
+		return;
+	}
+
+	auto world_iter = state->GetWorld().Entities().begin();
+	auto world_end = state->GetWorld().Entities().end();
+
+	uint32_t count = 0;
+	pack.ReadEntityCount(count);
+
+	for (uint32_t i = 0; i < count; ++i) {
+		uint32_t entity_id = 0;
+		pack.ReadEntityID(entity_id, i);
+
+		while (world_iter != world_end && world_iter->ID() < entity_id) {
+			++world_iter;
+		}
+		if (world_iter == world_end) {
+			// nothing can be done from here
+			return;
+		}
+		if (world_iter->ID() == entity_id) {
+			pack.ReadEntity(*world_iter, i);
+		}
+	}
 }
 
 }

@@ -1,6 +1,7 @@
 #ifndef BLANK_APP_SERVERSTATE_HPP_
 #define BLANK_APP_SERVERSTATE_HPP_
 
+#include "IntervalTimer.hpp"
 #include "State.hpp"
 #include "../net/Server.hpp"
 #include "../world/BlockTypeRegistry.hpp"
@@ -31,6 +32,7 @@ private:
 	BlockTypeRegistry block_types;
 	World world;
 	Server server;
+	IntervalTimer push_timer;
 
 };
 

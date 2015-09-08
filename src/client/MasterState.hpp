@@ -51,6 +51,9 @@ public:
 
 	void On(const Packet::Join &) override;
 	void On(const Packet::Part &) override;
+	void On(const Packet::SpawnEntity &) override;
+	void On(const Packet::DespawnEntity &) override;
+	void On(const Packet::EntityUpdate &) override;
 
 private:
 	Environment &env;

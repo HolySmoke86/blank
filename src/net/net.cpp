@@ -23,6 +23,9 @@ constexpr size_t Packet::Login::MAX_LEN;
 constexpr size_t Packet::Join::MAX_LEN;
 constexpr size_t Packet::Part::MAX_LEN;
 constexpr size_t Packet::PlayerUpdate::MAX_LEN;
+constexpr size_t Packet::SpawnEntity::MAX_LEN;
+constexpr size_t Packet::DespawnEntity::MAX_LEN;
+constexpr size_t Packet::EntityUpdate::MAX_LEN;
 
 namespace {
 
@@ -109,11 +112,18 @@ uint16_t Client::SendPlayerUpdate(const Entity &player) {
 	return conn.Send(client_pack, client_sock);
 }
 
+uint16_t Client::SendPart() {
+	Packet::Make<Packet::Part>(client_pack);
+	return conn.Send(client_pack, client_sock);
+}
+
 
 ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 : server(server)
 , conn(addr)
-, player(nullptr) {
+, player(nullptr)
+, spawns()
+, confirm_wait(0) {
 	conn.SetHandler(this);
 }
 
@@ -124,23 +134,163 @@ ClientConnection::~ClientConnection() {
 void ClientConnection::Update(int dt) {
 	conn.Update(dt);
 	if (Disconnected()) {
-		cout << "disconnect from " << conn.Address() << endl;
-	} else if (conn.ShouldPing()) {
+		return;
+	}
+	if (HasPlayer()) {
+		// sync entities
+		auto global_iter = server.GetWorld().Entities().begin();
+		auto global_end = server.GetWorld().Entities().end();
+		auto local_iter = spawns.begin();
+		auto local_end = spawns.end();
+
+		while (global_iter != global_end && local_iter != local_end) {
+			if (global_iter->ID() == local_iter->entity->ID()) {
+				// they're the same
+				if (CanDespawn(*global_iter)) {
+					SendDespawn(*local_iter);
+				} else {
+					// update
+					SendUpdate(*local_iter);
+				}
+				++global_iter;
+				++local_iter;
+			} else if (global_iter->ID() < local_iter->entity->ID()) {
+				// global entity was inserted
+				if (CanSpawn(*global_iter)) {
+					auto spawned = spawns.emplace(local_iter, *global_iter);
+					SendSpawn(*spawned);
+				}
+				++global_iter;
+			} else {
+				// global entity was removed
+				SendDespawn(*local_iter);
+				++local_iter;
+			}
+		}
+
+		// leftover spawns
+		while (global_iter != global_end) {
+			if (CanSpawn(*global_iter)) {
+				spawns.emplace_back(*global_iter);
+				SendSpawn(spawns.back());
+			}
+			++global_iter;
+		}
+
+		// leftover despawns
+		while (local_iter != local_end) {
+			SendDespawn(*local_iter);
+			++local_iter;
+		}
+	}
+	if (conn.ShouldPing()) {
 		conn.SendPing(server.GetPacket(), server.GetSocket());
 	}
+}
+
+ClientConnection::SpawnStatus::SpawnStatus(Entity &e)
+: entity(&e)
+, spawn_pack(-1)
+, despawn_pack(-1) {
+	entity->Ref();
+}
+
+ClientConnection::SpawnStatus::~SpawnStatus() {
+	entity->UnRef();
+}
+
+bool ClientConnection::CanSpawn(const Entity &e) const noexcept {
+	return
+		&e != player &&
+		!e.Dead() &&
+		manhattan_radius(e.ChunkCoords() - Player().ChunkCoords()) < 7;
+}
+
+bool ClientConnection::CanDespawn(const Entity &e) const noexcept {
+	return
+		e.Dead() ||
+		manhattan_radius(e.ChunkCoords() - Player().ChunkCoords()) > 7;
+}
+
+void ClientConnection::SendSpawn(SpawnStatus &status) {
+	// don't double spawn
+	if (status.spawn_pack != -1) return;
+
+	auto pack = Packet::Make<Packet::SpawnEntity>(server.GetPacket());
+	pack.WriteEntity(*status.entity);
+	status.spawn_pack = conn.Send(server.GetPacket(), server.GetSocket());
+	++confirm_wait;
+}
+
+void ClientConnection::SendDespawn(SpawnStatus &status) {
+	// don't double despawn
+	if (status.despawn_pack != -1) return;
+
+	auto pack = Packet::Make<Packet::DespawnEntity>(server.GetPacket());
+	pack.WriteEntityID(status.entity->ID());
+	status.despawn_pack = conn.Send(server.GetPacket(), server.GetSocket());
+	++confirm_wait;
+}
+
+void ClientConnection::SendUpdate(SpawnStatus &status) {
+	// don't send updates while spawn not ack'd or despawn sent
+	if (status.spawn_pack != -1 || status.despawn_pack != -1) return;
+
+	// TODO: pack entity updates
+	auto pack = Packet::Make<Packet::EntityUpdate>(server.GetPacket());
+	pack.WriteEntityCount(1);
+	pack.WriteEntity(*status.entity, 0);
+	server.GetPacket().len = Packet::EntityUpdate::GetSize(1);
+	conn.Send(server.GetPacket(), server.GetSocket());
 }
 
 void ClientConnection::AttachPlayer(Entity &new_player) {
 	DetachPlayer();
 	player = &new_player;
 	player->Ref();
+	cout << "player \"" << player->Name() << "\" joined" << endl;
 }
 
 void ClientConnection::DetachPlayer() {
 	if (!player) return;
 	player->Kill();
 	player->UnRef();
+	cout << "player \"" << player->Name() << "\" left" << endl;
 	player = nullptr;
+}
+
+void ClientConnection::OnPacketReceived(uint16_t seq) {
+	if (!confirm_wait) return;
+	for (auto iter = spawns.begin(), end = spawns.end(); iter != end; ++iter) {
+		if (seq == iter->spawn_pack) {
+			iter->spawn_pack = -1;
+			--confirm_wait;
+			return;
+		}
+		if (seq == iter->despawn_pack) {
+			spawns.erase(iter);
+			--confirm_wait;
+			return;
+		}
+	}
+}
+
+void ClientConnection::OnPacketLost(uint16_t seq) {
+	if (!confirm_wait) return;
+	for (SpawnStatus &status : spawns) {
+		if (seq == status.spawn_pack) {
+			status.spawn_pack = -1;
+			--confirm_wait;
+			SendSpawn(status);
+			return;
+		}
+		if (seq == status.despawn_pack) {
+			status.despawn_pack = -1;
+			--confirm_wait;
+			SendDespawn(status);
+			return;
+		}
+	}
 }
 
 void ClientConnection::On(const Packet::Login &pack) {
@@ -319,6 +469,12 @@ const char *Packet::Type2String(uint8_t t) noexcept {
 			return "Part";
 		case PlayerUpdate::TYPE:
 			return "PlayerUpdate";
+		case SpawnEntity::TYPE:
+			return "SpawnEntity";
+		case DespawnEntity::TYPE:
+			return "DespawnEntity";
+		case EntityUpdate::TYPE:
+			return "EntityUpdate";
 		default:
 			return "Unknown";
 	}
@@ -438,6 +594,106 @@ void Packet::PlayerUpdate::ReadPlayer(Entity &player) const noexcept {
 	player.AngularVelocity(ang);
 }
 
+void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
+	Write(e.ID(), 0);
+	Write(e.ChunkCoords(), 4);
+	Write(e.Position(), 16);
+	Write(e.Velocity(), 28);
+	Write(e.Orientation(), 40);
+	Write(e.AngularVelocity(), 56);
+	Write(e.Bounds(), 68);
+	uint32_t flags = 0;
+	if (e.WorldCollidable()) {
+		flags |= 1;
+	}
+	Write(flags, 92);
+	WriteString(e.Name(), 96, 32);
+}
+
+void Packet::SpawnEntity::ReadEntityID(uint32_t &id) const noexcept {
+	Read(id, 0);
+}
+
+void Packet::SpawnEntity::ReadEntity(Entity &e) const noexcept {
+	glm::ivec3 chunk_coords(0);
+	glm::vec3 pos;
+	glm::vec3 vel;
+	glm::quat rot;
+	glm::vec3 ang;
+	AABB bounds;
+	uint32_t flags = 0;
+	string name;
+
+	Read(chunk_coords, 4);
+	Read(pos, 16);
+	Read(vel, 28);
+	Read(rot, 40);
+	Read(ang, 56);
+	Read(bounds, 68);
+	Read(flags, 92);
+	ReadString(name, 96, 32);
+
+	e.Position(chunk_coords, pos);
+	e.Velocity(vel);
+	e.Orientation(rot);
+	e.AngularVelocity(ang);
+	e.Bounds(bounds);
+	e.WorldCollidable(flags & 1);
+	e.Name(name);
+}
+
+void Packet::DespawnEntity::WriteEntityID(uint32_t id) noexcept {
+	Write(id, 0);
+}
+
+void Packet::DespawnEntity::ReadEntityID(uint32_t &id) const noexcept {
+	Read(id, 0);
+}
+
+void Packet::EntityUpdate::WriteEntityCount(uint32_t count) noexcept {
+	Write(count, 0);
+}
+
+void Packet::EntityUpdate::ReadEntityCount(uint32_t &count) const noexcept {
+	Read(count, 0);
+}
+
+void Packet::EntityUpdate::WriteEntity(const Entity &entity, uint32_t num) noexcept {
+	uint32_t off = 4 + (num * 64);
+
+	Write(entity.ID(), off);
+	Write(entity.ChunkCoords(), off + 4);
+	Write(entity.Position(), off + 16);
+	Write(entity.Velocity(), off + 28);
+	Write(entity.Orientation(), off + 40);
+	Write(entity.AngularVelocity(), off + 56);
+}
+
+void Packet::EntityUpdate::ReadEntityID(uint32_t &id, uint32_t num) const noexcept {
+	Read(id, 4 + (num * 64));
+}
+
+void Packet::EntityUpdate::ReadEntity(Entity &entity, uint32_t num) const noexcept {
+	uint32_t off = 4 + (num * 64);
+
+	glm::ivec3 chunk_coords(0);
+	glm::vec3 pos;
+	glm::vec3 vel;
+	glm::quat rot;
+	glm::vec3 ang;
+
+	Read(chunk_coords, off + 4);
+	Read(pos, off + 16);
+	Read(vel, off + 28);
+	Read(rot, off + 40);
+	Read(ang, off + 56);
+
+	entity.Position(chunk_coords, pos);
+	entity.Velocity(vel);
+	entity.Orientation(rot);
+	entity.AngularVelocity(ang);
+}
+
 
 void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
@@ -456,6 +712,15 @@ void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 			break;
 		case Packet::PlayerUpdate::TYPE:
 			On(Packet::As<Packet::PlayerUpdate>(udp_pack));
+			break;
+		case Packet::SpawnEntity::TYPE:
+			On(Packet::As<Packet::SpawnEntity>(udp_pack));
+			break;
+		case Packet::DespawnEntity::TYPE:
+			On(Packet::As<Packet::DespawnEntity>(udp_pack));
+			break;
+		case Packet::EntityUpdate::TYPE:
+			On(Packet::As<Packet::EntityUpdate>(udp_pack));
 			break;
 		default:
 			// drop unknown or unhandled packets

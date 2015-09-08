@@ -99,6 +99,40 @@ struct Packet {
 		void ReadPlayer(Entity &) const noexcept;
 	};
 
+	struct SpawnEntity : public Payload {
+		static constexpr std::uint8_t TYPE = 5;
+		static constexpr std::size_t MAX_LEN = 128;
+
+		void WriteEntity(const Entity &) noexcept;
+		void ReadEntityID(std::uint32_t &) const noexcept;
+		void ReadEntity(Entity &) const noexcept;
+	};
+
+	struct DespawnEntity : public Payload {
+		static constexpr std::uint8_t TYPE = 6;
+		static constexpr std::size_t MAX_LEN = 4;
+
+		void WriteEntityID(std::uint32_t) noexcept;
+		void ReadEntityID(std::uint32_t &) const noexcept;
+	};
+
+	struct EntityUpdate : public Payload {
+		static constexpr std::uint8_t TYPE = 7;
+		static constexpr std::size_t MAX_LEN = 452;
+
+		static constexpr std::uint32_t MAX_ENTITIES = 7;
+		static constexpr std::size_t GetSize(std::uint32_t num) noexcept {
+			return 4 + (num * 64);
+		}
+
+		void WriteEntityCount(std::uint32_t) noexcept;
+		void ReadEntityCount(std::uint32_t &) const noexcept;
+
+		void WriteEntity(const Entity &, std::uint32_t) noexcept;
+		void ReadEntityID(std::uint32_t &, std::uint32_t) const noexcept;
+		void ReadEntity(Entity &, std::uint32_t) const noexcept;
+	};
+
 
 	template<class PayloadType>
 	PayloadType As() {

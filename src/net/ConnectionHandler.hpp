@@ -26,6 +26,9 @@ private:
 	virtual void On(const Packet::Join &) { }
 	virtual void On(const Packet::Part &) { }
 	virtual void On(const Packet::PlayerUpdate &) { }
+	virtual void On(const Packet::SpawnEntity &) { }
+	virtual void On(const Packet::DespawnEntity &) { }
+	virtual void On(const Packet::EntityUpdate &) { }
 
 };
 
