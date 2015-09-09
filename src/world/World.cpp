@@ -1,5 +1,6 @@
 #include "World.hpp"
 
+#include "ChunkIndex.hpp"
 #include "EntityCollision.hpp"
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
@@ -14,56 +15,59 @@
 
 namespace blank {
 
-World::World(const BlockTypeRegistry &types, const Config &config, const WorldSave &save)
+World::World(const BlockTypeRegistry &types, const Config &config)
 : config(config)
 , block_type(types)
-, generate(config.gen)
-, chunks(config.load, types, generate, save)
+, chunks(types)
+// TODO: set spawn base and extent from config
+, spawn_index(chunks.MakeIndex(Chunk::Pos(0, 0, 0), 3))
 , players()
 , entities()
 , light_direction(config.light_direction)
 , fog_density(config.fog_density) {
-	generate.Space(0);
-	generate.Light(13);
-	generate.Solids({ 1, 4, 7, 10 });
+
+}
+
+World::~World() {
+	chunks.UnregisterIndex(spawn_index);
 }
 
 
-Entity *World::AddPlayer(const std::string &name) {
-	for (Entity *e : players) {
-		if (e->Name() == name) {
-			return nullptr;
+Player World::AddPlayer(const std::string &name) {
+	for (Player &p : players) {
+		if (p.entity->Name() == name) {
+			return { nullptr, nullptr };
 		}
 	}
-	Entity &player = AddEntity();
-	player.Name(name);
+	Entity &entity = AddEntity();
+	entity.Name(name);
 	// TODO: load from save file here
-	player.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
-	player.WorldCollidable(true);
-	player.Position(config.spawn);
-	players.push_back(&player);
-	chunks.QueueSurrounding(player.ChunkCoords());
-	return &player;
+	entity.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	entity.WorldCollidable(true);
+	entity.Position(config.spawn);
+	ChunkIndex *index = &chunks.MakeIndex(entity.ChunkCoords(), 6);
+	players.emplace_back(&entity, index);
+	return players.back();
 }
 
-Entity *World::AddPlayer(const std::string &name, std::uint32_t id) {
-	for (Entity *e : players) {
-		if (e->Name() == name) {
-			return nullptr;
+Player World::AddPlayer(const std::string &name, std::uint32_t id) {
+	for (Player &p : players) {
+		if (p.entity->Name() == name) {
+			return { nullptr, nullptr };
 		}
 	}
-	Entity *player = AddEntity(id);
-	if (!player) {
-		return nullptr;
+	Entity *entity = AddEntity(id);
+	if (!entity) {
+		return { nullptr, nullptr };
 	}
-	player->Name(name);
+	entity->Name(name);
 	// TODO: load from save file here
-	player->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
-	player->WorldCollidable(true);
-	player->Position(config.spawn);
-	players.push_back(player);
-	chunks.QueueSurrounding(player->ChunkCoords());
-	return player;
+	entity->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	entity->WorldCollidable(true);
+	entity->Position(config.spawn);
+	ChunkIndex *index = &chunks.MakeIndex(entity->ChunkCoords(), 6);
+	players.emplace_back(entity, index);
+	return players.back();
 }
 
 Entity &World::AddEntity() {
@@ -134,7 +138,7 @@ bool World::Intersection(
 ) {
 	candidates.clear();
 
-	for (Chunk &cur_chunk : chunks.Loaded()) {
+	for (Chunk &cur_chunk : chunks) {
 		float cur_dist;
 		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(reference), cur_dist)) {
 			candidates.push_back({ &cur_chunk, cur_dist });
@@ -194,7 +198,7 @@ bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 	Chunk::Pos reference = e.ChunkCoords();
 	glm::mat4 M = e.Transform(reference);
 	bool any = false;
-	for (Chunk &cur_chunk : chunks.Loaded()) {
+	for (Chunk &cur_chunk : chunks) {
 		if (manhattan_radius(cur_chunk.Position() - e.ChunkCoords()) > 1) {
 			// chunk is not one of the 3x3x3 surrounding the entity
 			// since there's no entity which can extent over 16 blocks, they can be skipped
@@ -225,6 +229,9 @@ void World::Update(int dt) {
 			Resolve(entity, col);
 		}
 	}
+	for (Player &player : players) {
+		player.chunks->Rebase(player.entity->ChunkCoords());
+	}
 	for (auto iter = entities.begin(), end = entities.end(); iter != end;) {
 		if (iter->CanRemove()) {
 			iter = RemoveEntity(iter);
@@ -232,9 +239,6 @@ void World::Update(int dt) {
 			++iter;
 		}
 	}
-	// TODO: make flexible
-	chunks.Rebase(players[0]->ChunkCoords());
-	chunks.Update(dt);
 }
 
 void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
@@ -271,9 +275,13 @@ void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
 
 World::EntityHandle World::RemoveEntity(EntityHandle &eh) {
 	// check for player
-	auto player = std::find(players.begin(), players.end(), &*eh);
-	if (player != players.end()) {
-		players.erase(player);
+	for (auto player = players.begin(), end = players.end(); player != end;) {
+		if (player->entity == &*eh) {
+			chunks.UnregisterIndex(*player->chunks);
+			player = players.erase(player);
+		} else {
+			++player;
+		}
 	}
 	return entities.erase(eh);
 }
@@ -285,7 +293,7 @@ void World::Render(Viewport &viewport) {
 	entity_prog.SetFogDensity(fog_density);
 
 	for (Entity &entity : entities) {
-		entity.Render(entity.ChunkTransform(players[0]->ChunkCoords()), entity_prog);
+		entity.Render(entity.ChunkTransform(players[0].entity->ChunkCoords()), entity_prog);
 	}
 }
 

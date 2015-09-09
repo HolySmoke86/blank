@@ -46,14 +46,14 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
 , block_types()
 , save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetClientConf().host))
-, world(block_types, master.GetWorldConf(), save)
-, chunk_renderer(world, master.GetWorldConf().load.load_dist)
+, world(block_types, master.GetWorldConf())
 , interface(
 	master.GetInterfaceConf(),
 	master.GetEnv(),
 	world,
-	*world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
-) {
+	world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
+)
+, chunk_renderer(*interface.GetPlayer().chunks) {
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
@@ -99,21 +99,23 @@ void InteractiveState::Update(int dt) {
 
 	interface.Update(dt);
 	world.Update(dt);
-	chunk_renderer.Rebase(interface.Player().ChunkCoords());
 	chunk_renderer.Update(dt);
 
-	master.GetClient().SendPlayerUpdate(interface.Player());
+	Entity &player = *interface.GetPlayer().entity;
 
-	glm::mat4 trans = interface.Player().Transform(interface.Player().ChunkCoords());
+	master.GetClient().SendPlayerUpdate(player);
+
+	glm::mat4 trans = player.Transform(player.ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	master.GetEnv().audio.Position(interface.Player().Position());
-	master.GetEnv().audio.Velocity(interface.Player().Velocity());
+	master.GetEnv().audio.Position(player.Position());
+	master.GetEnv().audio.Velocity(player.Velocity());
 	master.GetEnv().audio.Orientation(dir, up);
 }
 
 void InteractiveState::Render(Viewport &viewport) {
-	viewport.WorldPosition(interface.Player().Transform(interface.Player().ChunkCoords()));
+	Entity &player = *interface.GetPlayer().entity;
+	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
 	chunk_renderer.Render(viewport);
 	world.Render(viewport);
 	interface.Render(viewport);
@@ -195,7 +197,7 @@ void MasterState::On(const Packet::Join &pack) {
 	pack.ReadPlayerID(player_id);
 	state.reset(new InteractiveState(*this, player_id));
 
-	pack.ReadPlayer(state->GetInterface().Player());
+	pack.ReadPlayer(*state->GetInterface().GetPlayer().entity);
 
 	env.state.PopAfter(this);
 	env.state.Push(state.get());

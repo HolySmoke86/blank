@@ -1,10 +1,17 @@
 #include "BlockLookup.hpp"
 #include "Chunk.hpp"
+#include "ChunkIndex.hpp"
 #include "ChunkLoader.hpp"
+#include "ChunkRenderer.hpp"
+#include "ChunkStore.hpp"
 
 #include "Generator.hpp"
 #include "WorldCollision.hpp"
+#include "../app/Assets.hpp"
+#include "../graphics/BlockLighting.hpp"
+#include "../graphics/Viewport.hpp"
 #include "../io/WorldSave.hpp"
+#include "../model/BlockModel.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -26,6 +33,7 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 , blocks{}
 , light{0}
 , position(0, 0, 0)
+, ref_count(0)
 , dirty_model(false)
 , dirty_save(false) {
 
@@ -212,11 +220,17 @@ void edge_light(
 
 }
 
-void Chunk::SetNeighbor(Chunk &other) noexcept {
-	if (other.position == position + Pos(-1, 0, 0)) {
-		if (neighbor[Block::FACE_LEFT] != &other) {
-			neighbor[Block::FACE_LEFT] = &other;
-			other.neighbor[Block::FACE_RIGHT] = this;
+void Chunk::SetNeighbor(Block::Face face, Chunk &other) noexcept {
+	neighbor[face] = &other;
+	other.neighbor[Block::Opposite(face)] = this;
+
+	switch (face) {
+
+		default:
+			// error
+			break;
+
+		case Block::FACE_LEFT:
 			for (int z = 0; z < depth; ++z) {
 				for (int y = 0; y < height; ++y) {
 					Pos my_pos(0, y, z);
@@ -225,12 +239,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
-			work_light();
-		}
-	} else if (other.position == position + Pos(1, 0, 0)) {
-		if (neighbor[Block::FACE_RIGHT] != &other) {
-			neighbor[Block::FACE_RIGHT] = &other;
-			other.neighbor[Block::FACE_LEFT] = this;
+			break;
+
+		case Block::FACE_RIGHT:
 			for (int z = 0; z < depth; ++z) {
 				for (int y = 0; y < height; ++y) {
 					Pos my_pos(width - 1, y, z);
@@ -239,12 +250,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
-			work_light();
-		}
-	} else if (other.position == position + Pos(0, -1, 0)) {
-		if (neighbor[Block::FACE_DOWN] != &other) {
-			neighbor[Block::FACE_DOWN] = &other;
-			other.neighbor[Block::FACE_UP] = this;
+			break;
+
+		case Block::FACE_DOWN:
 			for (int z = 0; z < depth; ++z) {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, 0, z);
@@ -253,12 +261,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
-			work_light();
-		}
-	} else if (other.position == position + Pos(0, 1, 0)) {
-		if (neighbor[Block::FACE_UP] != &other) {
-			neighbor[Block::FACE_UP] = &other;
-			other.neighbor[Block::FACE_DOWN] = this;
+			break;
+
+		case Block::FACE_UP:
 			for (int z = 0; z < depth; ++z) {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, height - 1, z);
@@ -267,12 +272,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
-			work_light();
-		}
-	} else if (other.position == position + Pos(0, 0, -1)) {
-		if (neighbor[Block::FACE_BACK] != &other) {
-			neighbor[Block::FACE_BACK] = &other;
-			other.neighbor[Block::FACE_FRONT] = this;
+			break;
+
+		case Block::FACE_BACK:
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, y, 0);
@@ -281,12 +283,9 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
-			work_light();
-		}
-	} else if (other.position == position + Pos(0, 0, 1)) {
-		if (neighbor[Block::FACE_FRONT] != &other) {
-			neighbor[Block::FACE_FRONT] = &other;
-			other.neighbor[Block::FACE_BACK] = this;
+			break;
+
+		case Block::FACE_FRONT:
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
 					Pos my_pos(x, y, depth - 1);
@@ -295,12 +294,13 @@ void Chunk::SetNeighbor(Chunk &other) noexcept {
 					edge_light(other, other_pos, *this, my_pos);
 				}
 			}
-			work_light();
-		}
+			break;
+
 	}
+	work_light();
 }
 
-void Chunk::ClearNeighbors() noexcept {
+void Chunk::Unlink() noexcept {
 	for (int face = 0; face < Block::FACE_COUNT; ++face) {
 		if (neighbor[face]) {
 			neighbor[face]->neighbor[Block::Opposite(Block::Face(face))] = nullptr;
@@ -627,241 +627,35 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face) noexce
 
 
 ChunkLoader::ChunkLoader(
-	const Config &config,
-	const BlockTypeRegistry &reg,
+	ChunkStore &store,
 	const Generator &gen,
 	const WorldSave &save
 ) noexcept
-: base(0, 0, 0)
-, reg(reg)
+: store(store)
 , gen(gen)
-, save(save)
-, loaded()
-, to_load()
-, to_free()
-, gen_timer(config.gen_limit)
-, load_dist(config.load_dist)
-, unload_dist(config.unload_dist) {
-	gen_timer.Start();
-}
+, save(save) {
 
-namespace {
-
-struct ChunkLess {
-
-	explicit ChunkLess(const Chunk::Pos &base) noexcept
-	: base(base) { }
-
-	bool operator ()(const Chunk::Pos &a, const Chunk::Pos &b) const noexcept {
-		Chunk::Pos da(base - a);
-		Chunk::Pos db(base - b);
-		return
-			da.x * da.x + da.y * da.y + da.z * da.z <
-			db.x * db.x + db.y * db.y + db.z * db.z;
-	}
-
-	Chunk::Pos base;
-
-};
-
-}
-
-void ChunkLoader::Queue(const Chunk::Pos &from, const Chunk::Pos &to) {
-	for (int z = from.z; z < to.z; ++z) {
-		for (int y = from.y; y < to.y; ++y) {
-			for (int x = from.x; x < to.x; ++x) {
-				Chunk::Pos pos(x, y, z);
-				if (Known(pos)) {
-					continue;
-				} else if (pos == base) {
-					Load(pos);
-
-				//	light testing
-				//	for (int i = 0; i < 16; ++i) {
-				//		for (int j = 0; j < 16; ++j) {
-				//			loaded.back().SetBlock(Chunk::Pos{  i, j,  0 }, Block(1));
-				//			loaded.back().SetBlock(Chunk::Pos{  i, j, 15 }, Block(1));
-				//			loaded.back().SetBlock(Chunk::Pos{  0, j,  i }, Block(1));
-				//			loaded.back().SetBlock(Chunk::Pos{ 15, j,  i }, Block(1));
-				//		}
-				//	}
-				//	loaded.back().SetBlock(Chunk::Pos{  1,  0,  1 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 14,  0,  1 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  1,  0, 14 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 14,  0, 14 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  1, 15,  1 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 14, 15,  1 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  1, 15, 14 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 14, 15, 14 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  7,  7,  0 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  8,  7,  0 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  7,  8,  0 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  8,  8,  0 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  7,  7, 15 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  8,  7, 15 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  7,  8, 15 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  8,  8, 15 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  0,  7,  7 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  0,  7,  8 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  0,  8,  7 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{  0,  8,  8 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 15,  7,  7 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 15,  7,  8 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 15,  8,  7 }, Block(13));
-				//	loaded.back().SetBlock(Chunk::Pos{ 15,  8,  8 }, Block(13));
-				//	loaded.back().Invalidate();
-				//	loaded.back().CheckUpdate();
-
-				//	orientation testing
-				//	for (int i = 0; i < Block::FACE_COUNT; ++i) {
-				//		for (int j = 0; j < Block::TURN_COUNT; ++j) {
-				//			loaded.back().BlockAt(512 * j + 2 * i) = Block(3 * (j + 1), Block::Face(i), Block::Turn(j));
-				//		}
-				//	}
-				//	loaded.back().Invalidate();
-				//	loaded.back().CheckUpdate();
-				} else {
-					to_load.emplace_back(pos);
-				}
-			}
-		}
-	}
-	to_load.sort(ChunkLess(base));
-}
-
-Chunk &ChunkLoader::Load(const Chunk::Pos &pos) {
-	loaded.emplace_back(reg);
-	Chunk &chunk = loaded.back();
-	chunk.Position(pos);
-	if (save.Exists(pos)) {
-		save.Read(chunk);
-	} else {
-		gen(chunk);
-	}
-	Insert(chunk);
-	return chunk;
-}
-
-void ChunkLoader::Insert(Chunk &chunk) noexcept {
-	for (Chunk &other : loaded) {
-		chunk.SetNeighbor(other);
-	}
-}
-
-std::list<Chunk>::iterator ChunkLoader::Remove(std::list<Chunk>::iterator chunk) noexcept {
-	// fetch next entry while chunk's still in the list
-	std::list<Chunk>::iterator next = chunk;
-	++next;
-	// unlink neighbors so they won't reference a dead chunk
-	chunk->ClearNeighbors();
-	// if it should be saved, do it now
-	if (chunk->ShouldUpdateSave()) {
-		save.Write(*chunk);
-	}
-	// and move it from loaded to free list
-	to_free.splice(to_free.end(), loaded, chunk);
-	return next;
-}
-
-Chunk *ChunkLoader::Loaded(const Chunk::Pos &pos) noexcept {
-	for (Chunk &chunk : loaded) {
-		if (chunk.Position() == pos) {
-			return &chunk;
-		}
-	}
-	return nullptr;
-}
-
-bool ChunkLoader::Queued(const Chunk::Pos &pos) noexcept {
-	for (const Chunk::Pos &chunk : to_load) {
-		if (chunk == pos) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool ChunkLoader::Known(const Chunk::Pos &pos) noexcept {
-	if (Loaded(pos)) return true;
-	return Queued(pos);
-}
-
-Chunk &ChunkLoader::ForceLoad(const Chunk::Pos &pos) {
-	Chunk *chunk = Loaded(pos);
-	if (chunk) {
-		return *chunk;
-	}
-
-	for (auto iter(to_load.begin()), end(to_load.end()); iter != end; ++iter) {
-		if (*iter == pos) {
-			to_load.erase(iter);
-			break;
-		}
-	}
-
-	return Load(pos);
-}
-
-bool ChunkLoader::OutOfRange(const Chunk::Pos &pos) const noexcept {
-	return std::abs(base.x - pos.x) > unload_dist
-			|| std::abs(base.y - pos.y) > unload_dist
-			|| std::abs(base.z - pos.z) > unload_dist;
-}
-
-void ChunkLoader::Rebase(const Chunk::Pos &new_base) {
-	if (new_base == base) {
-		return;
-	}
-	base = new_base;
-
-	// unload far away chunks
-	for (auto iter(loaded.begin()), end(loaded.end()); iter != end;) {
-		if (OutOfRange(*iter)) {
-			iter = Remove(iter);
-		} else {
-			++iter;
-		}
-	}
-	// abort far away queued chunks
-	for (auto iter(to_load.begin()), end(to_load.end()); iter != end;) {
-		if (OutOfRange(*iter)) {
-			iter = to_load.erase(iter);
-		} else {
-			++iter;
-		}
-	}
-	// add missing new chunks
-	QueueSurrounding(base);
-}
-
-void ChunkLoader::QueueSurrounding(const Chunk::Pos &pos) {
-	const Chunk::Pos offset(load_dist, load_dist, load_dist);
-	Queue(pos - offset, pos + offset);
 }
 
 void ChunkLoader::Update(int dt) {
-	// check if a chunk load is scheduled for this frame
-	// and if there's chunks waiting to be loaded
-	gen_timer.Update(dt);
-	if (gen_timer.Hit()) {
-		// we may
-		// load until one of load or generation limits was hit
-		constexpr int max_load = 10;
-		constexpr int max_gen = 1;
-		int loaded = 0;
-		int generated = 0;
-		while (!to_load.empty() && loaded < max_load && generated < max_gen) {
-			if (LoadOne()) {
-				++generated;
-			} else {
-				++loaded;
-			}
+	// check if there's chunks waiting to be loaded
+	// load until one of load or generation limits was hit
+	constexpr int max_load = 10;
+	constexpr int max_gen = 1;
+	int loaded = 0;
+	int generated = 0;
+	while (loaded < max_load && generated < max_gen && store.HasMissing()) {
+		if (LoadOne()) {
+			++generated;
+		} else {
+			++loaded;
 		}
 	}
 
+	// store a few chunks as well
 	constexpr int max_save = 10;
 	int saved = 0;
-	for (Chunk &chunk : loaded) {
+	for (Chunk &chunk : store) {
 		if (chunk.ShouldUpdateSave()) {
 			save.Write(chunk);
 			++saved;
@@ -872,49 +666,377 @@ void ChunkLoader::Update(int dt) {
 	}
 }
 
+int ChunkLoader::ToLoad() const noexcept {
+	return store.EstimateMissing();
+}
+
+bool ChunkLoader::LoadOne() {
+	if (!store.HasMissing()) return false;
+
+	Chunk::Pos pos = store.NextMissing();
+	Chunk *chunk = store.Allocate(pos);
+	if (!chunk) {
+		// chunk store corrupted?
+		return false;
+	}
+
+	if (save.Exists(pos)) {
+		save.Read(*chunk);
+		return false;
+	} else {
+		gen(*chunk);
+		return true;
+	}
+}
+
 void ChunkLoader::LoadN(std::size_t n) {
-	std::size_t end = std::min(n, ToLoad());
-	for (std::size_t i = 0; i < end; ++i) {
+	std::size_t end = std::min(n, std::size_t(ToLoad()));
+	for (std::size_t i = 0; i < end && store.HasMissing(); ++i) {
 		LoadOne();
 	}
 }
 
-bool ChunkLoader::LoadOne() {
-	if (to_load.empty()) return false;
 
-	// take position of next chunk in queue
-	Chunk::Pos pos(to_load.front());
-	to_load.pop_front();
+ChunkRenderer::ChunkRenderer(ChunkIndex &index)
+: index(index)
+, models(index.TotalChunks())
+, block_tex()
+, fog_density(0.0f) {
 
-	// look if the same chunk was already generated and still lingering
-	for (auto iter(to_free.begin()), end(to_free.end()); iter != end; ++iter) {
-		if (iter->Position() == pos) {
-			loaded.splice(loaded.end(), to_free, iter);
-			Insert(loaded.back());
-			return false;
+}
+
+ChunkRenderer::~ChunkRenderer() {
+
+}
+
+int ChunkRenderer::MissingChunks() const noexcept {
+	return index.MissingChunks();
+}
+
+void ChunkRenderer::LoadTextures(const AssetLoader &loader, const TextureIndex &tex_index) {
+	block_tex.Bind();
+	loader.LoadTextures(tex_index, block_tex);
+	block_tex.FilterNearest();
+}
+
+void ChunkRenderer::Update(int dt) {
+	for (int i = 0, updates = 0; updates < dt && i < index.TotalChunks(); ++i) {
+		if (index[i] && index[i]->ShouldUpdateModel()) {
+			index[i]->Update(models[i]);
+			++updates;
 		}
 	}
+}
 
-	// if the free list is empty, allocate a new chunk
-	// otherwise clear an unused one
-	if (to_free.empty()) {
-		loaded.emplace_back(reg);
+void ChunkRenderer::Render(Viewport &viewport) {
+	BlockLighting &chunk_prog = viewport.ChunkProgram();
+	chunk_prog.SetTexture(block_tex);
+	chunk_prog.SetFogDensity(fog_density);
+
+	for (int i = 0; i < index.TotalChunks(); ++i) {
+		if (!index[i]) continue;
+		glm::mat4 m(index[i]->Transform(index.Base()));
+		glm::mat4 mvp(chunk_prog.GetVP() * m);
+		if (!CullTest(Chunk::Bounds(), mvp)) {
+			if (index[i]->ShouldUpdateModel()) {
+				index[i]->Update(models[i]);
+			}
+			chunk_prog.SetM(m);
+			models[i].Draw();
+		}
+	}
+}
+
+
+ChunkIndex::ChunkIndex(ChunkStore &store, const Chunk::Pos &base, int extent)
+: store(store)
+, base(base)
+, extent(extent)
+, side_length(2 * extent + 1)
+, total_length(side_length * side_length * side_length)
+, total_indexed(0)
+, last_missing(0)
+, stride(1, side_length, side_length * side_length)
+, chunks(total_length, nullptr) {
+	Scan();
+}
+
+ChunkIndex::~ChunkIndex() {
+	Clear();
+}
+
+bool ChunkIndex::InRange(const Chunk::Pos &pos) const noexcept {
+	return manhattan_radius(pos - base) <= extent;
+}
+
+int ChunkIndex::IndexOf(const Chunk::Pos &pos) const noexcept {
+	Chunk::Pos mod_pos(
+		GetCol(pos.x),
+		GetCol(pos.y),
+		GetCol(pos.z)
+	);
+	return mod_pos.x * stride.x
+		+  mod_pos.y * stride.y
+		+  mod_pos.z * stride.z;
+}
+
+Chunk::Pos ChunkIndex::PositionOf(int i) const noexcept {
+	Chunk::Pos zero_pos(
+		(i / stride.x) % side_length,
+		(i / stride.y) % side_length,
+		(i / stride.z) % side_length
+	);
+	Chunk::Pos zero_base(
+		GetCol(base.x),
+		GetCol(base.y),
+		GetCol(base.z)
+	);
+	Chunk::Pos base_relative(zero_pos - zero_base);
+	if (base_relative.x > extent) base_relative.x -= side_length;
+	else if (base_relative.x < -extent) base_relative.x += side_length;
+	if (base_relative.y > extent) base_relative.y -= side_length;
+	else if (base_relative.y < -extent) base_relative.y += side_length;
+	if (base_relative.z > extent) base_relative.z -= side_length;
+	else if (base_relative.z < -extent) base_relative.z += side_length;
+	return base + base_relative;
+}
+
+Chunk *ChunkIndex::Get(const Chunk::Pos &pos) noexcept {
+	if (InRange(pos)) {
+		return chunks[IndexOf(pos)];
 	} else {
-		to_free.front().ClearNeighbors();
-		loaded.splice(loaded.end(), to_free, to_free.begin());
+		return nullptr;
+	}
+}
+
+const Chunk *ChunkIndex::Get(const Chunk::Pos &pos) const noexcept {
+	if (InRange(pos)) {
+		return chunks[IndexOf(pos)];
+	} else {
+		return nullptr;
+	}
+}
+
+void ChunkIndex::Rebase(const Chunk::Pos &new_base) {
+	if (new_base == base) return;
+
+	Chunk::Pos diff(new_base - base);
+
+	if (manhattan_radius(diff) > extent) {
+		// that's more than half, so probably not worth shifting
+		base = new_base;
+		Clear();
+		Scan();
+		store.Clean();
+		return;
 	}
 
-	bool generated = false;
-	Chunk &chunk = loaded.back();
-	chunk.Position(pos);
-	if (save.Exists(pos)) {
-		save.Read(chunk);
-	} else {
-		gen(chunk);
-		generated = true;
+	while (diff.x > 0) {
+		Shift(Block::FACE_RIGHT);
+		--diff.x;
 	}
-	Insert(chunk);
-	return generated;
+	while (diff.x < 0) {
+		Shift(Block::FACE_LEFT);
+		++diff.x;
+	}
+	while (diff.y > 0) {
+		Shift(Block::FACE_UP);
+		--diff.y;
+	}
+	while (diff.y < 0) {
+		Shift(Block::FACE_DOWN);
+		++diff.y;
+	}
+	while (diff.z > 0) {
+		Shift(Block::FACE_FRONT);
+		--diff.z;
+	}
+	while (diff.z < 0) {
+		Shift(Block::FACE_BACK);
+		++diff.z;
+	}
+	store.Clean();
+}
+
+int ChunkIndex::GetCol(int c) const noexcept {
+	c %= side_length;
+	if (c < 0) c += side_length;
+	return c;
+}
+
+void ChunkIndex::Shift(Block::Face f) {
+	int a_axis = Block::Axis(f);
+	int b_axis = (a_axis + 1) % 3;
+	int c_axis = (a_axis + 2) % 3;
+	int dir = Block::Direction(f);
+	base[a_axis] += dir;
+	int a = GetCol(base[a_axis] + (extent * dir));
+	int a_stride = a * stride[a_axis];
+	for (int b = 0; b < side_length; ++b) {
+		int b_stride = b * stride[b_axis];
+		for (int c = 0; c < side_length; ++c) {
+			int bc_stride = b_stride + c * stride[c_axis];
+			int index = a_stride + bc_stride;
+			Unset(index);
+			int neighbor = ((a - dir + side_length) % side_length) * stride[a_axis] + bc_stride;
+			if (chunks[neighbor] && chunks[neighbor]->HasNeighbor(f)) {
+				Set(index, chunks[neighbor]->GetNeighbor(f));
+			}
+		}
+	}
+}
+
+void ChunkIndex::Clear() noexcept {
+	for (int i = 0; i < total_length && total_indexed > 0; ++i) {
+		Unset(i);
+	}
+}
+
+void ChunkIndex::Scan() noexcept {
+	for (Chunk &chunk : store) {
+		Register(chunk);
+	}
+}
+
+void ChunkIndex::Register(Chunk &chunk) noexcept {
+	if (InRange(chunk.Position())) {
+		Set(IndexOf(chunk.Position()), chunk);
+	}
+}
+
+void ChunkIndex::Set(int index, Chunk &chunk) noexcept {
+	Unset(index);
+	chunks[index] = &chunk;
+	chunk.Ref();
+	++total_indexed;
+}
+
+void ChunkIndex::Unset(int index) noexcept {
+	if (chunks[index]) {
+		chunks[index]->UnRef();
+		chunks[index] = nullptr;
+		--total_indexed;
+	}
+}
+
+Chunk::Pos ChunkIndex::NextMissing() noexcept {
+	int roundtrip = last_missing;
+	while (chunks[last_missing]) {
+		++last_missing;
+		last_missing %= total_length;
+		if (last_missing == roundtrip) {
+			break;
+		}
+	}
+	return PositionOf(last_missing);
+}
+
+
+ChunkStore::ChunkStore(const BlockTypeRegistry &types)
+: types(types)
+, loaded()
+, free()
+, indices() {
+
+}
+
+ChunkStore::~ChunkStore() {
+
+}
+
+ChunkIndex &ChunkStore::MakeIndex(const Chunk::Pos &pos, int extent) {
+	indices.emplace_back(*this, pos, extent);
+	return indices.back();
+}
+
+void ChunkStore::UnregisterIndex(ChunkIndex &index) {
+	for (auto i = indices.begin(), end = indices.end(); i != end; ++i) {
+		if (&*i == &index) {
+			indices.erase(i);
+			return;
+		} else {
+			++i;
+		}
+	}
+}
+
+Chunk *ChunkStore::Get(const Chunk::Pos &pos) {
+	for (ChunkIndex &index : indices) {
+		Chunk *chunk = index.Get(pos);
+		if (chunk) {
+			return chunk;
+		}
+	}
+	return nullptr;
+}
+
+Chunk *ChunkStore::Allocate(const Chunk::Pos &pos) {
+	Chunk *chunk = Get(pos);
+	if (chunk) {
+		return chunk;
+	}
+	if (free.empty()) {
+		loaded.emplace(loaded.begin(), types);
+	} else {
+		loaded.splice(loaded.begin(), free, free.begin());
+		loaded.front().Unlink();
+	}
+	chunk = &loaded.front();
+	chunk->Position(pos);
+	for (ChunkIndex &index : indices) {
+		if (index.InRange(pos)) {
+			index.Register(*chunk);
+		}
+	}
+	for (int i = 0; i < Block::FACE_COUNT; ++i) {
+		Block::Face face = Block::Face(i);
+		Chunk::Pos neighbor_pos(pos + Block::FaceNormal(face));
+		Chunk *neighbor = Get(neighbor_pos);
+		if (neighbor) {
+			chunk->SetNeighbor(face, *neighbor);
+		}
+	}
+	return chunk;
+}
+
+bool ChunkStore::HasMissing() const noexcept {
+	for (const ChunkIndex &index : indices) {
+		if (index.MissingChunks() > 0) {
+			return true;
+		}
+	}
+	return false;
+}
+
+int ChunkStore::EstimateMissing() const noexcept {
+	int missing = 0;
+	for (const ChunkIndex &index : indices) {
+		missing += index.MissingChunks();
+	}
+	return missing;
+}
+
+Chunk::Pos ChunkStore::NextMissing() noexcept {
+	for (ChunkIndex &index : indices) {
+		if (index.MissingChunks()) {
+			return index.NextMissing();
+		}
+	}
+	return Chunk::Pos(0, 0, 0);
+}
+
+void ChunkStore::Clean() {
+	for (auto i = loaded.begin(), end = loaded.end(); i != end;) {
+		if (i->Referenced()) {
+			++i;
+		} else {
+			auto chunk = i;
+			++i;
+			free.splice(free.end(), loaded, chunk);
+			chunk->Unlink();
+			chunk->InvalidateModel();
+		}
+	}
 }
 
 }

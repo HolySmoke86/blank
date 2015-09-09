@@ -11,15 +11,18 @@ namespace blank {
 
 ServerState::ServerState(
 	HeadlessEnvironment &env,
+	const Generator::Config &gc,
 	const World::Config &wc,
 	const WorldSave &ws,
 	const Server::Config &sc
 )
 : env(env)
 , block_types()
-, world(block_types, wc, ws)
+, world(block_types, wc)
+, generator(gc)
+, chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
-, spawner(world, skeletons, wc.gen.seed)
+, spawner(world, skeletons, gc.seed)
 , server(sc, world)
 , push_timer(16) {
 	TextureIndex tex_index;

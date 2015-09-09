@@ -11,6 +11,7 @@
 #include "../model/OutlineModel.hpp"
 #include "../world/Block.hpp"
 #include "../world/EntityCollision.hpp"
+#include "../world/Player.hpp"
 #include "../world/WorldCollision.hpp"
 
 #include <string>
@@ -41,10 +42,9 @@ public:
 		bool visual_disabled = false;
 	};
 
-	Interface(const Config &, Environment &, World &, Entity &);
+	Interface(const Config &, Environment &, World &, const Player &);
 
-	Entity &Player() noexcept { return ctrl.Controlled(); }
-	const Entity &Player() const noexcept { return ctrl.Controlled(); }
+	const Player &GetPlayer() noexcept { return player; }
 
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
@@ -91,6 +91,7 @@ private:
 private:
 	Environment &env;
 	World &world;
+	Player player;
 	FPSController ctrl;
 	HUD hud;
 

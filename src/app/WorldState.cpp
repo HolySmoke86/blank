@@ -11,19 +11,22 @@ namespace blank {
 
 WorldState::WorldState(
 	Environment &env,
+	const Generator::Config &gc,
 	const Interface::Config &ic,
 	const World::Config &wc,
 	const WorldSave &save
 )
 : env(env)
 , block_types()
-, world(block_types, wc, save)
-, chunk_renderer(world, wc.load.load_dist)
+, world(block_types, wc)
+, interface(ic, env, world, world.AddPlayer(ic.player_name))
+, generator(gc)
+, chunk_loader(world.Chunks(), generator, save)
+, chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
-, spawner(world, skeletons, wc.gen.seed)
-, interface(ic, env, world, *world.AddPlayer(ic.player_name))
-, preload(env, world.Loader(), chunk_renderer)
-, unload(env, world.Loader()) {
+, spawner(world, skeletons, gc.seed)
+, preload(env, chunk_loader, chunk_renderer)
+, unload(env, world.Chunks(), save) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(env.loader, tex_index);
@@ -72,19 +75,22 @@ void WorldState::Update(int dt) {
 	interface.Update(dt);
 	spawner.Update(dt);
 	world.Update(dt);
-	chunk_renderer.Rebase(interface.Player().ChunkCoords());
+	chunk_loader.Update(dt);
 	chunk_renderer.Update(dt);
 
-	glm::mat4 trans = interface.Player().Transform(interface.Player().ChunkCoords());
+	Entity &player = *interface.GetPlayer().entity;
+
+	glm::mat4 trans = player.Transform(player.ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	env.audio.Position(interface.Player().Position());
-	env.audio.Velocity(interface.Player().Velocity());
+	env.audio.Position(player.Position());
+	env.audio.Velocity(player.Velocity());
 	env.audio.Orientation(dir, up);
 }
 
 void WorldState::Render(Viewport &viewport) {
-	viewport.WorldPosition(interface.Player().Transform(interface.Player().ChunkCoords()));
+	Entity &player = *interface.GetPlayer().entity;
+	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
 	chunk_renderer.Render(viewport);
 	world.Render(viewport);
 	interface.Render(viewport);

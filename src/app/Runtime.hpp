@@ -5,6 +5,7 @@
 #include "../net/Client.hpp"
 #include "../net/Server.hpp"
 #include "../ui/Interface.hpp"
+#include "../world/Generator.hpp"
 #include "../world/World.hpp"
 
 #include <cstddef>
@@ -44,6 +45,7 @@ public:
 		int multisampling = 1;
 
 		Client::Config client = Client::Config();
+		Generator::Config gen = Generator::Config();
 		HeadlessEnvironment::Config env = HeadlessEnvironment::Config();
 		Interface::Config interface = Interface::Config();
 		Server::Config server = Server::Config();

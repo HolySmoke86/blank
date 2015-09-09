@@ -7,12 +7,15 @@
 #include "../model/Skeletons.hpp"
 #include "../net/Server.hpp"
 #include "../world/BlockTypeRegistry.hpp"
+#include "../world/ChunkLoader.hpp"
+#include "../world/Generator.hpp"
 #include "../world/World.hpp"
 
 
 namespace blank {
 
 class HeadlessEnvironment;
+class WorldSave;
 
 class ServerState
 : public State {
@@ -20,6 +23,7 @@ class ServerState
 public:
 	ServerState(
 		HeadlessEnvironment &,
+		const Generator::Config &,
 		const World::Config &,
 		const WorldSave &,
 		const Server::Config &
@@ -33,6 +37,8 @@ private:
 	HeadlessEnvironment &env;
 	BlockTypeRegistry block_types;
 	World world;
+	Generator generator;
+	ChunkLoader chunk_loader;
 	Skeletons skeletons;
 	Spawner spawner;
 	Server server;

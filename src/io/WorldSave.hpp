@@ -2,6 +2,7 @@
 #define BLANK_IO_WORLDSAVE_HPP_
 
 #include "../world/Chunk.hpp"
+#include "../world/Generator.hpp"
 #include "../world/World.hpp"
 
 #include <memory>
@@ -20,6 +21,8 @@ public:
 	bool Exists() const noexcept;
 	void Read(World::Config &) const;
 	void Write(const World::Config &) const;
+	void Read(Generator::Config &) const;
+	void Write(const Generator::Config &) const;
 
 	// single chunk
 	bool Exists(const Chunk::Pos &) const noexcept;
@@ -30,7 +33,8 @@ public:
 
 private:
 	std::string root_path;
-	std::string conf_path;
+	std::string world_conf_path;
+	std::string gen_conf_path;
 	std::string chunk_path;
 	std::size_t chunk_bufsiz;
 	std::unique_ptr<char[]> chunk_buf;

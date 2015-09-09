@@ -37,8 +37,8 @@ private:
 	BlockTypeRegistry block_types;
 	WorldSave save;
 	World world;
-	ChunkRenderer chunk_renderer;
 	Interface interface;
+	ChunkRenderer chunk_renderer;
 
 };
 

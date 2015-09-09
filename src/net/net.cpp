@@ -297,7 +297,7 @@ void ClientConnection::On(const Packet::Login &pack) {
 	string name;
 	pack.ReadPlayerName(name);
 
-	Entity *new_player = server.GetWorld().AddPlayer(name);
+	Entity *new_player = server.GetWorld().AddPlayer(name).entity;
 
 	if (new_player) {
 		// success!

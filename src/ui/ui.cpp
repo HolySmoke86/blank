@@ -103,11 +103,11 @@ Interface::Interface(
 	const Config &config,
 	Environment &env,
 	World &world,
-	Entity &player)
+	const Player &player)
 : env(env)
 , world(world)
-// let's assume this succeeds and hope for the best for now
-, ctrl(player)
+, player(player)
+, ctrl(*player.entity)
 , hud(world.BlockTypes(), env.assets.small_ui_font)
 , aim{{ 0, 0, 0 }, { 0, 0, -1 }}
 , aim_world()
@@ -526,7 +526,7 @@ void Interface::UpdateOutline() {
 	outl_buf.Clear();
 	aim_world.GetType().FillOutlineModel(outl_buf);
 	outline.Update(outl_buf);
-	outline_transform = aim_world.GetChunk().Transform(Player().ChunkCoords());
+	outline_transform = aim_world.GetChunk().Transform(player.entity->ChunkCoords());
 	outline_transform *= aim_world.BlockTransform();
 	outline_transform *= glm::scale(glm::vec3(1.005f));
 }

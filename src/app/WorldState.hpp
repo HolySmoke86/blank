@@ -8,7 +8,9 @@
 #include "../model/Skeletons.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
+#include "../world/ChunkLoader.hpp"
 #include "../world/ChunkRenderer.hpp"
+#include "../world/Generator.hpp"
 #include "../world/World.hpp"
 
 
@@ -22,6 +24,7 @@ class WorldState
 public:
 	WorldState(
 		Environment &,
+		const Generator::Config &,
 		const Interface::Config &,
 		const World::Config &,
 		const WorldSave &
@@ -40,10 +43,12 @@ private:
 	Environment &env;
 	BlockTypeRegistry block_types;
 	World world;
+	Interface interface;
+	Generator generator;
+	ChunkLoader chunk_loader;
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
 	Spawner spawner;
-	Interface interface;
 
 	PreloadState preload;
 	UnloadState unload;

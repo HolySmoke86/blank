@@ -305,7 +305,7 @@ void ChunkTest::testNeighbor() {
 	for (int i = 0; i < Block::FACE_COUNT; ++i) {
 		Block::Face face = Block::Face(i);
 		neighbor->Position(Block::FaceNormal(face));
-		chunk->SetNeighbor(*neighbor);
+		chunk->SetNeighbor(face, *neighbor);
 		CPPUNIT_ASSERT_MESSAGE(
 			"chunk did not link right neighbor",
 			chunk->HasNeighbor(face)
@@ -322,16 +322,7 @@ void ChunkTest::testNeighbor() {
 			"chunk did not link correct neighbor",
 			&*chunk, &neighbor->GetNeighbor(Block::Opposite(face))
 		);
-		chunk->ClearNeighbors();
-	}
-
-	neighbor->Position({1, 1, 1});
-	chunk->SetNeighbor(*neighbor);
-	for (int i = 0; i < Block::FACE_COUNT; ++i) {
-		CPPUNIT_ASSERT_MESSAGE(
-			"chunk linked with non-neighbor",
-			!chunk->HasNeighbor(Block::Face(i))
-		);
+		chunk->Unlink();
 	}
 }
 

@@ -99,11 +99,10 @@ public:
 	bool IsSurface(const Block::Pos &pos) const noexcept { return IsSurface(Pos(pos)); }
 	bool IsSurface(const Pos &pos) const noexcept;
 
-	void SetNeighbor(Chunk &) noexcept;
+	void SetNeighbor(Block::Face, Chunk &) noexcept;
 	bool HasNeighbor(Block::Face f) const noexcept { return neighbor[f]; }
 	Chunk &GetNeighbor(Block::Face f) noexcept { return *neighbor[f]; }
 	const Chunk &GetNeighbor(Block::Face f) const noexcept { return *neighbor[f]; }
-	void ClearNeighbors() noexcept;
 	void Unlink() noexcept;
 
 	// check which faces of a block at given index are obstructed (and therefore invisible)
@@ -159,6 +158,10 @@ public:
 	const void *BlockData() const noexcept { return &blocks[0]; }
 	static constexpr std::size_t BlockSize() noexcept { return sizeof(blocks) + sizeof(light); }
 
+	void Ref() noexcept { ++ref_count; }
+	void UnRef() noexcept { --ref_count; }
+	bool Referenced() const noexcept { return ref_count > 0; }
+
 	void Invalidate() noexcept { dirty_model = dirty_save = true; }
 	void InvalidateModel() noexcept { dirty_model = true; }
 	void ClearModel() noexcept { dirty_model = false; }
@@ -174,6 +177,7 @@ private:
 	Block blocks[size];
 	unsigned char light[size];
 	Pos position;
+	int ref_count;
 	bool dirty_model;
 	bool dirty_save;
 

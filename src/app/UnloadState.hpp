@@ -12,14 +12,15 @@
 namespace blank {
 
 class Chunk;
-class ChunkLoader;
+class ChunkStore;
 class Environment;
+class WorldSave;
 
 class UnloadState
 : public State {
 
 public:
-	UnloadState(Environment &, ChunkLoader &);
+	UnloadState(Environment &, ChunkStore &, const WorldSave &);
 
 	void OnResume();
 
@@ -29,7 +30,8 @@ public:
 
 private:
 	Environment &env;
-	ChunkLoader &loader;
+	ChunkStore &chunks;
+	const WorldSave &save;
 	Progress progress;
 	std::list<Chunk>::iterator cur;
 	std::list<Chunk>::iterator end;

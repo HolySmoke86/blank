@@ -13,9 +13,10 @@ Generator::Generator(const Config &config) noexcept
 , typeNoise(config.seed)
 , stretch(1.0f/config.stretch)
 , solid_threshold(config.solid_threshold)
+// TODO: stable dynamic generator configuration
 , space(0)
-, light(0)
-, solids() {
+, light(13)
+, solids({ 1, 4, 7, 10 }) {
 
 }
 
@@ -47,7 +48,6 @@ void Generator::operator ()(Chunk &chunk) const noexcept {
 			}
 		}
 	}
-	//chunk.CheckUpdate();
 }
 
 }

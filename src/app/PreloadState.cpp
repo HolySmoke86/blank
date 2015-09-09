@@ -27,7 +27,7 @@ void PreloadState::Handle(const SDL_Event &e) {
 
 void PreloadState::Update(int dt) {
 	loader.LoadN(per_update);
-	if (loader.ToLoad() == 0) {
+	if (loader.ToLoad() <= 0) {
 		env.state.Pop();
 		render.Update(render.MissingChunks());
 	} else {

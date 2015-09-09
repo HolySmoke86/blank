@@ -220,7 +220,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 								cerr << "missing argument to -s" << endl;
 								error = true;
 							} else {
-								config.world.gen.seed = strtoul(argv[i], nullptr, 10);
+								config.gen.seed = strtoul(argv[i], nullptr, 10);
 							}
 							break;
 						case 't':
@@ -317,12 +317,14 @@ void Runtime::RunStandalone() {
 	WorldSave save(config.env.GetWorldPath(config.world.name));
 	if (save.Exists()) {
 		save.Read(config.world);
+		save.Read(config.gen);
 	} else {
 		save.Write(config.world);
+		save.Write(config.gen);
 	}
 
 	Application app(env);
-	WorldState world_state(env, config.interface, config.world, save);
+	WorldState world_state(env, config.gen, config.interface, config.world, save);
 	app.PushState(&world_state);
 	Run(app);
 }
@@ -333,12 +335,14 @@ void Runtime::RunServer() {
 	WorldSave save(config.env.GetWorldPath(config.world.name));
 	if (save.Exists()) {
 		save.Read(config.world);
+		save.Read(config.gen);
 	} else {
 		save.Write(config.world);
+		save.Write(config.gen);
 	}
 
 	HeadlessApplication app(env);
-	ServerState server_state(env, config.world, save, config.server);
+	ServerState server_state(env, config.gen, config.world, save, config.server);
 	app.PushState(&server_state);
 	Run(app);
 }
