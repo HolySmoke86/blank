@@ -279,6 +279,7 @@ World::EntityHandle World::RemoveEntity(EntityHandle &eh) {
 		if (player->entity == &*eh) {
 			chunks.UnregisterIndex(*player->chunks);
 			player = players.erase(player);
+			end = players.end();
 		} else {
 			++player;
 		}
