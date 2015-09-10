@@ -5,6 +5,7 @@
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
 #include "../app/TextureIndex.hpp"
+#include "../model/CompositeModel.hpp"
 
 #include <iostream>
 #include <glm/gtx/io.hpp>
@@ -53,11 +54,13 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	world,
 	world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
 )
-, chunk_renderer(*interface.GetPlayer().chunks) {
+, chunk_renderer(*interface.GetPlayer().chunks)
+, skeletons() {
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
+	skeletons.Load();
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
 }
@@ -229,6 +232,12 @@ void MasterState::On(const Packet::SpawnEntity &pack) {
 		return;
 	}
 	pack.ReadEntity(*entity);
+	uint32_t skel_id;
+	pack.ReadSkeletonID(skel_id);
+	CompositeModel *skel = state->GetSkeletons().ByID(skel_id);
+	if (skel) {
+		skel->Instantiate(entity->GetModel());
+	}
 	cout << "spawned entity " << entity->Name() << " at " << entity->AbsolutePosition() << endl;
 }
 

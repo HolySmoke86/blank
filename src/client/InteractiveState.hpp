@@ -3,6 +3,7 @@
 
 #include "../app/State.hpp"
 #include "../io/WorldSave.hpp"
+#include "../model/Skeletons.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"
@@ -25,6 +26,7 @@ public:
 
 	World &GetWorld() noexcept { return world; }
 	Interface &GetInterface() noexcept { return interface; }
+	Skeletons &GetSkeletons() noexcept { return skeletons; }
 
 	void OnEnter() override;
 
@@ -39,6 +41,7 @@ private:
 	World world;
 	Interface interface;
 	ChunkRenderer chunk_renderer;
+	Skeletons skeletons;
 
 };
 

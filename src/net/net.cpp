@@ -7,6 +7,7 @@
 #include "Server.hpp"
 
 #include "../app/init.hpp"
+#include "../model/CompositeModel.hpp"
 #include "../world/World.hpp"
 
 #include <cstring>
@@ -596,22 +597,31 @@ void Packet::PlayerUpdate::ReadPlayer(Entity &player) const noexcept {
 
 void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
 	Write(e.ID(), 0);
-	Write(e.ChunkCoords(), 4);
-	Write(e.Position(), 16);
-	Write(e.Velocity(), 28);
-	Write(e.Orientation(), 40);
-	Write(e.AngularVelocity(), 56);
-	Write(e.Bounds(), 68);
+	if (e.GetModel()) {
+		Write(e.GetModel().GetModel().ID(), 4);
+	} else {
+		Write(uint32_t(0), 4);
+	}
+	Write(e.ChunkCoords(), 8);
+	Write(e.Position(), 20);
+	Write(e.Velocity(), 32);
+	Write(e.Orientation(), 44);
+	Write(e.AngularVelocity(), 60);
+	Write(e.Bounds(), 72);
 	uint32_t flags = 0;
 	if (e.WorldCollidable()) {
 		flags |= 1;
 	}
-	Write(flags, 92);
-	WriteString(e.Name(), 96, 32);
+	Write(flags, 96);
+	WriteString(e.Name(), 100, 32);
 }
 
 void Packet::SpawnEntity::ReadEntityID(uint32_t &id) const noexcept {
 	Read(id, 0);
+}
+
+void Packet::SpawnEntity::ReadSkeletonID(uint32_t &id) const noexcept {
+	Read(id, 4);
 }
 
 void Packet::SpawnEntity::ReadEntity(Entity &e) const noexcept {
@@ -624,14 +634,14 @@ void Packet::SpawnEntity::ReadEntity(Entity &e) const noexcept {
 	uint32_t flags = 0;
 	string name;
 
-	Read(chunk_coords, 4);
-	Read(pos, 16);
-	Read(vel, 28);
-	Read(rot, 40);
-	Read(ang, 56);
-	Read(bounds, 68);
-	Read(flags, 92);
-	ReadString(name, 96, 32);
+	Read(chunk_coords, 8);
+	Read(pos, 20);
+	Read(vel, 32);
+	Read(rot, 44);
+	Read(ang, 60);
+	Read(bounds, 72);
+	Read(flags, 96);
+	ReadString(name, 100, 32);
 
 	e.Position(chunk_coords, pos);
 	e.Velocity(vel);

@@ -101,10 +101,11 @@ struct Packet {
 
 	struct SpawnEntity : public Payload {
 		static constexpr std::uint8_t TYPE = 5;
-		static constexpr std::size_t MAX_LEN = 128;
+		static constexpr std::size_t MAX_LEN = 132;
 
 		void WriteEntity(const Entity &) noexcept;
 		void ReadEntityID(std::uint32_t &) const noexcept;
+		void ReadSkeletonID(std::uint32_t &) const noexcept;
 		void ReadEntity(Entity &) const noexcept;
 	};
 

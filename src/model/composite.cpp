@@ -12,7 +12,10 @@
 namespace blank {
 
 CompositeModel::CompositeModel()
-: node_model(nullptr)
+: parent(nullptr)
+, node_model(nullptr)
+, id(0)
+, bounds{{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }}
 , position(0.0f)
 , orientation(1.0f, 0.0f, 0.0f, 0.0f)
 , parts() {
@@ -118,16 +121,19 @@ void Skeletons::LoadHeadless() {
 	{
 		AABB bounds{{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }};
 		skeletons.emplace_back(new CompositeModel);
+		skeletons[0]->ID(1);
 		skeletons[0]->Bounds(bounds);
 	}
 	{
 		AABB bounds{{ -0.5f, -0.25f, -0.5f }, { 0.5f, 0.25f, 0.5f }};
 		skeletons.emplace_back(new CompositeModel);
+		skeletons[1]->ID(2);
 		skeletons[1]->Bounds(bounds);
 	}
 	{
 		AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
 		skeletons.emplace_back(new CompositeModel);
+		skeletons[2]->ID(3);
 		skeletons[2]->Bounds(bounds);
 	}
 }
@@ -158,6 +164,22 @@ void Skeletons::Load() {
 		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
 		models[2].Update(buf);
 		skeletons[2]->SetNodeModel(&models[2]);
+	}
+}
+
+CompositeModel *Skeletons::ByID(std::uint16_t id) noexcept {
+	if (id == 0 || id > skeletons.size()) {
+		return nullptr;
+	} else {
+		return skeletons[id - 1].get();
+	}
+}
+
+const CompositeModel *Skeletons::ByID(std::uint16_t id) const noexcept {
+	if (id == 0 || id > skeletons.size()) {
+		return nullptr;
+	} else {
+		return skeletons[id - 1].get();
 	}
 }
 

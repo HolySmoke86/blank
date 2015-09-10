@@ -3,6 +3,7 @@
 
 #include "geometry.hpp"
 
+#include <cstdint>
 #include <list>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -20,6 +21,9 @@ public:
 
 	CompositeModel(const CompositeModel &) = delete;
 	CompositeModel &operator =(const CompositeModel &) = delete;
+
+	std::uint32_t ID() const noexcept { return id; }
+	void ID(std::uint32_t i) noexcept { id = i; }
 
 	const AABB &Bounds() const noexcept { return bounds; }
 	void Bounds(const AABB &b) noexcept { bounds = b; }
@@ -48,6 +52,8 @@ public:
 private:
 	CompositeModel *parent;
 	const EntityModel *node_model;
+
+	std::uint32_t id;
 
 	AABB bounds;
 

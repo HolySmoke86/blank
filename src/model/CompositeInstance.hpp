@@ -21,6 +21,7 @@ public:
 	CompositeInstance();
 
 	operator bool() const noexcept { return part_model; }
+	const CompositeModel &GetModel() const noexcept { return *part_model; }
 
 	const glm::vec3 &Position() const noexcept { return position; }
 	void Position(const glm::vec3 &p) noexcept { position = p; }

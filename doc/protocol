@@ -94,14 +94,15 @@ Sent by the server to notify the client of an entity entering spawn range.
 
 Code: 5
 Payload:
-	 0 entity ID, 32bit unsigned int
-	 4 chunk coords of the entity, 3x 32bit signed int
-	16 pos/vel/rot/ang of the entity, 13x 32bit float
-	68 bounding box of the entity, 6x 32bit float
-	92 flags, 32bit bitfield with boolean values
-	   1: world collision
-	96 entity name, max 32 byte UTF-8 string
-Length: 128
+	  0 entity ID, 32bit unsigned int
+	  4 entity's skeleton ID, 32bit unsigned int
+	  8 chunk coords of the entity, 3x 32bit signed int
+	 20 pos/vel/rot/ang of the entity, 13x 32bit float
+	 72 bounding box of the entity, 6x 32bit float
+	 96 flags, 32bit bitfield with boolean values
+	    1: world collision
+	100 entity name, max 32 byte UTF-8 string
+Length: 132
 
 
 Despawn Entity
