@@ -46,9 +46,8 @@ void ServerState::Update(int dt) {
 	push_timer.Update(dt);
 	server.Handle();
 	spawner.Update(dt);
-	if (!world.Players().empty()) {
-		world.Update(dt);
-	}
+	world.Update(dt);
+	chunk_loader.Update(dt);
 	if (push_timer.Hit()) {
 		server.Update(dt);
 	}
