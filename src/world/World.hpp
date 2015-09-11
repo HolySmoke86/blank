@@ -78,6 +78,9 @@ public:
 	/// add entity with given ID
 	/// returns nullptr if the ID is already taken
 	Entity *AddEntity(std::uint32_t id);
+	/// add entity with given ID
+	/// returs an existing entity if ID is already taken
+	Entity &ForceAddEntity(std::uint32_t id);
 
 	const std::vector<Player> &Players() const noexcept { return players; }
 	std::list<Entity> &Entities() noexcept { return entities; }

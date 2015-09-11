@@ -2,6 +2,7 @@
 #define BLANK_NET_CLIENT_HPP_
 
 #include "Connection.hpp"
+#include "../app/IntervalTimer.hpp"
 
 #include <string>
 #include <SDL_net.h>
@@ -33,7 +34,8 @@ public:
 	std::uint16_t SendPing();
 	std::uint16_t SendLogin(const std::string &);
 	std::uint16_t SendPart();
-	std::uint16_t SendPlayerUpdate(const Entity &);
+	// this may not send the update at all, in which case it returns -1
+	int SendPlayerUpdate(const Entity &);
 
 private:
 	void HandlePacket(const UDPpacket &);
@@ -42,6 +44,7 @@ private:
 	Connection conn;
 	UDPsocket client_sock;
 	UDPpacket client_pack;
+	IntervalTimer update_timer;
 
 };
 

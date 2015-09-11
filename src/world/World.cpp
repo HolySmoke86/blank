@@ -114,6 +114,26 @@ Entity *World::AddEntity(std::uint32_t id) {
 	return &*entity;
 }
 
+Entity &World::ForceAddEntity(std::uint32_t id) {
+	if (entities.empty() || entities.back().ID() < id) {
+		entities.emplace_back();
+		entities.back().ID(id);
+		return entities.back();
+	}
+
+	auto position = entities.begin();
+	auto end = entities.end();
+	while (position != end && position->ID() < id) {
+		++position;
+	}
+	if (position != end && position->ID() == id) {
+		return *position;
+	}
+	auto entity = entities.emplace(position);
+	entity->ID(id);
+	return *entity;
+}
+
 
 namespace {
 

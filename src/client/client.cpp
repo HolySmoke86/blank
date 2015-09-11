@@ -137,8 +137,11 @@ MasterState::MasterState(
 , state()
 , client(cc)
 , init_state(*this)
-, login_packet(-1) {
+, login_packet(-1)
+, update_status()
+, update_timer(16) {
 	client.GetConnection().SetHandler(this);
+	update_timer.Start();
 }
 
 void MasterState::Quit() {
@@ -161,6 +164,7 @@ void MasterState::Handle(const SDL_Event &event) {
 
 
 void MasterState::Update(int dt) {
+	update_timer.Update(dt);
 	client.Handle();
 	client.Update(dt);
 }
@@ -194,6 +198,8 @@ void MasterState::On(const Packet::Join &pack) {
 	} else {
 		// joining game
 		cout << "joined game \"" << world_conf.name << '"' << endl;
+		// server received our login
+		login_packet = -1;
 	}
 
 	uint32_t player_id;
@@ -225,20 +231,16 @@ void MasterState::On(const Packet::SpawnEntity &pack) {
 	}
 	uint32_t entity_id;
 	pack.ReadEntityID(entity_id);
-	Entity *entity = state->GetWorld().AddEntity(entity_id);
-	if (!entity) {
-		cout << "entity ID inconsistency" << endl;
-		Quit();
-		return;
-	}
-	pack.ReadEntity(*entity);
+	Entity &entity = state->GetWorld().ForceAddEntity(entity_id);
+	UpdateEntity(entity_id, pack.Seq());
+	pack.ReadEntity(entity);
 	uint32_t skel_id;
 	pack.ReadSkeletonID(skel_id);
 	CompositeModel *skel = state->GetSkeletons().ByID(skel_id);
 	if (skel) {
-		skel->Instantiate(entity->GetModel());
+		skel->Instantiate(entity.GetModel());
 	}
-	cout << "spawned entity " << entity->Name() << " at " << entity->AbsolutePosition() << endl;
+	cout << "spawned entity " << entity.Name() << " at " << entity.AbsolutePosition() << endl;
 }
 
 void MasterState::On(const Packet::DespawnEntity &pack) {
@@ -249,6 +251,7 @@ void MasterState::On(const Packet::DespawnEntity &pack) {
 	}
 	uint32_t entity_id;
 	pack.ReadEntityID(entity_id);
+	ClearEntity(entity_id);
 	for (Entity &entity : state->GetWorld().Entities()) {
 		if (entity.ID() == entity_id) {
 			entity.Kill();
@@ -283,9 +286,34 @@ void MasterState::On(const Packet::EntityUpdate &pack) {
 			return;
 		}
 		if (world_iter->ID() == entity_id) {
-			pack.ReadEntity(*world_iter, i);
+			if (UpdateEntity(entity_id, pack.Seq())) {
+				pack.ReadEntity(*world_iter, i);
+			}
 		}
 	}
+}
+
+bool MasterState::UpdateEntity(uint32_t entity_id, uint16_t seq) {
+	auto entry = update_status.find(entity_id);
+	if (entry == update_status.end()) {
+		update_status.emplace(entity_id, UpdateStatus{ seq, update_timer.Elapsed() });
+		return true;
+	}
+
+	int pack_diff = int16_t(seq) - int16_t(entry->second.last_packet);
+	int time_diff = update_timer.Elapsed() - entry->second.last_update;
+	entry->second.last_update = update_timer.Elapsed();
+
+	if (pack_diff > 0 || time_diff > 1500) {
+		entry->second.last_packet = seq;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void MasterState::ClearEntity(uint32_t entity_id) {
+	update_status.erase(entity_id);
 }
 
 }

@@ -120,7 +120,6 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	rot.z *= (random.Next<unsigned short>() % 1024);
 
 	Entity &e = world.AddEntity();
-	e.Name("spawned");
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
@@ -129,8 +128,10 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	Controller *ctrl;
 	if (random()) {
 		ctrl = new RandomWalk(e, random.Next<std::uint64_t>());
+		e.Name("spawned walker");
 	} else {
 		ctrl = new Chaser(world, e, reference);
+		e.Name("spawned chaser");
 	}
 	controllers.emplace_back(ctrl);
 }

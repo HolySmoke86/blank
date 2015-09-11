@@ -53,6 +53,10 @@ struct Packet {
 		std::size_t length;
 		std::uint8_t *data;
 
+		std::uint16_t Seq() const noexcept {
+			return reinterpret_cast<const Packet *>(data - sizeof(Header))->header.ctrl.seq;
+		}
+
 		template<class T>
 		void Write(const T &, size_t off) noexcept;
 		template<class T>

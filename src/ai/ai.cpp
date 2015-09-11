@@ -28,6 +28,11 @@ Chaser::~Chaser() {
 }
 
 void Chaser::Update(int dt) {
+	if (Target().Dead()) {
+		Controlled().Kill();
+		return;
+	}
+
 	glm::vec3 diff(Target().AbsoluteDifference(Controlled()));
 	float dist = length(diff);
 	if (dist < std::numeric_limits<float>::epsilon()) {

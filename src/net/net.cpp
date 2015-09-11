@@ -51,11 +51,13 @@ IPaddress client_resolve(const char *host, Uint16 port) {
 Client::Client(const Config &conf)
 : conn(client_resolve(conf.host.c_str(), conf.port))
 , client_sock(client_bind(0))
-, client_pack{ -1, nullptr, 0 } {
+, client_pack{ -1, nullptr, 0 }
+, update_timer(16) {
 	client_pack.data = new Uint8[sizeof(Packet)];
 	client_pack.maxlen = sizeof(Packet);
 	// establish connection
 	SendPing();
+	update_timer.Start();
 }
 
 Client::~Client() {
@@ -91,6 +93,7 @@ void Client::HandlePacket(const UDPpacket &udp_pack) {
 }
 
 void Client::Update(int dt) {
+	update_timer.Update(dt);
 	conn.Update(dt);
 	if (conn.ShouldPing()) {
 		SendPing();
@@ -107,7 +110,9 @@ uint16_t Client::SendLogin(const string &name) {
 	return conn.Send(client_pack, client_sock);
 }
 
-uint16_t Client::SendPlayerUpdate(const Entity &player) {
+int Client::SendPlayerUpdate(const Entity &player) {
+	// don't send all too many updates
+	if (!update_timer.Hit()) return -1;
 	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
 	pack.WritePlayer(player);
 	return conn.Send(client_pack, client_sock);
@@ -124,7 +129,9 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 , conn(addr)
 , player(nullptr)
 , spawns()
-, confirm_wait(0) {
+, confirm_wait(0)
+, player_update_pack(0)
+, player_update_timer(1500) {
 	conn.SetHandler(this);
 }
 
@@ -308,6 +315,10 @@ void ClientConnection::On(const Packet::Login &pack) {
 		response.WritePlayer(*new_player);
 		response.WriteWorldName(server.GetWorld().Name());
 		conn.Send(server.GetPacket(), server.GetSocket());
+		// set up update tracking
+		player_update_pack = pack.Seq();
+		player_update_timer.Reset();
+		player_update_timer.Start();
 	} else {
 		// aw no :(
 		cout << "rejected login from player \"" << name << '"' << endl;
@@ -323,7 +334,13 @@ void ClientConnection::On(const Packet::Part &) {
 
 void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	if (!HasPlayer()) return;
-	pack.ReadPlayer(Player());
+	int pack_diff = int16_t(pack.Seq()) - int16_t(player_update_pack);
+	bool overdue = player_update_timer.HitOnce();
+	player_update_timer.Reset();
+	if (pack_diff > 0 || overdue) {
+		player_update_pack = pack.Seq();
+		pack.ReadPlayer(Player());
+	}
 }
 
 
