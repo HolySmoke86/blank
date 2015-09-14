@@ -35,7 +35,7 @@ struct WorldCollision {
 
 	bool Blocks() const noexcept { return chunk->Type(block).collide_block; }
 
-	glm::vec3 BlockPos() const noexcept { return Chunk::ToPos(block); }
+	glm::ivec3 BlockPos() const noexcept { return Chunk::ToPos(block); }
 	glm::vec3 BlockCoords() const noexcept { return Chunk::ToCoords(block); }
 	glm::mat4 BlockTransform() const noexcept { return GetChunk().ToTransform(BlockPos(), block); }
 

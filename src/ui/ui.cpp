@@ -396,9 +396,9 @@ void Interface::PickBlock() {
 void Interface::PlaceBlock() {
 	if (!aim_world) return;
 
-	glm::vec3 next_pos = aim_world.BlockCoords() + aim_world.normal;
-	BlockLookup next_block(&aim_world.GetChunk(), next_pos);
-	if (next_block) {
+	BlockLookup next_block(aim_world.chunk, aim_world.BlockPos(), Block::NormalFace(aim_world.normal));
+	if (!next_block) {
+		return;
 	}
 	next_block.SetBlock(selection);
 
@@ -406,7 +406,7 @@ void Interface::PlaceBlock() {
 	const Entity &player = ctrl.Controlled();
 	env.audio.Play(
 		place_sound,
-		aim_world.GetChunk().ToSceneCoords(player.ChunkCoords(), next_pos)
+		next_block.GetChunk().ToSceneCoords(player.ChunkCoords(), next_block.GetBlockCoords())
 	);
 }
 

@@ -22,6 +22,7 @@ public:
 	// only valid if lookup was successful
 	Chunk &GetChunk() const noexcept { return *chunk; }
 	const Chunk::Pos &GetBlockPos() const noexcept { return pos; }
+	Block::Pos GetBlockCoords() const noexcept { return Chunk::ToCoords(pos); }
 	const Block &GetBlock() const noexcept { return GetChunk().BlockAt(GetBlockPos()); }
 	const BlockType &GetType() const noexcept { return GetChunk().Type(GetBlock()); }
 	int GetLight() const noexcept { return GetChunk().GetLight(GetBlockPos()); }
