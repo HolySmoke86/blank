@@ -1,6 +1,7 @@
 #ifndef BLANK_CLIENT_INTERACTIVESTATE_HPP_
 #define BLANK_CLIENT_INTERACTIVESTATE_HPP_
 
+#include "../app/IntervalTimer.hpp"
 #include "../app/State.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Skeletons.hpp"
@@ -42,6 +43,7 @@ private:
 	Interface interface;
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
+	IntervalTimer update_timer;
 
 };
 

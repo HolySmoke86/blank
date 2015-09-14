@@ -51,13 +51,11 @@ IPaddress client_resolve(const char *host, Uint16 port) {
 Client::Client(const Config &conf)
 : conn(client_resolve(conf.host.c_str(), conf.port))
 , client_sock(client_bind(0))
-, client_pack{ -1, nullptr, 0 }
-, update_timer(16) {
+, client_pack{ -1, nullptr, 0 } {
 	client_pack.data = new Uint8[sizeof(Packet)];
 	client_pack.maxlen = sizeof(Packet);
 	// establish connection
 	SendPing();
-	update_timer.Start();
 }
 
 Client::~Client() {
@@ -93,7 +91,6 @@ void Client::HandlePacket(const UDPpacket &udp_pack) {
 }
 
 void Client::Update(int dt) {
-	update_timer.Update(dt);
 	conn.Update(dt);
 	if (conn.ShouldPing()) {
 		SendPing();
@@ -110,9 +107,7 @@ uint16_t Client::SendLogin(const string &name) {
 	return conn.Send(client_pack, client_sock);
 }
 
-int Client::SendPlayerUpdate(const Entity &player) {
-	// don't send all too many updates
-	if (!update_timer.Hit()) return -1;
+uint16_t Client::SendPlayerUpdate(const Entity &player) {
 	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
 	pack.WritePlayer(player);
 	return conn.Send(client_pack, client_sock);

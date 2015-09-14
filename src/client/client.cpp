@@ -55,7 +55,8 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
 )
 , chunk_renderer(*interface.GetPlayer().chunks)
-, skeletons() {
+, skeletons()
+, update_timer(16) {
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
@@ -63,6 +64,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	skeletons.Load();
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
+	update_timer.Start();
 }
 
 void InteractiveState::OnEnter() {
@@ -104,9 +106,13 @@ void InteractiveState::Update(int dt) {
 	world.Update(dt);
 	chunk_renderer.Update(dt);
 
+	update_timer.Update(dt);
+
 	Entity &player = *interface.GetPlayer().entity;
 
-	master.GetClient().SendPlayerUpdate(player);
+	if (update_timer.Hit()) {
+		master.GetClient().SendPlayerUpdate(player);
+	}
 
 	glm::mat4 trans = player.Transform(player.ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
