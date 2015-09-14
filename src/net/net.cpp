@@ -29,6 +29,7 @@ constexpr size_t Packet::PlayerUpdate::MAX_LEN;
 constexpr size_t Packet::SpawnEntity::MAX_LEN;
 constexpr size_t Packet::DespawnEntity::MAX_LEN;
 constexpr size_t Packet::EntityUpdate::MAX_LEN;
+constexpr size_t Packet::PlayerCorrection::MAX_LEN;
 
 namespace {
 
@@ -187,6 +188,8 @@ void ClientConnection::Update(int dt) {
 			SendDespawn(*local_iter);
 			++local_iter;
 		}
+
+		CheckPlayerFix();
 	}
 	if (conn.ShouldPing()) {
 		conn.SendPing(server.GetPacket(), server.GetSocket());
@@ -246,6 +249,14 @@ void ClientConnection::SendUpdate(SpawnStatus &status) {
 	pack.WriteEntityCount(1);
 	pack.WriteEntity(*status.entity, 0);
 	server.GetPacket().len = Packet::EntityUpdate::GetSize(1);
+	conn.Send(server.GetPacket(), server.GetSocket());
+}
+
+void ClientConnection::CheckPlayerFix() {
+	// check always succeeds for now ;)
+	auto pack = Packet::Make<Packet::PlayerCorrection>(server.GetPacket());
+	pack.WritePacketSeq(player_update_pack);
+	pack.WritePlayer(Player());
 	conn.Send(server.GetPacket(), server.GetSocket());
 }
 
@@ -491,6 +502,8 @@ const char *Packet::Type2String(uint8_t t) noexcept {
 			return "DespawnEntity";
 		case EntityUpdate::TYPE:
 			return "EntityUpdate";
+		case PlayerCorrection::TYPE:
+			return "PlayerCorrection";
 		default:
 			return "Unknown";
 	}
@@ -646,6 +659,22 @@ void Packet::EntityUpdate::ReadEntityState(EntityState &state, uint32_t num) con
 	Read(state, off + 4);
 }
 
+void Packet::PlayerCorrection::WritePacketSeq(std::uint16_t s) noexcept {
+	Write(s, 0);
+}
+
+void Packet::PlayerCorrection::ReadPacketSeq(std::uint16_t &s) const noexcept {
+	Read(s, 0);
+}
+
+void Packet::PlayerCorrection::WritePlayer(const Entity &player) noexcept {
+	Write(player.GetState(), 2);
+}
+
+void Packet::PlayerCorrection::ReadPlayerState(EntityState &state) const noexcept {
+	Read(state, 2);
+}
+
 
 void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
@@ -673,6 +702,9 @@ void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 			break;
 		case Packet::EntityUpdate::TYPE:
 			On(Packet::As<Packet::EntityUpdate>(udp_pack));
+			break;
+		case Packet::PlayerCorrection::TYPE:
+			On(Packet::As<Packet::PlayerCorrection>(udp_pack));
 			break;
 		default:
 			// drop unknown or unhandled packets

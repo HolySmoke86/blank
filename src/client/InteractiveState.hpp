@@ -8,7 +8,10 @@
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"
+#include "../world/EntityState.hpp"
 #include "../world/World.hpp"
+
+#include <list>
 
 
 namespace blank {
@@ -35,6 +38,9 @@ public:
 	void Update(int dt) override;
 	void Render(Viewport &) override;
 
+	void PushPlayerUpdate(const Entity &);
+	void MergePlayerCorrection(std::uint16_t, const EntityState &);
+
 private:
 	MasterState &master;
 	BlockTypeRegistry block_types;
@@ -44,6 +50,15 @@ private:
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
 	IntervalTimer update_timer;
+
+	struct PlayerHistory {
+		EntityState state;
+		int timestamp;
+		std::uint16_t packet;
+		PlayerHistory(EntityState s, int t, std::uint16_t p)
+		: state(s), timestamp(t), packet(p) { }
+	};
+	std::list<PlayerHistory> player_hist;
 
 };
 

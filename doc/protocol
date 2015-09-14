@@ -17,6 +17,15 @@ with native LE (or BE if the server and all clients are on that,
 but that's by accident and will break if conversion code is ever
 added)
 
+Common Types
+------------
+
+Name          Size  Type
+vec3          12    3x 32bit float
+vec3i         12    3x 32bit signed int
+quat          16    4x 32bit float
+entity state  64    vec3i, vec3, vec3, quat, vec3
+
 
 Packets
 =======
@@ -56,8 +65,7 @@ it's changing worlds.
 Code: 2
 Payload:
 	 0 entity ID of the player, 32bit unsigned int
-	 4 chunk coords of the player, 3x 32bit signed int
-	16 pos/vel/rot/ang of the player, 13x 32bit float
+	 4 entity state of the player
 	68 name of the world the server's currently running
 	   max 32 byte UTF-8 string
 Length: 68-100
@@ -82,8 +90,7 @@ Sent by clients to notify the server of their changes to the player.
 
 Code: 4
 Payload:
-	 0 chunk coords of the player, 3x 32bit signed int
-	12 pos/vel/rot/ang of the player, 13x 32bit float
+	 0 entity state of the player as seen by the client
 Length: 64
 
 
@@ -96,8 +103,7 @@ Code: 5
 Payload:
 	  0 entity ID, 32bit unsigned int
 	  4 entity's skeleton ID, 32bit unsigned int
-	  8 chunk coords of the entity, 3x 32bit signed int
-	 20 pos/vel/rot/ang of the entity, 13x 32bit float
+	  8 entity state
 	 72 bounding box of the entity, 6x 32bit float
 	 96 flags, 32bit bitfield with boolean values
 	    1: world collision
@@ -125,7 +131,19 @@ Contained entities must be ordered by ascending entity ID.
 Code: 7
 Payload:
 	 0 number of entities, 32bit int, 1-7
-	 4 chunk coords of the entity, 3x 32bit signed int
-	16 pos/vel/rot/ang of the entity, 13x 32bit float
-	68 next entity...
-Length: 4 + multiple of 64, max 452
+	 4 entity ID, 32bit unsigned int
+	 8 entity state
+	72 next entity...
+Length: 4 + multiple of 68, max 452
+
+
+Player Correction
+-----------------
+
+Sent by the server to tell a client that its prediction is way off.
+
+Code: 8
+Payload:
+	 0 sequence number of the offending packet, 16bit unsigned int
+	 2 entity state of the player's entity on the server
+Length: 66

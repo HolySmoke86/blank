@@ -56,7 +56,8 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 )
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
-, update_timer(16) {
+, update_timer(16)
+, player_hist() {
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
@@ -111,7 +112,7 @@ void InteractiveState::Update(int dt) {
 	Entity &player = *interface.GetPlayer().entity;
 
 	if (update_timer.Hit()) {
-		master.GetClient().SendPlayerUpdate(player);
+		PushPlayerUpdate(player);
 	}
 
 	glm::mat4 trans = player.Transform(player.ChunkCoords());
@@ -120,6 +121,37 @@ void InteractiveState::Update(int dt) {
 	master.GetEnv().audio.Position(player.Position());
 	master.GetEnv().audio.Velocity(player.Velocity());
 	master.GetEnv().audio.Orientation(dir, up);
+}
+
+void InteractiveState::PushPlayerUpdate(const Entity &player) {
+	std::uint16_t packet = master.GetClient().SendPlayerUpdate(player);
+	if (player_hist.size() < 16) {
+		player_hist.emplace_back(player.GetState(), update_timer.Elapsed(), packet);
+	} else {
+		auto entry = player_hist.begin();
+		entry->state = player.GetState();
+		entry->timestamp = update_timer.Elapsed();
+		entry->packet = packet;
+		player_hist.splice(player_hist.end(), player_hist, entry);
+	}
+}
+
+void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &corrected_state) {
+	if (player_hist.empty()) return;
+
+	auto entry = player_hist.begin();
+	auto end = player_hist.end();
+
+	// drop anything older than the fix
+	while (entry != end) {
+		int pack_diff = int16_t(seq) - int16_t(entry->packet);
+		if (pack_diff < 0) {
+			entry = player_hist.erase(entry);
+		} else {
+			break;
+		}
+	}
+	if (entry == end) return;
 }
 
 void InteractiveState::Render(Viewport &viewport) {
@@ -320,6 +352,19 @@ bool MasterState::UpdateEntity(uint32_t entity_id, uint16_t seq) {
 
 void MasterState::ClearEntity(uint32_t entity_id) {
 	update_status.erase(entity_id);
+}
+
+void MasterState::On(const Packet::PlayerCorrection &pack) {
+	if (!state) {
+		cout << "got player correction without a player :S" << endl;
+		Quit();
+		return;
+	}
+	uint16_t pack_seq;
+	EntityState corrected_state;
+	pack.ReadPacketSeq(pack_seq);
+	pack.ReadPlayerState(corrected_state);
+	state->MergePlayerCorrection(pack_seq, corrected_state);
 }
 
 }

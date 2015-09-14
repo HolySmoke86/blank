@@ -139,6 +139,16 @@ struct Packet {
 		void ReadEntityState(EntityState &, std::uint32_t) const noexcept;
 	};
 
+	struct PlayerCorrection : public Payload {
+		static constexpr std::uint8_t TYPE = 8;
+		static constexpr std::size_t MAX_LEN = 66;
+
+		void WritePacketSeq(std::uint16_t) noexcept;
+		void ReadPacketSeq(std::uint16_t &) const noexcept;
+		void WritePlayer(const Entity &) noexcept;
+		void ReadPlayerState(EntityState &) const noexcept;
+	};
+
 
 	template<class PayloadType>
 	PayloadType As() {

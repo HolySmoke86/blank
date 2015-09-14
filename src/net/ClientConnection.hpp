@@ -62,6 +62,8 @@ private:
 	void SendDespawn(SpawnStatus &);
 	void SendUpdate(SpawnStatus &);
 
+	void CheckPlayerFix();
+
 private:
 	Server &server;
 	Connection conn;

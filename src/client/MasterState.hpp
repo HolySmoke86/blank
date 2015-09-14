@@ -55,6 +55,7 @@ public:
 	void On(const Packet::SpawnEntity &) override;
 	void On(const Packet::DespawnEntity &) override;
 	void On(const Packet::EntityUpdate &) override;
+	void On(const Packet::PlayerCorrection &) override;
 
 private:
 	/// flag entity as updated by given packet

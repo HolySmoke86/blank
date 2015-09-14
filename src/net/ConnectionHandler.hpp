@@ -29,6 +29,7 @@ private:
 	virtual void On(const Packet::SpawnEntity &) { }
 	virtual void On(const Packet::DespawnEntity &) { }
 	virtual void On(const Packet::EntityUpdate &) { }
+	virtual void On(const Packet::PlayerCorrection &) { }
 
 };
 
