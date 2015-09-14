@@ -2,6 +2,7 @@
 #define BLANK_WORLD_ENTITY_HPP_
 
 #include "Chunk.hpp"
+#include "EntityState.hpp"
 #include "../model/CompositeInstance.hpp"
 #include "../model/geometry.hpp"
 
@@ -36,34 +37,37 @@ public:
 	bool WorldCollidable() const noexcept { return world_collision; }
 	void WorldCollidable(bool b) noexcept { world_collision = b; }
 
-	const glm::vec3 &Velocity() const noexcept { return velocity; }
-	void Velocity(const glm::vec3 &v) noexcept { velocity = v; }
+	const glm::vec3 &Velocity() const noexcept { return state.velocity; }
+	void Velocity(const glm::vec3 &v) noexcept { state.velocity = v; }
 
-	const glm::vec3 &Position() const noexcept { return model.Position(); }
-	void Position(const Chunk::Pos &, const glm::vec3 &) noexcept;
+	const glm::vec3 &Position() const noexcept { return state.block_pos; }
+	void Position(const glm::ivec3 &, const glm::vec3 &) noexcept;
 	void Position(const glm::vec3 &) noexcept;
-	void Move(const glm::vec3 &delta) noexcept;
 
-	const Chunk::Pos ChunkCoords() const noexcept { return chunk; }
+	const glm::ivec3 ChunkCoords() const noexcept { return state.chunk_pos; }
 
 	glm::vec3 AbsolutePosition() const noexcept {
-		return glm::vec3(chunk * Chunk::Extent()) + Position();
+		return state.AbsolutePosition();
 	}
 	glm::vec3 AbsoluteDifference(const Entity &other) const noexcept {
-		return glm::vec3((chunk - other.chunk) * Chunk::Extent()) + Position() - other.Position();
+		return state.Diff(other.state);
 	}
 
 	/// direction is rotation axis, magnitude is speed in rad/ms
-	const glm::vec3 &AngularVelocity() const noexcept { return angular_velocity; }
-	void AngularVelocity(const glm::vec3 &v) noexcept { angular_velocity = v; }
+	const glm::vec3 &AngularVelocity() const noexcept { return state.ang_vel; }
+	void AngularVelocity(const glm::vec3 &v) noexcept { state.ang_vel = v; }
 
-	const glm::quat &Orientation() const noexcept { return model.Orientation(); }
-	void Orientation(const glm::quat &o) noexcept { model.Orientation(o); }
-	void Rotate(const glm::quat &delta) noexcept;
+	const glm::quat &Orientation() const noexcept { return state.orient; }
+	void Orientation(const glm::quat &o) noexcept { state.orient = o; }
 
-	glm::mat4 ChunkTransform(const Chunk::Pos &chunk_offset) const noexcept;
-	glm::mat4 Transform(const Chunk::Pos &chunk_offset) const noexcept;
+	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept {
+		return state.Transform(reference);
+	}
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
+
+	void SetState(const EntityState &s) noexcept { state = s; }
+	EntityState &GetState() noexcept { return state; }
+	const EntityState &GetState() const noexcept { return state; }
 
 	void Ref() noexcept { ++ref_count; }
 	void UnRef() noexcept { --ref_count; }
@@ -85,11 +89,7 @@ private:
 	std::string name;
 
 	AABB bounds;
-
-	glm::vec3 velocity;
-	Chunk::Pos chunk;
-
-	glm::vec3 angular_velocity;
+	EntityState state;
 
 	int ref_count;
 

@@ -10,6 +10,7 @@
 namespace blank {
 
 class Entity;
+class EntityState;
 
 struct Packet {
 
@@ -85,7 +86,7 @@ struct Packet {
 
 		void WritePlayer(const Entity &) noexcept;
 		void ReadPlayerID(std::uint32_t &) const noexcept;
-		void ReadPlayer(Entity &) const noexcept;
+		void ReadPlayerState(EntityState &) const noexcept;
 		void WriteWorldName(const std::string &) noexcept;
 		void ReadWorldName(std::string &) const noexcept;
 	};
@@ -100,7 +101,7 @@ struct Packet {
 		static constexpr std::size_t MAX_LEN = 64;
 
 		void WritePlayer(const Entity &) noexcept;
-		void ReadPlayer(Entity &) const noexcept;
+		void ReadPlayerState(EntityState &) const noexcept;
 	};
 
 	struct SpawnEntity : public Payload {
@@ -135,7 +136,7 @@ struct Packet {
 
 		void WriteEntity(const Entity &, std::uint32_t) noexcept;
 		void ReadEntityID(std::uint32_t &, std::uint32_t) const noexcept;
-		void ReadEntity(Entity &, std::uint32_t) const noexcept;
+		void ReadEntityState(EntityState &, std::uint32_t) const noexcept;
 	};
 
 

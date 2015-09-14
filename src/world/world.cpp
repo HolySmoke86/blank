@@ -1,3 +1,5 @@
+#include "Entity.hpp"
+#include "EntityState.hpp"
 #include "World.hpp"
 
 #include "ChunkIndex.hpp"
@@ -8,12 +10,119 @@
 #include "../graphics/Viewport.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <glm/gtx/io.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
 
 
 namespace blank {
+
+Entity::Entity() noexcept
+: model()
+, id(-1)
+, name("anonymous")
+, bounds()
+, state()
+, ref_count(0)
+, world_collision(false)
+, dead(false) {
+
+}
+
+
+void Entity::Position(const glm::ivec3 &c, const glm::vec3 &b) noexcept {
+	state.chunk_pos = c;
+	state.block_pos = b;
+}
+
+void Entity::Position(const glm::vec3 &pos) noexcept {
+	state.block_pos = pos;
+	state.AdjustPosition();
+}
+
+Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
+	glm::mat4 transform = Transform(chunk_offset);
+	glm::vec4 from = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	from /= from.w;
+	glm::vec4 to = transform * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
+	to /= to.w;
+	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
+}
+
+namespace {
+
+glm::quat delta_rot(const glm::vec3 &av, float dt) {
+	glm::vec3 half(av * dt * 0.5f);
+	float mag = length(half);
+	if (mag > 0.0f) {
+		float smag = std::sin(mag) / mag;
+		return glm::quat(std::cos(mag), half * smag);
+	} else {
+		return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+}
+
+void Entity::Update(int dt) noexcept {
+	state.Update(dt);
+}
+
+
+EntityState::EntityState()
+: chunk_pos(0)
+, block_pos(0.0f)
+, velocity(0.0f)
+, orient(1.0f, 0.0f, 0.0f, 0.0f)
+, ang_vel(0.0f) {
+
+}
+
+void EntityState::Update(int dt) noexcept {
+	float fdt = float(dt);
+	block_pos += velocity * fdt;
+	orient = delta_rot(ang_vel, fdt) * orient;
+	AdjustPosition();
+}
+
+void EntityState::AdjustPosition() noexcept {
+	while (block_pos.x >= Chunk::width) {
+		block_pos.x -= Chunk::width;
+		++chunk_pos.x;
+	}
+	while (block_pos.x < 0) {
+		block_pos.x += Chunk::width;
+		--chunk_pos.x;
+	}
+	while (block_pos.y >= Chunk::height) {
+		block_pos.y -= Chunk::height;
+		++chunk_pos.y;
+	}
+	while (block_pos.y < 0) {
+		block_pos.y += Chunk::height;
+		--chunk_pos.y;
+	}
+	while (block_pos.z >= Chunk::depth) {
+		block_pos.z -= Chunk::depth;
+		++chunk_pos.z;
+	}
+	while (block_pos.z < 0) {
+		block_pos.z += Chunk::depth;
+		--chunk_pos.z;
+	}
+}
+
+glm::mat4 EntityState::Transform(const glm::ivec3 &reference) const noexcept {
+	const glm::vec3 translation = RelativePosition(reference);
+	glm::mat4 transform(toMat4(orient));
+	transform[3].x = translation.x;
+	transform[3].y = translation.y;
+	transform[3].z = translation.z;
+	return transform;
+}
+
 
 World::World(const BlockTypeRegistry &types, const Config &config)
 : config(config)
@@ -290,7 +399,7 @@ void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
 			final_disp[axis] = max_disp[axis];
 		}
 	}
-	e.Move(final_disp);
+	e.Position(e.Position() + final_disp);
 }
 
 World::EntityHandle World::RemoveEntity(EntityHandle &eh) {
@@ -314,7 +423,7 @@ void World::Render(Viewport &viewport) {
 	entity_prog.SetFogDensity(fog_density);
 
 	for (Entity &entity : entities) {
-		entity.Render(entity.ChunkTransform(players[0].entity->ChunkCoords()), entity_prog);
+		entity.Render(entity.Transform(players[0].entity->ChunkCoords()), entity_prog);
 	}
 }
 

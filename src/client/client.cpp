@@ -212,7 +212,7 @@ void MasterState::On(const Packet::Join &pack) {
 	pack.ReadPlayerID(player_id);
 	state.reset(new InteractiveState(*this, player_id));
 
-	pack.ReadPlayer(*state->GetInterface().GetPlayer().entity);
+	pack.ReadPlayerState(state->GetInterface().GetPlayer().entity->GetState());
 
 	env.state.PopAfter(this);
 	env.state.Push(state.get());
@@ -293,7 +293,7 @@ void MasterState::On(const Packet::EntityUpdate &pack) {
 		}
 		if (world_iter->ID() == entity_id) {
 			if (UpdateEntity(entity_id, pack.Seq())) {
-				pack.ReadEntity(*world_iter, i);
+				pack.ReadEntityState(world_iter->GetState(), i);
 			}
 		}
 	}

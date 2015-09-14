@@ -8,6 +8,8 @@
 
 #include "../app/init.hpp"
 #include "../model/CompositeModel.hpp"
+#include "../world/Entity.hpp"
+#include "../world/EntityState.hpp"
 #include "../world/World.hpp"
 
 #include <cstring>
@@ -334,7 +336,8 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	player_update_timer.Reset();
 	if (pack_diff > 0 || overdue) {
 		player_update_pack = pack.Seq();
-		pack.ReadPlayer(Player());
+		// TODO: do client input validation here
+		pack.ReadPlayerState(Player().GetState());
 	}
 }
 
@@ -542,34 +545,15 @@ void Packet::Login::ReadPlayerName(string &name) const noexcept {
 
 void Packet::Join::WritePlayer(const Entity &player) noexcept {
 	Write(player.ID(), 0);
-	Write(player.ChunkCoords(), 4);
-	Write(player.Position(), 16);
-	Write(player.Velocity(), 28);
-	Write(player.Orientation(), 40);
-	Write(player.AngularVelocity(), 56);
+	Write(player.GetState(), 4);
 }
 
 void Packet::Join::ReadPlayerID(uint32_t &id) const noexcept {
 	Read(id, 0);
 }
 
-void Packet::Join::ReadPlayer(Entity &player) const noexcept {
-	glm::ivec3 chunk_coords(0);
-	glm::vec3 pos;
-	glm::vec3 vel;
-	glm::quat rot;
-	glm::vec3 ang;
-
-	Read(chunk_coords, 4);
-	Read(pos, 16);
-	Read(vel, 28);
-	Read(rot, 40);
-	Read(ang, 56);
-
-	player.Position(chunk_coords, pos);
-	player.Velocity(vel);
-	player.Orientation(rot);
-	player.AngularVelocity(ang);
+void Packet::Join::ReadPlayerState(EntityState &state) const noexcept {
+	Read(state, 4);
 }
 
 void Packet::Join::WriteWorldName(const string &name) noexcept {
@@ -581,30 +565,11 @@ void Packet::Join::ReadWorldName(string &name) const noexcept {
 }
 
 void Packet::PlayerUpdate::WritePlayer(const Entity &player) noexcept {
-	Write(player.ChunkCoords(), 0);
-	Write(player.Position(), 12);
-	Write(player.Velocity(), 24);
-	Write(player.Orientation(), 36);
-	Write(player.AngularVelocity(), 52);
+	Write(player.GetState(), 0);
 }
 
-void Packet::PlayerUpdate::ReadPlayer(Entity &player) const noexcept {
-	glm::ivec3 chunk_coords(0);
-	glm::vec3 pos;
-	glm::vec3 vel;
-	glm::quat rot;
-	glm::vec3 ang;
-
-	Read(chunk_coords, 0);
-	Read(pos, 12);
-	Read(vel, 24);
-	Read(rot, 36);
-	Read(ang, 52);
-
-	player.Position(chunk_coords, pos);
-	player.Velocity(vel);
-	player.Orientation(rot);
-	player.AngularVelocity(ang);
+void Packet::PlayerUpdate::ReadPlayerState(EntityState &state) const noexcept {
+	Read(state, 0);
 }
 
 void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
@@ -614,11 +579,7 @@ void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
 	} else {
 		Write(uint32_t(0), 4);
 	}
-	Write(e.ChunkCoords(), 8);
-	Write(e.Position(), 20);
-	Write(e.Velocity(), 32);
-	Write(e.Orientation(), 44);
-	Write(e.AngularVelocity(), 60);
+	Write(e.GetState(), 8);
 	Write(e.Bounds(), 72);
 	uint32_t flags = 0;
 	if (e.WorldCollidable()) {
@@ -637,28 +598,17 @@ void Packet::SpawnEntity::ReadSkeletonID(uint32_t &id) const noexcept {
 }
 
 void Packet::SpawnEntity::ReadEntity(Entity &e) const noexcept {
-	glm::ivec3 chunk_coords(0);
-	glm::vec3 pos;
-	glm::vec3 vel;
-	glm::quat rot;
-	glm::vec3 ang;
+	EntityState state;
 	AABB bounds;
 	uint32_t flags = 0;
 	string name;
 
-	Read(chunk_coords, 8);
-	Read(pos, 20);
-	Read(vel, 32);
-	Read(rot, 44);
-	Read(ang, 60);
+	Read(state, 8);
 	Read(bounds, 72);
 	Read(flags, 96);
 	ReadString(name, 100, 32);
 
-	e.Position(chunk_coords, pos);
-	e.Velocity(vel);
-	e.Orientation(rot);
-	e.AngularVelocity(ang);
+	e.SetState(state);
 	e.Bounds(bounds);
 	e.WorldCollidable(flags & 1);
 	e.Name(name);
@@ -684,36 +634,16 @@ void Packet::EntityUpdate::WriteEntity(const Entity &entity, uint32_t num) noexc
 	uint32_t off = 4 + (num * 64);
 
 	Write(entity.ID(), off);
-	Write(entity.ChunkCoords(), off + 4);
-	Write(entity.Position(), off + 16);
-	Write(entity.Velocity(), off + 28);
-	Write(entity.Orientation(), off + 40);
-	Write(entity.AngularVelocity(), off + 56);
+	Write(entity.GetState(), off + 4);
 }
 
 void Packet::EntityUpdate::ReadEntityID(uint32_t &id, uint32_t num) const noexcept {
 	Read(id, 4 + (num * 64));
 }
 
-void Packet::EntityUpdate::ReadEntity(Entity &entity, uint32_t num) const noexcept {
+void Packet::EntityUpdate::ReadEntityState(EntityState &state, uint32_t num) const noexcept {
 	uint32_t off = 4 + (num * 64);
-
-	glm::ivec3 chunk_coords(0);
-	glm::vec3 pos;
-	glm::vec3 vel;
-	glm::quat rot;
-	glm::vec3 ang;
-
-	Read(chunk_coords, off + 4);
-	Read(pos, off + 16);
-	Read(vel, off + 28);
-	Read(rot, off + 40);
-	Read(ang, off + 56);
-
-	entity.Position(chunk_coords, pos);
-	entity.Velocity(vel);
-	entity.Orientation(rot);
-	entity.AngularVelocity(ang);
+	Read(state, off + 4);
 }
 
 
