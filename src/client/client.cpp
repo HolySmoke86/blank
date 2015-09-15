@@ -56,6 +56,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 )
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
+, loop_timer(16)
 , update_timer(16)
 , player_hist() {
 	TextureIndex tex_index;
@@ -65,6 +66,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	skeletons.Load();
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
+	loop_timer.Start();
 	update_timer.Start();
 }
 
@@ -101,13 +103,16 @@ void InteractiveState::Handle(const SDL_Event &event) {
 }
 
 void InteractiveState::Update(int dt) {
+	loop_timer.Update(dt);
+	update_timer.Update(dt);
 	master.Update(dt);
 
 	interface.Update(dt);
-	world.Update(dt);
+	while (loop_timer.HitOnce()) {
+		world.Update(loop_timer.Interval());
+		loop_timer.PopIteration();
+	}
 	chunk_renderer.Update(dt);
-
-	update_timer.Update(dt);
 
 	Entity &player = *interface.GetPlayer().entity;
 
@@ -126,11 +131,10 @@ void InteractiveState::Update(int dt) {
 void InteractiveState::PushPlayerUpdate(const Entity &player) {
 	std::uint16_t packet = master.GetClient().SendPlayerUpdate(player);
 	if (player_hist.size() < 16) {
-		player_hist.emplace_back(player.GetState(), update_timer.Elapsed(), packet);
+		player_hist.emplace_back(player.GetState(), packet);
 	} else {
 		auto entry = player_hist.begin();
 		entry->state = player.GetState();
-		entry->timestamp = update_timer.Elapsed();
 		entry->packet = packet;
 		player_hist.splice(player_hist.end(), player_hist, entry);
 	}
@@ -145,13 +149,49 @@ void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &co
 	// drop anything older than the fix
 	while (entry != end) {
 		int pack_diff = int16_t(seq) - int16_t(entry->packet);
-		if (pack_diff < 0) {
+		if (pack_diff > 0) {
 			entry = player_hist.erase(entry);
 		} else {
 			break;
 		}
 	}
-	if (entry == end) return;
+
+	EntityState replay_state(corrected_state);
+	EntityState &player_state = interface.GetPlayer().entity->GetState();
+
+	if (entry != end) {
+		entry->state.chunk_pos = replay_state.chunk_pos;
+		entry->state.block_pos = replay_state.block_pos;
+		++entry;
+	}
+
+	while (entry != end) {
+		replay_state.velocity = entry->state.velocity;
+		replay_state.Update(16);
+		entry->state.chunk_pos = replay_state.chunk_pos;
+		entry->state.block_pos = replay_state.block_pos;
+		++entry;
+	}
+
+	glm::vec3 displacement(replay_state.Diff(player_state));
+	const float disp_squared = dot(displacement, displacement);
+
+	if (disp_squared < 16.0f * numeric_limits<float>::epsilon()) {
+		return;
+	}
+
+	constexpr float warp_thresh = 1.0f;
+	constexpr float max_disp = 0.0001f; // (1/100)^2
+
+	if (disp_squared > warp_thresh) {
+		player_state.chunk_pos = replay_state.chunk_pos;
+		player_state.block_pos = replay_state.block_pos;
+	} else if (disp_squared < max_disp) {
+		player_state.block_pos += displacement;
+	} else {
+		displacement *= 0.01f / sqrt(disp_squared);
+		player_state.block_pos += displacement;
+	}
 }
 
 void InteractiveState::Render(Viewport &viewport) {

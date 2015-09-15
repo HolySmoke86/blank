@@ -49,14 +49,14 @@ private:
 	Interface interface;
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
+	IntervalTimer loop_timer;
 	IntervalTimer update_timer;
 
 	struct PlayerHistory {
 		EntityState state;
-		int timestamp;
 		std::uint16_t packet;
-		PlayerHistory(EntityState s, int t, std::uint16_t p)
-		: state(s), timestamp(t), packet(p) { }
+		PlayerHistory(EntityState s, std::uint16_t p)
+		: state(s), packet(p) { }
 	};
 	std::list<PlayerHistory> player_hist;
 

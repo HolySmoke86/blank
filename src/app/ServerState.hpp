@@ -42,6 +42,7 @@ private:
 	Skeletons skeletons;
 	Spawner spawner;
 	Server server;
+	IntervalTimer loop_timer;
 	IntervalTimer push_timer;
 
 };

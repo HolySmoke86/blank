@@ -348,7 +348,10 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	if (pack_diff > 0 || overdue) {
 		player_update_pack = pack.Seq();
 		// TODO: do client input validation here
-		pack.ReadPlayerState(Player().GetState());
+		EntityState new_state;
+		pack.ReadPlayerState(new_state);
+		Player().Velocity(new_state.velocity);
+		Player().Orientation(new_state.orient);
 	}
 }
 

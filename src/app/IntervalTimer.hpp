@@ -40,8 +40,14 @@ public:
 	int Elapsed() const noexcept {
 		return value;
 	}
+	int Interval() const noexcept {
+		return intv;
+	}
 	int Iteration() const noexcept {
 		return value / intv;
+	}
+	void PopIteration() noexcept {
+		value -= intv;
 	}
 
 	void Update(int dt) noexcept {
