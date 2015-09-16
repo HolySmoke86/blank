@@ -57,7 +57,6 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
 , loop_timer(16)
-, update_timer(16)
 , player_hist() {
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
@@ -67,7 +66,6 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
 	loop_timer.Start();
-	update_timer.Start();
 }
 
 void InteractiveState::OnEnter() {
@@ -104,20 +102,21 @@ void InteractiveState::Handle(const SDL_Event &event) {
 
 void InteractiveState::Update(int dt) {
 	loop_timer.Update(dt);
-	update_timer.Update(dt);
 	master.Update(dt);
 
 	interface.Update(dt);
+	int world_dt = 0;
 	while (loop_timer.HitOnce()) {
 		world.Update(loop_timer.Interval());
+		world_dt += loop_timer.Interval();
 		loop_timer.PopIteration();
 	}
 	chunk_renderer.Update(dt);
 
 	Entity &player = *interface.GetPlayer().entity;
 
-	if (update_timer.Hit()) {
-		PushPlayerUpdate(player);
+	if (world_dt > 0) {
+		PushPlayerUpdate(player, world_dt);
 	}
 
 	glm::mat4 trans = player.Transform(player.ChunkCoords());
@@ -128,13 +127,14 @@ void InteractiveState::Update(int dt) {
 	master.GetEnv().audio.Orientation(dir, up);
 }
 
-void InteractiveState::PushPlayerUpdate(const Entity &player) {
+void InteractiveState::PushPlayerUpdate(const Entity &player, int dt) {
 	std::uint16_t packet = master.GetClient().SendPlayerUpdate(player);
 	if (player_hist.size() < 16) {
-		player_hist.emplace_back(player.GetState(), packet);
+		player_hist.emplace_back(player.GetState(), dt, packet);
 	} else {
 		auto entry = player_hist.begin();
 		entry->state = player.GetState();
+		entry->delta_t = dt;
 		entry->packet = packet;
 		player_hist.splice(player_hist.end(), player_hist, entry);
 	}
@@ -146,9 +146,16 @@ void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &co
 	auto entry = player_hist.begin();
 	auto end = player_hist.end();
 
+	// we may have received an older packet
+	int pack_diff = int16_t(seq) - int16_t(entry->packet);
+	if (pack_diff < 0) {
+		// indeed we have, just ignore it
+		return;
+	}
+
 	// drop anything older than the fix
 	while (entry != end) {
-		int pack_diff = int16_t(seq) - int16_t(entry->packet);
+		pack_diff = int16_t(seq) - int16_t(entry->packet);
 		if (pack_diff > 0) {
 			entry = player_hist.erase(entry);
 		} else {
@@ -167,7 +174,7 @@ void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &co
 
 	while (entry != end) {
 		replay_state.velocity = entry->state.velocity;
-		replay_state.Update(16);
+		replay_state.Update(entry->delta_t);
 		entry->state.chunk_pos = replay_state.chunk_pos;
 		entry->state.block_pos = replay_state.block_pos;
 		++entry;
@@ -180,7 +187,10 @@ void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &co
 		return;
 	}
 
-	constexpr float warp_thresh = 1.0f;
+	// if offset > 10cm, warp the player
+	// otherwise, move at most 1cm per frame towards
+	// the fixed position (160ms, so shouldn't be too noticeable)
+	constexpr float warp_thresh = 0.01f; // (1/10)^2
 	constexpr float max_disp = 0.0001f; // (1/100)^2
 
 	if (disp_squared > warp_thresh) {

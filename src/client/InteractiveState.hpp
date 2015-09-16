@@ -38,7 +38,7 @@ public:
 	void Update(int dt) override;
 	void Render(Viewport &) override;
 
-	void PushPlayerUpdate(const Entity &);
+	void PushPlayerUpdate(const Entity &, int dt);
 	void MergePlayerCorrection(std::uint16_t, const EntityState &);
 
 private:
@@ -50,13 +50,13 @@ private:
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
 	IntervalTimer loop_timer;
-	IntervalTimer update_timer;
 
 	struct PlayerHistory {
 		EntityState state;
+		int delta_t;
 		std::uint16_t packet;
-		PlayerHistory(EntityState s, std::uint16_t p)
-		: state(s), packet(p) { }
+		PlayerHistory(EntityState s, int dt, std::uint16_t p)
+		: state(s), delta_t(dt), packet(p) { }
 	};
 	std::list<PlayerHistory> player_hist;
 

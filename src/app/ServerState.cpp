@@ -24,14 +24,12 @@ ServerState::ServerState(
 , skeletons()
 , spawner(world, skeletons, gc.seed)
 , server(sc, world)
-, loop_timer(16)
-, push_timer(16) {
+, loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	skeletons.LoadHeadless();
 
 	loop_timer.Start();
-	push_timer.Start();
 
 	std::cout << "listening on UDP port " << sc.port << std::endl;
 }
@@ -46,16 +44,17 @@ void ServerState::Handle(const SDL_Event &event) {
 
 void ServerState::Update(int dt) {
 	loop_timer.Update(dt);
-	push_timer.Update(dt);
 	server.Handle();
+	int world_dt = 0;
 	while (loop_timer.HitOnce()) {
 		spawner.Update(loop_timer.Interval());
 		world.Update(loop_timer.Interval());
+		world_dt += loop_timer.Interval();
 		loop_timer.PopIteration();
 	}
 	chunk_loader.Update(dt);
-	if (push_timer.Hit()) {
-		server.Update(dt);
+	if (world_dt > 0) {
+		server.Update(world_dt);
 	}
 }
 

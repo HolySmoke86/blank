@@ -4,6 +4,7 @@
 #include "Connection.hpp"
 #include "ConnectionHandler.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../world/EntityState.hpp"
 
 #include <list>
 #include <SDL_net.h>
@@ -70,6 +71,7 @@ private:
 	Entity *player;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;
+	EntityState player_update_state;
 	std::uint16_t player_update_pack;
 	IntervalTimer player_update_timer;
 

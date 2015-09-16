@@ -128,6 +128,7 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 , player(nullptr)
 , spawns()
 , confirm_wait(0)
+, player_update_state()
 , player_update_pack(0)
 , player_update_timer(1500) {
 	conn.SetHandler(this);
@@ -253,11 +254,20 @@ void ClientConnection::SendUpdate(SpawnStatus &status) {
 }
 
 void ClientConnection::CheckPlayerFix() {
-	// check always succeeds for now ;)
-	auto pack = Packet::Make<Packet::PlayerCorrection>(server.GetPacket());
-	pack.WritePacketSeq(player_update_pack);
-	pack.WritePlayer(Player());
-	conn.Send(server.GetPacket(), server.GetSocket());
+	// player_update_state's position holds the client's most recent prediction
+	glm::vec3 diff = player_update_state.Diff(Player().GetState());
+	float dist_squared = dot(diff, diff);
+
+	// if client's prediction is off by more than 1cm, send
+	// our (authoritative) state back so it can fix it
+	constexpr float fix_thresh = 0.0001f;
+
+	if (dist_squared > fix_thresh) {
+		auto pack = Packet::Make<Packet::PlayerCorrection>(server.GetPacket());
+		pack.WritePacketSeq(player_update_pack);
+		pack.WritePlayer(Player());
+		conn.Send(server.GetPacket(), server.GetSocket());
+	}
 }
 
 void ClientConnection::AttachPlayer(Entity &new_player) {
@@ -324,6 +334,7 @@ void ClientConnection::On(const Packet::Login &pack) {
 		response.WriteWorldName(server.GetWorld().Name());
 		conn.Send(server.GetPacket(), server.GetSocket());
 		// set up update tracking
+		player_update_state = new_player->GetState();
 		player_update_pack = pack.Seq();
 		player_update_timer.Reset();
 		player_update_timer.Start();
@@ -347,11 +358,10 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	player_update_timer.Reset();
 	if (pack_diff > 0 || overdue) {
 		player_update_pack = pack.Seq();
-		// TODO: do client input validation here
-		EntityState new_state;
-		pack.ReadPlayerState(new_state);
-		Player().Velocity(new_state.velocity);
-		Player().Orientation(new_state.orient);
+		pack.ReadPlayerState(player_update_state);
+		// accept velocity and orientation as "user input"
+		Player().Velocity(player_update_state.velocity);
+		Player().Orientation(player_update_state.orient);
 	}
 }
 
