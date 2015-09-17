@@ -26,7 +26,7 @@ struct Packet {
 		// true if this contains an ack for given (remote) seq
 		bool Acks(std::uint16_t) const noexcept;
 		std::uint16_t AckBegin() const noexcept { return ack; }
-		std::uint16_t AckEnd() const noexcept { return ack + std::uint16_t(33); }
+		std::uint16_t AckEnd() const noexcept { return ack - std::uint16_t(33); }
 	};
 
 	struct Header {

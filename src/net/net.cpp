@@ -462,7 +462,7 @@ void Connection::Received(const UDPpacket &udp_pack) {
 			}
 		}
 		// check for newly ack'd packets
-		for (uint16_t s = ctrl_new.AckBegin(); s != ctrl_new.AckEnd(); ++s) {
+		for (uint16_t s = ctrl_new.AckBegin(); s != ctrl_new.AckEnd(); --s) {
 			if (ctrl_new.Acks(s) && !ctrl_in.Acks(s)) {
 				Handler().OnPacketReceived(s);
 			}
