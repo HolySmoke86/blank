@@ -55,8 +55,16 @@ struct Packet {
 		std::size_t length;
 		std::uint8_t *data;
 
+		/// WARNING: do not use these if the data doesn not
+		///          point into a real packet's payload
+		const Packet &GetPacket() const noexcept {
+			return *reinterpret_cast<const Packet *>(data - sizeof(Header));
+		}
+		const Header &GetHeader() const noexcept {
+			return GetPacket().header;
+		}
 		std::uint16_t Seq() const noexcept {
-			return reinterpret_cast<const Packet *>(data - sizeof(Header))->header.ctrl.seq;
+			return GetHeader().ctrl.seq;
 		}
 
 		template<class T>
