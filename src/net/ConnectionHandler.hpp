@@ -30,6 +30,8 @@ private:
 	virtual void On(const Packet::DespawnEntity &) { }
 	virtual void On(const Packet::EntityUpdate &) { }
 	virtual void On(const Packet::PlayerCorrection &) { }
+	virtual void On(const Packet::ChunkBegin &) { }
+	virtual void On(const Packet::ChunkData &) { }
 
 };
 

@@ -147,3 +147,32 @@ Payload:
 	 0 sequence number of the offending packet, 16bit unsigned int
 	 2 entity state of the player's entity on the server
 Length: 66
+
+
+Chunk Begin
+-----------
+
+Sent by the server to inform the client of an upcoming chunk transmission.
+
+Code: 9
+Payload:
+	 0 transmission ID, used for reference with Chunk Data packets, 32bit unsigned int
+	 4 flags, 32bit bitfield with boolean values
+	   1: compressed
+	 8 chunk coordinates, vec3i
+	20 data size, 32bit unsigned int
+Length: 24
+
+
+Chunk Data
+----------
+
+Raw chunk data sent by the server, optionally compressed with zlib.
+
+Code: 10
+Payload:
+	 0 transmission ID, references the Chunk Begin packet this data belongs to, 32bit unsigned int
+	 4 block offset, offset of this block inside the whole data, 32bit unsigned int
+	 8 block size, size of the data block, 32bit unsigned int
+	12 data, raw data
+Length: 12-484

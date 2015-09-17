@@ -8,6 +8,7 @@
 
 #include "../app/init.hpp"
 #include "../model/CompositeModel.hpp"
+#include "../world/ChunkIndex.hpp"
 #include "../world/Entity.hpp"
 #include "../world/EntityState.hpp"
 #include "../world/World.hpp"
@@ -30,6 +31,8 @@ constexpr size_t Packet::SpawnEntity::MAX_LEN;
 constexpr size_t Packet::DespawnEntity::MAX_LEN;
 constexpr size_t Packet::EntityUpdate::MAX_LEN;
 constexpr size_t Packet::PlayerCorrection::MAX_LEN;
+constexpr size_t Packet::ChunkBegin::MAX_LEN;
+constexpr size_t Packet::ChunkData::MAX_LEN;
 
 namespace {
 
@@ -125,12 +128,15 @@ uint16_t Client::SendPart() {
 ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 : server(server)
 , conn(addr)
-, player(nullptr)
+, player(nullptr, nullptr)
 , spawns()
 , confirm_wait(0)
 , player_update_state()
 , player_update_pack(0)
-, player_update_timer(1500) {
+, player_update_timer(1500)
+, transmitter(*this)
+, chunk_queue()
+, old_base() {
 	conn.SetHandler(this);
 }
 
@@ -191,6 +197,7 @@ void ClientConnection::Update(int dt) {
 		}
 
 		CheckPlayerFix();
+		CheckChunkQueue();
 	}
 	if (conn.ShouldPing()) {
 		conn.SendPing(server.GetPacket(), server.GetSocket());
@@ -210,24 +217,33 @@ ClientConnection::SpawnStatus::~SpawnStatus() {
 
 bool ClientConnection::CanSpawn(const Entity &e) const noexcept {
 	return
-		&e != player &&
+		&e != player.entity &&
 		!e.Dead() &&
-		manhattan_radius(e.ChunkCoords() - Player().ChunkCoords()) < 7;
+		manhattan_radius(e.ChunkCoords() - PlayerEntity().ChunkCoords()) < 7;
 }
 
 bool ClientConnection::CanDespawn(const Entity &e) const noexcept {
 	return
 		e.Dead() ||
-		manhattan_radius(e.ChunkCoords() - Player().ChunkCoords()) > 7;
+		manhattan_radius(e.ChunkCoords() - PlayerEntity().ChunkCoords()) > 7;
+}
+
+uint16_t ClientConnection::Send() {
+	return conn.Send(server.GetPacket(), server.GetSocket());
+}
+
+uint16_t ClientConnection::Send(size_t len) {
+	server.GetPacket().len = len;
+	return Send();
 }
 
 void ClientConnection::SendSpawn(SpawnStatus &status) {
 	// don't double spawn
 	if (status.spawn_pack != -1) return;
 
-	auto pack = Packet::Make<Packet::SpawnEntity>(server.GetPacket());
+	auto pack = Prepare<Packet::SpawnEntity>();
 	pack.WriteEntity(*status.entity);
-	status.spawn_pack = conn.Send(server.GetPacket(), server.GetSocket());
+	status.spawn_pack = Send();
 	++confirm_wait;
 }
 
@@ -235,9 +251,9 @@ void ClientConnection::SendDespawn(SpawnStatus &status) {
 	// don't double despawn
 	if (status.despawn_pack != -1) return;
 
-	auto pack = Packet::Make<Packet::DespawnEntity>(server.GetPacket());
+	auto pack = Prepare<Packet::DespawnEntity>();
 	pack.WriteEntityID(status.entity->ID());
-	status.despawn_pack = conn.Send(server.GetPacket(), server.GetSocket());
+	status.despawn_pack = Send();
 	++confirm_wait;
 }
 
@@ -246,16 +262,15 @@ void ClientConnection::SendUpdate(SpawnStatus &status) {
 	if (status.spawn_pack != -1 || status.despawn_pack != -1) return;
 
 	// TODO: pack entity updates
-	auto pack = Packet::Make<Packet::EntityUpdate>(server.GetPacket());
+	auto pack = Prepare<Packet::EntityUpdate>();
 	pack.WriteEntityCount(1);
 	pack.WriteEntity(*status.entity, 0);
-	server.GetPacket().len = Packet::EntityUpdate::GetSize(1);
-	conn.Send(server.GetPacket(), server.GetSocket());
+	Send(Packet::EntityUpdate::GetSize(1));
 }
 
 void ClientConnection::CheckPlayerFix() {
 	// player_update_state's position holds the client's most recent prediction
-	glm::vec3 diff = player_update_state.Diff(Player().GetState());
+	glm::vec3 diff = player_update_state.Diff(PlayerEntity().GetState());
 	float dist_squared = dot(diff, diff);
 
 	// if client's prediction is off by more than 1cm, send
@@ -263,29 +278,86 @@ void ClientConnection::CheckPlayerFix() {
 	constexpr float fix_thresh = 0.0001f;
 
 	if (dist_squared > fix_thresh) {
-		auto pack = Packet::Make<Packet::PlayerCorrection>(server.GetPacket());
+		auto pack = Prepare<Packet::PlayerCorrection>();
 		pack.WritePacketSeq(player_update_pack);
-		pack.WritePlayer(Player());
-		conn.Send(server.GetPacket(), server.GetSocket());
+		pack.WritePlayer(PlayerEntity());
+		Send();
 	}
 }
 
-void ClientConnection::AttachPlayer(Entity &new_player) {
+void ClientConnection::CheckChunkQueue() {
+	if (PlayerChunks().Base() != old_base) {
+		Chunk::Pos begin = PlayerChunks().CoordsBegin();
+		Chunk::Pos end = PlayerChunks().CoordsEnd();
+		for (Chunk::Pos pos = begin; pos.z < end.z; ++pos.z) {
+			for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+				for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+					if (manhattan_radius(pos - old_base) > PlayerChunks().Extent()) {
+						chunk_queue.push_back(pos);
+					}
+				}
+			}
+		}
+		old_base = PlayerChunks().Base();
+	}
+	if (transmitter.Transmitting()) {
+		transmitter.Transmit();
+		return;
+	}
+	if (transmitter.Idle()) {
+		int count = 0;
+		constexpr int max = 64;
+		while (count < max && !chunk_queue.empty()) {
+			Chunk::Pos pos = chunk_queue.front();
+			chunk_queue.pop_front();
+			if (PlayerChunks().InRange(pos)) {
+				Chunk *chunk = PlayerChunks().Get(pos);
+				if (chunk) {
+					transmitter.Send(*chunk);
+					return;
+				} else {
+					chunk_queue.push_back(pos);
+				}
+				++count;
+			}
+		}
+	}
+}
+
+void ClientConnection::AttachPlayer(const Player &new_player) {
 	DetachPlayer();
-	player = &new_player;
-	player->Ref();
-	cout << "player \"" << player->Name() << "\" joined" << endl;
+	player = new_player;
+	player.entity->Ref();
+
+	old_base = player.chunks->Base();
+	Chunk::Pos begin = player.chunks->CoordsBegin();
+	Chunk::Pos end = player.chunks->CoordsEnd();
+	for (Chunk::Pos pos = begin; pos.z < end.z; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				chunk_queue.push_back(pos);
+			}
+		}
+	}
+
+	cout << "player \"" << player.entity->Name() << "\" joined" << endl;
 }
 
 void ClientConnection::DetachPlayer() {
-	if (!player) return;
-	player->Kill();
-	player->UnRef();
-	cout << "player \"" << player->Name() << "\" left" << endl;
-	player = nullptr;
+	if (!HasPlayer()) return;
+	cout << "player \"" << player.entity->Name() << "\" left" << endl;
+	player.entity->Kill();
+	player.entity->UnRef();
+	player.entity = nullptr;
+	player.chunks = nullptr;
+	transmitter.Abort();
+	chunk_queue.clear();
 }
 
 void ClientConnection::OnPacketReceived(uint16_t seq) {
+	if (transmitter.Waiting()) {
+		transmitter.Ack(seq);
+	}
 	if (!confirm_wait) return;
 	for (auto iter = spawns.begin(), end = spawns.end(); iter != end; ++iter) {
 		if (seq == iter->spawn_pack) {
@@ -302,6 +374,9 @@ void ClientConnection::OnPacketReceived(uint16_t seq) {
 }
 
 void ClientConnection::OnPacketLost(uint16_t seq) {
+	if (transmitter.Waiting()) {
+		transmitter.Nack(seq);
+	}
 	if (!confirm_wait) return;
 	for (SpawnStatus &status : spawns) {
 		if (seq == status.spawn_pack) {
@@ -323,26 +398,26 @@ void ClientConnection::On(const Packet::Login &pack) {
 	string name;
 	pack.ReadPlayerName(name);
 
-	Entity *new_player = server.GetWorld().AddPlayer(name).entity;
+	Player new_player = server.GetWorld().AddPlayer(name);
 
-	if (new_player) {
+	if (new_player.entity) {
 		// success!
-		AttachPlayer(*new_player);
+		AttachPlayer(new_player);
 		cout << "accepted login from player \"" << name << '"' << endl;
-		auto response = Packet::Make<Packet::Join>(server.GetPacket());
-		response.WritePlayer(*new_player);
+		auto response = Prepare<Packet::Join>();
+		response.WritePlayer(*new_player.entity);
 		response.WriteWorldName(server.GetWorld().Name());
-		conn.Send(server.GetPacket(), server.GetSocket());
+		Send();
 		// set up update tracking
-		player_update_state = new_player->GetState();
+		player_update_state = new_player.entity->GetState();
 		player_update_pack = pack.Seq();
 		player_update_timer.Reset();
 		player_update_timer.Start();
 	} else {
 		// aw no :(
 		cout << "rejected login from player \"" << name << '"' << endl;
-		Packet::Make<Packet::Part>(server.GetPacket());
-		conn.Send(server.GetPacket(), server.GetSocket());
+		Prepare<Packet::Part>();
+		Send();
 		conn.Close();
 	}
 }
@@ -360,8 +435,8 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 		player_update_pack = pack.Seq();
 		pack.ReadPlayerState(player_update_state);
 		// accept velocity and orientation as "user input"
-		Player().Velocity(player_update_state.velocity);
-		Player().Orientation(player_update_state.orient);
+		PlayerEntity().Velocity(player_update_state.velocity);
+		PlayerEntity().Orientation(player_update_state.orient);
 	}
 }
 
@@ -517,6 +592,10 @@ const char *Packet::Type2String(uint8_t t) noexcept {
 			return "EntityUpdate";
 		case PlayerCorrection::TYPE:
 			return "PlayerCorrection";
+		case ChunkBegin::TYPE:
+			return "ChunkBegin";
+		case ChunkData::TYPE:
+			return "ChunkData";
 		default:
 			return "Unknown";
 	}
@@ -688,6 +767,72 @@ void Packet::PlayerCorrection::ReadPlayerState(EntityState &state) const noexcep
 	Read(state, 2);
 }
 
+void Packet::ChunkBegin::WriteTransmissionId(uint32_t id) noexcept {
+	Write(id, 0);
+}
+
+void Packet::ChunkBegin::ReadTransmissionId(uint32_t &id) const noexcept {
+	Read(id, 0);
+}
+
+void Packet::ChunkBegin::WriteFlags(uint32_t f) noexcept {
+	Write(f, 4);
+}
+
+void Packet::ChunkBegin::ReadFlags(uint32_t &f) const noexcept {
+	Read(f, 4);
+}
+
+void Packet::ChunkBegin::WriteChunkCoords(const glm::ivec3 &pos) noexcept {
+	Write(pos, 8);
+}
+
+void Packet::ChunkBegin::ReadChunkCoords(glm::ivec3 &pos) const noexcept {
+	Read(pos, 8);
+}
+
+void Packet::ChunkBegin::WriteDataSize(uint32_t s) noexcept {
+	Write(s, 20);
+}
+
+void Packet::ChunkBegin::ReadDataSize(uint32_t &s) const noexcept {
+	Read(s, 20);
+}
+
+void Packet::ChunkData::WriteTransmissionId(uint32_t id) noexcept {
+	Write(id, 0);
+}
+
+void Packet::ChunkData::ReadTransmissionId(uint32_t &id) const noexcept {
+	Read(id, 0);
+}
+
+void Packet::ChunkData::WriteDataOffset(uint32_t o) noexcept {
+	Write(o, 4);
+}
+
+void Packet::ChunkData::ReadDataOffset(uint32_t &o) const noexcept {
+	Read(o, 4);
+}
+
+void Packet::ChunkData::WriteDataSize(uint32_t s) noexcept {
+	Write(s, 8);
+}
+
+void Packet::ChunkData::ReadDataSize(uint32_t &s) const noexcept {
+	Read(s, 8);
+}
+
+void Packet::ChunkData::WriteData(const uint8_t *d, size_t l) noexcept {
+	size_t len = min(length - 12, l);
+	memcpy(&data[12], d, len);
+}
+
+void Packet::ChunkData::ReadData(uint8_t *d, size_t l) const noexcept {
+	size_t len = min(length - 12, l);
+	memcpy(d, &data[12], len);
+}
+
 
 void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
@@ -718,6 +863,12 @@ void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 			break;
 		case Packet::PlayerCorrection::TYPE:
 			On(Packet::As<Packet::PlayerCorrection>(udp_pack));
+			break;
+		case Packet::ChunkBegin::TYPE:
+			On(Packet::As<Packet::ChunkBegin>(udp_pack));
+			break;
+		case Packet::ChunkData::TYPE:
+			On(Packet::As<Packet::ChunkData>(udp_pack));
 			break;
 		default:
 			// drop unknown or unhandled packets

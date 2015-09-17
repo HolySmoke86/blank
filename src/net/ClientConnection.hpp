@@ -1,18 +1,21 @@
 #ifndef BLANK_NET_CLIENTCONNECTION_HPP_
 #define BLANK_NET_CLIENTCONNECTION_HPP_
 
+#include "ChunkTransmitter.hpp"
 #include "Connection.hpp"
 #include "ConnectionHandler.hpp"
+#include "Server.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../world/EntityState.hpp"
+#include "../world/Player.hpp"
 
+#include <deque>
 #include <list>
 #include <SDL_net.h>
 
 
 namespace blank {
 
-class Entity;
 class Server;
 
 class ClientConnection
@@ -29,11 +32,23 @@ public:
 	Connection &GetConnection() noexcept { return conn; }
 	bool Disconnected() const noexcept { return conn.Closed(); }
 
-	void AttachPlayer(Entity &);
+	/// prepare a packet of given type
+	template<class Type>
+	Type Prepare() const noexcept {
+		return Packet::Make<Type>(server.GetPacket());
+	}
+	/// send the previously prepared packet
+	std::uint16_t Send();
+	/// send the previously prepared packet of non-default length
+	std::uint16_t Send(std::size_t len);
+
+	void AttachPlayer(const Player &);
 	void DetachPlayer();
-	bool HasPlayer() const noexcept { return player; }
-	Entity &Player() noexcept { return *player; }
-	const Entity &Player() const noexcept { return *player; }
+	bool HasPlayer() const noexcept { return player.entity; }
+	Entity &PlayerEntity() noexcept { return *player.entity; }
+	const Entity &PlayerEntity() const noexcept { return *player.entity; }
+	ChunkIndex &PlayerChunks() noexcept { return *player.chunks; }
+	const ChunkIndex &PlayerChunks() const noexcept { return *player.chunks; }
 
 private:
 	struct SpawnStatus {
@@ -65,15 +80,22 @@ private:
 
 	void CheckPlayerFix();
 
+	void CheckChunkQueue();
+
 private:
 	Server &server;
 	Connection conn;
-	Entity *player;
+	Player player;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;
+
 	EntityState player_update_state;
 	std::uint16_t player_update_pack;
 	IntervalTimer player_update_timer;
+
+	ChunkTransmitter transmitter;
+	std::deque<glm::ivec3> chunk_queue;
+	glm::ivec3 old_base;
 
 };
 

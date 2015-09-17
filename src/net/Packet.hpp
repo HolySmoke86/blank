@@ -5,6 +5,7 @@
 #include <ostream>
 #include <string>
 #include <SDL_net.h>
+#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -147,6 +148,35 @@ struct Packet {
 		void ReadPacketSeq(std::uint16_t &) const noexcept;
 		void WritePlayer(const Entity &) noexcept;
 		void ReadPlayerState(EntityState &) const noexcept;
+	};
+
+	struct ChunkBegin : public Payload {
+		static constexpr std::uint8_t TYPE = 9;
+		static constexpr std::size_t MAX_LEN = 24;
+
+		void WriteTransmissionId(std::uint32_t) noexcept;
+		void ReadTransmissionId(std::uint32_t &) const noexcept;
+		void WriteFlags(std::uint32_t) noexcept;
+		void ReadFlags(std::uint32_t &) const noexcept;
+		void WriteChunkCoords(const glm::ivec3 &) noexcept;
+		void ReadChunkCoords(glm::ivec3 &) const noexcept;
+		void WriteDataSize(std::uint32_t) noexcept;
+		void ReadDataSize(std::uint32_t &) const noexcept;
+	};
+
+	struct ChunkData : public Payload {
+		static constexpr std::uint8_t TYPE = 10;
+		static constexpr std::size_t MAX_LEN = MAX_PAYLOAD_LEN;
+		static constexpr std::size_t MAX_DATA_LEN = MAX_LEN - 12;
+
+		void WriteTransmissionId(std::uint32_t) noexcept;
+		void ReadTransmissionId(std::uint32_t &) const noexcept;
+		void WriteDataOffset(std::uint32_t) noexcept;
+		void ReadDataOffset(std::uint32_t &) const noexcept;
+		void WriteDataSize(std::uint32_t) noexcept;
+		void ReadDataSize(std::uint32_t &) const noexcept;
+		void WriteData(const std::uint8_t *, std::size_t len) noexcept;
+		void ReadData(std::uint8_t *, std::size_t maxlen) const noexcept;
 	};
 
 

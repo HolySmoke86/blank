@@ -54,6 +54,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	world,
 	world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
 )
+, chunk_receiver(world.Chunks())
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
 , loop_timer(16)
@@ -103,6 +104,7 @@ void InteractiveState::Handle(const SDL_Event &event) {
 void InteractiveState::Update(int dt) {
 	loop_timer.Update(dt);
 	master.Update(dt);
+	chunk_receiver.Update(dt);
 
 	interface.Update(dt);
 	int world_dt = 0;
@@ -415,6 +417,24 @@ void MasterState::On(const Packet::PlayerCorrection &pack) {
 	pack.ReadPacketSeq(pack_seq);
 	pack.ReadPlayerState(corrected_state);
 	state->MergePlayerCorrection(pack_seq, corrected_state);
+}
+
+void MasterState::On(const Packet::ChunkBegin &pack) {
+	if (!state) {
+		cout << "got chunk data, but the world has not been created yet" << endl;
+		cout << "great, this will totally screw up everything :(" << endl;
+		return;
+	}
+	state->GetChunkReceiver().Handle(pack);
+}
+
+void MasterState::On(const Packet::ChunkData &pack) {
+	if (!state) {
+		cout << "got chunk data, but the world has not been created yet" << endl;
+		cout << "great, this will totally screw up everything :(" << endl;
+		return;
+	}
+	state->GetChunkReceiver().Handle(pack);
 }
 
 }

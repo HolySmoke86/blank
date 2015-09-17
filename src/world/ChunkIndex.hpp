@@ -30,6 +30,11 @@ public:
 	Chunk *operator [](int i) noexcept { return chunks[i]; }
 	const Chunk *operator [](int i) const noexcept { return chunks[i]; }
 
+	int Extent() const noexcept { return extent; }
+
+	Chunk::Pos CoordsBegin() const noexcept { return base - Chunk::Pos(extent); }
+	Chunk::Pos CoordsEnd() const noexcept { return base + Chunk::Pos(extent + 1); }
+
 	void Register(Chunk &) noexcept;
 
 	int TotalChunks() const noexcept { return total_length; }

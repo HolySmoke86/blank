@@ -56,6 +56,8 @@ public:
 	void On(const Packet::DespawnEntity &) override;
 	void On(const Packet::EntityUpdate &) override;
 	void On(const Packet::PlayerCorrection &) override;
+	void On(const Packet::ChunkBegin &) override;
+	void On(const Packet::ChunkData &) override;
 
 private:
 	/// flag entity as updated by given packet

@@ -5,6 +5,7 @@
 #include "../app/State.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Skeletons.hpp"
+#include "../net/ChunkReceiver.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"
@@ -30,6 +31,7 @@ public:
 
 	World &GetWorld() noexcept { return world; }
 	Interface &GetInterface() noexcept { return interface; }
+	ChunkReceiver &GetChunkReceiver() noexcept { return chunk_receiver; }
 	Skeletons &GetSkeletons() noexcept { return skeletons; }
 
 	void OnEnter() override;
@@ -47,6 +49,7 @@ private:
 	WorldSave save;
 	World world;
 	Interface interface;
+	ChunkReceiver chunk_receiver;
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
 	IntervalTimer loop_timer;
