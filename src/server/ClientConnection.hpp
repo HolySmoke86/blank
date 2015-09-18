@@ -12,6 +12,7 @@
 #include <deque>
 #include <list>
 #include <SDL_net.h>
+#include <vector>
 
 
 namespace blank {
@@ -77,7 +78,8 @@ private:
 
 	void SendSpawn(SpawnStatus &);
 	void SendDespawn(SpawnStatus &);
-	void SendUpdate(SpawnStatus &);
+	void QueueUpdate(SpawnStatus &);
+	void SendUpdates();
 
 	void CheckPlayerFix();
 
@@ -89,6 +91,8 @@ private:
 	Player player;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;
+
+	std::vector<SpawnStatus *> entity_updates;
 
 	EntityState player_update_state;
 	std::uint16_t player_update_pack;

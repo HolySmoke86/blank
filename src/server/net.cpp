@@ -174,6 +174,7 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 , player(nullptr, nullptr)
 , spawns()
 , confirm_wait(0)
+, entity_updates()
 , player_update_state()
 , player_update_pack(0)
 , player_update_timer(1500)
@@ -206,7 +207,7 @@ void ClientConnection::Update(int dt) {
 					SendDespawn(*local_iter);
 				} else {
 					// update
-					SendUpdate(*local_iter);
+					QueueUpdate(*local_iter);
 				}
 				++global_iter;
 				++local_iter;
@@ -238,6 +239,7 @@ void ClientConnection::Update(int dt) {
 			SendDespawn(*local_iter);
 			++local_iter;
 		}
+		SendUpdates();
 
 		CheckPlayerFix();
 		CheckChunkQueue();
@@ -300,15 +302,31 @@ void ClientConnection::SendDespawn(SpawnStatus &status) {
 	++confirm_wait;
 }
 
-void ClientConnection::SendUpdate(SpawnStatus &status) {
+void ClientConnection::QueueUpdate(SpawnStatus &status) {
 	// don't send updates while spawn not ack'd or despawn sent
-	if (status.spawn_pack != -1 || status.despawn_pack != -1) return;
+	if (status.spawn_pack == -1 && status.despawn_pack == -1) {
+		entity_updates.push_back(&status);
+	}
+}
 
-	// TODO: pack entity updates
+void ClientConnection::SendUpdates() {
 	auto pack = Prepare<Packet::EntityUpdate>();
-	pack.WriteEntityCount(1);
-	pack.WriteEntity(*status.entity, 0);
-	Send(Packet::EntityUpdate::GetSize(1));
+	int entity_pos = 0;
+	for (SpawnStatus *status : entity_updates) {
+		pack.WriteEntity(*status->entity, entity_pos);
+		++entity_pos;
+		if (entity_pos == Packet::EntityUpdate::MAX_ENTITIES) {
+			pack.WriteEntityCount(entity_pos);
+			Send(Packet::EntityUpdate::GetSize(entity_pos));
+			pack = Prepare<Packet::EntityUpdate>();
+			entity_pos = 0;
+		}
+	}
+	if (entity_pos > 0) {
+		pack.WriteEntityCount(entity_pos);
+		Send(Packet::EntityUpdate::GetSize(entity_pos));
+	}
+	entity_updates.clear();
 }
 
 void ClientConnection::CheckPlayerFix() {

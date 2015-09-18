@@ -396,7 +396,8 @@ void MasterState::On(const Packet::SpawnEntity &pack) {
 	if (skel) {
 		skel->Instantiate(entity.GetModel());
 	}
-	cout << "spawned entity " << entity.Name() << " at " << entity.AbsolutePosition() << endl;
+	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
+		<< ") at " << entity.AbsolutePosition() << endl;
 }
 
 void MasterState::On(const Packet::DespawnEntity &pack) {
@@ -411,7 +412,7 @@ void MasterState::On(const Packet::DespawnEntity &pack) {
 	for (Entity &entity : state->GetWorld().Entities()) {
 		if (entity.ID() == entity_id) {
 			entity.Kill();
-			cout << "despawned entity " << entity.Name() << " at " << entity.AbsolutePosition() << endl;
+			cout << "despawned entity #" << entity_id << " (" << entity.Name() << ") at " << entity.AbsolutePosition() << endl;
 			return;
 		}
 	}
