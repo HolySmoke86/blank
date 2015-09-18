@@ -1,5 +1,5 @@
-#ifndef BLANK_WORLD_CHUNKLOADER_HPP_
-#define BLANK_WORLD_CHUNKLOADER_HPP_
+#ifndef BLANK_CLIENT_CHUNKREQUESTER_HPP_
+#define BLANK_CLIENT_CHUNKREQUESTER_HPP_
 
 #include <cstddef>
 
@@ -7,15 +7,15 @@
 namespace blank {
 
 class ChunkStore;
-class Generator;
 class WorldSave;
 
-class ChunkLoader {
+namespace client {
+
+class ChunkRequester {
 
 public:
-	ChunkLoader(
+	ChunkRequester(
 		ChunkStore &,
-		const Generator &,
 		const WorldSave &
 	) noexcept;
 
@@ -25,18 +25,16 @@ public:
 
 	int ToLoad() const noexcept;
 
-	// returns true if the chunk was generated
-	// (as opposed to loaded from file)
-	bool LoadOne();
+	void LoadOne();
 	void LoadN(std::size_t n);
 
 private:
 	ChunkStore &store;
-	const Generator &gen;
 	const WorldSave &save;
 
 };
 
+}
 }
 
 #endif

@@ -920,12 +920,14 @@ void ChunkIndex::Unset(int index) noexcept {
 }
 
 Chunk::Pos ChunkIndex::NextMissing() noexcept {
-	int roundtrip = last_missing;
-	while (chunks[last_missing]) {
-		++last_missing;
-		last_missing %= total_length;
-		if (last_missing == roundtrip) {
-			break;
+	if (MissingChunks() > 0) {
+		int roundtrip = last_missing;
+		last_missing = (last_missing + 1) % total_length;
+		while (chunks[last_missing]) {
+			last_missing = (last_missing + 1) % total_length;
+			if (last_missing == roundtrip) {
+				break;
+			}
 		}
 	}
 	return PositionOf(last_missing);

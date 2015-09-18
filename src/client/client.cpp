@@ -1,3 +1,4 @@
+#include "ChunkRequester.hpp"
 #include "InitialState.hpp"
 #include "InteractiveState.hpp"
 #include "MasterState.hpp"
@@ -6,6 +7,8 @@
 #include "../app/init.hpp"
 #include "../app/TextureIndex.hpp"
 #include "../model/CompositeModel.hpp"
+#include "../io/WorldSave.hpp"
+#include "../world/ChunkStore.hpp"
 
 #include <iostream>
 #include <glm/gtx/io.hpp>
@@ -15,6 +18,63 @@ using namespace std;
 
 namespace blank {
 namespace client {
+
+ChunkRequester::ChunkRequester(
+	ChunkStore &store,
+	const WorldSave &save
+) noexcept
+: store(store)
+, save(save) {
+
+}
+
+void ChunkRequester::Update(int dt) {
+	// check if there's chunks waiting to be loaded
+	LoadN(10);
+
+	// store a few chunks as well
+	constexpr int max_save = 10;
+	int saved = 0;
+	for (Chunk &chunk : store) {
+		if (chunk.ShouldUpdateSave()) {
+			save.Write(chunk);
+			++saved;
+			if (saved >= max_save) {
+				break;
+			}
+		}
+	}
+}
+
+int ChunkRequester::ToLoad() const noexcept {
+	return store.EstimateMissing();
+}
+
+void ChunkRequester::LoadOne() {
+	if (!store.HasMissing()) return;
+
+	Chunk::Pos pos = store.NextMissing();
+	Chunk *chunk = store.Allocate(pos);
+	if (!chunk) {
+		// chunk store corrupted?
+		return;
+	}
+
+	if (save.Exists(pos)) {
+		save.Read(*chunk);
+		// TODO: request chunk from server with cache tag
+	} else {
+		// TODO: request chunk from server
+	}
+}
+
+void ChunkRequester::LoadN(std::size_t n) {
+	std::size_t end = std::min(n, std::size_t(ToLoad()));
+	for (std::size_t i = 0; i < end && store.HasMissing(); ++i) {
+		LoadOne();
+	}
+}
+
 
 InitialState::InitialState(MasterState &master)
 : master(master)
@@ -54,11 +114,16 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	world,
 	world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
 )
+// TODO: looks like chunk requester and receiver can and should be merged
+, chunk_requester(world.Chunks(), save)
 , chunk_receiver(world.Chunks())
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
 , loop_timer(16)
 , player_hist() {
+	if (!save.Exists()) {
+		save.Write(master.GetWorldConf());
+	}
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
@@ -105,6 +170,7 @@ void InteractiveState::Update(int dt) {
 	loop_timer.Update(dt);
 	master.Update(dt);
 	chunk_receiver.Update(dt);
+	chunk_requester.Update(dt);
 
 	interface.Update(dt);
 	int world_dt = 0;

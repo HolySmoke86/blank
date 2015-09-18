@@ -1,6 +1,7 @@
 #ifndef BLANK_CLIENT_INTERACTIVESTATE_HPP_
 #define BLANK_CLIENT_INTERACTIVESTATE_HPP_
 
+#include "ChunkRequester.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../app/State.hpp"
 #include "../io/WorldSave.hpp"
@@ -49,6 +50,7 @@ private:
 	WorldSave save;
 	World world;
 	Interface interface;
+	ChunkRequester chunk_requester;
 	ChunkReceiver chunk_receiver;
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
