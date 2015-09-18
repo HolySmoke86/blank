@@ -1,7 +1,7 @@
-#ifndef BLANK_NET_CLIENT_HPP_
-#define BLANK_NET_CLIENT_HPP_
+#ifndef BLANK_CLIENT_CLIENT_HPP_
+#define BLANK_CLIENT_CLIENT_HPP_
 
-#include "Connection.hpp"
+#include "../net/Connection.hpp"
 
 #include <string>
 #include <SDL_net.h>
@@ -10,6 +10,8 @@
 namespace blank {
 
 class World;
+
+namespace client {
 
 class Client {
 
@@ -45,6 +47,7 @@ private:
 
 };
 
+}
 }
 
 #endif

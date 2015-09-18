@@ -1,5 +1,5 @@
-#ifndef BLANK_NET_CHUNKTRANSMITTER_HPP_
-#define BLANK_NET_CHUNKTRANSMITTER_HPP_
+#ifndef BLANK_SERVER_CHUNKTRANSMITTER_HPP_
+#define BLANK_SERVER_CHUNKTRANSMITTER_HPP_
 
 #include <cstdint>
 #include <memory>
@@ -9,6 +9,9 @@
 namespace blank {
 
 class Chunk;
+
+namespace server {
+
 class ClientConnection;
 
 class ChunkTransmitter {
@@ -68,6 +71,7 @@ private:
 
 };
 
+}
 }
 
 #endif

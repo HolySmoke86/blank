@@ -1,12 +1,12 @@
 #ifndef BLANK_CLIENT_INTERACTIVESTATE_HPP_
 #define BLANK_CLIENT_INTERACTIVESTATE_HPP_
 
+#include "ChunkReceiver.hpp"
 #include "ChunkRequester.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../app/State.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Skeletons.hpp"
-#include "../net/ChunkReceiver.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"

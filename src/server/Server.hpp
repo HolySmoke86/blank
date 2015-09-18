@@ -1,5 +1,5 @@
-#ifndef BLANK_NET_SERVER_HPP
-#define BLANK_NET_SERVER_HPP
+#ifndef BLANK_SERVER_SERVER_HPP
+#define BLANK_SERVER_SERVER_HPP
 
 #include <list>
 #include <SDL_net.h>
@@ -7,8 +7,11 @@
 
 namespace blank {
 
-class ClientConnection;
 class World;
+
+namespace server {
+
+class ClientConnection;
 
 class Server {
 
@@ -44,6 +47,7 @@ private:
 
 };
 
+}
 }
 
 #endif

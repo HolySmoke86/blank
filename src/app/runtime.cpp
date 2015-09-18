@@ -1,13 +1,13 @@
 #include "Application.hpp"
 #include "Environment.hpp"
 #include "Runtime.hpp"
-#include "ServerState.hpp"
 #include "WorldState.hpp"
 
 #include "init.hpp"
 #include "../client/MasterState.hpp"
 #include "../io/filesystem.hpp"
 #include "../io/WorldSave.hpp"
+#include "../server/ServerState.hpp"
 
 #include <cctype>
 #include <cstdlib>
@@ -342,7 +342,7 @@ void Runtime::RunServer() {
 	}
 
 	HeadlessApplication app(env);
-	ServerState server_state(env, config.gen, config.world, save, config.server);
+	server::ServerState server_state(env, config.gen, config.world, save, config.server);
 	app.PushState(&server_state);
 	Run(app);
 }

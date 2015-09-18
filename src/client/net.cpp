@@ -1,9 +1,9 @@
 #include "ChunkReceiver.hpp"
 #include "ChunkTransmission.hpp"
-#include "ChunkTransmitter.hpp"
+#include "Client.hpp"
 
-#include "ClientConnection.hpp"
-#include "Packet.hpp"
+#include "../app/init.hpp"
+#include "../net/Packet.hpp"
 #include "../world/Chunk.hpp"
 #include "../world/ChunkStore.hpp"
 
@@ -15,6 +15,8 @@ using namespace std;
 
 
 namespace blank {
+namespace client {
+
 
 ChunkReceiver::ChunkReceiver(ChunkStore &store)
 : store(store)
@@ -154,155 +156,95 @@ bool ChunkTransmission::Compressed() const noexcept {
 }
 
 
-ChunkTransmitter::ChunkTransmitter(ClientConnection &conn)
-: conn(conn)
-, current(nullptr)
-, buffer_size(Chunk::BlockSize() + 10)
-, buffer(new uint8_t[buffer_size])
-, buffer_len(0)
-, packet_len(Packet::ChunkData::MAX_DATA_LEN)
-, cursor(0)
-, num_packets(0)
-, begin_packet(-1)
-, data_packets()
-, confirm_wait(0)
-, trans_id(0)
-, compressed(false) {
+namespace {
+
+UDPsocket client_bind(Uint16 port) {
+	UDPsocket sock = SDLNet_UDP_Open(port);
+	if (!sock) {
+		throw NetError("SDLNet_UDP_Open");
+	}
+	return sock;
+}
+
+IPaddress client_resolve(const char *host, Uint16 port) {
+	IPaddress addr;
+	if (SDLNet_ResolveHost(&addr, host, port) != 0) {
+		throw NetError("SDLNet_ResolveHost");
+	}
+	return addr;
+}
 
 }
 
-ChunkTransmitter::~ChunkTransmitter() {
-	Abort();
+Client::Client(const Config &conf)
+: conn(client_resolve(conf.host.c_str(), conf.port))
+, client_sock(client_bind(0))
+, client_pack{ -1, nullptr, 0 } {
+	client_pack.data = new Uint8[sizeof(Packet)];
+	client_pack.maxlen = sizeof(Packet);
+	// establish connection
+	SendPing();
 }
 
-bool ChunkTransmitter::Idle() const noexcept {
-	return !Transmitting() && !Waiting();
+Client::~Client() {
+	delete[] client_pack.data;
+	SDLNet_UDP_Close(client_sock);
 }
 
-bool ChunkTransmitter::Transmitting() const noexcept {
-	return cursor < num_packets;
-}
 
-void ChunkTransmitter::Transmit() {
-	if (cursor < num_packets) {
-		SendData(cursor);
-		++cursor;
+void Client::Handle() {
+	int result = SDLNet_UDP_Recv(client_sock, &client_pack);
+	while (result > 0) {
+		HandlePacket(client_pack);
+		result = SDLNet_UDP_Recv(client_sock, &client_pack);
+	}
+	if (result == -1) {
+		// a boo boo happened
+		throw NetError("SDLNet_UDP_Recv");
 	}
 }
 
-bool ChunkTransmitter::Waiting() const noexcept {
-	return confirm_wait > 0;
-}
-
-void ChunkTransmitter::Ack(uint16_t seq) {
-	if (!Waiting()) {
+void Client::HandlePacket(const UDPpacket &udp_pack) {
+	if (!conn.Matches(udp_pack.address)) {
+		// packet came from somewhere else, drop
 		return;
 	}
-	if (seq == begin_packet) {
-		begin_packet = -1;
-		--confirm_wait;
-		if (Idle()) {
-			Release();
-		}
+	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
+	if (pack.header.tag != Packet::TAG) {
+		// mistagged packet, drop
 		return;
 	}
-	for (int i = 0, end = data_packets.size(); i < end; ++i) {
-		if (seq == data_packets[i]) {
-			data_packets[i] = -1;
-			--confirm_wait;
-			if (Idle()) {
-				Release();
-			}
-			return;
-		}
+
+	conn.Received(udp_pack);
+}
+
+void Client::Update(int dt) {
+	conn.Update(dt);
+	if (conn.ShouldPing()) {
+		SendPing();
 	}
 }
 
-void ChunkTransmitter::Nack(uint16_t seq) {
-	if (!Waiting()) {
-		return;
-	}
-	if (seq == begin_packet) {
-		SendBegin();
-		return;
-	}
-	for (size_t i = 0, end = data_packets.size(); i < end; ++i) {
-		if (seq == data_packets[i]) {
-			SendData(i);
-			return;
-		}
-	}
+uint16_t Client::SendPing() {
+	return conn.SendPing(client_pack, client_sock);
 }
 
-void ChunkTransmitter::Abort() {
-	if (!current) return;
-
-	Release();
-
-	begin_packet = -1;
-	data_packets.clear();
-	confirm_wait = 0;
+uint16_t Client::SendLogin(const string &name) {
+	auto pack = Packet::Make<Packet::Login>(client_pack);
+	pack.WritePlayerName(name);
+	return conn.Send(client_pack, client_sock);
 }
 
-void ChunkTransmitter::Send(Chunk &chunk) {
-	// abort current chunk, if any
-	Abort();
-
-	current = &chunk;
-	current->Ref();
-
-	// load new chunk data
-	compressed = true;
-	buffer_len = buffer_size;
-	if (compress(buffer.get(), &buffer_len, reinterpret_cast<const Bytef *>(chunk.BlockData()), Chunk::BlockSize()) != Z_OK) {
-		// compression failed, send it uncompressed
-		buffer_len = Chunk::BlockSize();
-		memcpy(buffer.get(), chunk.BlockData(), buffer_len);
-		compressed = false;
-	}
-	cursor = 0;
-	num_packets = (buffer_len / packet_len) + (buffer_len % packet_len != 0);
-	data_packets.resize(num_packets, -1);
-
-	++trans_id;
-	SendBegin();
+uint16_t Client::SendPlayerUpdate(const Entity &player) {
+	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
+	pack.WritePlayer(player);
+	return conn.Send(client_pack, client_sock);
 }
 
-void ChunkTransmitter::SendBegin() {
-	uint32_t flags = compressed;
-	auto pack = conn.Prepare<Packet::ChunkBegin>();
-	pack.WriteTransmissionId(trans_id);
-	pack.WriteFlags(flags);
-	pack.WriteChunkCoords(current->Position());
-	pack.WriteDataSize(buffer_len);
-	if (begin_packet == -1) {
-		++confirm_wait;
-	}
-	begin_packet = conn.Send();
+uint16_t Client::SendPart() {
+	Packet::Make<Packet::Part>(client_pack);
+	return conn.Send(client_pack, client_sock);
 }
 
-void ChunkTransmitter::SendData(size_t i) {
-	int pos = i * packet_len;
-	int len = min(packet_len, buffer_len - pos);
-	const uint8_t *data = &buffer[pos];
-
-	auto pack = conn.Prepare<Packet::ChunkData>();
-	pack.WriteTransmissionId(trans_id);
-	pack.WriteDataOffset(pos);
-	pack.WriteDataSize(len);
-	pack.WriteData(data, len);
-
-	if (data_packets[i] == -1) {
-		++confirm_wait;
-	}
-	data_packets[i] = conn.Send();
 }
-
-void ChunkTransmitter::Release() {
-	if (current) {
-		current->UnRef();
-		current = nullptr;
-	}
-}
-
 }

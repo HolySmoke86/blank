@@ -1,11 +1,11 @@
-#ifndef BLANK_APP_SERVERSTATE_HPP_
-#define BLANK_APP_SERVERSTATE_HPP_
+#ifndef BLANK_SERVER_SERVERSTATE_HPP_
+#define BLANK_SERVER_SERVERSTATE_HPP_
 
-#include "IntervalTimer.hpp"
-#include "State.hpp"
+#include "Server.hpp"
 #include "../ai/Spawner.hpp"
+#include "../app/IntervalTimer.hpp"
+#include "../app/State.hpp"
 #include "../model/Skeletons.hpp"
-#include "../net/Server.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkLoader.hpp"
 #include "../world/Generator.hpp"
@@ -16,6 +16,8 @@ namespace blank {
 
 class HeadlessEnvironment;
 class WorldSave;
+
+namespace server {
 
 class ServerState
 : public State {
@@ -46,6 +48,7 @@ private:
 
 };
 
+}
 }
 
 #endif

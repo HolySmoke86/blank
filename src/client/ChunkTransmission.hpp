@@ -1,5 +1,5 @@
-#ifndef BLANK_NET_CHUNKTRANSMISSION_HPP_
-#define BLANK_NET_CHUNKTRANSMISSION_HPP_
+#ifndef BLANK_CLIENT_CHUNKTRANSMISSION_HPP_
+#define BLANK_CLIENT_CHUNKTRANSMISSION_HPP_
 
 #include "../world/Chunk.hpp"
 
@@ -8,6 +8,7 @@
 
 
 namespace blank {
+namespace client {
 
 struct ChunkTransmission {
 
@@ -35,6 +36,7 @@ struct ChunkTransmission {
 
 };
 
-};
+}
+}
 
 #endif

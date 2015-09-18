@@ -1,10 +1,10 @@
 #ifndef BLANK_CLIENT_CLIENTSTATE_HPP_
 #define BLANK_CLIENT_CLIENTSTATE_HPP_
 
+#include "Client.hpp"
 #include "InitialState.hpp"
 #include "InteractiveState.hpp"
 #include "../app/State.hpp"
-#include "../net/Client.hpp"
 #include "../net/ConnectionHandler.hpp"
 
 #include <map>

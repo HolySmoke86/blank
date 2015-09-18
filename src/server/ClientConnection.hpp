@@ -1,11 +1,11 @@
-#ifndef BLANK_NET_CLIENTCONNECTION_HPP_
-#define BLANK_NET_CLIENTCONNECTION_HPP_
+#ifndef BLANK_SERVER_CLIENTCONNECTION_HPP_
+#define BLANK_SERVER_CLIENTCONNECTION_HPP_
 
 #include "ChunkTransmitter.hpp"
-#include "Connection.hpp"
-#include "ConnectionHandler.hpp"
 #include "Server.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../net/Connection.hpp"
+#include "../net/ConnectionHandler.hpp"
 #include "../world/EntityState.hpp"
 #include "../world/Player.hpp"
 
@@ -15,6 +15,7 @@
 
 
 namespace blank {
+namespace server {
 
 class Server;
 
@@ -99,6 +100,7 @@ private:
 
 };
 
+}
 }
 
 #endif

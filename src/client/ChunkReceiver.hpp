@@ -1,8 +1,8 @@
-#ifndef BLANK_NET_CHUNKRECEIVER_HPP_
-#define BLANK_NET_CHUNKRECEIVER_HPP_
+#ifndef BLANK_CLIENT_CHUNKRECEIVER_HPP_
+#define BLANK_CLIENT_CHUNKRECEIVER_HPP_
 
-#include "Packet.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../net/Packet.hpp"
 
 #include <cstdint>
 #include <list>
@@ -11,6 +11,9 @@
 namespace blank {
 
 class ChunkStore;
+
+namespace client {
+
 class ChunkTransmission;
 
 class ChunkReceiver {
@@ -35,6 +38,7 @@ private:
 
 };
 
+}
 }
 
 #endif

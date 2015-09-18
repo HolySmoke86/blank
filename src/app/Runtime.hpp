@@ -2,8 +2,8 @@
 #define BLANK_RUNTIME_HPP_
 
 #include "Environment.hpp"
-#include "../net/Client.hpp"
-#include "../net/Server.hpp"
+#include "../client/Client.hpp"
+#include "../server/Server.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/Generator.hpp"
 #include "../world/World.hpp"
@@ -44,11 +44,11 @@ public:
 		bool doublebuf = true;
 		int multisampling = 1;
 
-		Client::Config client = Client::Config();
+		client::Client::Config client = client::Client::Config();
 		Generator::Config gen = Generator::Config();
 		HeadlessEnvironment::Config env = HeadlessEnvironment::Config();
 		Interface::Config interface = Interface::Config();
-		Server::Config server = Server::Config();
+		server::Server::Config server = server::Server::Config();
 		World::Config world = World::Config();
 	};
 

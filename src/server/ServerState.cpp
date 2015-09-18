@@ -1,13 +1,14 @@
 #include "ServerState.hpp"
 
-#include "Environment.hpp"
-#include "TextureIndex.hpp"
+#include "../app/Environment.hpp"
+#include "../app/TextureIndex.hpp"
 #include "../net/io.hpp"
 
 #include <iostream>
 
 
 namespace blank {
+namespace server {
 
 ServerState::ServerState(
 	HeadlessEnvironment &env,
@@ -63,4 +64,5 @@ void ServerState::Render(Viewport &viewport) {
 
 }
 
+}
 }
