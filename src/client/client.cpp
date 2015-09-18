@@ -456,7 +456,7 @@ bool MasterState::UpdateEntity(uint32_t entity_id, uint16_t seq) {
 		return true;
 	}
 
-	int pack_diff = int16_t(seq) - int16_t(entry->second.last_packet);
+	int16_t pack_diff = int16_t(seq) - int16_t(entry->second.last_packet);
 	int time_diff = update_timer.Elapsed() - entry->second.last_update;
 	entry->second.last_update = update_timer.Elapsed();
 
