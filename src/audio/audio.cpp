@@ -48,7 +48,8 @@ ALError::ALError(ALenum num, const std::string &msg)
 }
 
 
-Audio::Audio() {
+Audio::Audio()
+: last_free(0) {
 	alGenSources(NUM_SRC, source);
 	ALenum err = alGetError();
 	if (err != AL_NO_ERROR) {
