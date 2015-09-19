@@ -123,6 +123,7 @@ void ChunkReceiver::Commit(ChunkTransmission &trans) {
 	} else {
 		memcpy(dst, src, min(src_len, dst_len));
 	}
+	chunk->Invalidate();
 	trans.Clear();
 }
 
