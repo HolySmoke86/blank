@@ -585,6 +585,7 @@ ClientConnection &Server::GetClient(const IPaddress &addr) {
 
 void Server::Update(int dt) {
 	for (list<ClientConnection>::iterator client(clients.begin()), end(clients.end()); client != end;) {
+		client->Update(dt);
 		if (client->Disconnected()) {
 			client = clients.erase(client);
 		} else {
