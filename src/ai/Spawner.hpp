@@ -10,6 +10,7 @@
 
 namespace blank {
 
+class CompositeModel;
 class Controller;
 class Entity;
 class Skeletons;
@@ -21,12 +22,16 @@ public:
 	Spawner(World &, Skeletons &, std::uint64_t seed);
 	~Spawner();
 
+	void LimitSkeletons(std::size_t begin, std::size_t end);
+
 	void Update(int dt);
 
 private:
 	void CheckDespawn() noexcept;
 	void TrySpawn();
 	void Spawn(Entity &reference, const glm::ivec3 &, const glm::vec3 &);
+
+	CompositeModel &RandomSkeleton() noexcept;
 
 private:
 	World &world;
@@ -40,6 +45,9 @@ private:
 	float spawn_distance;
 	unsigned int max_entities;
 	int chunk_range;
+
+	std::size_t skeletons_offset;
+	std::size_t skeletons_length;
 
 };
 

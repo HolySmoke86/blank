@@ -10,10 +10,14 @@
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
 
+#include <iostream>
+
+using namespace std;
+
 
 namespace blank {
 
-Spawner::Spawner(World &world, Skeletons &skeletons, std::uint64_t seed)
+Spawner::Spawner(World &world, Skeletons &skeletons, uint64_t seed)
 : world(world)
 , skeletons(skeletons)
 , controllers()
@@ -22,7 +26,9 @@ Spawner::Spawner(World &world, Skeletons &skeletons, std::uint64_t seed)
 , despawn_range(128 * 128)
 , spawn_distance(16 * 16)
 , max_entities(16)
-, chunk_range(4) {
+, chunk_range(4)
+, skeletons_offset(0)
+, skeletons_length(skeletons.Size()) {
 	timer.Start();
 }
 
@@ -32,6 +38,15 @@ Spawner::~Spawner() {
 	}
 }
 
+
+void Spawner::LimitSkeletons(size_t begin, size_t end) {
+	if (begin >= skeletons.Size() || end > skeletons.Size() || begin >= end) {
+		cout << "warning, skeleton limit out of bounds or invalid range given" << endl;
+	} else {
+		skeletons_offset = begin;
+		skeletons_length = end - begin;
+	}
+}
 
 void Spawner::Update(int dt) {
 	CheckDespawn();
@@ -75,7 +90,7 @@ void Spawner::CheckDespawn() noexcept {
 }
 
 void Spawner::TrySpawn() {
-	if (controllers.size() >= max_entities) return;
+	if (controllers.size() >= max_entities || skeletons_length == 0) return;
 
 	// select random player to punish
 	auto &players = world.Players();
@@ -123,17 +138,22 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	skeletons[random.Next<unsigned char>() % skeletons.Size()].Instantiate(e.GetModel());
+	RandomSkeleton().Instantiate(e.GetModel());
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (random()) {
 		ctrl = new RandomWalk(e, random.Next<std::uint64_t>());
-		e.Name("spawned walker");
+		e.Name("walker");
 	} else {
 		ctrl = new Chaser(world, e, reference);
-		e.Name("spawned chaser");
+		e.Name("chaser");
 	}
 	controllers.emplace_back(ctrl);
+}
+
+CompositeModel &Spawner::RandomSkeleton() noexcept {
+	std::size_t offset = (random.Next<std::size_t>() % skeletons_length) + skeletons_offset;
+	return skeletons[offset];
 }
 
 }

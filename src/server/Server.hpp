@@ -7,6 +7,7 @@
 
 namespace blank {
 
+class CompositeModel;
 class World;
 
 namespace server {
@@ -33,6 +34,10 @@ public:
 
 	World &GetWorld() noexcept { return world; }
 
+	void SetPlayerModel(const CompositeModel &) noexcept;
+	bool HasPlayerModel() const noexcept;
+	const CompositeModel &GetPlayerModel() const noexcept;
+
 private:
 	void HandlePacket(const UDPpacket &);
 
@@ -44,6 +49,7 @@ private:
 	std::list<ClientConnection> clients;
 
 	World &world;
+	const CompositeModel *player_model;
 
 };
 

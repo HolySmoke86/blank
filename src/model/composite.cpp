@@ -117,9 +117,9 @@ Skeletons::~Skeletons() {
 
 void Skeletons::LoadHeadless() {
 	skeletons.clear();
-	skeletons.reserve(3);
+	skeletons.reserve(4);
 	{
-		AABB bounds{{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }};
+		AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
 		skeletons.emplace_back(new CompositeModel);
 		skeletons[0]->ID(1);
 		skeletons[0]->Bounds(bounds);
@@ -131,20 +131,26 @@ void Skeletons::LoadHeadless() {
 		skeletons[1]->Bounds(bounds);
 	}
 	{
-		AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
+		AABB bounds{{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }};
 		skeletons.emplace_back(new CompositeModel);
 		skeletons[2]->ID(3);
 		skeletons[2]->Bounds(bounds);
+	}
+	{
+		AABB bounds{{ -0.25f, -0.5f, -0.35f }, { 0.25f, 0.5f, 0.35f }};
+		skeletons.emplace_back(new CompositeModel);
+		skeletons[3]->ID(4);
+		skeletons[3]->Bounds(bounds);
 	}
 }
 
 void Skeletons::Load() {
 	LoadHeadless();
-	models.resize(3);
+	models.resize(4);
 	EntityModel::Buffer buf;
 	{
 		CuboidShape shape(skeletons[0]->Bounds());
-		shape.Vertices(buf, 1.0f);
+		shape.Vertices(buf, 3.0f);
 		buf.colors.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
 		models[0].Update(buf);
 		skeletons[0]->SetNodeModel(&models[0]);
@@ -152,7 +158,7 @@ void Skeletons::Load() {
 	{
 		CuboidShape shape(skeletons[1]->Bounds());
 		buf.Clear();
-		shape.Vertices(buf, 2.0f);
+		shape.Vertices(buf, 0.0f);
 		buf.colors.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		models[1].Update(buf);
 		skeletons[1]->SetNodeModel(&models[1]);
@@ -160,10 +166,18 @@ void Skeletons::Load() {
 	{
 		StairShape shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
 		buf.Clear();
-		shape.Vertices(buf, 3.0f);
+		shape.Vertices(buf, 1.0f);
 		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
 		models[2].Update(buf);
 		skeletons[2]->SetNodeModel(&models[2]);
+	}
+	{
+		CuboidShape shape(skeletons[3]->Bounds());
+		buf.Clear();
+		shape.Vertices(buf, 2.0f);
+		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.25f, 0.5f });
+		models[3].Update(buf);
+		skeletons[3]->SetNodeModel(&models[3]);
 	}
 }
 

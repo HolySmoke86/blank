@@ -29,6 +29,8 @@ ServerState::ServerState(
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	skeletons.LoadHeadless();
+	spawner.LimitSkeletons(1, skeletons.Size());
+	server.SetPlayerModel(skeletons[0]);
 
 	loop_timer.Start();
 

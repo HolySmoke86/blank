@@ -16,6 +16,9 @@
 
 
 namespace blank {
+
+class CompositeModel;
+
 namespace server {
 
 class Server;
@@ -51,6 +54,10 @@ public:
 	const Entity &PlayerEntity() const noexcept { return *player.entity; }
 	ChunkIndex &PlayerChunks() noexcept { return *player.chunks; }
 	const ChunkIndex &PlayerChunks() const noexcept { return *player.chunks; }
+
+	void SetPlayerModel(const CompositeModel &) noexcept;
+	bool HasPlayerModel() const noexcept;
+	const CompositeModel &GetPlayerModel() const noexcept;
 
 private:
 	struct SpawnStatus {
@@ -89,6 +96,7 @@ private:
 	Server &server;
 	Connection conn;
 	Player player;
+	const CompositeModel *player_model;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;
 

@@ -32,6 +32,7 @@ WorldState::WorldState(
 	chunk_renderer.LoadTextures(env.loader, tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
 	skeletons.Load();
+	spawner.LimitSkeletons(0, skeletons.Size());
 	// TODO: better solution for initializing HUD
 	interface.SelectNext();
 }

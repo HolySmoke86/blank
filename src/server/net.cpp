@@ -3,6 +3,7 @@
 #include "Server.hpp"
 
 #include "../app/init.hpp"
+#include "../model/CompositeModel.hpp"
 #include "../world/ChunkIndex.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
@@ -172,6 +173,7 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 : server(server)
 , conn(addr)
 , player(nullptr, nullptr)
+, player_model(nullptr)
 , spawns()
 , confirm_wait(0)
 , entity_updates()
@@ -400,6 +402,9 @@ void ClientConnection::AttachPlayer(const Player &new_player) {
 			}
 		}
 	}
+	if (HasPlayerModel()) {
+		GetPlayerModel().Instantiate(player.entity->GetModel());
+	}
 
 	cout << "player \"" << player.entity->Name() << "\" joined" << endl;
 }
@@ -413,6 +418,21 @@ void ClientConnection::DetachPlayer() {
 	player.chunks = nullptr;
 	transmitter.Abort();
 	chunk_queue.clear();
+}
+
+void ClientConnection::SetPlayerModel(const CompositeModel &m) noexcept {
+	player_model = &m;
+	if (HasPlayer()) {
+		m.Instantiate(PlayerEntity().GetModel());
+	}
+}
+
+bool ClientConnection::HasPlayerModel() const noexcept {
+	return player_model;
+}
+
+const CompositeModel &ClientConnection::GetPlayerModel() const noexcept {
+	return *player_model;
 }
 
 void ClientConnection::OnPacketReceived(uint16_t seq) {
@@ -506,7 +526,8 @@ Server::Server(const Config &conf, World &world)
 : serv_sock(nullptr)
 , serv_pack{ -1, nullptr, 0 }
 , clients()
-, world(world) {
+, world(world)
+, player_model(nullptr) {
 	serv_sock = SDLNet_UDP_Open(conf.port);
 	if (!serv_sock) {
 		throw NetError("SDLNet_UDP_Open");
@@ -556,18 +577,35 @@ ClientConnection &Server::GetClient(const IPaddress &addr) {
 		}
 	}
 	clients.emplace_back(*this, addr);
+	if (HasPlayerModel()) {
+		clients.back().SetPlayerModel(GetPlayerModel());
+	}
 	return clients.back();
 }
 
 void Server::Update(int dt) {
 	for (list<ClientConnection>::iterator client(clients.begin()), end(clients.end()); client != end;) {
-		client->Update(dt);
 		if (client->Disconnected()) {
 			client = clients.erase(client);
 		} else {
 			++client;
 		}
 	}
+}
+
+void Server::SetPlayerModel(const CompositeModel &m) noexcept {
+	player_model = &m;
+	for (ClientConnection &client : clients) {
+		client.SetPlayerModel(m);
+	}
+}
+
+bool Server::HasPlayerModel() const noexcept {
+	return player_model;
+}
+
+const CompositeModel &Server::GetPlayerModel() const noexcept {
+	return *player_model;
 }
 
 }
