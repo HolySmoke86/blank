@@ -118,14 +118,14 @@ void Connection::Received(const UDPpacket &udp_pack) {
 		if (diff > 0) {
 			for (int i = 0; i < diff; ++i) {
 				if (i > 32 || (i < 32 && (ctrl_in.hist & (1 << (31 - i))) == 0)) {
-					Handler().OnPacketLost(ctrl_in.ack - 32 + i);
+					Handler().PacketLost(ctrl_in.ack - 32 + i);
 				}
 			}
 		}
 		// check for newly ack'd packets
 		for (uint16_t s = ctrl_new.AckBegin(); s != ctrl_new.AckEnd(); --s) {
 			if (ctrl_new.Acks(s) && !ctrl_in.Acks(s)) {
-				Handler().OnPacketReceived(s);
+				Handler().PacketReceived(s);
 			}
 		}
 		ctrl_in = ctrl_new;
@@ -142,6 +142,35 @@ bool Packet::TControl::Acks(uint16_t s) const noexcept {
 uint16_t Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
 	Packet::Make<Packet::Ping>(udp_pack);
 	return Send(udp_pack, sock);
+}
+
+
+ConnectionHandler::ConnectionHandler()
+: packets_lost(0)
+, packets_received(0)
+, packet_loss(0.0f) {
+
+}
+
+void ConnectionHandler::PacketLost(uint16_t seq) {
+	OnPacketLost(seq);
+	++packets_lost;
+	UpdatePacketLoss();
+}
+
+void ConnectionHandler::PacketReceived(uint16_t seq) {
+	OnPacketReceived(seq);
+	++packets_received;
+	UpdatePacketLoss();
+}
+
+void ConnectionHandler::UpdatePacketLoss() noexcept {
+	unsigned int packets_total = packets_lost + packets_received;
+	if (packets_total >= 256) {
+		packet_loss = float(packets_lost) / float(packets_total);
+		packets_lost = 0;
+		packets_received = 0;
+	}
 }
 
 
