@@ -108,7 +108,7 @@ Payload:
 	 96 flags, 32bit bitfield with boolean values
 	    1: world collision
 	100 entity name, max 32 byte UTF-8 string
-Length: 132
+Length: 100 - 132
 
 
 Despawn Entity
