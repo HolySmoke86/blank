@@ -137,7 +137,7 @@ struct Packet {
 
 		static constexpr std::uint32_t MAX_ENTITIES = 7;
 		static constexpr std::size_t GetSize(std::uint32_t num) noexcept {
-			return 4 + (num * 64);
+			return 4 + (num * 68);
 		}
 
 		void WriteEntityCount(std::uint32_t) noexcept;

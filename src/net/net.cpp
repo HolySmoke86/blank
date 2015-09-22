@@ -351,18 +351,19 @@ void Packet::EntityUpdate::ReadEntityCount(uint32_t &count) const noexcept {
 }
 
 void Packet::EntityUpdate::WriteEntity(const Entity &entity, uint32_t num) noexcept {
-	uint32_t off = 4 + (num * 64);
+	uint32_t off = GetSize(num);;
 
 	Write(entity.ID(), off);
 	Write(entity.GetState(), off + 4);
 }
 
 void Packet::EntityUpdate::ReadEntityID(uint32_t &id, uint32_t num) const noexcept {
-	Read(id, 4 + (num * 64));
+	uint32_t off = GetSize(num);;
+	Read(id, off);
 }
 
 void Packet::EntityUpdate::ReadEntityState(EntityState &state, uint32_t num) const noexcept {
-	uint32_t off = 4 + (num * 64);
+	uint32_t off = GetSize(num);;
 	Read(state, off + 4);
 }
 
