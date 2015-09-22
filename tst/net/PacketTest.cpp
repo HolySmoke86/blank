@@ -235,6 +235,50 @@ void PacketTest::testDespawnEntity() {
 	);
 }
 
+void PacketTest::testEntityUpdate() {
+	auto pack = Packet::Make<Packet::EntityUpdate>(udp_pack);
+	AssertPacket("EntityUpdate", 7, 4, 452, pack);
+
+	pack.length = Packet::EntityUpdate::GetSize(3);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"length not correctly set in DespawnEntity packet",
+		size_t(4 + 3 * 68), pack.length
+	);
+
+	uint32_t write_count = 3;
+	uint32_t read_count;
+	pack.WriteEntityCount(write_count);
+	pack.ReadEntityCount(read_count);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"entity count not correctly transported in EntityUpdate packet",
+		write_count, read_count
+	);
+
+	Entity write_entity;
+	write_entity.ID(8567234);
+	write_entity.GetState().chunk_pos = { 7, 2, -3 };
+	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
+	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
+	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
+	pack.WriteEntity(write_entity, 1);
+	pack.WriteEntity(write_entity, 0);
+	pack.WriteEntity(write_entity, 2);
+
+	uint32_t read_id;
+	EntityState read_state;
+	pack.ReadEntityID(read_id, 1);
+	pack.ReadEntityState(read_state, 1);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"entity ID not correctly transported in EntityUpdate packet",
+		write_entity.ID(), read_id
+	);
+	AssertEqual(
+		"entity state not correctly transported in EntityUpdate packet",
+		write_entity.GetState(), read_state
+	);
+}
+
 
 void PacketTest::AssertPacket(
 	const string &name,
