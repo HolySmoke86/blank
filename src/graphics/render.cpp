@@ -1,7 +1,9 @@
 #include "ArrayTexture.hpp"
+#include "CubeMap.hpp"
 #include "Font.hpp"
 #include "Format.hpp"
 #include "Texture.hpp"
+#include "TextureBase.hpp"
 #include "Viewport.hpp"
 
 #include "../app/init.hpp"
@@ -128,7 +130,7 @@ void Font::Render(const char *text, Texture &tex) const {
 	SDL_FreeSurface(srf);
 }
 
-Format::Format()
+Format::Format() noexcept
 : format(GL_BGRA)
 , type(GL_UNSIGNED_INT_8_8_8_8_REV)
 , internal(GL_RGBA8) {
@@ -152,7 +154,7 @@ Format::Format()
 	sdl_format.next = nullptr;
 }
 
-Format::Format(const SDL_PixelFormat &fmt)
+Format::Format(const SDL_PixelFormat &fmt) noexcept
 : sdl_format(fmt) {
 	if (fmt.BytesPerPixel == 4) {
 		if (fmt.Amask == 0xFF) {
@@ -187,37 +189,53 @@ bool Format::Compatible(const Format &other) const noexcept {
 }
 
 
+template<GLenum TARGET, GLsizei COUNT>
+TextureBase<TARGET, COUNT>::TextureBase() {
+	glGenTextures(COUNT, handle);
+}
+
+template<GLenum TARGET, GLsizei COUNT>
+TextureBase<TARGET, COUNT>::~TextureBase() {
+	glDeleteTextures(COUNT, handle);
+}
+
+template<GLenum TARGET, GLsizei COUNT>
+TextureBase<TARGET, COUNT>::TextureBase(TextureBase &&other) noexcept {
+	std::memcpy(handle, other.handle, sizeof(handle));
+	std::memset(other.handle, 0, sizeof(handle));
+}
+
+template<GLenum TARGET, GLsizei COUNT>
+TextureBase<TARGET, COUNT> &TextureBase<TARGET, COUNT>::operator =(TextureBase &&other) noexcept {
+	std::swap(handle, other.handle);
+	return *this;
+}
+
+
 Texture::Texture()
-: handle(0)
+: TextureBase()
 , width(0)
 , height(0) {
-	glGenTextures(1, &handle);
+
 }
 
 Texture::~Texture() {
-	if (handle != 0) {
-		glDeleteTextures(1, &handle);
-	}
+
 }
 
 Texture::Texture(Texture &&other) noexcept
-: handle(other.handle) {
-	other.handle = 0;
+: TextureBase(std::move(other)) {
 	width = other.width;
 	height = other.height;
 }
 
 Texture &Texture::operator =(Texture &&other) noexcept {
-	std::swap(handle, other.handle);
+	TextureBase::operator =(std::move(other));
 	width = other.width;
 	height = other.height;
 	return *this;
 }
 
-
-void Texture::Bind() noexcept {
-	glBindTexture(GL_TEXTURE_2D, handle);
-}
 
 namespace {
 	bool ispow2(unsigned int i) {
@@ -289,25 +307,6 @@ void Texture::Data(GLsizei w, GLsizei h, const Format &format, GLvoid *data) noe
 }
 
 
-void Texture::FilterNearest() noexcept {
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-}
-
-void Texture::FilterLinear() noexcept {
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-}
-
-void Texture::FilterTrilinear() noexcept {
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glGenerateMipmap(GL_TEXTURE_2D);
-}
-
-
 void Texture::UnpackAlignment(GLint i) noexcept {
 	glPixelStorei(GL_UNPACK_ALIGNMENT, i);
 }
@@ -327,38 +326,30 @@ void Texture::UnpackRowLength(GLint i) noexcept {
 
 
 ArrayTexture::ArrayTexture()
-: handle(0)
+: TextureBase()
 , width(0)
 , height(0)
 , depth(0) {
-	glGenTextures(1, &handle);
+
 }
 
 ArrayTexture::~ArrayTexture() {
-	if (handle != 0) {
-		glDeleteTextures(1, &handle);
-	}
+
 }
 
 ArrayTexture::ArrayTexture(ArrayTexture &&other) noexcept
-: handle(other.handle) {
-	other.handle = 0;
+: TextureBase(std::move(other)) {
 	width = other.width;
 	height = other.height;
 	depth = other.depth;
 }
 
 ArrayTexture &ArrayTexture::operator =(ArrayTexture &&other) noexcept {
-	std::swap(handle, other.handle);
+	TextureBase::operator =(std::move(other));
 	width = other.width;
 	height = other.height;
 	depth = other.depth;
 	return *this;
-}
-
-
-void ArrayTexture::Bind() noexcept {
-	glBindTexture(GL_TEXTURE_2D_ARRAY, handle);
 }
 
 
@@ -413,22 +404,40 @@ void ArrayTexture::Data(GLsizei l, const Format &f, GLvoid *data) noexcept {
 }
 
 
-void ArrayTexture::FilterNearest() noexcept {
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+CubeMap::CubeMap()
+: TextureBase() {
+
 }
 
-void ArrayTexture::FilterLinear() noexcept {
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+CubeMap::~CubeMap() {
+
 }
 
-void ArrayTexture::FilterTrilinear() noexcept {
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+CubeMap::CubeMap(CubeMap &&other) noexcept
+: TextureBase(std::move(other)) {
+
+}
+
+CubeMap &CubeMap::operator =(CubeMap &&other) noexcept {
+	TextureBase::operator =(std::move(other));
+	return *this;
+}
+
+
+void CubeMap::Data(Face f, const SDL_Surface &srf) noexcept {
+	Data(f, srf.w, srf.h, Format(*srf.format), srf.pixels);
+}
+
+void CubeMap::Data(Face face, GLsizei w, GLsizei h, const Format &f, GLvoid *data) noexcept {
+	glTexImage2D(
+		face,             // which
+		0,                // mipmap level
+		f.internal,       // internal format
+		w, h,             // size
+		0,                // border
+		f.format, f.type, // pixel format
+		data              // pixel data
+	);
 }
 
 }

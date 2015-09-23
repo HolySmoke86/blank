@@ -10,6 +10,7 @@ namespace blank {
 
 class ArrayTexture;
 class BlockTypeRegistry;
+class CubeMap;
 class Sound;
 class Texture;
 class TextureIndex;
@@ -20,6 +21,7 @@ public:
 	explicit AssetLoader(const std::string &base);
 
 	void LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &, TextureIndex &) const;
+	CubeMap LoadCubeMap(const std::string &name) const;
 	Font LoadFont(const std::string &name, int size) const;
 	Sound LoadSound(const std::string &name) const;
 	Texture LoadTexture(const std::string &name) const;

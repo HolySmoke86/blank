@@ -2,6 +2,7 @@
 #define BLANK_GRAPHICS_ARRAYTEXTURE_HPP_
 
 #include "Format.hpp"
+#include "TextureBase.hpp"
 
 #include <GL/glew.h>
 
@@ -10,7 +11,8 @@ struct SDL_Surface;
 
 namespace blank {
 
-class ArrayTexture {
+class ArrayTexture
+: public TextureBase<GL_TEXTURE_2D_ARRAY> {
 
 public:
 	ArrayTexture();
@@ -27,19 +29,11 @@ public:
 	GLsizei Height() const noexcept { return height; }
 	GLsizei Depth() const noexcept { return depth; }
 
-	void Bind() noexcept;
-
 	void Reserve(GLsizei w, GLsizei h, GLsizei d, const Format &) noexcept;
 	void Data(GLsizei l, const SDL_Surface &);
 	void Data(GLsizei l, const Format &, GLvoid *data) noexcept;
 
-	void FilterNearest() noexcept;
-	void FilterLinear() noexcept;
-	void FilterTrilinear() noexcept;
-
 private:
-	GLuint handle;
-
 	GLsizei width, height, depth;
 
 	Format format;

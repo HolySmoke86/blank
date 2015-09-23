@@ -9,6 +9,7 @@
 #include "init.hpp"
 #include "../audio/Sound.hpp"
 #include "../graphics/ArrayTexture.hpp"
+#include "../graphics/CubeMap.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/Texture.hpp"
 #include "../io/TokenStreamReader.hpp"
@@ -372,6 +373,45 @@ void AssetLoader::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry 
 
 		reg.Add(type);
 	}
+}
+
+CubeMap AssetLoader::LoadCubeMap(const string &name) const {
+	string full = textures + name;
+	string right = full + "-right.png";
+	string left = full + "-left.png";
+	string top = full + "-top.png";
+	string bottom = full + "-bottom.png";
+	string back = full + "-back.png";
+	string front = full + "-front.png";
+
+	CubeMap cm;
+	SDL_Surface *srf;
+
+	if (!(srf = IMG_Load(right.c_str()))) throw SDLError("IMG_Load");
+	cm.Data(CubeMap::RIGHT, *srf);
+	SDL_FreeSurface(srf);
+
+	if (!(srf = IMG_Load(left.c_str()))) throw SDLError("IMG_Load");
+	cm.Data(CubeMap::LEFT, *srf);
+	SDL_FreeSurface(srf);
+
+	if (!(srf = IMG_Load(top.c_str()))) throw SDLError("IMG_Load");
+	cm.Data(CubeMap::TOP, *srf);
+	SDL_FreeSurface(srf);
+
+	if (!(srf = IMG_Load(bottom.c_str()))) throw SDLError("IMG_Load");
+	cm.Data(CubeMap::BOTTOM, *srf);
+	SDL_FreeSurface(srf);
+
+	if (!(srf = IMG_Load(back.c_str()))) throw SDLError("IMG_Load");
+	cm.Data(CubeMap::BACK, *srf);
+	SDL_FreeSurface(srf);
+
+	if (!(srf = IMG_Load(front.c_str()))) throw SDLError("IMG_Load");
+	cm.Data(CubeMap::FRONT, *srf);
+	SDL_FreeSurface(srf);
+
+	return cm;
 }
 
 Font AssetLoader::LoadFont(const string &name, int size) const {

@@ -15,8 +15,8 @@ struct Format {
 
 	SDL_PixelFormat sdl_format;
 
-	Format();
-	explicit Format(const SDL_PixelFormat &);
+	Format() noexcept;
+	explicit Format(const SDL_PixelFormat &) noexcept;
 
 	bool Compatible(const Format &other) const noexcept;
 
