@@ -4,6 +4,7 @@
 #include "BlockModel.hpp"
 #include "EntityModel.hpp"
 #include "OutlineModel.hpp"
+#include "SkyBoxModel.hpp"
 
 #include <glm/glm.hpp>
 
@@ -44,6 +45,9 @@ struct Shape {
 		const glm::mat4 &transform,
 		float tex_offset = 0.0f,
 		BlockModel::Index idx_offset = 0
+	) const;
+	void Vertices(
+		SkyBoxModel::Buffer &out
 	) const;
 
 	/// the number of vertices this shape's outline has

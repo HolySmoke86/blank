@@ -59,6 +59,17 @@ void Shape::Vertices(
 	}
 }
 
+void Shape::Vertices(
+	SkyBoxModel::Buffer &out
+) const {
+	for (const auto &pos : vtx_pos) {
+		out.vertices.emplace_back(pos);
+	}
+	for (auto idx : vtx_idx) {
+		out.indices.emplace_back(idx);
+	}
+}
+
 void Shape::Outline(OutlineModel::Buffer &out) const {
 	out.vertices.insert(out.vertices.end(), out_pos.begin(), out_pos.end());
 	out.indices.insert(out.indices.end(), out_idx.begin(), out_idx.end());

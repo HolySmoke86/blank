@@ -4,8 +4,10 @@
 #include "PlainColor.hpp"
 #include "Program.hpp"
 #include "Shader.hpp"
+#include "SkyBoxShader.hpp"
 
 #include "ArrayTexture.hpp"
+#include "CubeMap.hpp"
 #include "Texture.hpp"
 #include "../app/init.hpp"
 
@@ -491,6 +493,96 @@ void BlendedSprite::SetFG(const glm::vec4 &v) noexcept {
 
 void BlendedSprite::SetBG(const glm::vec4 &v) noexcept {
 	program.Uniform(bg_handle, v);
+}
+
+
+SkyBoxShader::SkyBoxShader()
+: program()
+, vp(1.0f)
+, m_handle(0)
+, mv_handle(0)
+, mvp_handle(0)
+, sampler_handle(0) {
+	program.LoadShader(
+		GL_VERTEX_SHADER,
+		"#version 330 core\n"
+		"layout(location = 0) in vec3 vtx_position;\n"
+		"uniform mat4 M;\n"
+		"uniform mat4 MV;\n"
+		"uniform mat4 MVP;\n"
+		"out vec3 vtx_viewspace;\n"
+		"void main() {\n"
+			"gl_Position = MVP * vec4(vtx_position, 1);\n"
+			"gl_Position.z = gl_Position.w;\n"
+			"vtx_viewspace = (MV * vec4(vtx_position, 1)).xyz;\n"
+		"}\n"
+	);
+	program.LoadShader(
+		GL_FRAGMENT_SHADER,
+		"#version 330 core\n"
+		"in vec3 vtx_viewspace;\n"
+		"uniform samplerCube tex_sampler;\n"
+		"out vec3 color;\n"
+		"void main() {\n"
+			"color = texture(tex_sampler, vtx_viewspace).rgb;\n"
+		"}\n"
+	);
+	program.Link();
+	if (!program.Linked()) {
+		program.Log(std::cerr);
+		throw std::runtime_error("link program");
+	}
+
+	m_handle = program.UniformLocation("M");
+	mv_handle = program.UniformLocation("MV");
+	mvp_handle = program.UniformLocation("MVP");
+	sampler_handle = program.UniformLocation("tex_sampler");
+}
+
+
+void SkyBoxShader::Activate() noexcept {
+	program.Use();
+}
+
+void SkyBoxShader::SetM(const glm::mat4 &M) noexcept {
+	glm::mat4 m(M);
+	m[0].w = 0.0f;
+	m[1].w = 0.0f;
+	m[2].w = 0.0f;
+	m[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	program.Uniform(m_handle, m);
+	program.Uniform(mv_handle, view * m);
+	program.Uniform(mvp_handle, vp * m);
+}
+
+void SkyBoxShader::SetTexture(CubeMap &tex) noexcept {
+	glActiveTexture(GL_TEXTURE0);
+	tex.Bind();
+	program.Uniform(sampler_handle, GLint(0));
+}
+
+void SkyBoxShader::SetProjection(const glm::mat4 &p) noexcept {
+	projection = p;
+	vp = p * view;
+}
+
+void SkyBoxShader::SetView(const glm::mat4 &v) noexcept {
+	view = v;
+	view[0].w = 0.0f;
+	view[1].w = 0.0f;
+	view[2].w = 0.0f;
+	view[3] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	vp = projection * v;
+}
+
+void SkyBoxShader::SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept {
+	projection = p;
+	SetView(v);
+}
+
+void SkyBoxShader::SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept {
+	SetVP(v, p);
+	SetM(m);
 }
 
 

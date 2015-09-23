@@ -8,6 +8,7 @@
 #include "Canvas.hpp"
 #include "DirectionalLighting.hpp"
 #include "PlainColor.hpp"
+#include "SkyBoxShader.hpp"
 
 #include <glm/glm.hpp>
 
@@ -25,6 +26,7 @@ public:
 	void VSync(bool b) noexcept;
 
 	void EnableDepthTest() noexcept;
+	void EqualDepthTest() noexcept;
 	void DisableDepthTest() noexcept;
 
 	void EnableBackfaceCulling() noexcept;
@@ -52,6 +54,7 @@ public:
 	DirectionalLighting &HUDProgram() noexcept;
 	PlainColor &WorldOutlineProgram() noexcept;
 	PlainColor &HUDOutlineProgram() noexcept;
+	SkyBoxShader &SkyBoxProgram() noexcept;
 	BlendedSprite &SpriteProgram() noexcept;
 
 	void WorldPosition(const glm::mat4 &) noexcept;
@@ -68,6 +71,7 @@ private:
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;
 	PlainColor outline_prog;
+	SkyBoxShader sky_prog;
 	BlendedSprite sprite_prog;
 
 	enum {
@@ -77,6 +81,7 @@ private:
 		HUD,
 		OUTLINE_WORLD,
 		OUTLINE_HUD,
+		SKY_BOX,
 		SPRITE,
 	} active_prog;
 

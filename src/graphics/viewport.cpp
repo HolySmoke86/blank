@@ -79,6 +79,7 @@ Viewport::Viewport()
 , cursor(1.0f)
 , chunk_prog()
 , entity_prog()
+, sky_prog()
 , sprite_prog()
 , active_prog(NONE) {
 	glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -93,6 +94,11 @@ void Viewport::VSync(bool b) noexcept {
 void Viewport::EnableDepthTest() noexcept {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
+}
+
+void Viewport::EqualDepthTest() noexcept {
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LEQUAL);
 }
 
 void Viewport::DisableDepthTest() noexcept {
@@ -216,6 +222,16 @@ PlainColor &Viewport::HUDOutlineProgram() noexcept {
 		active_prog = OUTLINE_HUD;
 	}
 	return outline_prog;
+}
+
+SkyBoxShader &Viewport::SkyBoxProgram() noexcept {
+	if (active_prog != SKY_BOX) {
+		sky_prog.Activate();
+		DisableBlending();
+		EqualDepthTest();
+		active_prog = SKY_BOX;
+	}
+	return sky_prog;
 }
 
 BlendedSprite &Viewport::SpriteProgram() noexcept {

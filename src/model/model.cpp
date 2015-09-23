@@ -1,7 +1,10 @@
 #include "BlockModel.hpp"
 #include "EntityModel.hpp"
 #include "OutlineModel.hpp"
+#include "SkyBoxModel.hpp"
 #include "SpriteModel.hpp"
+
+#include "shapes.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -81,6 +84,24 @@ void OutlineModel::Draw() noexcept {
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 	vao.DrawLineElements();
+}
+
+
+void SkyBoxModel::LoadUnitBox() {
+	Buffer buffer;
+	CuboidShape shape({{ -1, -1, -1 }, { 1, 1, 1 }});
+	shape.Vertices(buffer);
+	Update(buffer);
+}
+
+void SkyBoxModel::Update(const Buffer &buf) noexcept {
+	vao.Bind();
+	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
+	vao.PushIndices(ATTRIB_INDEX, buf.indices);
+}
+
+void SkyBoxModel::Draw() const noexcept {
+	vao.DrawTriangleElements();
 }
 
 
