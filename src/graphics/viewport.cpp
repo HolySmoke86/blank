@@ -1,5 +1,6 @@
 #include "Camera.hpp"
 #include "Canvas.hpp"
+#include "SkyBox.hpp"
 #include "Viewport.hpp"
 
 #include "../app/init.hpp"
@@ -73,6 +74,19 @@ void Canvas::UpdateProjection() noexcept {
 }
 
 
+SkyBox::SkyBox(CubeMap &&tex)
+: texture(std::move(tex))
+, model() {
+	model.LoadUnitBox();
+}
+
+void SkyBox::Render(Viewport &viewport) noexcept {
+	SkyBoxShader &prog = viewport.SkyBoxProgram();
+	prog.SetTexture(texture);
+	model.Draw();
+}
+
+
 Viewport::Viewport()
 : cam()
 , canv()
@@ -140,6 +154,7 @@ void Viewport::Resize(int w, int h) noexcept {
 	} else {
 		entity_prog.SetProjection(Perspective());
 	}
+	sky_prog.SetProjection(Perspective());
 	sprite_prog.SetProjection(Ortho());
 }
 
@@ -228,6 +243,7 @@ SkyBoxShader &Viewport::SkyBoxProgram() noexcept {
 	if (active_prog != SKY_BOX) {
 		sky_prog.Activate();
 		DisableBlending();
+		DisableBackfaceCulling();
 		EqualDepthTest();
 		active_prog = SKY_BOX;
 	}
@@ -247,6 +263,7 @@ BlendedSprite &Viewport::SpriteProgram() noexcept {
 void Viewport::WorldPosition(const glm::mat4 &t) noexcept {
 	cam.View(glm::inverse(t));
 	chunk_prog.SetView(cam.View());
+	sky_prog.SetView(cam.View());
 }
 
 }

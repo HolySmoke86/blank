@@ -5,6 +5,7 @@
 #include "State.hpp"
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
+#include "../graphics/SkyBox.hpp"
 #include "../model/Skeletons.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
@@ -49,6 +50,8 @@ private:
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
 	Spawner spawner;
+
+	SkyBox sky;
 
 	PreloadState preload;
 	UnloadState unload;

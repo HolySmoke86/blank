@@ -25,6 +25,7 @@ WorldState::WorldState(
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
 , spawner(world, skeletons, gc.seed)
+, sky(env.loader.LoadCubeMap("skybox"))
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save) {
 	TextureIndex tex_index;
@@ -94,6 +95,8 @@ void WorldState::Render(Viewport &viewport) {
 	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
 	chunk_renderer.Render(viewport);
 	world.Render(viewport);
+	sky.Render(viewport);
+
 	interface.Render(viewport);
 }
 

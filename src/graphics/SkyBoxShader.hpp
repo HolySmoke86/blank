@@ -15,11 +15,9 @@ public:
 
 	void SetTexture(CubeMap &) noexcept;
 
-	void SetM(const glm::mat4 &m) noexcept;
 	void SetProjection(const glm::mat4 &p) noexcept;
 	void SetView(const glm::mat4 &v) noexcept;
 	void SetVP(const glm::mat4 &v, const glm::mat4 &p) noexcept;
-	void SetMVP(const glm::mat4 &m, const glm::mat4 &v, const glm::mat4 &p) noexcept;
 
 	const glm::mat4 &Projection() const noexcept { return projection; }
 	const glm::mat4 &View() const noexcept { return view; }
@@ -32,9 +30,7 @@ private:
 	glm::mat4 view;
 	glm::mat4 vp;
 
-	GLuint m_handle;
-	GLuint mv_handle;
-	GLuint mvp_handle;
+	GLuint vp_handle;
 	GLuint sampler_handle;
 
 };
