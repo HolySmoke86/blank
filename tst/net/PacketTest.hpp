@@ -29,6 +29,9 @@ CPPUNIT_TEST(testPlayerUpdate);
 CPPUNIT_TEST(testSpawnEntity);
 CPPUNIT_TEST(testDespawnEntity);
 CPPUNIT_TEST(testEntityUpdate);
+CPPUNIT_TEST(testPlayerCorrection);
+CPPUNIT_TEST(testChunkBegin);
+CPPUNIT_TEST(testChunkData);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -45,6 +48,9 @@ public:
 	void testSpawnEntity();
 	void testDespawnEntity();
 	void testEntityUpdate();
+	void testPlayerCorrection();
+	void testChunkBegin();
+	void testChunkData();
 
 private:
 	static void AssertPacket(

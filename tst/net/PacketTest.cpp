@@ -279,6 +279,122 @@ void PacketTest::testEntityUpdate() {
 	);
 }
 
+void PacketTest::testPlayerCorrection() {
+	auto pack = Packet::Make<Packet::PlayerCorrection>(udp_pack);
+	AssertPacket("PlayerCorrection", 8, 66, pack);
+
+	uint16_t write_seq = 50050;
+	uint16_t read_seq;
+	pack.WritePacketSeq(write_seq);
+	pack.ReadPacketSeq(read_seq);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"packet sequence not correctly transported in PlayerCorrection packet",
+		write_seq, read_seq
+	);
+
+	Entity write_entity;
+	write_entity.GetState().chunk_pos = { 7, 2, -3 };
+	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
+	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
+	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
+	pack.WritePlayer(write_entity);
+
+	EntityState read_state;
+	pack.ReadPlayerState(read_state);
+	AssertEqual(
+		"entity state not correctly transported in PlayerCorrection packet",
+		write_entity.GetState(), read_state
+	);
+}
+
+void PacketTest::testChunkBegin() {
+	auto pack = Packet::Make<Packet::ChunkBegin>(udp_pack);
+	AssertPacket("ChunkBegin", 9, 24, pack);
+
+	uint32_t write_id = 532;
+	uint32_t write_flags = 9864328;
+	glm::ivec3 write_pos = { -6, 15, 38 };
+	uint32_t write_size = 4097;
+
+	pack.WriteTransmissionId(write_id);
+	pack.WriteFlags(write_flags);
+	pack.WriteChunkCoords(write_pos);
+	pack.WriteDataSize(write_size);
+
+	uint32_t read_id;
+	uint32_t read_flags;
+	glm::ivec3 read_pos;
+	uint32_t read_size;
+
+	pack.ReadTransmissionId(read_id);
+	pack.ReadFlags(read_flags);
+	pack.ReadChunkCoords(read_pos);
+	pack.ReadDataSize(read_size);
+
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"transmission ID not correctly transported in ChunkBegin packet",
+		write_id, read_id
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"flags not correctly transported in ChunkBegin packet",
+		write_flags, read_flags
+	);
+	AssertEqual(
+		"chunk coordinates not correctly transported in ChunkBegin packet",
+		write_pos, read_pos
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"data size not correctly transported in ChunkBegin packet",
+		write_size, read_size
+	);
+}
+
+void PacketTest::testChunkData() {
+	auto pack = Packet::Make<Packet::ChunkData>(udp_pack);
+	AssertPacket("ChunkData", 10, 12, 484, pack);
+
+	constexpr size_t block_size = 97;
+
+	uint32_t write_id = 6743124;
+	uint32_t write_offset = 8583;
+	uint32_t write_size = block_size;
+	uint8_t write_data[block_size];
+	memset(write_data, 'X', block_size);
+
+	pack.WriteTransmissionId(write_id);
+	pack.WriteDataOffset(write_offset);
+	pack.WriteDataSize(write_size);
+	pack.WriteData(write_data, write_size);
+
+	uint32_t read_id;
+	uint32_t read_offset;
+	uint32_t read_size;
+	uint8_t read_data[block_size];
+
+	pack.ReadTransmissionId(read_id);
+	pack.ReadDataOffset(read_offset);
+	pack.ReadDataSize(read_size);
+	pack.ReadData(read_data, read_size);
+
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"transmission ID not correctly transported in ChunkData packet",
+		write_id, read_id
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"data offset not correctly transported in ChunkData packet",
+		write_offset, read_offset
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"data size not correctly transported in ChunkData packet",
+		write_size, read_size
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"raw data not correctly transported in ChunkData packet",
+		string(write_data, write_data + write_size), string(read_data, read_data + read_size)
+	);
+}
+
 
 void PacketTest::AssertPacket(
 	const string &name,
