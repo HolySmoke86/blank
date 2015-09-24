@@ -148,14 +148,9 @@ void Viewport::Resize(int w, int h) noexcept {
 	cam.Aspect(fw, fh);
 	canv.Resize(fw, fh);
 
-	chunk_prog.SetProjection(Perspective());
-	if (active_prog == HUD) {
-		entity_prog.SetProjection(Ortho());
-	} else {
-		entity_prog.SetProjection(Perspective());
-	}
-	sky_prog.SetProjection(Perspective());
-	sprite_prog.SetProjection(Ortho());
+	ChunkProgram().SetProjection(Perspective());
+	SkyBoxProgram().SetProjection(Perspective());
+	SpriteProgram().SetProjection(Ortho());
 }
 
 void Viewport::Clear() noexcept {
@@ -262,8 +257,9 @@ BlendedSprite &Viewport::SpriteProgram() noexcept {
 
 void Viewport::WorldPosition(const glm::mat4 &t) noexcept {
 	cam.View(glm::inverse(t));
-	chunk_prog.SetView(cam.View());
-	sky_prog.SetView(cam.View());
+	ChunkProgram().SetView(cam.View());
+	sky_prog.Activate();
+	SkyBoxProgram().SetView(cam.View());
 }
 
 }

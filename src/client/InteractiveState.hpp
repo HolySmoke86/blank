@@ -5,6 +5,7 @@
 #include "ChunkRequester.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../app/State.hpp"
+#include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Skeletons.hpp"
 #include "../ui/Interface.hpp"
@@ -55,6 +56,8 @@ private:
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
 	IntervalTimer loop_timer;
+
+	SkyBox sky;
 
 	struct PlayerHistory {
 		EntityState state;

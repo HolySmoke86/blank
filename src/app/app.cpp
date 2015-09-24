@@ -385,31 +385,65 @@ CubeMap AssetLoader::LoadCubeMap(const string &name) const {
 	string front = full + "-front.png";
 
 	CubeMap cm;
+	cm.Bind();
 	SDL_Surface *srf;
 
 	if (!(srf = IMG_Load(right.c_str()))) throw SDLError("IMG_Load");
-	cm.Data(CubeMap::RIGHT, *srf);
+	try {
+		cm.Data(CubeMap::RIGHT, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
 	SDL_FreeSurface(srf);
 
 	if (!(srf = IMG_Load(left.c_str()))) throw SDLError("IMG_Load");
-	cm.Data(CubeMap::LEFT, *srf);
+	try {
+		cm.Data(CubeMap::LEFT, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
 	SDL_FreeSurface(srf);
 
 	if (!(srf = IMG_Load(top.c_str()))) throw SDLError("IMG_Load");
-	cm.Data(CubeMap::TOP, *srf);
+	try {
+		cm.Data(CubeMap::TOP, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
 	SDL_FreeSurface(srf);
 
 	if (!(srf = IMG_Load(bottom.c_str()))) throw SDLError("IMG_Load");
-	cm.Data(CubeMap::BOTTOM, *srf);
+	try {
+		cm.Data(CubeMap::BOTTOM, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
 	SDL_FreeSurface(srf);
 
 	if (!(srf = IMG_Load(back.c_str()))) throw SDLError("IMG_Load");
-	cm.Data(CubeMap::BACK, *srf);
+	try {
+		cm.Data(CubeMap::BACK, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
 	SDL_FreeSurface(srf);
 
 	if (!(srf = IMG_Load(front.c_str()))) throw SDLError("IMG_Load");
-	cm.Data(CubeMap::FRONT, *srf);
+	try {
+		cm.Data(CubeMap::FRONT, *srf);
+	} catch (...) {
+		SDL_FreeSurface(srf);
+		throw;
+	}
 	SDL_FreeSurface(srf);
+
+	cm.FilterNearest();
+	cm.WrapEdge();
 
 	return cm;
 }

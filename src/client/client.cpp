@@ -120,6 +120,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , chunk_renderer(*interface.GetPlayer().chunks)
 , skeletons()
 , loop_timer(16)
+, sky(master.GetEnv().loader.LoadCubeMap("skybox"))
 , player_hist() {
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
@@ -277,6 +278,7 @@ void InteractiveState::Render(Viewport &viewport) {
 	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
 	chunk_renderer.Render(viewport);
 	world.Render(viewport);
+	sky.Render(viewport);
 	interface.Render(viewport);
 }
 

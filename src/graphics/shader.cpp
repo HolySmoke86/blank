@@ -521,6 +521,7 @@ SkyBoxShader::SkyBoxShader()
 		"out vec3 color;\n"
 		"void main() {\n"
 			"color = texture(tex_sampler, vtx_viewspace).rgb;\n"
+			//"color = vec3(1,0,0);\n"
 		"}\n"
 	);
 	program.Link();
@@ -556,7 +557,7 @@ void SkyBoxShader::SetView(const glm::mat4 &v) noexcept {
 	view[1].w = 0.0f;
 	view[2].w = 0.0f;
 	view[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	vp = projection * v;
+	vp = projection * view;
 	program.Uniform(vp_handle, vp);
 }
 

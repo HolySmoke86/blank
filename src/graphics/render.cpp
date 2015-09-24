@@ -424,8 +424,28 @@ CubeMap &CubeMap::operator =(CubeMap &&other) noexcept {
 }
 
 
-void CubeMap::Data(Face f, const SDL_Surface &srf) noexcept {
-	Data(f, srf.w, srf.h, Format(*srf.format), srf.pixels);
+void CubeMap::Data(Face f, const SDL_Surface &srf) {
+	Format format;
+	Format fmt(*srf.format);
+	if (format.Compatible(fmt)) {
+		Data(f, srf.w, srf.h, fmt, srf.pixels);
+	} else {
+		SDL_Surface *converted = SDL_ConvertSurface(
+			const_cast<SDL_Surface *>(&srf),
+			&format.sdl_format,
+			0
+		);
+		if (!converted) {
+			throw SDLError("SDL_ConvertSurface");
+		}
+		Format new_fmt(*converted->format);
+		if (!format.Compatible(new_fmt)) {
+			SDL_FreeSurface(converted);
+			throw std::runtime_error("unable to convert texture input");
+		}
+		Data(f, converted->w, converted->h, new_fmt, converted->pixels);
+		SDL_FreeSurface(converted);
+	}
 }
 
 void CubeMap::Data(Face face, GLsizei w, GLsizei h, const Format &f, GLvoid *data) noexcept {

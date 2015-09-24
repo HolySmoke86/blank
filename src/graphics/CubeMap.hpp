@@ -35,7 +35,7 @@ public:
 	CubeMap &operator =(const CubeMap &) = delete;
 
 public:
-	void Data(Face, const SDL_Surface &) noexcept;
+	void Data(Face, const SDL_Surface &);
 	void Data(Face, GLsizei w, GLsizei h, const Format &, GLvoid *data) noexcept;
 
 };
