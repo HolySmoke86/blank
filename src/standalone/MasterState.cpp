@@ -1,15 +1,16 @@
-#include "WorldState.hpp"
+#include "MasterState.hpp"
 
-#include "Environment.hpp"
-#include "init.hpp"
-#include "TextureIndex.hpp"
+#include "../app/Environment.hpp"
+#include "../app/init.hpp"
+#include "../app/TextureIndex.hpp"
 
 #include <SDL.h>
 
 
 namespace blank {
+namespace standalone {
 
-WorldState::WorldState(
+MasterState::MasterState(
 	Environment &env,
 	const Generator::Config &gc,
 	const Interface::Config &ic,
@@ -39,13 +40,13 @@ WorldState::WorldState(
 }
 
 
-void WorldState::OnEnter() {
+void MasterState::OnEnter() {
 	env.state.Push(&preload);
 	env.window.GrabMouse();
 }
 
 
-void WorldState::Handle(const SDL_Event &event) {
+void MasterState::Handle(const SDL_Event &event) {
 	switch (event.type) {
 		case SDL_KEYDOWN:
 			interface.HandlePress(event.key);
@@ -73,7 +74,7 @@ void WorldState::Handle(const SDL_Event &event) {
 	}
 }
 
-void WorldState::Update(int dt) {
+void MasterState::Update(int dt) {
 	interface.Update(dt);
 	spawner.Update(dt);
 	world.Update(dt);
@@ -90,7 +91,7 @@ void WorldState::Update(int dt) {
 	env.audio.Orientation(dir, up);
 }
 
-void WorldState::Render(Viewport &viewport) {
+void MasterState::Render(Viewport &viewport) {
 	Entity &player = *interface.GetPlayer().entity;
 	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
 	chunk_renderer.Render(viewport);
@@ -100,4 +101,5 @@ void WorldState::Render(Viewport &viewport) {
 	interface.Render(viewport);
 }
 
+}
 }

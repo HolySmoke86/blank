@@ -1,7 +1,7 @@
-#ifndef BLANK_APP_UNLOADSTATE_HPP_
-#define BLANK_APP_UNLOADSTATE_HPP_
+#ifndef BLANK_STANDALONE_UNLOADSTATE_HPP_
+#define BLANK_STANDALONE_UNLOADSTATE_HPP_
 
-#include "State.hpp"
+#include "../app/State.hpp"
 
 #include "../ui/Progress.hpp"
 
@@ -15,6 +15,8 @@ class Chunk;
 class ChunkStore;
 class Environment;
 class WorldSave;
+
+namespace standalone {
 
 class UnloadState
 : public State {
@@ -41,6 +43,7 @@ private:
 
 };
 
+}
 }
 
 #endif

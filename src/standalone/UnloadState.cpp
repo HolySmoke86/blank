@@ -1,11 +1,12 @@
 #include "UnloadState.hpp"
 
-#include "Environment.hpp"
+#include "../app/Environment.hpp"
 #include "../io/WorldSave.hpp"
 #include "../world/ChunkLoader.hpp"
 
 
 namespace blank {
+namespace standalone {
 
 UnloadState::UnloadState(
 	Environment &env,
@@ -54,4 +55,5 @@ void UnloadState::Render(Viewport &viewport) {
 	progress.Render(viewport);
 }
 
+}
 }

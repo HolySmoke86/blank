@@ -1,7 +1,7 @@
-#ifndef BLANK_APP_PRELOADSTATE_HPP_
-#define BLANK_APP_PRELOADSTATE_HPP_
+#ifndef BLANK_STANDALONE_PRELOADSTATE_HPP_
+#define BLANK_STANDALONE_PRELOADSTATE_HPP_
 
-#include "State.hpp"
+#include "../app/State.hpp"
 
 #include "../ui/Progress.hpp"
 
@@ -13,6 +13,8 @@ namespace blank {
 class ChunkLoader;
 class ChunkRenderer;
 class Environment;
+
+namespace standalone {
 
 class PreloadState
 : public State {
@@ -34,6 +36,7 @@ private:
 
 };
 
+}
 }
 
 #endif

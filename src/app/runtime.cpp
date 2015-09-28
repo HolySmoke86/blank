@@ -1,13 +1,13 @@
 #include "Application.hpp"
 #include "Environment.hpp"
 #include "Runtime.hpp"
-#include "WorldState.hpp"
 
 #include "init.hpp"
 #include "../client/MasterState.hpp"
 #include "../io/filesystem.hpp"
 #include "../io/WorldSave.hpp"
 #include "../server/ServerState.hpp"
+#include "../standalone/MasterState.hpp"
 
 #include <cctype>
 #include <cstdlib>
@@ -324,7 +324,7 @@ void Runtime::RunStandalone() {
 	}
 
 	Application app(env);
-	WorldState world_state(env, config.gen, config.interface, config.world, save);
+	standalone::MasterState world_state(env, config.gen, config.interface, config.world, save);
 	app.PushState(&world_state);
 	Run(app);
 }

@@ -1,8 +1,9 @@
-#ifndef BLANK_APP_WORLDSTATE_HPP_
-#define BLANK_APP_WORLDSTATE_HPP_
+#ifndef BLANK_STANDALONE_MASTERSTATE_HPP_
+#define BLANK_STANDALONE_MASTERSTATE_HPP_
+
+#include "../app/State.hpp"
 
 #include "PreloadState.hpp"
-#include "State.hpp"
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
 #include "../graphics/SkyBox.hpp"
@@ -19,11 +20,13 @@ namespace blank {
 
 class Environment;
 
-class WorldState
+namespace standalone {
+
+class MasterState
 : public State {
 
 public:
-	WorldState(
+	MasterState(
 		Environment &,
 		const Generator::Config &,
 		const Interface::Config &,
@@ -58,6 +61,7 @@ private:
 
 };
 
+}
 }
 
 #endif

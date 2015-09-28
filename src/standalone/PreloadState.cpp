@@ -1,11 +1,12 @@
 #include "PreloadState.hpp"
 
-#include "Environment.hpp"
+#include "../app/Environment.hpp"
 #include "../world/ChunkLoader.hpp"
 #include "../world/ChunkRenderer.hpp"
 
 
 namespace blank {
+namespace standalone {
 
 PreloadState::PreloadState(Environment &env, ChunkLoader &loader, ChunkRenderer &render)
 : env(env)
@@ -39,4 +40,5 @@ void PreloadState::Render(Viewport &viewport) {
 	progress.Render(viewport);
 }
 
+}
 }
