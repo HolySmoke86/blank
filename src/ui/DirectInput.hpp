@@ -55,8 +55,6 @@ private:
 	float yaw;
 	bool dirty;
 
-	int active_slot;
-
 	IntervalTimer place_timer;
 	IntervalTimer remove_timer;
 

@@ -126,6 +126,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	}
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
+	interface.SetInventorySlots(block_types.Size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
 	skeletons.Load();
@@ -170,6 +171,8 @@ void InteractiveState::Update(int dt) {
 		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
 	} else if (input.EntityFocus()) {
 		hud.FocusEntity(*input.EntityFocus().entity);
+	} else {
+		hud.FocusNone();
 	}
 	hud.Display(block_types[player.GetInventorySlot() + 1]);
 	loop_timer.Update(dt);

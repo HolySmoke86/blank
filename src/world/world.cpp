@@ -127,7 +127,8 @@ glm::mat4 EntityState::Transform(const glm::ivec3 &reference) const noexcept {
 
 Player::Player(Entity &e, ChunkIndex &c)
 : entity(e)
-, chunks(c) {
+, chunks(c)
+, inv_slot(0) {
 
 }
 

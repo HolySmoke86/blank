@@ -42,7 +42,6 @@ DirectInput::DirectInput(World &world, Player &player, WorldManipulator &manip)
 , pitch(0.0f)
 , yaw(0.0f)
 , dirty(true)
-, active_slot(0)
 , place_timer(256)
 , remove_timer(256) {
 
@@ -118,7 +117,8 @@ void DirectInput::StopTertiaryAction() {
 	// nothing
 }
 
-void DirectInput::SelectInventory(int) {
+void DirectInput::SelectInventory(int i) {
+	player.SetInventorySlot(i);
 }
 
 void DirectInput::UpdatePlayer() {
@@ -636,6 +636,7 @@ void Interface::InvAbs(int s) {
 	while (slot < 0) {
 		slot += num_slots;
 	}
+	player_ctrl.SelectInventory(slot);
 }
 
 void Interface::InvRel(int delta) {
