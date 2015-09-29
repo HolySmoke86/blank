@@ -177,7 +177,7 @@ IPaddress client_resolve(const char *host, Uint16 port) {
 
 }
 
-Client::Client(const Config &conf)
+Client::Client(const Config::Network &conf)
 : conn(client_resolve(conf.host.c_str(), conf.port))
 , client_sock(client_bind(0))
 , client_pack{ -1, nullptr, 0 } {

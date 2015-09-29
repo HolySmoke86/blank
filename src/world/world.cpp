@@ -1,5 +1,6 @@
 #include "Entity.hpp"
 #include "EntityState.hpp"
+#include "Player.hpp"
 #include "World.hpp"
 
 #include "ChunkIndex.hpp"
@@ -124,6 +125,21 @@ glm::mat4 EntityState::Transform(const glm::ivec3 &reference) const noexcept {
 }
 
 
+Player::Player(Entity &e, ChunkIndex &c)
+: entity(e)
+, chunks(c) {
+
+}
+
+Player::~Player() {
+
+}
+
+void Player::Update(int dt) {
+	chunks.Rebase(entity.ChunkCoords());
+}
+
+
 World::World(const BlockTypeRegistry &types, const Config &config)
 : config(config)
 , block_type(types)
@@ -142,10 +158,10 @@ World::~World() {
 }
 
 
-Player World::AddPlayer(const std::string &name) {
+Player *World::AddPlayer(const std::string &name) {
 	for (Player &p : players) {
-		if (p.entity->Name() == name) {
-			return { nullptr, nullptr };
+		if (p.Name() == name) {
+			return nullptr;
 		}
 	}
 	Entity &entity = AddEntity();
@@ -154,29 +170,29 @@ Player World::AddPlayer(const std::string &name) {
 	entity.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	entity.WorldCollidable(true);
 	entity.Position(config.spawn);
-	ChunkIndex *index = &chunks.MakeIndex(entity.ChunkCoords(), 6);
-	players.emplace_back(&entity, index);
-	return players.back();
+	ChunkIndex &index = chunks.MakeIndex(entity.ChunkCoords(), 6);
+	players.emplace_back(entity, index);
+	return &players.back();
 }
 
-Player World::AddPlayer(const std::string &name, std::uint32_t id) {
+Player *World::AddPlayer(const std::string &name, std::uint32_t id) {
 	for (Player &p : players) {
-		if (p.entity->Name() == name) {
-			return { nullptr, nullptr };
+		if (p.Name() == name) {
+			return nullptr;
 		}
 	}
 	Entity *entity = AddEntity(id);
 	if (!entity) {
-		return { nullptr, nullptr };
+		return nullptr;
 	}
 	entity->Name(name);
 	// TODO: load from save file here
 	entity->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	entity->WorldCollidable(true);
 	entity->Position(config.spawn);
-	ChunkIndex *index = &chunks.MakeIndex(entity->ChunkCoords(), 6);
-	players.emplace_back(entity, index);
-	return players.back();
+	ChunkIndex &index = chunks.MakeIndex(entity->ChunkCoords(), 6);
+	players.emplace_back(*entity, index);
+	return &players.back();
 }
 
 Entity &World::AddEntity() {
@@ -359,7 +375,7 @@ void World::Update(int dt) {
 		}
 	}
 	for (Player &player : players) {
-		player.chunks->Rebase(player.entity->ChunkCoords());
+		player.Update(dt);
 	}
 	for (auto iter = entities.begin(), end = entities.end(); iter != end;) {
 		if (iter->CanRemove()) {
@@ -405,8 +421,8 @@ void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
 World::EntityHandle World::RemoveEntity(EntityHandle &eh) {
 	// check for player
 	for (auto player = players.begin(), end = players.end(); player != end;) {
-		if (player->entity == &*eh) {
-			chunks.UnregisterIndex(*player->chunks);
+		if (&player->GetEntity() == &*eh) {
+			chunks.UnregisterIndex(player->GetChunks());
 			player = players.erase(player);
 			end = players.end();
 		} else {
@@ -423,7 +439,7 @@ void World::Render(Viewport &viewport) {
 	entity_prog.SetFogDensity(fog_density);
 
 	for (Entity &entity : entities) {
-		entity.Render(entity.Transform(players[0].entity->ChunkCoords()), entity_prog);
+		entity.Render(entity.Transform(players.front().GetEntity().ChunkCoords()), entity_prog);
 	}
 }
 

@@ -120,15 +120,15 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 					const char *param = arg + 2;
 					// long option
 					if (strcmp(param, "no-vsync") == 0) {
-						config.vsync = false;
+						config.game.video.vsync = false;
 					} else if (strcmp(param, "no-keyboard") == 0) {
-						config.interface.keyboard_disabled = true;
+						config.game.input.keyboard = false;
 					} else if (strcmp(param, "no-mouse") == 0) {
-						config.interface.mouse_disabled = true;
+						config.game.input.mouse = false;
 					} else if (strcmp(param, "no-hud") == 0) {
-						config.interface.visual_disabled = true;
+						config.game.video.hud = false;
 					} else if (strcmp(param, "no-audio") == 0) {
-						config.interface.audio_disabled = true;
+						config.game.audio.enabled = false;
 					} else if (strcmp(param, "standalone") == 0) {
 						target = STANDALONE;
 					} else if (strcmp(param, "server") == 0) {
@@ -149,7 +149,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							cerr << "missing argument to --host" << endl;
 							error = true;
 						} else {
-							config.client.host = argv[i];
+							config.game.net.host = argv[i];
 						}
 					} else if (strcmp(param, "port") == 0) {
 						++i;
@@ -157,8 +157,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							cerr << "missing argument to --port" << endl;
 							error = true;
 						} else {
-							config.server.port = strtoul(argv[i], nullptr, 10);
-							config.client.port = config.server.port;
+							config.game.net.port = strtoul(argv[i], nullptr, 10);
 						}
 					} else if (strcmp(param, "player-name") == 0) {
 						++i;
@@ -166,7 +165,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							cerr << "missing argument to --player-name" << endl;
 							error = true;
 						} else {
-							config.interface.player_name = argv[i];
+							config.game.player.name = argv[i];
 						}
 					} else if (strcmp(param, "save-path") == 0) {
 						++i;
@@ -194,7 +193,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 				for (int j = 1; arg[j] != '\0'; ++j) {
 					switch (arg[j]) {
 						case 'd':
-							config.doublebuf = false;
+							config.game.video.dblbuf = false;
 							break;
 						case 'm':
 							++i;
@@ -202,7 +201,7 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 								cerr << "missing argument to -m" << endl;
 								error = true;
 							} else {
-								config.multisampling = strtoul(argv[i], nullptr, 10);
+								config.game.video.msaa = strtoul(argv[i], nullptr, 10);
 							}
 							break;
 						case 'n':
@@ -309,10 +308,10 @@ int Runtime::Execute() {
 }
 
 void Runtime::RunStandalone() {
-	Init init(config.doublebuf, config.multisampling);
+	Init init(config.game.video.dblbuf, config.game.video.msaa);
 
 	Environment env(init.window, config.env);
-	env.viewport.VSync(config.vsync);
+	env.viewport.VSync(config.game.video.vsync);
 
 	WorldSave save(config.env.GetWorldPath(config.world.name));
 	if (save.Exists()) {
@@ -324,7 +323,7 @@ void Runtime::RunStandalone() {
 	}
 
 	Application app(env);
-	standalone::MasterState world_state(env, config.gen, config.interface, config.world, save);
+	standalone::MasterState world_state(env, config.game, config.gen, config.world, save);
 	app.PushState(&world_state);
 	Run(app);
 }
@@ -342,19 +341,19 @@ void Runtime::RunServer() {
 	}
 
 	HeadlessApplication app(env);
-	server::ServerState server_state(env, config.gen, config.world, save, config.server);
+	server::ServerState server_state(env, config.gen, config.world, save, config.game);
 	app.PushState(&server_state);
 	Run(app);
 }
 
 void Runtime::RunClient() {
-	Init init(config.doublebuf, config.multisampling);
+	Init init(config.game.video.dblbuf, config.game.video.msaa);
 
 	Environment env(init.window, config.env);
-	env.viewport.VSync(config.vsync);
+	env.viewport.VSync(config.game.video.vsync);
 
 	Application app(env);
-	client::MasterState client_state(env, config.world, config.interface, config.client);
+	client::MasterState client_state(env, config.game, config.world);
 	app.PushState(&client_state);
 	Run(app);
 }

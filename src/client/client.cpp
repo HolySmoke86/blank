@@ -106,18 +106,17 @@ void InitialState::Render(Viewport &viewport) {
 InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
 , block_types()
-, save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetClientConf().host))
+, save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetConfig().net.host))
 , world(block_types, master.GetWorldConf())
-, interface(
-	master.GetInterfaceConf(),
-	master.GetEnv(),
-	world,
-	world.AddPlayer(master.GetInterfaceConf().player_name, player_id)
-)
+, player(*world.AddPlayer(master.GetConfig().player.name))
+, hud(master.GetEnv(), master.GetConfig(), player)
+, manip(master.GetEnv(), player.GetEntity())
+, input(world, player, manip)
+, interface(master.GetConfig(), master.GetEnv().keymap, input, *this)
 // TODO: looks like chunk requester and receiver can and should be merged
 , chunk_requester(world.Chunks(), save)
 , chunk_receiver(world.Chunks())
-, chunk_renderer(*interface.GetPlayer().chunks)
+, chunk_renderer(player.GetChunks())
 , skeletons()
 , loop_timer(16)
 , sky(master.GetEnv().loader.LoadCubeMap("skybox"))
@@ -130,8 +129,6 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
 	skeletons.Load();
-	// TODO: better solution for initializing HUD
-	interface.SelectNext();
 	loop_timer.Start();
 }
 
@@ -168,12 +165,19 @@ void InteractiveState::Handle(const SDL_Event &event) {
 }
 
 void InteractiveState::Update(int dt) {
+	input.Update(dt);
+	if (input.BlockFocus()) {
+		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
+	} else if (input.EntityFocus()) {
+		hud.FocusEntity(*input.EntityFocus().entity);
+	}
+	hud.Display(block_types[player.GetInventorySlot() + 1]);
 	loop_timer.Update(dt);
 	master.Update(dt);
 	chunk_receiver.Update(dt);
 	chunk_requester.Update(dt);
 
-	interface.Update(dt);
+	hud.Update(dt);
 	int world_dt = 0;
 	while (loop_timer.HitOnce()) {
 		world.Update(loop_timer.Interval());
@@ -182,17 +186,15 @@ void InteractiveState::Update(int dt) {
 	}
 	chunk_renderer.Update(dt);
 
-	Entity &player = *interface.GetPlayer().entity;
-
 	if (world_dt > 0) {
-		PushPlayerUpdate(player, world_dt);
+		PushPlayerUpdate(player.GetEntity(), world_dt);
 	}
 
-	glm::mat4 trans = player.Transform(player.ChunkCoords());
+	glm::mat4 trans = player.GetEntity().Transform(player.GetEntity().ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	master.GetEnv().audio.Position(player.Position());
-	master.GetEnv().audio.Velocity(player.Velocity());
+	master.GetEnv().audio.Position(player.GetEntity().Position());
+	master.GetEnv().audio.Velocity(player.GetEntity().Velocity());
 	master.GetEnv().audio.Orientation(dir, up);
 }
 
@@ -233,7 +235,7 @@ void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &co
 	}
 
 	EntityState replay_state(corrected_state);
-	EntityState &player_state = interface.GetPlayer().entity->GetState();
+	EntityState &player_state = player.GetEntity().GetState();
 
 	if (entry != end) {
 		entry->state.chunk_pos = replay_state.chunk_pos;
@@ -274,26 +276,65 @@ void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &co
 }
 
 void InteractiveState::Render(Viewport &viewport) {
-	Entity &player = *interface.GetPlayer().entity;
-	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
-	chunk_renderer.Render(viewport);
-	world.Render(viewport);
-	sky.Render(viewport);
-	interface.Render(viewport);
+	viewport.WorldPosition(player.GetEntity().Transform(player.GetEntity().ChunkCoords()));
+	if (master.GetConfig().video.world) {
+		chunk_renderer.Render(viewport);
+		world.Render(viewport);
+		sky.Render(viewport);
+	}
+	hud.Render(viewport);
+}
+
+void InteractiveState::SetAudio(bool b) {
+	master.GetConfig().audio.enabled = b;
+	if (b) {
+		hud.PostMessage("Audio enabled");
+	} else {
+		hud.PostMessage("Audio disabled");
+	}
+}
+
+void InteractiveState::SetVideo(bool b) {
+	master.GetConfig().video.world = b;
+	if (b) {
+		hud.PostMessage("World rendering enabled");
+	} else {
+		hud.PostMessage("World rendering disabled");
+	}
+}
+
+void InteractiveState::SetHUD(bool b) {
+	master.GetConfig().video.hud = b;
+	if (b) {
+		hud.PostMessage("HUD rendering enabled");
+	} else {
+		hud.PostMessage("HUD rendering disabled");
+	}
+}
+
+void InteractiveState::SetDebug(bool b) {
+	master.GetConfig().video.debug = b;
+	if (b) {
+		hud.PostMessage("Debug rendering enabled");
+	} else {
+		hud.PostMessage("Debug rendering disabled");
+	}
+}
+
+void InteractiveState::Exit() {
+	master.Quit();
 }
 
 
 MasterState::MasterState(
 	Environment &env,
-	const World::Config &wc,
-	const Interface::Config &ic,
-	const Client::Config &cc)
+	Config &config,
+	const World::Config &wc)
 : env(env)
+, config(config)
 , world_conf(wc)
-, intf_conf(ic)
-, client_conf(cc)
 , state()
-, client(cc)
+, client(config.net)
 , init_state(*this)
 , login_packet(-1)
 , update_status()
@@ -311,7 +352,7 @@ void MasterState::Quit() {
 
 
 void MasterState::OnEnter() {
-	login_packet = client.SendLogin(intf_conf.player_name);
+	login_packet = client.SendLogin(config.player.name);
 	env.state.Push(&init_state);
 }
 
@@ -335,7 +376,7 @@ void MasterState::Render(Viewport &) {
 
 void MasterState::OnPacketLost(uint16_t id) {
 	if (id == login_packet) {
-		login_packet = client.SendLogin(intf_conf.player_name);
+		login_packet = client.SendLogin(config.player.name);
 	}
 }
 
@@ -364,7 +405,7 @@ void MasterState::On(const Packet::Join &pack) {
 	pack.ReadPlayerID(player_id);
 	state.reset(new InteractiveState(*this, player_id));
 
-	pack.ReadPlayerState(state->GetInterface().GetPlayer().entity->GetState());
+	pack.ReadPlayerState(state->GetPlayer().GetEntity().GetState());
 
 	env.state.PopAfter(this);
 	env.state.Push(state.get());

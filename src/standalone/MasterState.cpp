@@ -1,5 +1,6 @@
 #include "MasterState.hpp"
 
+#include "../app/Config.hpp"
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
 #include "../app/TextureIndex.hpp"
@@ -12,18 +13,23 @@ namespace standalone {
 
 MasterState::MasterState(
 	Environment &env,
+	Config &config,
 	const Generator::Config &gc,
-	const Interface::Config &ic,
 	const World::Config &wc,
 	const WorldSave &save
 )
-: env(env)
+: config(config)
+, env(env)
 , block_types()
 , world(block_types, wc)
-, interface(ic, env, world, world.AddPlayer(ic.player_name))
+, player(*world.AddPlayer(config.player.name))
+, hud(env, config, player)
+, manip(env, player.GetEntity())
+, input(world, player, manip)
+, interface(config, env.keymap, input, *this)
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, save)
-, chunk_renderer(*interface.GetPlayer().chunks)
+, chunk_renderer(player.GetChunks())
 , skeletons()
 , spawner(world, skeletons, gc.seed)
 , sky(env.loader.LoadCubeMap("skybox"))
@@ -35,8 +41,6 @@ MasterState::MasterState(
 	chunk_renderer.FogDensity(wc.fog_density);
 	skeletons.Load();
 	spawner.LimitSkeletons(0, skeletons.Size());
-	// TODO: better solution for initializing HUD
-	interface.SelectNext();
 }
 
 
@@ -75,30 +79,76 @@ void MasterState::Handle(const SDL_Event &event) {
 }
 
 void MasterState::Update(int dt) {
-	interface.Update(dt);
+	input.Update(dt);
+	if (input.BlockFocus()) {
+		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
+	} else if (input.EntityFocus()) {
+		hud.FocusEntity(*input.EntityFocus().entity);
+	}
+	hud.Display(block_types[player.GetInventorySlot() + 1]);
+	hud.Update(dt);
 	spawner.Update(dt);
 	world.Update(dt);
 	chunk_loader.Update(dt);
 	chunk_renderer.Update(dt);
 
-	Entity &player = *interface.GetPlayer().entity;
-
-	glm::mat4 trans = player.Transform(player.ChunkCoords());
+	glm::mat4 trans = player.GetEntity().Transform(player.GetEntity().ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));
 	glm::vec3 up(trans * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f));
-	env.audio.Position(player.Position());
-	env.audio.Velocity(player.Velocity());
+	env.audio.Position(player.GetEntity().Position());
+	env.audio.Velocity(player.GetEntity().Velocity());
 	env.audio.Orientation(dir, up);
 }
 
 void MasterState::Render(Viewport &viewport) {
-	Entity &player = *interface.GetPlayer().entity;
-	viewport.WorldPosition(player.Transform(player.ChunkCoords()));
-	chunk_renderer.Render(viewport);
-	world.Render(viewport);
-	sky.Render(viewport);
+	viewport.WorldPosition(player.GetEntity().Transform(player.GetEntity().ChunkCoords()));
+	if (config.video.world) {
+		chunk_renderer.Render(viewport);
+		world.Render(viewport);
+		sky.Render(viewport);
+	}
+	hud.Render(viewport);
+}
 
-	interface.Render(viewport);
+
+void MasterState::SetAudio(bool b) {
+	config.audio.enabled = b;
+	if (b) {
+		hud.PostMessage("Audio enabled");
+	} else {
+		hud.PostMessage("Audio disabled");
+	}
+}
+
+void MasterState::SetVideo(bool b) {
+	config.video.world = b;
+	if (b) {
+		hud.PostMessage("World rendering enabled");
+	} else {
+		hud.PostMessage("World rendering disabled");
+	}
+}
+
+void MasterState::SetHUD(bool b) {
+	config.video.hud = b;
+	if (b) {
+		hud.PostMessage("HUD rendering enabled");
+	} else {
+		hud.PostMessage("HUD rendering disabled");
+	}
+}
+
+void MasterState::SetDebug(bool b) {
+	config.video.debug = b;
+	if (b) {
+		hud.PostMessage("Debug rendering enabled");
+	} else {
+		hud.PostMessage("Debug rendering disabled");
+	}
+}
+
+void MasterState::Exit() {
+	env.state.Pop();
 }
 
 }

@@ -1,8 +1,13 @@
+#include "ClientController.hpp"
+#include "DirectInput.hpp"
 #include "HUD.hpp"
+#include "InteractiveManipulator.hpp"
 #include "Interface.hpp"
 #include "Keymap.hpp"
+#include "PlayerController.hpp"
 
 #include "../app/Assets.hpp"
+#include "../app/Config.hpp"
 #include "../app/Environment.hpp"
 #include "../app/FrameCounter.hpp"
 #include "../app/init.hpp"
@@ -13,42 +18,192 @@
 #include "../model/shapes.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/World.hpp"
+#include "../world/WorldManipulator.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/io.hpp>
 
 
 namespace blank {
 
-HUD::HUD(const BlockTypeRegistry &types, const Font &font)
-: types(types)
-, font(font)
+DirectInput::DirectInput(World &world, Player &player, WorldManipulator &manip)
+: world(world)
+, player(player)
+, manip(manip)
+, aim_world()
+, aim_entity()
+, move_dir(0.0f)
+, pitch(0.0f)
+, yaw(0.0f)
+, dirty(true)
+, active_slot(0)
+, place_timer(256)
+, remove_timer(256) {
+
+}
+
+void DirectInput::Update(int dt) {
+	dirty = true; // world has changed in the meantime
+	UpdatePlayer();
+
+	remove_timer.Update(dt);
+	if (remove_timer.Hit()) {
+		RemoveBlock();
+	}
+
+	place_timer.Update(dt);
+	if (place_timer.Hit()) {
+		PlaceBlock();
+	}
+}
+
+void DirectInput::SetMovement(const glm::vec3 &m) {
+	if (dot(m, m) > 1.0f) {
+		move_dir = normalize(m);
+	} else {
+		move_dir = m;
+	}
+	dirty = true;
+}
+
+void DirectInput::TurnHead(float dp, float dy) {
+	pitch += dp;
+	if (pitch > PI / 2) {
+		pitch = PI / 2;
+	} else if (pitch < -PI / 2) {
+		pitch = -PI / 2;
+	}
+	yaw += dy;
+	if (yaw > PI) {
+		yaw -= PI * 2;
+	} else if (yaw < -PI) {
+		yaw += PI * 2;
+	}
+	dirty = true;
+}
+
+void DirectInput::StartPrimaryAction() {
+	if (!remove_timer.Running()) {
+		RemoveBlock();
+		remove_timer.Start();
+	}
+}
+
+void DirectInput::StopPrimaryAction() {
+	remove_timer.Stop();
+}
+
+void DirectInput::StartSecondaryAction() {
+	if (!place_timer.Running()) {
+		PlaceBlock();
+		place_timer.Start();
+	}
+}
+
+void DirectInput::StopSecondaryAction() {
+	place_timer.Stop();
+}
+
+void DirectInput::StartTertiaryAction() {
+	PickBlock();
+}
+
+void DirectInput::StopTertiaryAction() {
+	// nothing
+}
+
+void DirectInput::SelectInventory(int) {
+}
+
+void DirectInput::UpdatePlayer() {
+	constexpr float max_vel = 0.005f;
+	if (dirty) {
+		player.GetEntity().Orientation(glm::quat(glm::vec3(pitch, yaw, 0.0f)));
+		player.GetEntity().Velocity(glm::rotateY(move_dir * max_vel, yaw));
+
+		Ray aim = player.Aim();
+		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {
+			aim_world = WorldCollision();
+		}
+		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity(), aim_entity)) {
+			aim_entity = EntityCollision();
+		}
+		if (aim_world && aim_entity) {
+			// got both, pick the closest one
+			if (aim_world.depth < aim_entity.depth) {
+				aim_entity = EntityCollision();
+			} else {
+				aim_world = WorldCollision();
+			}
+		}
+		// TODO: update outline if applicable
+		dirty = false;
+	}
+}
+
+void DirectInput::PickBlock() {
+	UpdatePlayer();
+	if (!aim_world) return;
+	player.SetInventorySlot(aim_world.GetBlock().type - 1);
+}
+
+void DirectInput::PlaceBlock() {
+	UpdatePlayer();
+	if (!aim_world) return;
+
+	BlockLookup next_block(aim_world.chunk, aim_world.BlockPos(), Block::NormalFace(aim_world.normal));
+	if (!next_block) {
+		return;
+	}
+	manip.SetBlock(next_block.GetChunk(), next_block.GetBlockIndex(), Block(player.GetInventorySlot() + 1));
+	dirty = true;
+}
+
+void DirectInput::RemoveBlock() {
+	UpdatePlayer();
+	if (!aim_world) return;
+	manip.SetBlock(aim_world.GetChunk(), aim_world.block, Block(0));
+	dirty = true;
+}
+
+
+HUD::HUD(Environment &env, Config &config, const Player &player)
+: env(env)
+, config(config)
+, player(player)
+// block focus
+, outline()
+, outline_transform(1.0f)
+, outline_visible(false)
+// "inventory"
 , block()
 , block_buf()
 , block_transform(1.0f)
 , block_label()
 , block_visible(false)
+// debug overlay
+, counter_text()
+, position_text()
+, orientation_text()
+, block_text()
+, show_block(false)
+, show_entity(false)
+// message box
+, messages(env.assets.small_ui_font)
+, msg_timer(5000)
+// crosshair
 , crosshair() {
+	// "inventory"
 	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
 	block_transform = glm::scale(block_transform, glm::vec3(50.0f));
 	block_transform = glm::rotate(block_transform, 3.5f, glm::vec3(1.0f, 0.0f, 0.0f));
 	block_transform = glm::rotate(block_transform, 0.35f, glm::vec3(0.0f, 1.0f, 0.0f));
-
-	OutlineModel::Buffer buf;
-	buf.vertices = std::vector<glm::vec3>({
-		{ -10.0f,   0.0f, 0.0f }, { 10.0f,  0.0f, 0.0f },
-		{   0.0f, -10.0f, 0.0f }, {  0.0f, 10.0f, 0.0f },
-	});
-	buf.indices = std::vector<OutlineModel::Index>({
-		0, 1, 2, 3
-	});
-	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f });
-	crosshair.Update(buf);
-
 	block_label.Position(
 		glm::vec3(50.0f, 85.0f, 0.0f),
 		Gravity::NORTH_WEST,
@@ -56,82 +211,8 @@ HUD::HUD(const BlockTypeRegistry &types, const Font &font)
 	);
 	block_label.Foreground(glm::vec4(1.0f));
 	block_label.Background(glm::vec4(0.5f));
-}
 
-
-void HUD::DisplayNone() {
-	block_visible = false;
-}
-
-void HUD::Display(const Block &b) {
-	const BlockType &type = types.Get(b.type);
-
-	block_buf.Clear();
-	type.FillEntityModel(block_buf, b.Transform());
-	block.Update(block_buf);
-
-	block_label.Set(font, type.label);
-
-	block_visible = type.visible;
-}
-
-
-void HUD::Render(Viewport &viewport) noexcept {
-	viewport.ClearDepth();
-
-	PlainColor &outline_prog = viewport.HUDOutlineProgram();
-	viewport.EnableInvertBlending();
-	viewport.SetCursor(glm::vec3(0.0f), Gravity::CENTER);
-	outline_prog.SetM(viewport.Cursor());
-	crosshair.Draw();
-
-	if (block_visible) {
-		DirectionalLighting &world_prog = viewport.HUDProgram();
-		world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
-		// disable distance fog
-		world_prog.SetFogDensity(0.0f);
-
-		viewport.DisableBlending();
-		world_prog.SetM(block_transform);
-		block.Draw();
-		block_label.Render(viewport);
-	}
-}
-
-
-Interface::Interface(
-	const Config &config,
-	Environment &env,
-	World &world,
-	const Player &player)
-: env(env)
-, world(world)
-, player(player)
-, ctrl(*player.entity)
-, hud(world.BlockTypes(), env.assets.small_ui_font)
-, aim{{ 0, 0, 0 }, { 0, 0, -1 }}
-, aim_world()
-, aim_entity()
-, outline()
-, outline_transform(1.0f)
-, counter_text()
-, position_text()
-, orientation_text()
-, block_text()
-, last_block()
-, last_entity(nullptr)
-, messages(env.assets.small_ui_font)
-, msg_timer(5000)
-, config(config)
-, place_timer(256)
-, remove_timer(256)
-, remove(0)
-, selection(0)
-, place_sound(env.loader.LoadSound("thump"))
-, remove_sound(env.loader.LoadSound("plop"))
-, fwd(0)
-, rev(0)
-, debug(false) {
+	// debug overlay
 	counter_text.Position(glm::vec3(-25.0f, 25.0f, 0.0f), Gravity::NORTH_EAST);
 	counter_text.Foreground(glm::vec4(1.0f));
 	counter_text.Background(glm::vec4(0.5f));
@@ -149,347 +230,23 @@ Interface::Interface(
 	entity_text.Foreground(glm::vec4(1.0f));
 	entity_text.Background(glm::vec4(0.5f));
 	entity_text.Set(env.assets.small_ui_font, "Entity: none");
+
+	// message box
 	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
-	hud.DisplayNone();
-}
 
-
-void Interface::HandlePress(const SDL_KeyboardEvent &event) {
-	if (config.keyboard_disabled) return;
-
-	switch (env.keymap.Lookup(event)) {
-		case Keymap::MOVE_FORWARD:
-			rev.z = 1;
-			break;
-		case Keymap::MOVE_BACKWARD:
-			fwd.z = 1;
-			break;
-		case Keymap::MOVE_LEFT:
-			rev.x = 1;
-			break;
-		case Keymap::MOVE_RIGHT:
-			fwd.x = 1;
-			break;
-		case Keymap::MOVE_UP:
-			fwd.y = 1;
-			break;
-		case Keymap::MOVE_DOWN:
-			rev.y = 1;
-			break;
-
-		case Keymap::BLOCK_FACE:
-			FaceBlock();
-			break;
-		case Keymap::BLOCK_TURN:
-			TurnBlock();
-			break;
-		case Keymap::BLOCK_NEXT:
-			SelectNext();
-			break;
-		case Keymap::BLOCK_PREV:
-			SelectPrevious();
-			break;
-
-		case Keymap::BLOCK_PLACE:
-			PlaceBlock();
-			break;
-		case Keymap::BLOCK_PICK:
-			PickBlock();
-			break;
-		case Keymap::BLOCK_REMOVE:
-			RemoveBlock();
-			break;
-
-		case Keymap::TOGGLE_COLLISION:
-			ToggleCollision();
-			break;
-
-		case Keymap::TOGGLE_VISUAL:
-			ToggleVisual();
-			break;
-		case Keymap::TOGGLE_DEBUG:
-			ToggleDebug();
-			break;
-		case Keymap::TOGGLE_AUDIO:
-			ToggleAudio();
-			break;
-
-		case Keymap::EXIT:
-			env.state.Pop();
-			break;
-
-		default:
-			break;
-	}
-}
-
-void Interface::HandleRelease(const SDL_KeyboardEvent &event) {
-	if (config.keyboard_disabled) return;
-
-	switch (env.keymap.Lookup(event)) {
-		case Keymap::MOVE_FORWARD:
-			rev.z = 0;
-			break;
-		case Keymap::MOVE_BACKWARD:
-			fwd.z = 0;
-			break;
-		case Keymap::MOVE_LEFT:
-			rev.x = 0;
-			break;
-		case Keymap::MOVE_RIGHT:
-			fwd.x = 0;
-			break;
-		case Keymap::MOVE_UP:
-			fwd.y = 0;
-			break;
-		case Keymap::MOVE_DOWN:
-			rev.y = 0;
-			break;
-
-		default:
-			break;
-	}
-}
-
-void Interface::FaceBlock() {
-	selection.SetFace(Block::Face((selection.GetFace() + 1) % Block::FACE_COUNT));
-	hud.Display(selection);
-}
-
-void Interface::TurnBlock() {
-	selection.SetTurn(Block::Turn((selection.GetTurn() + 1) % Block::TURN_COUNT));
-	hud.Display(selection);
-}
-
-void Interface::ToggleCollision() {
-	ctrl.Controlled().WorldCollidable(!ctrl.Controlled().WorldCollidable());
-	if (ctrl.Controlled().WorldCollidable()) {
-		PostMessage("collision on");
-	} else {
-		PostMessage("collision off");
-	}
-}
-
-void Interface::ToggleAudio() {
-	config.audio_disabled = !config.audio_disabled;
-	if (config.audio_disabled) {
-		PostMessage("audio off");
-	} else {
-		PostMessage("audio on");
-	}
-}
-
-void Interface::ToggleVisual() {
-	config.visual_disabled = !config.visual_disabled;
-	if (config.visual_disabled) {
-		PostMessage("visual off");
-	} else {
-		PostMessage("visual on");
-	}
-}
-
-void Interface::ToggleDebug() {
-	debug = !debug;
-	if (debug) {
-		UpdateCounter();
-		UpdatePosition();
-		UpdateOrientation();
-		UpdateBlockInfo();
-		UpdateEntityInfo();
-	}
-}
-
-void Interface::UpdateCounter() {
-	std::stringstream s;
-	s << std::setprecision(3) <<
-		"avg: " << env.counter.Average().running << "ms, "
-		"peak: " << env.counter.Peak().running << "ms";
-	std::string text = s.str();
-	counter_text.Set(env.assets.small_ui_font, text);
-}
-
-void Interface::UpdatePosition() {
-	std::stringstream s;
-	s << std::setprecision(3) << "pos: " << ctrl.Controlled().AbsolutePosition();
-	position_text.Set(env.assets.small_ui_font, s.str());
-}
-
-void Interface::UpdateOrientation() {
-	std::stringstream s;
-	s << std::setprecision(3) << "pitch: " << rad2deg(ctrl.Pitch())
-		<< ", yaw: " << rad2deg(ctrl.Yaw());
-	orientation_text.Set(env.assets.small_ui_font, s.str());
-}
-
-void Interface::UpdateBlockInfo() {
-	if (aim_world) {
-		const Block &block = aim_world.GetBlock();
-		if (last_block != block) {
-			std::stringstream s;
-			s << "Block: "
-				<< aim_world.GetType().label
-				<< ", face: " << block.GetFace()
-				<< ", turn: " << block.GetTurn();
-			block_text.Set(env.assets.small_ui_font, s.str());
-			last_block = block;
-		}
-	} else {
-		if (last_block != Block()) {
-			std::stringstream s;
-			s << "Block: none";
-			block_text.Set(env.assets.small_ui_font, s.str());
-			last_block = Block();
-		}
-	}
-}
-
-void Interface::UpdateEntityInfo() {
-	if (aim_entity) {
-		if (last_entity != aim_entity.entity) {
-			std::stringstream s;
-			s << "Entity: " << aim_entity.entity->Name();
-			entity_text.Set(env.assets.small_ui_font, s.str());
-			last_entity = aim_entity.entity;
-		}
-	}
-}
-
-
-void Interface::Handle(const SDL_MouseMotionEvent &event) {
-	if (config.mouse_disabled) return;
-	ctrl.RotateYaw(event.xrel * config.yaw_sensitivity);
-	ctrl.RotatePitch(event.yrel * config.pitch_sensitivity);
-}
-
-void Interface::HandlePress(const SDL_MouseButtonEvent &event) {
-	if (config.mouse_disabled) return;
-
-	if (event.button == SDL_BUTTON_LEFT) {
-		RemoveBlock();
-		remove_timer.Start();
-	} else if (event.button == SDL_BUTTON_MIDDLE) {
-		PickBlock();
-	} else if (event.button == SDL_BUTTON_RIGHT) {
-		PlaceBlock();
-		place_timer.Start();
-	}
-}
-
-void Interface::HandleRelease(const SDL_MouseButtonEvent &event) {
-	if (config.mouse_disabled) return;
-
-	if (event.button == SDL_BUTTON_LEFT) {
-		remove_timer.Stop();
-	} else if (event.button == SDL_BUTTON_RIGHT) {
-		place_timer.Stop();
-	}
-}
-
-void Interface::PickBlock() {
-	if (!aim_world) return;
-	selection = aim_world.GetBlock();
-	hud.Display(selection);
-}
-
-void Interface::PlaceBlock() {
-	if (!aim_world) return;
-
-	BlockLookup next_block(aim_world.chunk, aim_world.BlockPos(), Block::NormalFace(aim_world.normal));
-	if (!next_block) {
-		return;
-	}
-	next_block.SetBlock(selection);
-
-	if (config.audio_disabled) return;
-	const Entity &player = ctrl.Controlled();
-	env.audio.Play(
-		place_sound,
-		next_block.GetChunk().ToSceneCoords(player.ChunkCoords(), next_block.GetBlockCoords())
-	);
-}
-
-void Interface::RemoveBlock() noexcept {
-	if (!aim_world) return;
-	aim_world.SetBlock(remove);
-
-	if (config.audio_disabled) return;
-	const Entity &player = ctrl.Controlled();
-	env.audio.Play(
-		remove_sound,
-		aim_world.GetChunk().ToSceneCoords(player.ChunkCoords(), aim_world.BlockCoords())
-	);
-}
-
-
-void Interface::Handle(const SDL_MouseWheelEvent &event) {
-	if (config.mouse_disabled) return;
-
-	if (event.y < 0) {
-		SelectNext();
-	} else if (event.y > 0) {
-		SelectPrevious();
-	}
-}
-
-void Interface::SelectNext() {
-	++selection.type;
-	if (size_t(selection.type) >= world.BlockTypes().Size()) {
-		selection.type = 1;
-	}
-	hud.Display(selection);
-}
-
-void Interface::SelectPrevious() {
-	--selection.type;
-	if (selection.type <= 0) {
-		selection.type = world.BlockTypes().Size() - 1;
-	}
-	hud.Display(selection);
-}
-
-
-void Interface::PostMessage(const char *msg) {
-	messages.PushLine(msg);
-	msg_timer.Reset();
-	msg_timer.Start();
-	std::cout << msg << std::endl;
-}
-
-
-void Interface::Update(int dt) {
-	ctrl.Velocity(glm::vec3(fwd - rev) * config.move_velocity);
-	ctrl.Update(dt);
-
-	msg_timer.Update(dt);
-	place_timer.Update(dt);
-	remove_timer.Update(dt);
-
-	aim = ctrl.Aim();
-	CheckAim();
-
-	if (msg_timer.HitOnce()) {
-		msg_timer.Stop();
-	}
-
-	if (remove_timer.Hit()) {
-		RemoveBlock();
-		CheckAim();
-	}
-
-	if (place_timer.Hit()) {
-		PlaceBlock();
-		CheckAim();
-	}
-
-	if (debug) {
-		if (env.counter.Changed()) {
-			UpdateCounter();
-		}
-		UpdatePosition();
-		UpdateOrientation();
-	}
+	// crosshair
+	OutlineModel::Buffer buf;
+	buf.vertices = std::vector<glm::vec3>({
+		{ -10.0f,   0.0f, 0.0f }, { 10.0f,  0.0f, 0.0f },
+		{   0.0f, -10.0f, 0.0f }, {  0.0f, 10.0f, 0.0f },
+	});
+	buf.indices = std::vector<OutlineModel::Index>({
+		0, 1, 2, 3
+	});
+	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f });
+	crosshair.Update(buf);
 }
 
 namespace {
@@ -498,65 +255,391 @@ OutlineModel::Buffer outl_buf;
 
 }
 
-void Interface::CheckAim() {
-	if (!world.Intersection(aim, glm::mat4(1.0f), ctrl.Controlled().ChunkCoords(), aim_world)) {
-		aim_world = WorldCollision();
-	}
-	if (!world.Intersection(aim, glm::mat4(1.0f), ctrl.Controlled(), aim_entity)) {
-		aim_entity = EntityCollision();
-	}
-	if (aim_world && aim_entity) {
-		// got both, pick the closest one
-		if (aim_world.depth < aim_entity.depth) {
-			UpdateOutline();
-			aim_entity = EntityCollision();
-		} else {
-			aim_world = WorldCollision();
-		}
-	} else if (aim_world) {
-		UpdateOutline();
-	}
-	if (debug) {
-		UpdateBlockInfo();
-		UpdateEntityInfo();
-	}
-}
-
-void Interface::UpdateOutline() {
+void HUD::FocusBlock(const Chunk &chunk, int index) {
+	const Block &block = chunk.BlockAt(index);
+	const BlockType &type = chunk.Type(index);
 	outl_buf.Clear();
-	aim_world.GetType().FillOutlineModel(outl_buf);
+	type.FillOutlineModel(outl_buf);
 	outline.Update(outl_buf);
-	outline_transform = aim_world.GetChunk().Transform(player.entity->ChunkCoords());
-	outline_transform *= aim_world.BlockTransform();
+	outline_transform = chunk.Transform(player.GetEntity().ChunkCoords());
+	outline_transform *= chunk.ToTransform(Chunk::ToPos(index), index);
 	outline_transform *= glm::scale(glm::vec3(1.005f));
+	outline_visible = true;
+	{
+		std::stringstream s;
+		s << "Block: "
+			<< type.label
+			<< ", face: " << block.GetFace()
+			<< ", turn: " << block.GetTurn();
+		block_text.Set(env.assets.small_ui_font, s.str());
+	}
+	show_block = true;
+	show_entity = false;
+}
+
+void HUD::FocusEntity(const Entity &entity) {
+	{
+		std::stringstream s;
+		s << "Entity: " << entity.Name();
+		entity_text.Set(env.assets.small_ui_font, s.str());
+	}
+	show_block = false;
+	show_entity = true;
+}
+
+void HUD::FocusNone() {
+	outline_visible = false;
+	show_block = false;
+	show_entity = false;
+}
+
+void HUD::DisplayNone() {
+	block_visible = false;
+}
+
+void HUD::Display(const BlockType &type) {
+	block_buf.Clear();
+	type.FillEntityModel(block_buf);
+	block.Update(block_buf);
+
+	block_label.Set(env.assets.small_ui_font, type.label);
+
+	block_visible = type.visible;
 }
 
 
-void Interface::Render(Viewport &viewport) noexcept {
-	if (config.visual_disabled) return;
+void HUD::UpdateDebug() {
+	UpdateCounter();
+	UpdatePosition();
+	UpdateOrientation();
+}
 
-	if (aim_world) {
+void HUD::UpdateCounter() {
+	std::stringstream s;
+	s << std::setprecision(3) <<
+		"avg: " << env.counter.Average().running << "ms, "
+		"peak: " << env.counter.Peak().running << "ms";
+	std::string text = s.str();
+	counter_text.Set(env.assets.small_ui_font, text);
+}
+
+void HUD::UpdatePosition() {
+	std::stringstream s;
+	s << std::setprecision(3) << "pos: " << player.GetEntity().AbsolutePosition();
+	position_text.Set(env.assets.small_ui_font, s.str());
+}
+
+void HUD::UpdateOrientation() {
+	//std::stringstream s;
+	//s << std::setprecision(3) << "pitch: " << rad2deg(ctrl.Pitch())
+	//	<< ", yaw: " << rad2deg(ctrl.Yaw());
+	//orientation_text.Set(env.assets.small_ui_font, s.str());
+}
+
+void HUD::PostMessage(const char *msg) {
+	messages.PushLine(msg);
+	msg_timer.Reset();
+	msg_timer.Start();
+	std::cout << msg << std::endl;
+}
+
+
+void HUD::Update(int dt) {
+	msg_timer.Update(dt);
+	if (msg_timer.HitOnce()) {
+		msg_timer.Stop();
+	}
+
+	if (config.video.debug) {
+		if (env.counter.Changed()) {
+			UpdateCounter();
+		}
+		UpdatePosition();
+		UpdateOrientation();
+	}
+}
+
+void HUD::Render(Viewport &viewport) noexcept {
+	// block focus
+	if (outline_visible && config.video.world) {
 		PlainColor &outline_prog = viewport.WorldOutlineProgram();
 		outline_prog.SetM(outline_transform);
 		outline.Draw();
 	}
 
-	if (debug) {
+	// clear depth buffer so everything renders above the world
+	viewport.ClearDepth();
+
+	if (config.video.hud) {
+		// "inventory"
+		if (block_visible) {
+			DirectionalLighting &world_prog = viewport.HUDProgram();
+			world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
+			// disable distance fog
+			world_prog.SetFogDensity(0.0f);
+
+			viewport.DisableBlending();
+			world_prog.SetM(block_transform);
+			block.Draw();
+			block_label.Render(viewport);
+		}
+
+		// message box
+		if (msg_timer.Running()) {
+			messages.Render(viewport);
+		}
+
+		// crosshair
+		PlainColor &outline_prog = viewport.HUDOutlineProgram();
+		viewport.EnableInvertBlending();
+		viewport.SetCursor(glm::vec3(0.0f), Gravity::CENTER);
+		outline_prog.SetM(viewport.Cursor());
+		crosshair.Draw();
+	}
+
+	// debug overlay
+	if (config.video.debug) {
 		counter_text.Render(viewport);
 		position_text.Render(viewport);
 		orientation_text.Render(viewport);
-		if (aim_world) {
+		if (show_block) {
 			block_text.Render(viewport);
-		} else if (aim_entity) {
+		} else if (show_entity) {
 			entity_text.Render(viewport);
 		}
 	}
+}
 
-	if (msg_timer.Running()) {
-		messages.Render(viewport);
+
+InteractiveManipulator::InteractiveManipulator(Environment &env, Entity &player)
+: player(player)
+, audio(env.audio)
+, place_sound(env.loader.LoadSound("thump"))
+, remove_sound(env.loader.LoadSound("plop")) {
+
+}
+
+void InteractiveManipulator::SetBlock(Chunk &chunk, int index, const Block &block) {
+	chunk.SetBlock(index, block);
+	glm::vec3 coords = chunk.ToSceneCoords(player.ChunkCoords(), Chunk::ToCoords(index));
+	// TODO: get sound effect from block type
+	if (block.type == 0) {
+		audio.Play(remove_sound, coords);
+	} else {
+		audio.Play(place_sound, coords);
 	}
+}
 
-	hud.Render(viewport);
+
+Interface::Interface(
+	Config &config,
+	const Keymap &keymap,
+	PlayerController &pc,
+	ClientController &cc)
+: config(config)
+, keymap(keymap)
+, player_ctrl(pc)
+, client_ctrl(cc)
+, fwd(0)
+, rev(0)
+, slot(0)
+, num_slots(10) {
+
+}
+
+
+void Interface::HandlePress(const SDL_KeyboardEvent &event) {
+	if (!config.input.keyboard) return;
+
+	Keymap::Action action = keymap.Lookup(event);
+	switch (action) {
+		case Keymap::MOVE_FORWARD:
+			rev.z = 1;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_BACKWARD:
+			fwd.z = 1;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_LEFT:
+			rev.x = 1;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_RIGHT:
+			fwd.x = 1;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_UP:
+			fwd.y = 1;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_DOWN:
+			rev.y = 1;
+			UpdateMovement();
+			break;
+
+		case Keymap::PRIMARY:
+			player_ctrl.StartPrimaryAction();
+			break;
+		case Keymap::SECONDARY:
+			player_ctrl.StartSecondaryAction();
+			break;
+		case Keymap::TERTIARY:
+			player_ctrl.StartTertiaryAction();
+			break;
+
+		case Keymap::INV_NEXT:
+			InvRel(1);
+			break;
+		case Keymap::INV_PREVIOUS:
+			InvRel(-1);
+			break;
+		case Keymap::INV_1:
+		case Keymap::INV_2:
+		case Keymap::INV_3:
+		case Keymap::INV_4:
+		case Keymap::INV_5:
+		case Keymap::INV_6:
+		case Keymap::INV_7:
+		case Keymap::INV_8:
+		case Keymap::INV_9:
+		case Keymap::INV_10:
+			InvAbs(action - Keymap::INV_1);
+			break;
+
+		case Keymap::EXIT:
+			client_ctrl.Exit();
+			break;
+
+		case Keymap::TOGGLE_AUDIO:
+			config.audio.enabled = !config.audio.enabled;
+			client_ctrl.SetAudio(config.audio.enabled);
+			break;
+		case Keymap::TOGGLE_VIDEO:
+			config.video.world = !config.video.world;
+			client_ctrl.SetVideo(config.video.world);
+			break;
+		case Keymap::TOGGLE_HUD:
+			config.video.hud = !config.video.hud;
+			client_ctrl.SetHUD(config.video.hud);
+			break;
+		case Keymap::TOGGLE_DEBUG:
+			config.video.debug = !config.video.debug;
+			client_ctrl.SetDebug(config.video.debug);
+			break;
+
+		default:
+			break;
+	}
+}
+
+void Interface::HandleRelease(const SDL_KeyboardEvent &event) {
+	if (!config.input.keyboard) return;
+
+	switch (keymap.Lookup(event)) {
+		case Keymap::MOVE_FORWARD:
+			rev.z = 0;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_BACKWARD:
+			fwd.z = 0;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_LEFT:
+			rev.x = 0;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_RIGHT:
+			fwd.x = 0;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_UP:
+			fwd.y = 0;
+			UpdateMovement();
+			break;
+		case Keymap::MOVE_DOWN:
+			rev.y = 0;
+			UpdateMovement();
+			break;
+
+		case Keymap::PRIMARY:
+			player_ctrl.StopPrimaryAction();
+			break;
+		case Keymap::SECONDARY:
+			player_ctrl.StopSecondaryAction();
+			break;
+		case Keymap::TERTIARY:
+			player_ctrl.StopTertiaryAction();
+			break;
+
+		default:
+			break;
+	}
+}
+
+void Interface::Handle(const SDL_MouseMotionEvent &event) {
+	if (!config.input.mouse) return;
+	player_ctrl.TurnHead(
+		event.yrel * config.input.pitch_sensitivity,
+		event.xrel * config.input.yaw_sensitivity);
+}
+
+void Interface::HandlePress(const SDL_MouseButtonEvent &event) {
+	if (!config.input.mouse) return;
+
+	switch (event.button) {
+		case SDL_BUTTON_LEFT:
+			player_ctrl.StartPrimaryAction();
+			break;
+		case SDL_BUTTON_RIGHT:
+			player_ctrl.StartSecondaryAction();
+			break;
+		case SDL_BUTTON_MIDDLE:
+			player_ctrl.StartTertiaryAction();
+			break;
+	}
+}
+
+void Interface::HandleRelease(const SDL_MouseButtonEvent &event) {
+	if (!config.input.mouse) return;
+
+	switch (event.button) {
+		case SDL_BUTTON_LEFT:
+			player_ctrl.StopPrimaryAction();
+			break;
+		case SDL_BUTTON_RIGHT:
+			player_ctrl.StopSecondaryAction();
+			break;
+		case SDL_BUTTON_MIDDLE:
+			player_ctrl.StopTertiaryAction();
+			break;
+	}
+}
+
+
+void Interface::Handle(const SDL_MouseWheelEvent &event) {
+	if (!config.input.mouse) return;
+
+	if (event.y < 0) {
+		InvRel(1);
+	} else if (event.y > 0) {
+		InvRel(-1);
+	}
+}
+
+void Interface::UpdateMovement() {
+	player_ctrl.SetMovement(glm::vec3(fwd - rev));
+}
+
+void Interface::InvAbs(int s) {
+	slot = s % num_slots;
+	while (slot < 0) {
+		slot += num_slots;
+	}
+}
+
+void Interface::InvRel(int delta) {
+	InvAbs(slot + delta);
 }
 
 
@@ -572,7 +655,7 @@ void Keymap::Map(SDL_Scancode scancode, Action action) {
 	codemap[scancode] = action;
 }
 
-Keymap::Action Keymap::Lookup(SDL_Scancode scancode) {
+Keymap::Action Keymap::Lookup(SDL_Scancode scancode) const {
 	if (scancode < NUM_SCANCODES) {
 		return codemap[scancode];
 	} else {
@@ -596,20 +679,28 @@ void Keymap::LoadDefault() {
 	Map(SDL_SCANCODE_LCTRL, MOVE_DOWN);
 	Map(SDL_SCANCODE_RCTRL, MOVE_DOWN);
 
-	Map(SDL_SCANCODE_Q, BLOCK_FACE);
-	Map(SDL_SCANCODE_E, BLOCK_TURN);
-	Map(SDL_SCANCODE_TAB, BLOCK_NEXT);
-	Map(SDL_SCANCODE_RIGHTBRACKET, BLOCK_NEXT);
-	Map(SDL_SCANCODE_LEFTBRACKET, BLOCK_PREV);
+	Map(SDL_SCANCODE_TAB, INV_NEXT);
+	Map(SDL_SCANCODE_RIGHTBRACKET, INV_NEXT);
+	Map(SDL_SCANCODE_LEFTBRACKET, INV_PREVIOUS);
+	Map(SDL_SCANCODE_1, INV_1);
+	Map(SDL_SCANCODE_2, INV_2);
+	Map(SDL_SCANCODE_3, INV_3);
+	Map(SDL_SCANCODE_4, INV_4);
+	Map(SDL_SCANCODE_5, INV_5);
+	Map(SDL_SCANCODE_6, INV_6);
+	Map(SDL_SCANCODE_7, INV_7);
+	Map(SDL_SCANCODE_8, INV_8);
+	Map(SDL_SCANCODE_9, INV_9);
+	Map(SDL_SCANCODE_0, INV_10);
 
-	Map(SDL_SCANCODE_INSERT, BLOCK_PLACE);
-	Map(SDL_SCANCODE_RETURN, BLOCK_PLACE);
-	Map(SDL_SCANCODE_MENU, BLOCK_PICK);
-	Map(SDL_SCANCODE_DELETE, BLOCK_REMOVE);
-	Map(SDL_SCANCODE_BACKSPACE, BLOCK_REMOVE);
+	Map(SDL_SCANCODE_INSERT, SECONDARY);
+	Map(SDL_SCANCODE_RETURN, SECONDARY);
+	Map(SDL_SCANCODE_MENU, TERTIARY);
+	Map(SDL_SCANCODE_DELETE, PRIMARY);
+	Map(SDL_SCANCODE_BACKSPACE, PRIMARY);
 
-	Map(SDL_SCANCODE_N, TOGGLE_COLLISION);
-	Map(SDL_SCANCODE_F1, TOGGLE_VISUAL);
+	Map(SDL_SCANCODE_F1, TOGGLE_HUD);
+	Map(SDL_SCANCODE_F2, TOGGLE_VIDEO);
 	Map(SDL_SCANCODE_F3, TOGGLE_DEBUG);
 	Map(SDL_SCANCODE_F4, TOGGLE_AUDIO);
 
@@ -665,88 +756,59 @@ void Keymap::Save(std::ostream &out) {
 }
 
 
+namespace {
+
+std::map<std::string, Keymap::Action> action_map = {
+	{ "none", Keymap::NONE },
+	{ "move_forward", Keymap::MOVE_FORWARD },
+	{ "move_backward", Keymap::MOVE_BACKWARD },
+	{ "move_left", Keymap::MOVE_LEFT },
+	{ "move_right", Keymap::MOVE_RIGHT },
+	{ "move_up", Keymap::MOVE_UP },
+	{ "move_down", Keymap::MOVE_DOWN },
+
+	{ "primary", Keymap::PRIMARY },
+	{ "secondary", Keymap::SECONDARY },
+	{ "tertiary", Keymap::TERTIARY },
+
+	{ "inventory_next", Keymap::INV_NEXT },
+	{ "inventory_prev", Keymap::INV_PREVIOUS },
+	{ "inventory_1", Keymap::INV_1 },
+	{ "inventory_2", Keymap::INV_2 },
+	{ "inventory_3", Keymap::INV_3 },
+	{ "inventory_4", Keymap::INV_4 },
+	{ "inventory_5", Keymap::INV_5 },
+	{ "inventory_6", Keymap::INV_6 },
+	{ "inventory_7", Keymap::INV_7 },
+	{ "inventory_8", Keymap::INV_8 },
+	{ "inventory_9", Keymap::INV_9 },
+	{ "inventory_10", Keymap::INV_10 },
+
+	{ "toggle_audio", Keymap::TOGGLE_AUDIO },
+	{ "toggle_video", Keymap::TOGGLE_VIDEO },
+	{ "toggle_hud", Keymap::TOGGLE_HUD },
+	{ "toggle_debug", Keymap::TOGGLE_DEBUG },
+
+	{ "exit", Keymap::EXIT },
+};
+
+}
+
 const char *Keymap::ActionToString(Action action) {
-	switch (action) {
-		default:
-		case NONE:
-			return "none";
-		case MOVE_FORWARD:
-			return "move_forward";
-		case MOVE_BACKWARD:
-			return "move_backward";
-		case MOVE_LEFT:
-			return "move_left";
-		case MOVE_RIGHT:
-			return "move_right";
-		case MOVE_UP:
-			return "move_up";
-		case MOVE_DOWN:
-			return "move_down";
-		case BLOCK_FACE:
-			return "block_face";
-		case BLOCK_TURN:
-			return "block_turn";
-		case BLOCK_NEXT:
-			return "block_next";
-		case BLOCK_PREV:
-			return "block_prev";
-		case BLOCK_PLACE:
-			return "block_place";
-		case BLOCK_PICK:
-			return "block_pick";
-		case BLOCK_REMOVE:
-			return "block_remove";
-		case TOGGLE_COLLISION:
-			return "toggle_collision";
-		case TOGGLE_AUDIO:
-			return "toggle_audio";
-		case TOGGLE_VISUAL:
-			return "toggle_visual";
-		case TOGGLE_DEBUG:
-			return "toggle_debug";
-		case EXIT:
-			return "exit";
+	for (const auto &entry : action_map) {
+		if (action == entry.second) {
+			return entry.first.c_str();
+		}
 	}
+	return "none";
 }
 
 Keymap::Action Keymap::StringToAction(const std::string &str) {
-	if (str == "move_forward") {
-		return MOVE_FORWARD;
-	} else if (str == "move_backward") {
-		return MOVE_BACKWARD;
-	} else if (str == "move_left") {
-		return MOVE_LEFT;
-	} else if (str == "move_right") {
-		return MOVE_RIGHT;
-	} else if (str == "move_up") {
-		return MOVE_UP;
-	} else if (str == "move_down") {
-		return MOVE_DOWN;
-	} else if (str == "block_face") {
-		return BLOCK_FACE;
-	} else if (str == "block_turn") {
-		return BLOCK_TURN;
-	} else if (str == "block_next") {
-		return BLOCK_NEXT;
-	} else if (str == "block_prev") {
-		return BLOCK_PREV;
-	} else if (str == "block_place") {
-		return BLOCK_PLACE;
-	} else if (str == "block_pick") {
-		return BLOCK_PICK;
-	} else if (str == "block_remove") {
-		return BLOCK_REMOVE;
-	} else if (str == "toggle_collision") {
-		return TOGGLE_COLLISION;
-	} else if (str == "toggle_audio") {
-		return TOGGLE_AUDIO;
-	} else if (str == "toggle_visual") {
-		return TOGGLE_VISUAL;
-	} else if (str == "toggle_debug") {
-		return TOGGLE_DEBUG;
-	} else if (str == "exit") {
-		return EXIT;
+	auto entry = action_map.find(str);
+	if (entry != action_map.end()) {
+		return entry->second;
 	} else {
+		std::cerr << "unknown action \"" << str << '"' << std::endl;
 		return NONE;
 	}
 }

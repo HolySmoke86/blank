@@ -172,7 +172,7 @@ void ChunkTransmitter::Release() {
 ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 : server(server)
 , conn(addr)
-, player(nullptr, nullptr)
+, player(nullptr)
 , player_model(nullptr)
 , spawns()
 , confirm_wait(0)
@@ -264,7 +264,7 @@ ClientConnection::SpawnStatus::~SpawnStatus() {
 
 bool ClientConnection::CanSpawn(const Entity &e) const noexcept {
 	return
-		&e != player.entity &&
+		&e != &PlayerEntity() &&
 		!e.Dead() &&
 		manhattan_radius(e.ChunkCoords() - PlayerEntity().ChunkCoords()) < 7;
 }
@@ -387,14 +387,14 @@ void ClientConnection::CheckChunkQueue() {
 	}
 }
 
-void ClientConnection::AttachPlayer(const Player &new_player) {
+void ClientConnection::AttachPlayer(Player &new_player) {
 	DetachPlayer();
-	player = new_player;
-	player.entity->Ref();
+	player = &new_player;
+	PlayerEntity().Ref();
 
-	old_base = player.chunks->Base();
-	Chunk::Pos begin = player.chunks->CoordsBegin();
-	Chunk::Pos end = player.chunks->CoordsEnd();
+	old_base = PlayerChunks().Base();
+	Chunk::Pos begin = PlayerChunks().CoordsBegin();
+	Chunk::Pos end = PlayerChunks().CoordsEnd();
 	for (Chunk::Pos pos = begin; pos.z < end.z; ++pos.z) {
 		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
 			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
@@ -403,19 +403,18 @@ void ClientConnection::AttachPlayer(const Player &new_player) {
 		}
 	}
 	if (HasPlayerModel()) {
-		GetPlayerModel().Instantiate(player.entity->GetModel());
+		GetPlayerModel().Instantiate(PlayerEntity().GetModel());
 	}
 
-	cout << "player \"" << player.entity->Name() << "\" joined" << endl;
+	cout << "player \"" << player->Name() << "\" joined" << endl;
 }
 
 void ClientConnection::DetachPlayer() {
 	if (!HasPlayer()) return;
-	cout << "player \"" << player.entity->Name() << "\" left" << endl;
-	player.entity->Kill();
-	player.entity->UnRef();
-	player.entity = nullptr;
-	player.chunks = nullptr;
+	cout << "player \"" << player->Name() << "\" left" << endl;
+	player->GetEntity().Kill();
+	player->GetEntity().UnRef();
+	player = nullptr;
 	transmitter.Abort();
 	chunk_queue.clear();
 }
@@ -479,18 +478,18 @@ void ClientConnection::On(const Packet::Login &pack) {
 	string name;
 	pack.ReadPlayerName(name);
 
-	Player new_player = server.GetWorld().AddPlayer(name);
+	Player *new_player = server.GetWorld().AddPlayer(name);
 
-	if (new_player.entity) {
+	if (new_player) {
 		// success!
-		AttachPlayer(new_player);
+		AttachPlayer(*new_player);
 		cout << "accepted login from player \"" << name << '"' << endl;
 		auto response = Prepare<Packet::Join>();
-		response.WritePlayer(*new_player.entity);
+		response.WritePlayer(new_player->GetEntity());
 		response.WriteWorldName(server.GetWorld().Name());
 		Send();
 		// set up update tracking
-		player_update_state = new_player.entity->GetState();
+		player_update_state = new_player->GetEntity().GetState();
 		player_update_pack = pack.Seq();
 		player_update_timer.Reset();
 		player_update_timer.Start();
@@ -522,7 +521,7 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 }
 
 
-Server::Server(const Config &conf, World &world)
+Server::Server(const Config::Network &conf, World &world)
 : serv_sock(nullptr)
 , serv_pack{ -1, nullptr, 0 }
 , clients()

@@ -1,11 +1,13 @@
 #ifndef BLANK_CLIENT_CLIENTSTATE_HPP_
 #define BLANK_CLIENT_CLIENTSTATE_HPP_
 
+#include "../app/State.hpp"
+#include "../net/ConnectionHandler.hpp"
+
 #include "Client.hpp"
 #include "InitialState.hpp"
 #include "InteractiveState.hpp"
-#include "../app/State.hpp"
-#include "../net/ConnectionHandler.hpp"
+#include "../app/Config.hpp"
 
 #include <map>
 #include <memory>
@@ -26,18 +28,18 @@ class MasterState
 public:
 	MasterState(
 		Environment &,
-		const World::Config &,
-		const Interface::Config &,
-		const Client::Config &
+		Config &,
+		const World::Config &
 	);
 
 	Client &GetClient() noexcept { return client; }
 	Environment &GetEnv() noexcept { return env; }
 
+	Config &GetConfig() noexcept { return config; }
+	const Config &GetConfig() const noexcept { return config; }
+
 	World::Config &GetWorldConf() noexcept { return world_conf; }
 	const World::Config &GetWorldConf() const noexcept { return world_conf; }
-	const Interface::Config &GetInterfaceConf() const noexcept { return intf_conf; }
-	const Client::Config &GetClientConf() const noexcept { return client_conf; }
 
 	void Quit();
 
@@ -68,9 +70,8 @@ private:
 
 private:
 	Environment &env;
+	Config &config;
 	World::Config world_conf;
-	const Interface::Config &intf_conf;
-	const Client::Config &client_conf;
 	std::unique_ptr<InteractiveState> state;
 	Client client;
 

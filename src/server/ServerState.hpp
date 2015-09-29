@@ -14,6 +14,7 @@
 
 namespace blank {
 
+class Config;
 class HeadlessEnvironment;
 class WorldSave;
 
@@ -28,7 +29,7 @@ public:
 		const Generator::Config &,
 		const World::Config &,
 		const WorldSave &,
-		const Server::Config &
+		const Config &
 	);
 
 	void Handle(const SDL_Event &) override;

@@ -47,13 +47,13 @@ public:
 	/// send the previously prepared packet of non-default length
 	std::uint16_t Send(std::size_t len);
 
-	void AttachPlayer(const Player &);
+	void AttachPlayer(Player &);
 	void DetachPlayer();
-	bool HasPlayer() const noexcept { return player.entity; }
-	Entity &PlayerEntity() noexcept { return *player.entity; }
-	const Entity &PlayerEntity() const noexcept { return *player.entity; }
-	ChunkIndex &PlayerChunks() noexcept { return *player.chunks; }
-	const ChunkIndex &PlayerChunks() const noexcept { return *player.chunks; }
+	bool HasPlayer() const noexcept { return player; }
+	Entity &PlayerEntity() noexcept { return player->GetEntity(); }
+	const Entity &PlayerEntity() const noexcept { return player->GetEntity(); }
+	ChunkIndex &PlayerChunks() noexcept { return player->GetChunks(); }
+	const ChunkIndex &PlayerChunks() const noexcept { return player->GetChunks(); }
 
 	void SetPlayerModel(const CompositeModel &) noexcept;
 	bool HasPlayerModel() const noexcept;
@@ -95,7 +95,7 @@ private:
 private:
 	Server &server;
 	Connection conn;
-	Player player;
+	Player *player;
 	const CompositeModel *player_model;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;

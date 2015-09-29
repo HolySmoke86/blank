@@ -40,15 +40,9 @@ public:
 	};
 
 	struct Config {
-		bool vsync = true;
-		bool doublebuf = true;
-		int multisampling = 1;
-
-		client::Client::Config client = client::Client::Config();
-		Generator::Config gen = Generator::Config();
+		blank::Config game = blank::Config();
 		HeadlessEnvironment::Config env = HeadlessEnvironment::Config();
-		Interface::Config interface = Interface::Config();
-		server::Server::Config server = server::Server::Config();
+		Generator::Config gen = Generator::Config();
 		World::Config world = World::Config();
 	};
 

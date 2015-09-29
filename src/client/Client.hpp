@@ -1,6 +1,7 @@
 #ifndef BLANK_CLIENT_CLIENT_HPP_
 #define BLANK_CLIENT_CLIENT_HPP_
 
+#include "../app/Config.hpp"
 #include "../net/Connection.hpp"
 
 #include <string>
@@ -16,13 +17,7 @@ namespace client {
 class Client {
 
 public:
-	struct Config {
-		std::string host = "localhost";
-		Uint16 port = 12354;
-	};
-
-public:
-	explicit Client(const Config &);
+	explicit Client(const Config::Network &);
 	~Client();
 
 	void Handle();

@@ -15,7 +15,7 @@ ServerState::ServerState(
 	const Generator::Config &gc,
 	const World::Config &wc,
 	const WorldSave &ws,
-	const Server::Config &sc
+	const Config &config
 )
 : env(env)
 , block_types()
@@ -24,7 +24,7 @@ ServerState::ServerState(
 , chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
 , spawner(world, skeletons, gc.seed)
-, server(sc, world)
+, server(config.net, world)
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
@@ -34,7 +34,7 @@ ServerState::ServerState(
 
 	loop_timer.Start();
 
-	std::cout << "listening on UDP port " << sc.port << std::endl;
+	std::cout << "listening on UDP port " << config.net.port << std::endl;
 }
 
 

@@ -72,7 +72,7 @@ void Spawner::CheckDespawn() noexcept {
 		}
 		bool safe = false;
 		for (const Player &ref : refs) {
-			glm::vec3 diff(ref.entity->AbsoluteDifference(e));
+			glm::vec3 diff(ref.GetEntity().AbsoluteDifference(e));
 			if (dot(diff, diff) < despawn_range) {
 				safe = true;
 				break;
@@ -95,11 +95,15 @@ void Spawner::TrySpawn() {
 	// select random player to punish
 	auto &players = world.Players();
 	if (players.size() == 0) return;
-	const Player &player = players[random.Next<unsigned short>() % players.size()];
+	size_t player_num = random.Next<unsigned short>() % players.size();
+	auto i = players.begin(), end = players.end();
+	for (; player_num > 0 && i != end; ++i, --player_num) {
+	}
+	const Player &player = *i;
 
-	int index = random.Next<unsigned int>() % player.chunks->TotalChunks();
+	int index = random.Next<unsigned int>() % player.GetChunks().TotalChunks();
 
-	glm::ivec3 chunk(player.chunks->PositionOf(index));
+	glm::ivec3 chunk(player.GetChunks().PositionOf(index));
 
 	glm::ivec3 pos(
 		random.Next<unsigned char>() % Chunk::width,
@@ -115,7 +119,7 @@ void Spawner::TrySpawn() {
 	//}
 
 	// check if the spawn block and the one above it are loaded and inhabitable
-	BlockLookup spawn_block((*player.chunks)[index], pos);
+	BlockLookup spawn_block(player.GetChunks()[index], pos);
 	if (!spawn_block || spawn_block.GetType().collide_block) {
 		return;
 	}
@@ -125,7 +129,7 @@ void Spawner::TrySpawn() {
 		return;
 	}
 
-	Spawn(*player.entity, chunk, glm::vec3(pos) + glm::vec3(0.5f));
+	Spawn(player.GetEntity(), chunk, glm::vec3(pos) + glm::vec3(0.5f));
 }
 
 void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 &pos) {

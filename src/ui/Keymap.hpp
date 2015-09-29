@@ -21,18 +21,26 @@ public:
 		MOVE_UP,
 		MOVE_DOWN,
 
-		BLOCK_FACE,
-		BLOCK_TURN,
-		BLOCK_NEXT,
-		BLOCK_PREV,
+		PRIMARY,
+		SECONDARY,
+		TERTIARY,
 
-		BLOCK_PLACE,
-		BLOCK_PICK,
-		BLOCK_REMOVE,
+		INV_NEXT,
+		INV_PREVIOUS,
+		INV_1,
+		INV_2,
+		INV_3,
+		INV_4,
+		INV_5,
+		INV_6,
+		INV_7,
+		INV_8,
+		INV_9,
+		INV_10,
 
-		TOGGLE_COLLISION,
 		TOGGLE_AUDIO,
-		TOGGLE_VISUAL,
+		TOGGLE_VIDEO,
+		TOGGLE_HUD,
 		TOGGLE_DEBUG,
 
 		EXIT,
@@ -45,9 +53,9 @@ public:
 	Keymap();
 
 	void Map(SDL_Scancode scancode, Action);
-	Action Lookup(SDL_Scancode scancode);
-	Action Lookup(const SDL_Keysym &s) { return Lookup(s.scancode); }
-	Action Lookup(const SDL_KeyboardEvent &e) { return Lookup(e.keysym); }
+	Action Lookup(SDL_Scancode scancode) const;
+	Action Lookup(const SDL_Keysym &s) const { return Lookup(s.scancode); }
+	Action Lookup(const SDL_KeyboardEvent &e) const { return Lookup(e.keysym); }
 
 	void LoadDefault();
 

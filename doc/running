@@ -97,15 +97,11 @@ as the active block, and button 3 places the active block next to the one
 you're pointing at.
 
 As an alternative to picking, you can also use the mousewheel up/down to
-flip through available blocks.
-
-Q changes the face of the active block (loops over up, down, right, left,
-front, and back) and E changes the turn (none, left, around, and right).
-
-Press N to toggle player/world collision.
+flip through available blocks or access the first 10 via the number keys.
 
 F1 toggles UI rendering.
-F3 toggles a display telling how long on average it takes to compute a frame.
+F2 toggles world rendering.
+F3 toggles the debug overlay.
 F4 toggles audio.
 
 Controls are interpreted by scancode, meaning you don't have to break your

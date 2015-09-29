@@ -1,6 +1,8 @@
 #ifndef BLANK_SERVER_SERVER_HPP
 #define BLANK_SERVER_SERVER_HPP
 
+#include "../app/Config.hpp"
+
 #include <list>
 #include <SDL_net.h>
 
@@ -17,12 +19,7 @@ class ClientConnection;
 class Server {
 
 public:
-	struct Config {
-		Uint16 port = 12354;
-	};
-
-public:
-	Server(const Config &, World &);
+	Server(const Config::Network &, World &);
 	~Server();
 
 	void Handle();
