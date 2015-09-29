@@ -5,6 +5,7 @@
 #include "init.hpp"
 #include "../client/MasterState.hpp"
 #include "../io/filesystem.hpp"
+#include "../io/TokenStreamReader.hpp"
 #include "../io/WorldSave.hpp"
 #include "../server/ServerState.hpp"
 #include "../standalone/MasterState.hpp"
@@ -46,6 +47,71 @@ string default_save_path() {
 }
 
 namespace blank {
+
+void Config::Load(std::istream &is) {
+	TokenStreamReader in(is);
+	std::string name;
+	while (in.HasMore()) {
+		if (in.Peek().type == Token::STRING) {
+			in.ReadString(name);
+		} else {
+			in.ReadIdentifier(name);
+		}
+		in.Skip(Token::EQUALS);
+		if (name == "audio.enabled") {
+			in.ReadBoolean(audio.enabled);
+		} else if (name == "input.keyboard") {
+			in.ReadBoolean(input.keyboard);
+		} else if (name == "input.mouse") {
+			in.ReadBoolean(input.mouse);
+		} else if (name == "input.pitch_sensitivity") {
+			in.ReadNumber(input.pitch_sensitivity);
+		} else if (name == "input.yaw_sensitivity") {
+			in.ReadNumber(input.yaw_sensitivity);
+		} else if (name == "net.host") {
+			in.ReadString(net.host);
+		} else if (name == "net.port") {
+			int port;
+			in.ReadNumber(port);
+			net.port = port;
+		} else if (name == "player.name") {
+			in.ReadString(player.name);
+		} else if (name == "video.dblbuf") {
+			in.ReadBoolean(video.dblbuf);
+		} else if (name == "video.vsync") {
+			in.ReadBoolean(video.vsync);
+		} else if (name == "video.msaa") {
+			in.ReadNumber(video.msaa);
+		} else if (name == "video.hud") {
+			in.ReadBoolean(video.hud);
+		} else if (name == "video.world") {
+			in.ReadBoolean(video.world);
+		} else if (name == "video.debug") {
+			in.ReadBoolean(video.debug);
+		}
+		if (in.HasMore() && in.Peek().type == Token::SEMICOLON) {
+			in.Skip(Token::SEMICOLON);
+		}
+	}
+}
+
+void Config::Save(std::ostream &out) {
+	out << "audio.enabled = " << (audio.enabled ? "yes" : "no") << ';' << std::endl;
+	out << "input.keyboard = " << (input.keyboard ? "on" : "off") << ';' << std::endl;
+	out << "input.mouse = " << (input.keyboard ? "on" : "off") << ';' << std::endl;
+	out << "input.pitch_sensitivity = " << input.pitch_sensitivity << ';' << std::endl;
+	out << "input.yaw_sensitivity = " << input.yaw_sensitivity << ';' << std::endl;
+	out << "net.host = \"" << net.host << "\";" << std::endl;
+	out << "net.port = " << net.port << ';' << std::endl;
+	out << "player.name = \"" << player.name << "\";" << std::endl;
+	out << "video.dblbuf = " << (video.dblbuf ? "on" : "off") << ';' << std::endl;
+	out << "video.vsync = " << (video.vsync ? "on" : "off") << ';' << std::endl;
+	out << "video.msaa = " << net.port << ';' << std::endl;
+	out << "video.hud = " << (video.hud ? "on" : "off") << ';' << std::endl;
+	out << "video.world = " << (video.world ? "on" : "off") << ';' << std::endl;
+	out << "video.debug = " << (video.world ? "on" : "off") << ';' << std::endl;
+}
+
 
 HeadlessEnvironment::HeadlessEnvironment(const Config &config)
 : config(config)

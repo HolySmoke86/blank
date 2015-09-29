@@ -2,6 +2,7 @@
 #define BLANK_APP_CONFIG_HPP_
 
 #include <cstdint>
+#include <iosfwd>
 #include <string>
 
 
@@ -49,6 +50,9 @@ struct Config {
 		bool debug = false;
 
 	} video;
+
+	void Load(std::istream &);
+	void Save(std::ostream &);
 
 };
 
