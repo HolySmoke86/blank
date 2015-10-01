@@ -1,11 +1,13 @@
 #include "ChunkReceiver.hpp"
 #include "ChunkTransmission.hpp"
 #include "Client.hpp"
+#include "NetworkedInput.hpp"
 
 #include "../app/init.hpp"
 #include "../net/Packet.hpp"
 #include "../world/Chunk.hpp"
 #include "../world/ChunkStore.hpp"
+#include "../world/Player.hpp"
 
 #include <iostream>
 #include <zlib.h>
@@ -236,15 +238,151 @@ uint16_t Client::SendLogin(const string &name) {
 	return conn.Send(client_pack, client_sock);
 }
 
-uint16_t Client::SendPlayerUpdate(const Entity &player) {
+uint16_t Client::SendPlayerUpdate(
+	const EntityState &prediction,
+	const glm::vec3 &movement,
+	float pitch,
+	float yaw,
+	std::uint8_t actions,
+	std::uint8_t slot
+) {
 	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
-	pack.WritePlayer(player);
+	pack.WritePredictedState(prediction);
+	pack.WriteMovement(movement);
+	pack.WritePitch(pitch);
+	pack.WriteYaw(yaw);
+	pack.WriteActions(actions);
+	pack.WriteSlot(slot);
 	return conn.Send(client_pack, client_sock);
 }
 
 uint16_t Client::SendPart() {
 	Packet::Make<Packet::Part>(client_pack);
 	return conn.Send(client_pack, client_sock);
+}
+
+
+NetworkedInput::NetworkedInput(World &world, Player &player, Client &client)
+: PlayerController(world, player)
+, client(client)
+, player_hist()
+, actions(0) {
+
+}
+
+void NetworkedInput::Update(int dt) {
+	Invalidate();
+	UpdatePlayer();
+}
+
+void NetworkedInput::PushPlayerUpdate(int dt) {
+	const EntityState &state = GetPlayer().GetEntity().GetState();
+
+	std::uint16_t packet = client.SendPlayerUpdate(
+		state,
+		GetMovement(),
+		GetPitch(),
+		GetYaw(),
+		actions,
+		InventorySlot()
+	);
+	if (player_hist.size() < 16) {
+		player_hist.emplace_back(state, dt, packet);
+	} else {
+		auto entry = player_hist.begin();
+		entry->state = state;
+		entry->delta_t = dt;
+		entry->packet = packet;
+		player_hist.splice(player_hist.end(), player_hist, entry);
+	}
+}
+
+void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corrected_state) {
+	if (player_hist.empty()) return;
+
+	auto entry = player_hist.begin();
+	auto end = player_hist.end();
+
+	// we may have received an older packet
+	int pack_diff = int16_t(seq) - int16_t(entry->packet);
+	if (pack_diff < 0) {
+		// indeed we have, just ignore it
+		return;
+	}
+
+	// drop anything older than the fix
+	while (entry != end) {
+		pack_diff = int16_t(seq) - int16_t(entry->packet);
+		if (pack_diff > 0) {
+			entry = player_hist.erase(entry);
+		} else {
+			break;
+		}
+	}
+
+	EntityState replay_state(corrected_state);
+	EntityState &player_state = GetPlayer().GetEntity().GetState();
+
+	if (entry != end) {
+		entry->state.chunk_pos = replay_state.chunk_pos;
+		entry->state.block_pos = replay_state.block_pos;
+		++entry;
+	}
+
+	while (entry != end) {
+		replay_state.velocity = entry->state.velocity;
+		replay_state.Update(entry->delta_t);
+		entry->state.chunk_pos = replay_state.chunk_pos;
+		entry->state.block_pos = replay_state.block_pos;
+		++entry;
+	}
+
+	glm::vec3 displacement(replay_state.Diff(player_state));
+	const float disp_squared = dot(displacement, displacement);
+
+	if (disp_squared < 16.0f * numeric_limits<float>::epsilon()) {
+		return;
+	}
+
+	// if offset > 10cm, warp the player
+	// otherwise, move at most 1cm per frame towards
+	// the fixed position (160ms, so shouldn't be too noticeable)
+	constexpr float warp_thresh = 0.01f; // (1/10)^2
+	constexpr float max_disp = 0.0001f; // (1/100)^2
+
+	if (disp_squared > warp_thresh) {
+		player_state.chunk_pos = replay_state.chunk_pos;
+		player_state.block_pos = replay_state.block_pos;
+	} else if (disp_squared < max_disp) {
+		player_state.block_pos += displacement;
+	} else {
+		displacement *= 0.01f / sqrt(disp_squared);
+		player_state.block_pos += displacement;
+	}
+}
+
+void NetworkedInput::StartPrimaryAction() {
+	actions |= 0x01;
+}
+
+void NetworkedInput::StopPrimaryAction() {
+	actions &= ~0x01;
+}
+
+void NetworkedInput::StartSecondaryAction() {
+	actions |= 0x02;
+}
+
+void NetworkedInput::StopSecondaryAction() {
+	actions &= ~0x02;
+}
+
+void NetworkedInput::StartTertiaryAction() {
+	actions |= 0x04;
+}
+
+void NetworkedInput::StopTertiaryAction() {
+	actions &= ~0x04;
 }
 
 }

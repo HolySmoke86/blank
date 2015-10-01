@@ -90,8 +90,13 @@ Sent by clients to notify the server of their changes to the player.
 
 Code: 4
 Payload:
-	 0 entity state of the player as seen by the client
-Length: 64
+	 0 player's entity state as predicted by the client
+	64 movement input, 3x 16bit signed int, each component mapped from [-1,1] to [-32767,32767]
+	70 pitch input, 16bit signed int, mapped from [-PI/2,PI/2] to [-32767,32767]
+	72 yaw input, 16bit signed int, mapped from [-PI,PI] to [-32767,32767]
+	74 active actions, 8bit bit field, first three bits are primary, secondary, and tertiary
+	75 selected inventory slot, 8bit unsigned int
+Length: 76
 
 
 Spawn Entity
@@ -134,7 +139,7 @@ Payload:
 	 4 entity ID, 32bit unsigned int
 	 8 entity state
 	72 next entity...
-Length: 4 + multiple of 68, max 452
+Length: 4 + multiple of 68, max 480
 
 
 Player Correction

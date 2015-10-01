@@ -6,6 +6,7 @@
 #include "world/EntityState.hpp"
 
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <SDL_net.h>
 #include <glm/glm.hpp>
@@ -80,7 +81,8 @@ private:
 	static void AssertEqual(
 		const std::string &message,
 		const glm::vec3 &expected,
-		const glm::vec3 &actual);
+		const glm::vec3 &actual,
+		float epsilon = std::numeric_limits<float>::epsilon());
 	static void AssertEqual(
 		const std::string &message,
 		const glm::quat &expected,

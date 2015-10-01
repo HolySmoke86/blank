@@ -6,11 +6,11 @@
 
 #include "ChunkReceiver.hpp"
 #include "ChunkRequester.hpp"
+#include "NetworkedInput.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Skeletons.hpp"
-#include "../ui/DirectInput.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"
 #include "../ui/Interface.hpp"
@@ -19,8 +19,6 @@
 #include "../world/EntityState.hpp"
 #include "../world/Player.hpp"
 #include "../world/World.hpp"
-
-#include <list>
 
 
 namespace blank {
@@ -49,7 +47,6 @@ public:
 	void Update(int dt) override;
 	void Render(Viewport &) override;
 
-	void PushPlayerUpdate(const Entity &, int dt);
 	void MergePlayerCorrection(std::uint16_t, const EntityState &);
 
 	void SetAudio(bool) override;
@@ -66,7 +63,7 @@ private:
 	Player &player;
 	HUD hud;
 	InteractiveManipulator manip;
-	DirectInput input;
+	NetworkedInput input;
 	Interface interface;
 	ChunkRequester chunk_requester;
 	ChunkReceiver chunk_receiver;
@@ -75,15 +72,6 @@ private:
 	IntervalTimer loop_timer;
 
 	SkyBox sky;
-
-	struct PlayerHistory {
-		EntityState state;
-		int delta_t;
-		std::uint16_t packet;
-		PlayerHistory(EntityState s, int dt, std::uint16_t p)
-		: state(s), delta_t(dt), packet(p) { }
-	};
-	std::list<PlayerHistory> player_hist;
 
 };
 

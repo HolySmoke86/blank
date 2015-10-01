@@ -3,8 +3,6 @@
 #include "model/CompositeModel.hpp"
 #include "world/Entity.hpp"
 
-#include <limits>
-
 CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::PacketTest);
 
 using namespace std;
@@ -149,22 +147,61 @@ void PacketTest::testPart() {
 
 void PacketTest::testPlayerUpdate() {
 	auto pack = Packet::Make<Packet::PlayerUpdate>(udp_pack);
-	AssertPacket("PlayerUpdate", 4, 64, pack);
+	AssertPacket("PlayerUpdate", 4, 76, pack);
 
-	Entity write_entity;
-	write_entity.ID(534574);
-	write_entity.GetState().chunk_pos = { 7, 2, -3 };
-	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
-	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
-	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
+	EntityState write_state;
+	write_state.chunk_pos = { 7, 2, -3 };
+	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.velocity = { 0.025f, 0.001f, 0.0f };
+	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.ang_vel = { 0.01f, 0.00302f, 0.0985f };
+	glm::vec3 write_movement(0.5f, -1.0f, 1.0f);
+	float write_pitch = 1.25f;
+	float write_yaw = -2.5f;
+	uint8_t write_actions = 0x05;
+	uint8_t write_slot = 3;
+	pack.WritePredictedState(write_state);
+	pack.WriteMovement(write_movement);
+	pack.WritePitch(write_pitch);
+	pack.WriteYaw(write_yaw);
+	pack.WriteActions(write_actions);
+	pack.WriteSlot(write_slot);
+
 	EntityState read_state;
-	pack.WritePlayer(write_entity);
-
-	pack.ReadPlayerState(read_state);
+	glm::vec3 read_movement;
+	float read_pitch;
+	float read_yaw;
+	uint8_t read_actions;
+	uint8_t read_slot;
+	pack.ReadPredictedState(read_state);
+	pack.ReadMovement(read_movement);
+	pack.ReadPitch(read_pitch);
+	pack.ReadYaw(read_yaw);
+	pack.ReadActions(read_actions);
+	pack.ReadSlot(read_slot);
 	AssertEqual(
-		"player entity state not correctly transported in PlayerUpdate packet",
-		write_entity.GetState(), read_state
+		"player predicted entity state not correctly transported in PlayerUpdate packet",
+		write_state, read_state
+	);
+	AssertEqual(
+		"player movement input not correctly transported in PlayerUpdate packet",
+		write_movement, read_movement, 0.0001f
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"player pitch input not correctly transported in PlayerUpdate packet",
+		write_pitch, read_pitch, 0.0001f
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"player yaw input not correctly transported in PlayerUpdate packet",
+		write_yaw, read_yaw, 0.0001f
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"player actions not correctly transported in PlayerUpdate packet",
+		int(write_actions), int(read_actions)
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"player inventory slot not correctly transported in PlayerUpdate packet",
+		int(write_slot), int(read_slot)
 	);
 }
 
@@ -237,7 +274,7 @@ void PacketTest::testDespawnEntity() {
 
 void PacketTest::testEntityUpdate() {
 	auto pack = Packet::Make<Packet::EntityUpdate>(udp_pack);
-	AssertPacket("EntityUpdate", 7, 4, 452, pack);
+	AssertPacket("EntityUpdate", 7, 4, 480, pack);
 
 	pack.length = Packet::EntityUpdate::GetSize(3);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
@@ -501,19 +538,20 @@ void PacketTest::AssertEqual(
 void PacketTest::AssertEqual(
 	const string &message,
 	const glm::vec3 &expected,
-	const glm::vec3 &actual
+	const glm::vec3 &actual,
+	float epsilon
 ) {
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (X component)",
-		expected.x, actual.x, numeric_limits<float>::epsilon()
+		expected.x, actual.x, epsilon
 	);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (Y component)",
-		expected.y, actual.y, numeric_limits<float>::epsilon()
+		expected.y, actual.y, epsilon
 	);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (Z component)",
-		expected.z, actual.z, numeric_limits<float>::epsilon()
+		expected.z, actual.z, epsilon
 	);
 }
 

@@ -4,6 +4,7 @@
 #include "ChunkTransmitter.hpp"
 #include "Server.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../ui/DirectInput.hpp"
 #include "../net/Connection.hpp"
 #include "../net/ConnectionHandler.hpp"
 #include "../world/EntityState.hpp"
@@ -11,6 +12,7 @@
 
 #include <deque>
 #include <list>
+#include <memory>
 #include <SDL_net.h>
 #include <vector>
 
@@ -49,11 +51,11 @@ public:
 
 	void AttachPlayer(Player &);
 	void DetachPlayer();
-	bool HasPlayer() const noexcept { return player; }
-	Entity &PlayerEntity() noexcept { return player->GetEntity(); }
-	const Entity &PlayerEntity() const noexcept { return player->GetEntity(); }
-	ChunkIndex &PlayerChunks() noexcept { return player->GetChunks(); }
-	const ChunkIndex &PlayerChunks() const noexcept { return player->GetChunks(); }
+	bool HasPlayer() const noexcept { return !!input; }
+	Entity &PlayerEntity() noexcept { return input->GetPlayer().GetEntity(); }
+	const Entity &PlayerEntity() const noexcept { return input->GetPlayer().GetEntity(); }
+	ChunkIndex &PlayerChunks() noexcept { return input->GetPlayer().GetChunks(); }
+	const ChunkIndex &PlayerChunks() const noexcept { return input->GetPlayer().GetChunks(); }
 
 	void SetPlayerModel(const CompositeModel &) noexcept;
 	bool HasPlayerModel() const noexcept;
@@ -95,7 +97,7 @@ private:
 private:
 	Server &server;
 	Connection conn;
-	Player *player;
+	std::unique_ptr<DirectInput> input;
 	const CompositeModel *player_model;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;
@@ -105,6 +107,7 @@ private:
 	EntityState player_update_state;
 	std::uint16_t player_update_pack;
 	IntervalTimer player_update_timer;
+	std::uint8_t old_actions;
 
 	ChunkTransmitter transmitter;
 	std::deque<glm::ivec3> chunk_queue;

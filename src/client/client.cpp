@@ -111,7 +111,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , player(*world.AddPlayer(master.GetConfig().player.name))
 , hud(master.GetEnv(), master.GetConfig(), player)
 , manip(master.GetEnv(), player.GetEntity())
-, input(world, player, manip)
+, input(world, player, master.GetClient())
 , interface(master.GetConfig(), master.GetEnv().keymap, input, *this)
 // TODO: looks like chunk requester and receiver can and should be merged
 , chunk_requester(world.Chunks(), save)
@@ -119,8 +119,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , chunk_renderer(player.GetChunks())
 , skeletons()
 , loop_timer(16)
-, sky(master.GetEnv().loader.LoadCubeMap("skybox"))
-, player_hist() {
+, sky(master.GetEnv().loader.LoadCubeMap("skybox")) {
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
 	}
@@ -190,7 +189,7 @@ void InteractiveState::Update(int dt) {
 	chunk_renderer.Update(dt);
 
 	if (world_dt > 0) {
-		PushPlayerUpdate(player.GetEntity(), world_dt);
+		input.PushPlayerUpdate(world_dt);
 	}
 
 	glm::mat4 trans = player.GetEntity().Transform(player.GetEntity().ChunkCoords());
@@ -201,83 +200,6 @@ void InteractiveState::Update(int dt) {
 	master.GetEnv().audio.Orientation(dir, up);
 }
 
-void InteractiveState::PushPlayerUpdate(const Entity &player, int dt) {
-	std::uint16_t packet = master.GetClient().SendPlayerUpdate(player);
-	if (player_hist.size() < 16) {
-		player_hist.emplace_back(player.GetState(), dt, packet);
-	} else {
-		auto entry = player_hist.begin();
-		entry->state = player.GetState();
-		entry->delta_t = dt;
-		entry->packet = packet;
-		player_hist.splice(player_hist.end(), player_hist, entry);
-	}
-}
-
-void InteractiveState::MergePlayerCorrection(uint16_t seq, const EntityState &corrected_state) {
-	if (player_hist.empty()) return;
-
-	auto entry = player_hist.begin();
-	auto end = player_hist.end();
-
-	// we may have received an older packet
-	int pack_diff = int16_t(seq) - int16_t(entry->packet);
-	if (pack_diff < 0) {
-		// indeed we have, just ignore it
-		return;
-	}
-
-	// drop anything older than the fix
-	while (entry != end) {
-		pack_diff = int16_t(seq) - int16_t(entry->packet);
-		if (pack_diff > 0) {
-			entry = player_hist.erase(entry);
-		} else {
-			break;
-		}
-	}
-
-	EntityState replay_state(corrected_state);
-	EntityState &player_state = player.GetEntity().GetState();
-
-	if (entry != end) {
-		entry->state.chunk_pos = replay_state.chunk_pos;
-		entry->state.block_pos = replay_state.block_pos;
-		++entry;
-	}
-
-	while (entry != end) {
-		replay_state.velocity = entry->state.velocity;
-		replay_state.Update(entry->delta_t);
-		entry->state.chunk_pos = replay_state.chunk_pos;
-		entry->state.block_pos = replay_state.block_pos;
-		++entry;
-	}
-
-	glm::vec3 displacement(replay_state.Diff(player_state));
-	const float disp_squared = dot(displacement, displacement);
-
-	if (disp_squared < 16.0f * numeric_limits<float>::epsilon()) {
-		return;
-	}
-
-	// if offset > 10cm, warp the player
-	// otherwise, move at most 1cm per frame towards
-	// the fixed position (160ms, so shouldn't be too noticeable)
-	constexpr float warp_thresh = 0.01f; // (1/10)^2
-	constexpr float max_disp = 0.0001f; // (1/100)^2
-
-	if (disp_squared > warp_thresh) {
-		player_state.chunk_pos = replay_state.chunk_pos;
-		player_state.block_pos = replay_state.block_pos;
-	} else if (disp_squared < max_disp) {
-		player_state.block_pos += displacement;
-	} else {
-		displacement *= 0.01f / sqrt(disp_squared);
-		player_state.block_pos += displacement;
-	}
-}
-
 void InteractiveState::Render(Viewport &viewport) {
 	viewport.WorldPosition(player.GetEntity().Transform(player.GetEntity().ChunkCoords()));
 	if (master.GetConfig().video.world) {
@@ -286,6 +208,10 @@ void InteractiveState::Render(Viewport &viewport) {
 		sky.Render(viewport);
 	}
 	hud.Render(viewport);
+}
+
+void InteractiveState::MergePlayerCorrection(std::uint16_t pack, const EntityState &state) {
+	input.MergePlayerCorrection(pack, state);
 }
 
 void InteractiveState::SetAudio(bool b) {

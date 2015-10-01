@@ -284,12 +284,65 @@ void Packet::Join::ReadWorldName(string &name) const noexcept {
 	ReadString(name, 68, 32);
 }
 
-void Packet::PlayerUpdate::WritePlayer(const Entity &player) noexcept {
-	Write(player.GetState(), 0);
+void Packet::PlayerUpdate::WritePredictedState(const EntityState &state) noexcept {
+	Write(state, 0);
 }
 
-void Packet::PlayerUpdate::ReadPlayerState(EntityState &state) const noexcept {
+void Packet::PlayerUpdate::ReadPredictedState(EntityState &state) const noexcept {
 	Read(state, 0);
+}
+
+void Packet::PlayerUpdate::WriteMovement(const glm::vec3 &mov) noexcept {
+	glm::ivec3 conv = clamp(glm::ivec3(mov * 32767.0f), -32767, 32767);
+	Write(int16_t(conv.x), 64);
+	Write(int16_t(conv.y), 66);
+	Write(int16_t(conv.z), 68);
+}
+
+void Packet::PlayerUpdate::ReadMovement(glm::vec3 &mov) const noexcept {
+	int16_t x, y, z;
+	Read(x, 64);
+	Read(y, 66);
+	Read(z, 68);
+	mov = glm::vec3(x, y, z) * .00003051850947599719f;
+}
+
+void Packet::PlayerUpdate::WritePitch(float pitch) noexcept {
+	int16_t conv = pitch * 20860.12008116853786870640f;
+	Write(conv, 70);
+}
+
+void Packet::PlayerUpdate::ReadPitch(float &pitch) const noexcept {
+	int16_t conv = 0;
+	Read(conv, 70);
+	pitch = conv * .00004793836258415163f;
+}
+
+void Packet::PlayerUpdate::WriteYaw(float yaw) noexcept {
+	int16_t conv = yaw * 10430.06004058426893435320f;
+	Write(conv, 72);
+}
+
+void Packet::PlayerUpdate::ReadYaw(float &yaw) const noexcept {
+	int16_t conv = 0;
+	Read(conv, 72);
+	yaw = conv * .00009587672516830326f;
+}
+
+void Packet::PlayerUpdate::WriteActions(uint8_t actions) noexcept {
+	Write(actions, 74);
+}
+
+void Packet::PlayerUpdate::ReadActions(uint8_t &actions) const noexcept {
+	Read(actions, 74);
+}
+
+void Packet::PlayerUpdate::WriteSlot(uint8_t slot) noexcept {
+	Write(slot, 75);
+}
+
+void Packet::PlayerUpdate::ReadSlot(uint8_t &slot) const noexcept {
+	Read(slot, 75);
 }
 
 void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
@@ -351,19 +404,19 @@ void Packet::EntityUpdate::ReadEntityCount(uint32_t &count) const noexcept {
 }
 
 void Packet::EntityUpdate::WriteEntity(const Entity &entity, uint32_t num) noexcept {
-	uint32_t off = GetSize(num);;
+	uint32_t off = GetSize(num);
 
 	Write(entity.ID(), off);
 	Write(entity.GetState(), off + 4);
 }
 
 void Packet::EntityUpdate::ReadEntityID(uint32_t &id, uint32_t num) const noexcept {
-	uint32_t off = GetSize(num);;
+	uint32_t off = GetSize(num);
 	Read(id, off);
 }
 
 void Packet::EntityUpdate::ReadEntityState(EntityState &state, uint32_t num) const noexcept {
-	uint32_t off = GetSize(num);;
+	uint32_t off = GetSize(num);
 	Read(state, off + 4);
 }
 

@@ -10,6 +10,7 @@
 
 #include <iostream>
 #include <zlib.h>
+#include <glm/gtx/io.hpp>
 
 using namespace std;
 
@@ -172,7 +173,7 @@ void ChunkTransmitter::Release() {
 ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 : server(server)
 , conn(addr)
-, player(nullptr)
+, input()
 , player_model(nullptr)
 , spawns()
 , confirm_wait(0)
@@ -180,6 +181,7 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 , player_update_state()
 , player_update_pack(0)
 , player_update_timer(1500)
+, old_actions(0)
 , transmitter(*this)
 , chunk_queue()
 , old_base() {
@@ -243,6 +245,7 @@ void ClientConnection::Update(int dt) {
 		}
 		SendUpdates();
 
+		input->Update(dt);
 		CheckPlayerFix();
 		CheckChunkQueue();
 	}
@@ -387,9 +390,9 @@ void ClientConnection::CheckChunkQueue() {
 	}
 }
 
-void ClientConnection::AttachPlayer(Player &new_player) {
+void ClientConnection::AttachPlayer(Player &player) {
 	DetachPlayer();
-	player = &new_player;
+	input.reset(new DirectInput(server.GetWorld(), player, server));
 	PlayerEntity().Ref();
 
 	old_base = PlayerChunks().Base();
@@ -406,17 +409,18 @@ void ClientConnection::AttachPlayer(Player &new_player) {
 		GetPlayerModel().Instantiate(PlayerEntity().GetModel());
 	}
 
-	cout << "player \"" << player->Name() << "\" joined" << endl;
+	cout << "player \"" << player.Name() << "\" joined" << endl;
 }
 
 void ClientConnection::DetachPlayer() {
 	if (!HasPlayer()) return;
-	cout << "player \"" << player->Name() << "\" left" << endl;
-	player->GetEntity().Kill();
-	player->GetEntity().UnRef();
-	player = nullptr;
+	cout << "player \"" << input->GetPlayer().Name() << "\" left" << endl;
+	PlayerEntity().Kill();
+	PlayerEntity().UnRef();
+	input.reset();
 	transmitter.Abort();
 	chunk_queue.clear();
+	old_actions = 0;
 }
 
 void ClientConnection::SetPlayerModel(const CompositeModel &m) noexcept {
@@ -511,13 +515,44 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	int pack_diff = int16_t(pack.Seq()) - int16_t(player_update_pack);
 	bool overdue = player_update_timer.HitOnce();
 	player_update_timer.Reset();
-	if (pack_diff > 0 || overdue) {
-		player_update_pack = pack.Seq();
-		pack.ReadPlayerState(player_update_state);
-		// accept velocity and orientation as "user input"
-		PlayerEntity().Velocity(player_update_state.velocity);
-		PlayerEntity().Orientation(player_update_state.orient);
+	if (pack_diff <= 0 && !overdue) {
+		// drop old packets if we have a fairly recent state
+		return;
 	}
+	glm::vec3 movement(0.0f);
+	float pitch = 0.0f;
+	float yaw = 0.0f;
+	uint8_t new_actions;
+	uint8_t slot;
+
+	player_update_pack = pack.Seq();
+	pack.ReadPredictedState(player_update_state);
+	pack.ReadMovement(movement);
+	pack.ReadPitch(pitch);
+	pack.ReadYaw(yaw);
+	pack.ReadActions(new_actions);
+	pack.ReadSlot(slot);
+
+	input->SetMovement(movement);
+	input->TurnHead(pitch - input->GetPitch(), yaw - input->GetYaw());
+	input->SelectInventory(slot);
+
+	if ((new_actions & 0x01) && !(old_actions & 0x01)) {
+		input->StartPrimaryAction();
+	} else if (!(new_actions & 0x01) && (old_actions & 0x01)) {
+		input->StopPrimaryAction();
+	}
+	if ((new_actions & 0x02) && !(old_actions & 0x02)) {
+		input->StartSecondaryAction();
+	} else if (!(new_actions & 0x02) && (old_actions & 0x02)) {
+		input->StopSecondaryAction();
+	}
+	if ((new_actions & 0x04) && !(old_actions & 0x04)) {
+		input->StartTertiaryAction();
+	} else if (!(new_actions & 0x04) && (old_actions & 0x04)) {
+		input->StopTertiaryAction();
+	}
+	old_actions = new_actions;
 }
 
 
@@ -606,6 +641,12 @@ bool Server::HasPlayerModel() const noexcept {
 
 const CompositeModel &Server::GetPlayerModel() const noexcept {
 	return *player_model;
+}
+
+void Server::SetBlock(Chunk &chunk, int index, const Block &block) {
+	chunk.SetBlock(index, block);
+	// TODO: send to clients
+	// also TODO: batch chunk changes
 }
 
 }

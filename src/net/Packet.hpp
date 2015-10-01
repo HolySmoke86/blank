@@ -107,10 +107,20 @@ struct Packet {
 
 	struct PlayerUpdate : public Payload {
 		static constexpr std::uint8_t TYPE = 4;
-		static constexpr std::size_t MAX_LEN = 64;
+		static constexpr std::size_t MAX_LEN = 76;
 
-		void WritePlayer(const Entity &) noexcept;
-		void ReadPlayerState(EntityState &) const noexcept;
+		void WritePredictedState(const EntityState &) noexcept;
+		void ReadPredictedState(EntityState &) const noexcept;
+		void WriteMovement(const glm::vec3 &) noexcept;
+		void ReadMovement(glm::vec3 &) const noexcept;
+		void WritePitch(float) noexcept;
+		void ReadPitch(float &) const noexcept;
+		void WriteYaw(float) noexcept;
+		void ReadYaw(float &) const noexcept;
+		void WriteActions(std::uint8_t) noexcept;
+		void ReadActions(std::uint8_t &) const noexcept;
+		void WriteSlot(std::uint8_t) noexcept;
+		void ReadSlot(std::uint8_t &) const noexcept;
 	};
 
 	struct SpawnEntity : public Payload {
@@ -133,7 +143,7 @@ struct Packet {
 
 	struct EntityUpdate : public Payload {
 		static constexpr std::uint8_t TYPE = 7;
-		static constexpr std::size_t MAX_LEN = 452;
+		static constexpr std::size_t MAX_LEN = 480;
 
 		static constexpr std::uint32_t MAX_ENTITIES = 7;
 		static constexpr std::size_t GetSize(std::uint32_t num) noexcept {

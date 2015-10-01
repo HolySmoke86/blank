@@ -30,7 +30,13 @@ public:
 	std::uint16_t SendPing();
 	std::uint16_t SendLogin(const std::string &);
 	std::uint16_t SendPart();
-	std::uint16_t SendPlayerUpdate(const Entity &);
+	std::uint16_t SendPlayerUpdate(
+		const EntityState &prediction,
+		const glm::vec3 &movement,
+		float pitch,
+		float yaw,
+		std::uint8_t actions,
+		std::uint8_t slot);
 
 private:
 	void HandlePacket(const UDPpacket &);

@@ -32,46 +32,28 @@
 
 namespace blank {
 
-DirectInput::DirectInput(World &world, Player &player, WorldManipulator &manip)
+PlayerController::PlayerController(World &world, Player &player)
 : world(world)
 , player(player)
-, manip(manip)
-, aim_world()
-, aim_entity()
 , move_dir(0.0f)
 , pitch(0.0f)
 , yaw(0.0f)
 , dirty(true)
-, place_timer(256)
-, remove_timer(256) {
+, aim_world()
+, aim_entity() {
 
 }
 
-void DirectInput::Update(int dt) {
-	dirty = true; // world has changed in the meantime
-	UpdatePlayer();
-
-	remove_timer.Update(dt);
-	if (remove_timer.Hit()) {
-		RemoveBlock();
-	}
-
-	place_timer.Update(dt);
-	if (place_timer.Hit()) {
-		PlaceBlock();
-	}
-}
-
-void DirectInput::SetMovement(const glm::vec3 &m) {
+void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 	if (dot(m, m) > 1.0f) {
 		move_dir = normalize(m);
 	} else {
 		move_dir = m;
 	}
-	dirty = true;
+	Invalidate();
 }
 
-void DirectInput::TurnHead(float dp, float dy) {
+void PlayerController::TurnHead(float dp, float dy) noexcept {
 	pitch += dp;
 	if (pitch > PI / 2) {
 		pitch = PI / 2;
@@ -84,7 +66,68 @@ void DirectInput::TurnHead(float dp, float dy) {
 	} else if (yaw < -PI) {
 		yaw += PI * 2;
 	}
+	Invalidate();
+}
+
+void PlayerController::SelectInventory(int i) noexcept {
+	player.SetInventorySlot(i);
+}
+
+int PlayerController::InventorySlot() const noexcept {
+	return player.GetInventorySlot();
+}
+
+void PlayerController::Invalidate() noexcept {
 	dirty = true;
+}
+
+void PlayerController::UpdatePlayer() noexcept {
+	constexpr float max_vel = 0.005f;
+	if (dirty) {
+		player.GetEntity().Orientation(glm::quat(glm::vec3(pitch, yaw, 0.0f)));
+		player.GetEntity().Velocity(glm::rotateY(move_dir * max_vel, yaw));
+
+		Ray aim = player.Aim();
+		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {
+			aim_world = WorldCollision();
+		}
+		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity(), aim_entity)) {
+			aim_entity = EntityCollision();
+		}
+		if (aim_world && aim_entity) {
+			// got both, pick the closest one
+			if (aim_world.depth < aim_entity.depth) {
+				aim_entity = EntityCollision();
+			} else {
+				aim_world = WorldCollision();
+			}
+		}
+		dirty = false;
+	}
+}
+
+
+DirectInput::DirectInput(World &world, Player &player, WorldManipulator &manip)
+: PlayerController(world, player)
+, manip(manip)
+, place_timer(256)
+, remove_timer(256) {
+
+}
+
+void DirectInput::Update(int dt) {
+	Invalidate(); // world has changed in the meantime
+	UpdatePlayer();
+
+	remove_timer.Update(dt);
+	if (remove_timer.Hit()) {
+		RemoveBlock();
+	}
+
+	place_timer.Update(dt);
+	if (place_timer.Hit()) {
+		PlaceBlock();
+	}
 }
 
 void DirectInput::StartPrimaryAction() {
@@ -117,59 +160,29 @@ void DirectInput::StopTertiaryAction() {
 	// nothing
 }
 
-void DirectInput::SelectInventory(int i) {
-	player.SetInventorySlot(i);
-}
-
-void DirectInput::UpdatePlayer() {
-	constexpr float max_vel = 0.005f;
-	if (dirty) {
-		player.GetEntity().Orientation(glm::quat(glm::vec3(pitch, yaw, 0.0f)));
-		player.GetEntity().Velocity(glm::rotateY(move_dir * max_vel, yaw));
-
-		Ray aim = player.Aim();
-		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {
-			aim_world = WorldCollision();
-		}
-		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity(), aim_entity)) {
-			aim_entity = EntityCollision();
-		}
-		if (aim_world && aim_entity) {
-			// got both, pick the closest one
-			if (aim_world.depth < aim_entity.depth) {
-				aim_entity = EntityCollision();
-			} else {
-				aim_world = WorldCollision();
-			}
-		}
-		// TODO: update outline if applicable
-		dirty = false;
-	}
-}
-
 void DirectInput::PickBlock() {
 	UpdatePlayer();
-	if (!aim_world) return;
-	player.SetInventorySlot(aim_world.GetBlock().type - 1);
+	if (!BlockFocus()) return;
+	SelectInventory(BlockFocus().GetBlock().type - 1);
 }
 
 void DirectInput::PlaceBlock() {
 	UpdatePlayer();
-	if (!aim_world) return;
+	if (!BlockFocus()) return;
 
-	BlockLookup next_block(aim_world.chunk, aim_world.BlockPos(), Block::NormalFace(aim_world.normal));
+	BlockLookup next_block(BlockFocus().chunk, BlockFocus().BlockPos(), Block::NormalFace(BlockFocus().normal));
 	if (!next_block) {
 		return;
 	}
-	manip.SetBlock(next_block.GetChunk(), next_block.GetBlockIndex(), Block(player.GetInventorySlot() + 1));
-	dirty = true;
+	manip.SetBlock(next_block.GetChunk(), next_block.GetBlockIndex(), Block(InventorySlot() + 1));
+	Invalidate();
 }
 
 void DirectInput::RemoveBlock() {
 	UpdatePlayer();
-	if (!aim_world) return;
-	manip.SetBlock(aim_world.GetChunk(), aim_world.block, Block(0));
-	dirty = true;
+	if (!BlockFocus()) return;
+	manip.SetBlock(BlockFocus().GetChunk(), BlockFocus().block, Block(0));
+	Invalidate();
 }
 
 

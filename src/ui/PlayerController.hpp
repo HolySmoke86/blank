@@ -3,16 +3,39 @@
 
 #include <glm/glm.hpp>
 
+#include "../world/EntityCollision.hpp"
+#include "../world/WorldCollision.hpp"
+
 
 namespace blank {
 
-struct PlayerController {
+class Player;
+class World;
+
+class PlayerController {
+
+public:
+	PlayerController(World &, Player &);
+
+	Player &GetPlayer() noexcept { return player; }
+	const Player &GetPlayer() const noexcept { return player; }
+
+	WorldCollision &BlockFocus() noexcept { return aim_world; }
+	const WorldCollision &BlockFocus() const noexcept { return aim_world; }
+	EntityCollision &EntityFocus() noexcept { return aim_entity; }
+	const EntityCollision &EntityFocus() const noexcept { return aim_entity; }
 
 	/// set desired direction of movement
 	/// the magnitude (clamped to [0..1]) can be used to attenuate target velocity
-	virtual void SetMovement(const glm::vec3 &) = 0;
+	void SetMovement(const glm::vec3 &) noexcept;
+	const glm::vec3 &GetMovement() const noexcept { return move_dir; }
 	/// turn the controlled entity's head by given pitch and yaw deltas
-	virtual void TurnHead(float pitch, float yaw) = 0;
+	void TurnHead(float pitch, float yaw) noexcept;
+
+	/// get player pitch in radians, normalized to [-PI/2,PI/2]
+	float GetPitch() const noexcept { return pitch; }
+	/// get player yaw in radians, normalized to [-PI,PI]
+	float GetYaw() const noexcept { return yaw; }
 
 	/// start doing primary action
 	/// what exactly this means depends on the active item
@@ -26,7 +49,23 @@ struct PlayerController {
 	virtual void StopTertiaryAction() = 0;
 
 	/// set the item at given inventory slot as active
-	virtual void SelectInventory(int) = 0;
+	void SelectInventory(int) noexcept;
+	int InventorySlot() const noexcept;
+
+protected:
+	void Invalidate() noexcept;
+	void UpdatePlayer() noexcept;
+
+private:
+	World &world;
+	Player &player;
+	glm::vec3 move_dir;
+	float pitch;
+	float yaw;
+	bool dirty;
+
+	WorldCollision aim_world;
+	EntityCollision aim_entity;
 
 };
 

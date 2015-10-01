@@ -2,6 +2,7 @@
 #define BLANK_SERVER_SERVER_HPP
 
 #include "../app/Config.hpp"
+#include "../world/WorldManipulator.hpp"
 
 #include <list>
 #include <SDL_net.h>
@@ -16,7 +17,8 @@ namespace server {
 
 class ClientConnection;
 
-class Server {
+class Server
+: public WorldManipulator {
 
 public:
 	Server(const Config::Network &, World &);
@@ -34,6 +36,8 @@ public:
 	void SetPlayerModel(const CompositeModel &) noexcept;
 	bool HasPlayerModel() const noexcept;
 	const CompositeModel &GetPlayerModel() const noexcept;
+
+	void SetBlock(Chunk &, int, const Block &) override;
 
 private:
 	void HandlePacket(const UDPpacket &);
