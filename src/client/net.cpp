@@ -8,6 +8,7 @@
 #include "../world/Chunk.hpp"
 #include "../world/ChunkStore.hpp"
 #include "../world/Player.hpp"
+#include "../world/World.hpp"
 
 #include <iostream>
 #include <zlib.h>
@@ -320,24 +321,30 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 		}
 	}
 
-	EntityState replay_state(corrected_state);
 	EntityState &player_state = GetPlayer().GetEntity().GetState();
+	Entity replay(GetPlayer().GetEntity());
+	replay.SetState(corrected_state);
 
 	if (entry != end) {
-		entry->state.chunk_pos = replay_state.chunk_pos;
-		entry->state.block_pos = replay_state.block_pos;
+		entry->state.chunk_pos = replay.GetState().chunk_pos;
+		entry->state.block_pos = replay.GetState().block_pos;
 		++entry;
 	}
 
+	vector<WorldCollision> col;
 	while (entry != end) {
-		replay_state.velocity = entry->state.velocity;
-		replay_state.Update(entry->delta_t);
-		entry->state.chunk_pos = replay_state.chunk_pos;
-		entry->state.block_pos = replay_state.block_pos;
+		replay.Velocity(entry->state.velocity);
+		replay.Update(entry->delta_t);
+		if (GetWorld().Intersection(replay, col)) {
+			GetWorld().Resolve(replay, col);
+			col.clear();
+		}
+		entry->state.chunk_pos = replay.GetState().chunk_pos;
+		entry->state.block_pos = replay.GetState().block_pos;
 		++entry;
 	}
 
-	glm::vec3 displacement(replay_state.Diff(player_state));
+	glm::vec3 displacement(replay.GetState().Diff(player_state));
 	const float disp_squared = dot(displacement, displacement);
 
 	if (disp_squared < 16.0f * numeric_limits<float>::epsilon()) {
@@ -351,8 +358,8 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	constexpr float max_disp = 0.0001f; // (1/100)^2
 
 	if (disp_squared > warp_thresh) {
-		player_state.chunk_pos = replay_state.chunk_pos;
-		player_state.block_pos = replay_state.block_pos;
+		player_state.chunk_pos = replay.GetState().chunk_pos;
+		player_state.block_pos = replay.GetState().block_pos;
 	} else if (disp_squared < max_disp) {
 		player_state.block_pos += displacement;
 	} else {
