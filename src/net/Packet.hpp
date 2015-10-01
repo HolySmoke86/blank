@@ -10,6 +10,7 @@
 
 namespace blank {
 
+class Block;
 class Entity;
 class EntityState;
 
@@ -195,6 +196,26 @@ struct Packet {
 		void ReadDataSize(std::uint32_t &) const noexcept;
 		void WriteData(const std::uint8_t *, std::size_t len) noexcept;
 		void ReadData(std::uint8_t *, std::size_t maxlen) const noexcept;
+	};
+
+	struct BlockUpdate : public Payload {
+		static constexpr std::uint8_t TYPE = 11;
+		static constexpr std::size_t MAX_LEN = 484;
+
+		static constexpr std::uint32_t MAX_BLOCKS = 78;
+		static constexpr std::size_t GetSize(std::uint32_t num) noexcept {
+			return 16 + (num * 6);
+		}
+
+		void WriteChunkCoords(const glm::ivec3 &) noexcept;
+		void ReadChunkCoords(glm::ivec3 &) const noexcept;
+		void WriteBlockCount(std::uint32_t) noexcept;
+		void ReadBlockCount(std::uint32_t &) const noexcept;
+
+		void WriteIndex(std::uint16_t, std::uint32_t) noexcept;
+		void ReadIndex(std::uint16_t &, std::uint32_t) const noexcept;
+		void WriteBlock(const Block &, std::uint32_t) noexcept;
+		void ReadBlock(Block &, std::uint32_t) const noexcept;
 	};
 
 

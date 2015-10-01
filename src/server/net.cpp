@@ -283,7 +283,7 @@ uint16_t ClientConnection::Send() {
 }
 
 uint16_t ClientConnection::Send(size_t len) {
-	server.GetPacket().len = len;
+	server.GetPacket().len = sizeof(Packet::Header) + len;
 	return Send();
 }
 
@@ -555,6 +555,10 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	old_actions = new_actions;
 }
 
+bool ClientConnection::ChunkInRange(const glm::ivec3 &pos) const noexcept {
+	return HasPlayer() && PlayerChunks().InRange(pos);
+}
+
 
 Server::Server(const Config::Network &conf, World &world)
 : serv_sock(nullptr)
@@ -645,8 +649,18 @@ const CompositeModel &Server::GetPlayerModel() const noexcept {
 
 void Server::SetBlock(Chunk &chunk, int index, const Block &block) {
 	chunk.SetBlock(index, block);
-	// TODO: send to clients
-	// also TODO: batch chunk changes
+	// TODO: batch chunk changes
+	auto pack = Packet::Make<Packet::BlockUpdate>(GetPacket());
+	pack.WriteChunkCoords(chunk.Position());
+	pack.WriteBlockCount(uint32_t(1));
+	pack.WriteIndex(index, 0);
+	pack.WriteBlock(chunk.BlockAt(index), 0);
+	GetPacket().len = sizeof(Packet::Header) + Packet::BlockUpdate::GetSize(1);
+	for (ClientConnection &client : clients) {
+		if (client.ChunkInRange(chunk.Position())) {
+			client.Send();
+		}
+	}
 }
 
 }

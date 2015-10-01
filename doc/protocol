@@ -181,3 +181,18 @@ Payload:
 	 8 block size, size of the data block, 32bit unsigned int
 	12 data, raw data
 Length: 12-484
+
+
+Block Update
+------------
+
+Sent by the server whenever one or more block in a chunk have changed.
+
+Code: 11
+Payload:
+	 0 chunk coordinates, vec3i
+	12 number of blocks, 32bit unsigned int, 1-78
+	16 first block index, 16bit unsigned int
+	18 first block data, 32bit
+	22 second block index...
+Length: 16 + multiple of 6, max 484

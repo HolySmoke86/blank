@@ -11,6 +11,7 @@
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Skeletons.hpp"
+#include "../net/Packet.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"
 #include "../ui/Interface.hpp"
@@ -48,6 +49,7 @@ public:
 	void Render(Viewport &) override;
 
 	void MergePlayerCorrection(std::uint16_t, const EntityState &);
+	void Handle(const Packet::BlockUpdate &);
 
 	void SetAudio(bool) override;
 	void SetVideo(bool) override;

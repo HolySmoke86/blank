@@ -25,6 +25,25 @@ static constexpr uint32_t TEST_TAG = 0xFB1AB1AF;
 
 }
 
+void PacketTest::testSizes() {
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected size of vec3",
+		size_t(12), sizeof(glm::vec3)
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected size of vec3i",
+		size_t(12), sizeof(glm::ivec3)
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected size of quat",
+		size_t(16), sizeof(glm::quat)
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected size of entity state",
+		size_t(64), sizeof(EntityState)
+	);
+}
+
 void PacketTest::testControl() {
 	Packet::TControl ctrl;
 	ctrl.ack = 10;
@@ -278,7 +297,7 @@ void PacketTest::testEntityUpdate() {
 
 	pack.length = Packet::EntityUpdate::GetSize(3);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"length not correctly set in DespawnEntity packet",
+		"length not correctly set in EntityUpdate packet",
 		size_t(4 + 3 * 68), pack.length
 	);
 
@@ -429,6 +448,66 @@ void PacketTest::testChunkData() {
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"raw data not correctly transported in ChunkData packet",
 		string(write_data, write_data + write_size), string(read_data, read_data + read_size)
+	);
+}
+
+void PacketTest::testBlockUpdate() {
+	auto pack = Packet::Make<Packet::BlockUpdate>(udp_pack);
+	AssertPacket("BlockUpdate", 11, 16, 484, pack);
+
+	pack.length = Packet::BlockUpdate::GetSize(3);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"length not correctly set in BlockUpdate packet",
+		size_t(16 + 3 * 6), pack.length
+	);
+
+	glm::ivec3 write_coords(432, -325, 99998);
+	uint32_t write_count = 3;
+	uint16_t write_index = 432;
+	Block write_block(324, Block::FACE_DOWN, Block::TURN_AROUND);
+
+	pack.WriteChunkCoords(write_coords);
+	pack.WriteBlockCount(write_count);
+	pack.WriteIndex(write_index, 1);
+	pack.WriteBlock(write_block, 1);
+	pack.WriteIndex(write_index, 0);
+	pack.WriteBlock(write_block, 0);
+	pack.WriteIndex(write_index, 2);
+	pack.WriteBlock(write_block, 2);
+
+	glm::ivec3 read_coords;
+	uint32_t read_count;
+	uint16_t read_index;
+	Block read_block;
+
+	pack.ReadChunkCoords(read_coords);
+	pack.ReadBlockCount(read_count);
+	pack.ReadIndex(read_index, 1);
+	pack.ReadBlock(read_block, 1);
+
+	AssertEqual(
+		"chunk coordinates not correctly transported in BlockUpdate packet",
+		write_coords, read_coords
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"block count not correctly transported in BlockUpdate packet",
+		write_count, read_count
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"block index not correctly transported in BlockUpdate packet",
+		write_index, read_index
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"block type not correctly transported in BlockUpdate packet",
+		write_block.type, read_block.type
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"block face not correctly transported in BlockUpdate packet",
+		write_block.GetFace(), read_block.GetFace()
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"block turn not correctly transported in BlockUpdate packet",
+		write_block.GetTurn(), read_block.GetTurn()
 	);
 }
 

@@ -41,6 +41,7 @@ private:
 	virtual void On(const Packet::PlayerCorrection &) { }
 	virtual void On(const Packet::ChunkBegin &) { }
 	virtual void On(const Packet::ChunkData &) { }
+	virtual void On(const Packet::BlockUpdate &) { }
 
 private:
 	unsigned int packets_lost;

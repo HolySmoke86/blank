@@ -8,6 +8,7 @@
 #include "../app/TextureIndex.hpp"
 #include "../model/CompositeModel.hpp"
 #include "../io/WorldSave.hpp"
+#include "../world/ChunkIndex.hpp"
 #include "../world/ChunkStore.hpp"
 
 #include <iostream>
@@ -212,6 +213,27 @@ void InteractiveState::Render(Viewport &viewport) {
 
 void InteractiveState::MergePlayerCorrection(std::uint16_t pack, const EntityState &state) {
 	input.MergePlayerCorrection(pack, state);
+}
+
+void InteractiveState::Handle(const Packet::BlockUpdate &pack) {
+	glm::ivec3 pos;
+	pack.ReadChunkCoords(pos);
+	Chunk *chunk = player.GetChunks().Get(pos);
+	if (!chunk) {
+		// this change doesn't concern us
+		return;
+	}
+	uint32_t count = 0;
+	pack.ReadBlockCount(count);
+	for (uint32_t i = 0; i < count; ++i) {
+		uint16_t index;
+		Block block;
+		pack.ReadIndex(index, i);
+		pack.ReadBlock(block, i);
+		if (index < Chunk::size && block.type < block_types.Size()) {
+			manip.SetBlock(*chunk, index, block);
+		}
+	}
 }
 
 void InteractiveState::SetAudio(bool b) {
@@ -474,6 +496,14 @@ void MasterState::On(const Packet::ChunkData &pack) {
 		return;
 	}
 	state->GetChunkReceiver().Handle(pack);
+}
+
+void MasterState::On(const Packet::BlockUpdate &pack) {
+	if (!state) {
+		cout << "received block update, but the world has not been created yet" << endl;
+		return;
+	}
+	state->Handle(pack);
 }
 
 }

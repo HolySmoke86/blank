@@ -61,6 +61,8 @@ public:
 	bool HasPlayerModel() const noexcept;
 	const CompositeModel &GetPlayerModel() const noexcept;
 
+	bool ChunkInRange(const glm::ivec3 &) const noexcept;
+
 private:
 	struct SpawnStatus {
 		// the entity in question

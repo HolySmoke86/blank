@@ -21,6 +21,7 @@ class PacketTest
 
 CPPUNIT_TEST_SUITE(PacketTest);
 
+CPPUNIT_TEST(testSizes);
 CPPUNIT_TEST(testControl);
 CPPUNIT_TEST(testPing);
 CPPUNIT_TEST(testLogin);
@@ -33,6 +34,7 @@ CPPUNIT_TEST(testEntityUpdate);
 CPPUNIT_TEST(testPlayerCorrection);
 CPPUNIT_TEST(testChunkBegin);
 CPPUNIT_TEST(testChunkData);
+CPPUNIT_TEST(testBlockUpdate);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -40,6 +42,7 @@ public:
 	void setUp();
 	void tearDown();
 
+	void testSizes();
 	void testControl();
 	void testPing();
 	void testLogin();
@@ -52,6 +55,7 @@ public:
 	void testPlayerCorrection();
 	void testChunkBegin();
 	void testChunkData();
+	void testBlockUpdate();
 
 private:
 	static void AssertPacket(

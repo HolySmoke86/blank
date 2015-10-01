@@ -26,6 +26,7 @@ constexpr size_t Packet::EntityUpdate::MAX_LEN;
 constexpr size_t Packet::PlayerCorrection::MAX_LEN;
 constexpr size_t Packet::ChunkBegin::MAX_LEN;
 constexpr size_t Packet::ChunkData::MAX_LEN;
+constexpr size_t Packet::BlockUpdate::MAX_LEN;
 
 Connection::Connection(const IPaddress &addr)
 : handler(nullptr)
@@ -211,6 +212,8 @@ const char *Packet::Type2String(uint8_t t) noexcept {
 			return "ChunkBegin";
 		case ChunkData::TYPE:
 			return "ChunkData";
+		case BlockUpdate::TYPE:
+			return "BlockUpdate";
 		default:
 			return "Unknown";
 	}
@@ -502,6 +505,42 @@ void Packet::ChunkData::ReadData(uint8_t *d, size_t l) const noexcept {
 	memcpy(d, &data[12], len);
 }
 
+void Packet::BlockUpdate::WriteChunkCoords(const glm::ivec3 &coords) noexcept {
+	Write(coords, 0);
+}
+
+void Packet::BlockUpdate::ReadChunkCoords(glm::ivec3 &coords) const noexcept {
+	Read(coords, 0);
+}
+
+void Packet::BlockUpdate::WriteBlockCount(uint32_t count) noexcept {
+	Write(count, 12);
+}
+
+void Packet::BlockUpdate::ReadBlockCount(uint32_t &count) const noexcept {
+	Read(count, 12);
+}
+
+void Packet::BlockUpdate::WriteIndex(uint16_t index, uint32_t num) noexcept {
+	uint32_t off = GetSize(num);
+	Write(index, off);
+}
+
+void Packet::BlockUpdate::ReadIndex(uint16_t &index, uint32_t num) const noexcept {
+	uint32_t off = GetSize(num);
+	Read(index, off);
+}
+
+void Packet::BlockUpdate::WriteBlock(const Block &block, uint32_t num) noexcept {
+	uint32_t off = GetSize(num) + 2;
+	Write(block, off);
+}
+
+void Packet::BlockUpdate::ReadBlock(Block &block, uint32_t num) const noexcept {
+	uint32_t off = GetSize(num) + 2;
+	Read(block, off);
+}
+
 
 void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
@@ -538,6 +577,9 @@ void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 			break;
 		case Packet::ChunkData::TYPE:
 			On(Packet::As<Packet::ChunkData>(udp_pack));
+			break;
+		case Packet::BlockUpdate::TYPE:
+			On(Packet::As<Packet::BlockUpdate>(udp_pack));
 			break;
 		default:
 			// drop unknown or unhandled packets

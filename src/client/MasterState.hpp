@@ -60,6 +60,7 @@ public:
 	void On(const Packet::PlayerCorrection &) override;
 	void On(const Packet::ChunkBegin &) override;
 	void On(const Packet::ChunkData &) override;
+	void On(const Packet::BlockUpdate &) override;
 
 private:
 	/// flag entity as updated by given packet
