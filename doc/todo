@@ -28,10 +28,6 @@ persistence
 
 	store some kind of byte order mark?
 
-block asset loading
-
-	parameterization of chunk generator should be less static/dangerous
-
 networking
 
 	write tests
@@ -95,8 +91,9 @@ transparency (blocks and entities)
 
 world generator that is not boring
 
-	maybe divide into biomes and add special features like
-	settlements, ruins, all kinds of interesting stuff
+	maybe store a min/max solidity, humidity, temperature, rarity, etc.
+	for each block type (with the option to deactivate generation
+	altogether) and use different noise overlays for each
 
 entity/world collision
 
@@ -104,7 +101,3 @@ entity/world collision
 	it jitters and has some surprising behaviour
 	finding a spawn point which doesn't put entities in solids is
 	now a little more crucial. press N if you're in trouble
-
-better noise
-
-	current simplex noise implementation repeats itself pretty quickly
