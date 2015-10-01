@@ -167,7 +167,6 @@ Player *World::AddPlayer(const std::string &name) {
 	}
 	Entity &entity = AddEntity();
 	entity.Name(name);
-	// TODO: load from save file here
 	entity.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	entity.WorldCollidable(true);
 	entity.Position(config.spawn);
@@ -187,7 +186,6 @@ Player *World::AddPlayer(const std::string &name, std::uint32_t id) {
 		return nullptr;
 	}
 	entity->Name(name);
-	// TODO: load from save file here
 	entity->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	entity->WorldCollidable(true);
 	entity->Position(config.spawn);

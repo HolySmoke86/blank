@@ -1,6 +1,7 @@
 #include "WorldSave.hpp"
 
 #include "filesystem.hpp"
+#include "TokenStreamReader.hpp"
 
 #include <cctype>
 #include <cstring>
@@ -9,6 +10,7 @@
 #include <limits>
 #include <stdexcept>
 #include <zlib.h>
+#include <glm/gtx/io.hpp>
 
 using namespace std;
 
@@ -19,6 +21,7 @@ WorldSave::WorldSave(const string &path)
 : root_path(path)
 , world_conf_path(path + "world.conf")
 , gen_conf_path(path + "gen.conf")
+, player_path(path + "player/")
 , chunk_path(path + "chunks/%d/%d/%d.gz")
 , chunk_bufsiz(chunk_path.length() + 3 * std::numeric_limits<int>::digits10)
 , chunk_buf(new char[chunk_bufsiz]) {
@@ -31,42 +34,26 @@ bool WorldSave::Exists() const noexcept {
 }
 
 
-// TODO: better implementation of config files
 void WorldSave::Read(World::Config &conf) const {
-	ifstream in(world_conf_path);
-	if (!in) {
+	ifstream is(world_conf_path);
+	if (!is) {
 		throw runtime_error("failed to open world config");
 	}
+	TokenStreamReader in(is);
 
-	constexpr char spaces[] = "\n\r\t ";
-
-	string line;
-	while (getline(in, line)) {
-		if (line.empty() || line[0] == '#') continue;
-		auto equals_pos = line.find_first_of('=');
-
-		auto name_begin = line.find_first_not_of(spaces, 0, sizeof(spaces));
-		auto name_end = equals_pos - 1;
-		while (name_end > name_begin && isspace(line[name_end])) {
-			--name_end;
+	string name;
+	while (in.HasMore()) {
+		in.ReadIdentifier(name);
+		in.Skip(Token::EQUALS);
+		if (name == "spawn") {
+			in.ReadVec(conf.spawn);
 		}
-
-		auto value_begin = line.find_first_not_of(spaces, equals_pos + 1, sizeof(spaces));
-		auto value_end = line.length() - 1;
-		while (value_end > value_begin && isspace(line[value_end])) {
-			--value_end;
+		if (in.HasMore() && in.Peek().type == Token::SEMICOLON) {
+			in.Skip(Token::SEMICOLON);
 		}
-
-		string name(line, name_begin, name_end - name_begin + 1);
-		string value(line, value_begin, value_end - value_begin + 1);
-
-	//	if (name == "seed") {
-	//		conf.gen.seed = stoul(value);
-	//	} else {
-			throw runtime_error("unknown world option: " + name);
-	//	}
 	}
-	if (in.bad()) {
+
+	if (is.bad()) {
 		throw runtime_error("IO error reading world config");
 	}
 }
@@ -77,7 +64,7 @@ void WorldSave::Write(const World::Config &conf) const {
 	}
 
 	ofstream out(world_conf_path);
-	//out << "seed = " << conf.gen.seed << endl;
+	out << "spawn = " << conf.spawn << ';' << endl;
 	out.close();
 
 	if (!out) {
@@ -87,41 +74,26 @@ void WorldSave::Write(const World::Config &conf) const {
 
 
 void WorldSave::Read(Generator::Config &conf) const {
-	ifstream in(gen_conf_path);
-	if (!in) {
+	ifstream is(gen_conf_path);
+	if (!is) {
 		throw runtime_error("failed to open generator config");
 	}
+	TokenStreamReader in(is);
 
-	constexpr char spaces[] = "\n\r\t ";
-
-	string line;
-	while (getline(in, line)) {
-		if (line.empty() || line[0] == '#') continue;
-		auto equals_pos = line.find_first_of('=');
-
-		auto name_begin = line.find_first_not_of(spaces, 0, sizeof(spaces));
-		auto name_end = equals_pos - 1;
-		while (name_end > name_begin && isspace(line[name_end])) {
-			--name_end;
-		}
-
-		auto value_begin = line.find_first_not_of(spaces, equals_pos + 1, sizeof(spaces));
-		auto value_end = line.length() - 1;
-		while (value_end > value_begin && isspace(line[value_end])) {
-			--value_end;
-		}
-
-		string name(line, name_begin, name_end - name_begin + 1);
-		string value(line, value_begin, value_end - value_begin + 1);
-
+	string name;
+	while (in.HasMore()) {
+		in.ReadIdentifier(name);
+		in.Skip(Token::EQUALS);
 		if (name == "seed") {
-			conf.seed = stoul(value);
-		} else {
-			throw runtime_error("unknown generator option: " + name);
+			in.ReadNumber(conf.seed);
+		}
+		if (in.HasMore() && in.Peek().type == Token::SEMICOLON) {
+			in.Skip(Token::SEMICOLON);
 		}
 	}
-	if (in.bad()) {
-		throw runtime_error("IO error reading world config");
+
+	if (is.bad()) {
+		throw runtime_error("IO error reading generator config");
 	}
 }
 
@@ -131,12 +103,61 @@ void WorldSave::Write(const Generator::Config &conf) const {
 	}
 
 	ofstream out(gen_conf_path);
-	out << "seed = " << conf.seed << endl;
+	out << "seed = " << conf.seed << ';' << endl;
 	out.close();
 
 	if (!out) {
 		throw runtime_error("failed to write generator config");
 	}
+}
+
+
+bool WorldSave::Exists(const Player &player) const {
+	return is_file(PlayerPath(player));
+}
+
+void WorldSave::Read(Player &player) const {
+	ifstream is(PlayerPath(player));
+	TokenStreamReader in(is);
+	string name;
+	EntityState state;
+	while (in.HasMore()) {
+		in.ReadIdentifier(name);
+		in.Skip(Token::EQUALS);
+		if (name == "chunk") {
+			in.ReadVec(state.chunk_pos);
+		} else if (name == "position") {
+			in.ReadVec(state.block_pos);
+		} else if (name == "orientation") {
+			in.ReadQuat(state.orient);
+		} else if (name == "slot") {
+			int slot;
+			in.ReadNumber(slot);
+			player.SetInventorySlot(slot);
+		}
+		if (in.HasMore() && in.Peek().type == Token::SEMICOLON) {
+			in.Skip(Token::SEMICOLON);
+		}
+	}
+	player.GetEntity().SetState(state);
+}
+
+void WorldSave::Write(const Player &player) const {
+	if (!make_dirs(player_path)) {
+		throw runtime_error("failed to create player save directory");
+	}
+	const EntityState &state = player.GetEntity().GetState();
+	ofstream out(PlayerPath(player));
+	out << "chunk = " << state.chunk_pos << ';' << endl;
+	out << "position = " << state.block_pos << ';' << endl;
+	out << "orientation = " << state.orient << ';' << endl;
+	out << "slot = " << player.GetInventorySlot() << ';' << endl;
+}
+
+string WorldSave::PlayerPath(const Player &player) const {
+	// TODO: this is potentially dangerous, server and client should
+	//       provide a sanitized name for storage
+	return player_path + player.Name();
 }
 
 

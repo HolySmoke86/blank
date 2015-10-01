@@ -1,6 +1,7 @@
 #ifndef BLANK_RAND_SIMPLEXNOISE_HPP_
 #define BLANK_RAND_SIMPLEXNOISE_HPP_
 
+#include <cstdint>
 #include <glm/glm.hpp>
 
 
@@ -10,7 +11,7 @@ namespace blank {
 class SimplexNoise {
 
 public:
-	explicit SimplexNoise(unsigned int seed) noexcept;
+	explicit SimplexNoise(std::uint64_t seed) noexcept;
 
 	float operator ()(const glm::vec3 &) const noexcept;
 

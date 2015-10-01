@@ -5,6 +5,7 @@
 #include "../rand/SimplexNoise.hpp"
 #include "../rand/WorleyNoise.hpp"
 
+#include <cstdint>
 #include <vector>
 
 
@@ -16,7 +17,7 @@ class Generator {
 
 public:
 	struct Config {
-		unsigned int seed = 0;
+		std::uint64_t seed = 0;
 		float stretch = 64.0f;
 		float solid_threshold = 0.5f;
 	};

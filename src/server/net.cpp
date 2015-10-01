@@ -3,6 +3,7 @@
 #include "Server.hpp"
 
 #include "../app/init.hpp"
+#include "../io/WorldSave.hpp"
 #include "../model/CompositeModel.hpp"
 #include "../world/ChunkIndex.hpp"
 #include "../world/Entity.hpp"
@@ -394,6 +395,9 @@ void ClientConnection::AttachPlayer(Player &player) {
 	DetachPlayer();
 	input.reset(new DirectInput(server.GetWorld(), player, server));
 	PlayerEntity().Ref();
+	if (server.GetWorldSave().Exists(player)) {
+		server.GetWorldSave().Read(player);
+	}
 
 	old_base = PlayerChunks().Base();
 	Chunk::Pos begin = PlayerChunks().CoordsBegin();
@@ -415,6 +419,7 @@ void ClientConnection::AttachPlayer(Player &player) {
 void ClientConnection::DetachPlayer() {
 	if (!HasPlayer()) return;
 	cout << "player \"" << input->GetPlayer().Name() << "\" left" << endl;
+	server.GetWorldSave().Write(input->GetPlayer());
 	PlayerEntity().Kill();
 	PlayerEntity().UnRef();
 	input.reset();
@@ -560,11 +565,12 @@ bool ClientConnection::ChunkInRange(const glm::ivec3 &pos) const noexcept {
 }
 
 
-Server::Server(const Config::Network &conf, World &world)
+Server::Server(const Config::Network &conf, World &world, const WorldSave &save)
 : serv_sock(nullptr)
 , serv_pack{ -1, nullptr, 0 }
 , clients()
 , world(world)
+, save(save)
 , player_model(nullptr) {
 	serv_sock = SDLNet_UDP_Open(conf.port);
 	if (!serv_sock) {

@@ -60,6 +60,7 @@ private:
 	Config &config;
 	Environment &env;
 	BlockTypeRegistry block_types;
+	const WorldSave &save;
 	World world;
 	Player &player;
 	HUD hud;

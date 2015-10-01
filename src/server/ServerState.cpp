@@ -24,7 +24,7 @@ ServerState::ServerState(
 , chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
 , spawner(world, skeletons, gc.seed)
-, server(config.net, world)
+, server(config.net, world, ws)
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);

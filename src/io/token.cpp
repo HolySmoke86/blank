@@ -4,6 +4,7 @@
 #include <cctype>
 #include <istream>
 #include <stdexcept>
+#include <glm/gtc/quaternion.hpp>
 
 using namespace std;
 
@@ -327,6 +328,18 @@ void TokenStreamReader::ReadVec(glm::ivec4 &v) {
 	ReadNumber(v.z);
 	Skip(Token::COMMA);
 	ReadNumber(v.w);
+	Skip(Token::BRACKET_CLOSE);
+}
+
+void TokenStreamReader::ReadQuat(glm::quat &q) {
+	Skip(Token::BRACKET_OPEN);
+	ReadNumber(q.w);
+	Skip(Token::COMMA);
+	ReadNumber(q.x);
+	Skip(Token::COMMA);
+	ReadNumber(q.y);
+	Skip(Token::COMMA);
+	ReadNumber(q.z);
 	Skip(Token::BRACKET_CLOSE);
 }
 

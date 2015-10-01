@@ -131,6 +131,9 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
 	skeletons.Load();
 	loop_timer.Start();
+	if (save.Exists(player)) {
+		save.Read(player);
+	}
 }
 
 void InteractiveState::OnEnter() {
@@ -158,7 +161,7 @@ void InteractiveState::Handle(const SDL_Event &event) {
 			interface.Handle(event.wheel);
 			break;
 		case SDL_QUIT:
-			master.Quit();
+			Exit();
 			break;
 		default:
 			break;
@@ -273,6 +276,7 @@ void InteractiveState::SetDebug(bool b) {
 }
 
 void InteractiveState::Exit() {
+	save.Write(player);
 	master.Quit();
 }
 

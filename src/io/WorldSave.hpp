@@ -11,6 +11,8 @@
 
 namespace blank {
 
+class Player;
+
 class WorldSave {
 
 public:
@@ -24,17 +26,23 @@ public:
 	void Read(Generator::Config &) const;
 	void Write(const Generator::Config &) const;
 
+	// player
+	bool Exists(const Player &) const;
+	void Read(Player &) const;
+	void Write(const Player &) const;
+	std::string PlayerPath(const Player &) const;
+
 	// single chunk
 	bool Exists(const Chunk::Pos &) const noexcept;
 	void Read(Chunk &) const;
 	void Write(Chunk &) const;
-
 	const char *ChunkPath(const Chunk::Pos &) const;
 
 private:
 	std::string root_path;
 	std::string world_conf_path;
 	std::string gen_conf_path;
+	std::string player_path;
 	std::string chunk_path;
 	std::size_t chunk_bufsiz;
 	std::unique_ptr<char[]> chunk_buf;

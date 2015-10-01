@@ -4,6 +4,7 @@
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
 #include "../app/TextureIndex.hpp"
+#include "../io/WorldSave.hpp"
 
 #include <SDL.h>
 
@@ -21,6 +22,7 @@ MasterState::MasterState(
 : config(config)
 , env(env)
 , block_types()
+, save(save)
 , world(block_types, wc)
 , player(*world.AddPlayer(config.player.name))
 , hud(env, config, player)
@@ -42,6 +44,9 @@ MasterState::MasterState(
 	chunk_renderer.FogDensity(wc.fog_density);
 	skeletons.Load();
 	spawner.LimitSkeletons(0, skeletons.Size());
+	if (save.Exists(player)) {
+		save.Read(player);
+	}
 }
 
 
@@ -72,7 +77,7 @@ void MasterState::Handle(const SDL_Event &event) {
 			interface.Handle(event.wheel);
 			break;
 		case SDL_QUIT:
-			env.state.Switch(&unload);
+			Exit();
 			break;
 		default:
 			break;
@@ -151,7 +156,8 @@ void MasterState::SetDebug(bool b) {
 }
 
 void MasterState::Exit() {
-	env.state.Pop();
+	save.Write(player);
+	env.state.Switch(&unload);
 }
 
 }

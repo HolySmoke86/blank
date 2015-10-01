@@ -12,6 +12,7 @@ namespace blank {
 
 class CompositeModel;
 class World;
+class WorldSave;
 
 namespace server {
 
@@ -21,7 +22,7 @@ class Server
 : public WorldManipulator {
 
 public:
-	Server(const Config::Network &, World &);
+	Server(const Config::Network &, World &, const WorldSave &);
 	~Server();
 
 	void Handle();
@@ -32,6 +33,7 @@ public:
 	UDPpacket &GetPacket() noexcept { return serv_pack; }
 
 	World &GetWorld() noexcept { return world; }
+	const WorldSave &GetWorldSave() noexcept { return save; }
 
 	void SetPlayerModel(const CompositeModel &) noexcept;
 	bool HasPlayerModel() const noexcept;
@@ -50,6 +52,7 @@ private:
 	std::list<ClientConnection> clients;
 
 	World &world;
+	const WorldSave &save;
 	const CompositeModel *player_model;
 
 };

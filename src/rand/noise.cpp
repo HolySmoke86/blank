@@ -14,7 +14,7 @@ constexpr float one_sixth = 1.0f/6.0f;
 
 namespace blank {
 
-SimplexNoise::SimplexNoise(unsigned int seed) noexcept
+SimplexNoise::SimplexNoise(std::uint64_t seed) noexcept
 : grad({
 	{  1.0f,  1.0f,  0.0f },
 	{ -1.0f,  1.0f,  0.0f },

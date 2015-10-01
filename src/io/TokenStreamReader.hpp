@@ -37,6 +37,8 @@ public:
 	void ReadVec(glm::ivec3 &);
 	void ReadVec(glm::ivec4 &);
 
+	void ReadQuat(glm::quat &);
+
 	bool GetBool();
 	float GetFloat();
 	int GetInt();
