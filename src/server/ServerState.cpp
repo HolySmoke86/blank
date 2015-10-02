@@ -20,6 +20,7 @@ ServerState::ServerState(
 : env(env)
 , block_types()
 , world(block_types, wc)
+, spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
@@ -35,6 +36,10 @@ ServerState::ServerState(
 	loop_timer.Start();
 
 	std::cout << "listening on UDP port " << config.net.port << std::endl;
+}
+
+ServerState::~ServerState() {
+	world.Chunks().UnregisterIndex(spawn_index);
 }
 
 

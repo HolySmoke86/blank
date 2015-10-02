@@ -7,6 +7,7 @@
 #include "../app/State.hpp"
 #include "../model/Skeletons.hpp"
 #include "../world/BlockTypeRegistry.hpp"
+#include "../world/ChunkIndex.hpp"
 #include "../world/ChunkLoader.hpp"
 #include "../world/Generator.hpp"
 #include "../world/World.hpp"
@@ -31,6 +32,7 @@ public:
 		const WorldSave &,
 		const Config &
 	);
+	~ServerState();
 
 	void Handle(const SDL_Event &) override;
 	void Update(int dt) override;
@@ -40,6 +42,7 @@ private:
 	HeadlessEnvironment &env;
 	BlockTypeRegistry block_types;
 	World world;
+	ChunkIndex &spawn_index;
 	Generator generator;
 	ChunkLoader chunk_loader;
 	Skeletons skeletons;

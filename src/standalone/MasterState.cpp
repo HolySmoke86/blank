@@ -24,6 +24,7 @@ MasterState::MasterState(
 , block_types()
 , save(save)
 , world(block_types, wc)
+, spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , player(*world.AddPlayer(config.player.name))
 , hud(env, config, player)
 , manip(env, player.GetEntity())
@@ -46,7 +47,13 @@ MasterState::MasterState(
 	spawner.LimitSkeletons(0, skeletons.Size());
 	if (save.Exists(player)) {
 		save.Read(player);
+	} else {
+		// TODO: spawn
 	}
+}
+
+MasterState::~MasterState() {
+	world.Chunks().UnregisterIndex(spawn_index);
 }
 
 

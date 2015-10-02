@@ -14,6 +14,7 @@
 #include "../ui/InteractiveManipulator.hpp"
 #include "../ui/Interface.hpp"
 #include "../world/BlockTypeRegistry.hpp"
+#include "../world/ChunkIndex.hpp"
 #include "../world/ChunkLoader.hpp"
 #include "../world/ChunkRenderer.hpp"
 #include "../world/Generator.hpp"
@@ -40,6 +41,7 @@ public:
 		const World::Config &,
 		const WorldSave &
 	);
+	~MasterState();
 
 	void OnEnter() override;
 
@@ -62,6 +64,7 @@ private:
 	BlockTypeRegistry block_types;
 	const WorldSave &save;
 	World world;
+	ChunkIndex &spawn_index;
 	Player &player;
 	HUD hud;
 	InteractiveManipulator manip;

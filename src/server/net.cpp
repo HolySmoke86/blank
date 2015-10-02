@@ -397,6 +397,8 @@ void ClientConnection::AttachPlayer(Player &player) {
 	PlayerEntity().Ref();
 	if (server.GetWorldSave().Exists(player)) {
 		server.GetWorldSave().Read(player);
+	} else {
+		// TODO: spawn
 	}
 
 	old_base = PlayerChunks().Base();

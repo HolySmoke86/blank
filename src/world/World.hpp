@@ -25,8 +25,8 @@ class World {
 public:
 	struct Config {
 		std::string name = "default";
-		// initial player position
-		glm::vec3 spawn = { 0.0f, 0.0f, 0.0f };
+		// chunk base where new players are spawned
+		glm::ivec3 spawn = { 0, 0, 0 };
 		// direction facing towards(!) the light
 		glm::vec3 light_direction = { -1.0f, -3.0f, -2.0f };
 		// fade out reaches 1/e (0.3679) at 1/fog_density,
@@ -100,7 +100,6 @@ private:
 	const BlockTypeRegistry &block_type;
 
 	ChunkStore chunks;
-	ChunkIndex &spawn_index;
 
 	std::list<Player> players;
 	std::list<Entity> entities;

@@ -145,8 +145,6 @@ World::World(const BlockTypeRegistry &types, const Config &config)
 : config(config)
 , block_type(types)
 , chunks(types)
-// TODO: set spawn base and extent from config
-, spawn_index(chunks.MakeIndex(Chunk::Pos(0, 0, 0), 3))
 , players()
 , entities()
 , light_direction(config.light_direction)
@@ -155,7 +153,7 @@ World::World(const BlockTypeRegistry &types, const Config &config)
 }
 
 World::~World() {
-	chunks.UnregisterIndex(spawn_index);
+
 }
 
 
@@ -169,7 +167,6 @@ Player *World::AddPlayer(const std::string &name) {
 	entity.Name(name);
 	entity.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	entity.WorldCollidable(true);
-	entity.Position(config.spawn);
 	ChunkIndex &index = chunks.MakeIndex(entity.ChunkCoords(), 6);
 	players.emplace_back(entity, index);
 	return &players.back();
@@ -188,7 +185,6 @@ Player *World::AddPlayer(const std::string &name, std::uint32_t id) {
 	entity->Name(name);
 	entity->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	entity->WorldCollidable(true);
-	entity->Position(config.spawn);
 	ChunkIndex &index = chunks.MakeIndex(entity->ChunkCoords(), 6);
 	players.emplace_back(*entity, index);
 	return &players.back();

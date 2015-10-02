@@ -99,5 +99,19 @@ entity/world collision
 
 	first draft of entity/world collision is implemented
 	it jitters and has some surprising behaviour
-	finding a spawn point which doesn't put entities in solids is
-	now a little more crucial. press N if you're in trouble
+
+spawning
+
+	need a way to find a suitable location to spawn new players in
+	I imagine a "random block" function of ChunkIndex could be nice
+	(also for use with the AI spawner)
+	also, finding a spawn position for a player must no fail. after a
+	certain number of tries, the world must change to safely accomodate
+	the player.
+	chunk generation could be adjusted to make a little more room near the
+	origin (since that's where the usual spawn point will be), but that's
+	not strictly necessary and might overcomplicate the generation
+	if all fails, the spawner has to modify the world
+	how much space has to be cleared and how to make sure the spawning
+	space connects to "open space" I don't know yet, it's all a little
+	fuzzy anyway
