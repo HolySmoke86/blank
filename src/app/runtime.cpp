@@ -135,7 +135,8 @@ Environment::Environment(Window &win, const Config &config)
 , audio()
 , viewport()
 , window(win)
-, keymap() {
+, keymap()
+, msg_state(*this) {
 	viewport.Clear();
 	window.Flip();
 	keymap.LoadDefault();
@@ -148,6 +149,12 @@ Environment::Environment(Window &win, const Config &config)
 		std::ifstream file(keys_path);
 		keymap.Load(file);
 	}
+}
+
+void Environment::ShowMessage(const char *msg) {
+	cout << msg << endl;
+	msg_state.SetMessage(msg);
+	state.Push(&msg_state);
 }
 
 

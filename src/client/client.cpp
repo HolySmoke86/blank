@@ -337,9 +337,8 @@ void MasterState::OnPacketLost(uint16_t id) {
 
 void MasterState::OnTimeout() {
 	if (client.GetConnection().Closed()) {
-		// TODO: push disconnected message
-		cout << "connection timed out" << endl;
 		Quit();
+		env.ShowMessage("connection timed out");
 	}
 }
 
@@ -367,20 +366,19 @@ void MasterState::On(const Packet::Join &pack) {
 }
 
 void MasterState::On(const Packet::Part &pack) {
+	Quit();
 	if (state) {
 		// kicked
-		cout << "kicked by server" << endl;
+		env.ShowMessage("kicked by server");
 	} else {
 		// join refused
-		cout << "login refused by server" << endl;
+		env.ShowMessage("login refused by server");
 	}
-	Quit();
 }
 
 void MasterState::On(const Packet::SpawnEntity &pack) {
 	if (!state) {
 		cout << "got entity spawn before world was created" << endl;
-		Quit();
 		return;
 	}
 	uint32_t entity_id;
@@ -401,7 +399,6 @@ void MasterState::On(const Packet::SpawnEntity &pack) {
 void MasterState::On(const Packet::DespawnEntity &pack) {
 	if (!state) {
 		cout << "got entity despawn before world was created" << endl;
-		Quit();
 		return;
 	}
 	uint32_t entity_id;
@@ -419,7 +416,6 @@ void MasterState::On(const Packet::DespawnEntity &pack) {
 void MasterState::On(const Packet::EntityUpdate &pack) {
 	if (!state) {
 		cout << "got entity update before world was created" << endl;
-		Quit();
 		return;
 	}
 
@@ -474,7 +470,6 @@ void MasterState::ClearEntity(uint32_t entity_id) {
 void MasterState::On(const Packet::PlayerCorrection &pack) {
 	if (!state) {
 		cout << "got player correction without a player :S" << endl;
-		Quit();
 		return;
 	}
 	uint16_t pack_seq;

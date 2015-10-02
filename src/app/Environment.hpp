@@ -3,6 +3,7 @@
 
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
+#include "MessageState.hpp"
 #include "StateControl.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
@@ -53,8 +54,12 @@ struct Environment
 
 	Keymap keymap;
 
+	MessageState msg_state;
+
 
 	Environment(Window &win, const Config &);
+
+	void ShowMessage(const char *);
 
 };
 
