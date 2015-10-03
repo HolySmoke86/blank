@@ -1,16 +1,17 @@
 #ifndef BLANK_WORLD_GENERATOR_HPP_
 #define BLANK_WORLD_GENERATOR_HPP_
 
-#include "Block.hpp"
 #include "../rand/SimplexNoise.hpp"
 #include "../rand/WorleyNoise.hpp"
 
 #include <cstdint>
-#include <vector>
+#include <glm/glm.hpp>
 
 
 namespace blank {
 
+class Block;
+class BlockTypeRegistry;
 class Chunk;
 
 class Generator {
@@ -18,28 +19,43 @@ class Generator {
 public:
 	struct Config {
 		std::uint64_t seed = 0;
-		float stretch = 64.0f;
-		float solid_threshold = 0.5f;
+		struct NoiseParam {
+			std::uint64_t seed_mask;
+			int octaves;
+			float persistence;
+			float frequency;
+			float amplitude;
+			float growth;
+		};
+		NoiseParam solidity = { 0xA85033F6BCBDD110, 3, 0.5f, 1.0f/64.0f, 2.0f, 2.0f };
+		NoiseParam humidity = { 0x3A463FB24B04A901, 3, 0.5f, 1.0f/256.0f, 2.0f, 2.0f };
+		NoiseParam temperature = { 0x2530BA6C6134A9FB, 3, 0.5f, 1.0f/512.0f, 2.0f, 2.0f };
+		NoiseParam richness = { 0x95A179F180103446, 3, 0.5f, 1.0f/128.0f, 2.0f, 2.0f };
+		NoiseParam randomness = { 0x074453EEE1496390, 3, 0.5f, 1.0f/16.0f, 2.0f, 2.0f };
 	};
 
-	explicit Generator(const Config &) noexcept;
+	explicit Generator(const Config &, const BlockTypeRegistry &) noexcept;
+
+	// scan types for generation
+	void Scan();
 
 	void operator ()(Chunk &) const noexcept;
 
-	void Space(Block::Type t) noexcept { space = t; }
-	void Light(Block::Type t) noexcept { light = t; }
-	void Solids(const std::vector<Block::Type> &s) { solids = s; }
+private:
+	Block Generate(const glm::vec3 &position) const noexcept;
+	static float GetValue(
+		const SimplexNoise &,
+		const glm::vec3 &,
+		const Config::NoiseParam &) noexcept;
 
 private:
-	SimplexNoise solidNoise;
-	WorleyNoise typeNoise;
-
-	float stretch;
-	float solid_threshold;
-
-	Block::Type space;
-	Block::Type light;
-	std::vector<Block::Type> solids;
+	const Config &config;
+	const BlockTypeRegistry &types;
+	SimplexNoise solidity_noise;
+	SimplexNoise humidity_noise;
+	SimplexNoise temperature_noise;
+	SimplexNoise richness_noise;
+	SimplexNoise random_noise;
 
 };
 

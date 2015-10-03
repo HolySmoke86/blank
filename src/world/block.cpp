@@ -81,6 +81,20 @@ BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
 , block_light(false)
 , collision(false)
 , collide_block(false)
+, generate(false)
+, min_solidity(0.5f)
+, mid_solidity(0.75f)
+, max_solidity(1.0f)
+, min_humidity(-1.0f)
+, mid_humidity(0.0f)
+, max_humidity(1.0f)
+, min_temperature(-1.0f)
+, mid_temperature(0.0f)
+, max_temperature(1.0f)
+, min_richness(-1.0f)
+, mid_richness(0.0f)
+, max_richness(1.0f)
+, commonness(1.0f)
 , fill({ false, false, false, false, false, false }) {
 
 }

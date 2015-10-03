@@ -349,6 +349,34 @@ void AssetLoader::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry 
 				type.collision = in.GetBool();
 			} else if (name == "collide_block") {
 				type.collide_block = in.GetBool();
+			} else if (name == "generate") {
+				type.generate = in.GetBool();
+			} else if (name == "min_solidity") {
+				type.min_solidity = in.GetFloat();
+			} else if (name == "mid_solidity") {
+				type.mid_solidity = in.GetFloat();
+			} else if (name == "max_solidity") {
+				type.max_solidity = in.GetFloat();
+			} else if (name == "min_humidity") {
+				type.min_humidity = in.GetFloat();
+			} else if (name == "mid_humidity") {
+				type.mid_humidity = in.GetFloat();
+			} else if (name == "max_humidity") {
+				type.max_humidity = in.GetFloat();
+			} else if (name == "min_temperature") {
+				type.min_temperature = in.GetFloat();
+			} else if (name == "mid_temperature") {
+				type.mid_temperature = in.GetFloat();
+			} else if (name == "max_temperature") {
+				type.max_temperature = in.GetFloat();
+			} else if (name == "min_richness") {
+				type.min_richness = in.GetFloat();
+			} else if (name == "mid_richness") {
+				type.mid_richness = in.GetFloat();
+			} else if (name == "max_richness") {
+				type.max_richness = in.GetFloat();
+			} else if (name == "commonness") {
+				type.commonness = in.GetFloat();
 			} else if (name == "shape") {
 				in.ReadIdentifier(shape_name);
 				if (shape_name == "block") {

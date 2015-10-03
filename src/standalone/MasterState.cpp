@@ -30,7 +30,7 @@ MasterState::MasterState(
 , manip(env, player.GetEntity())
 , input(world, player, manip)
 , interface(config, env.keymap, input, *this)
-, generator(gc)
+, generator(gc, block_types)
 , chunk_loader(world.Chunks(), generator, save)
 , chunk_renderer(player.GetChunks())
 , skeletons()
@@ -41,6 +41,7 @@ MasterState::MasterState(
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	interface.SetInventorySlots(block_types.Size() - 1);
+	generator.Scan();
 	chunk_renderer.LoadTextures(env.loader, tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
 	skeletons.Load();

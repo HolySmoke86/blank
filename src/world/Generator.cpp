@@ -1,5 +1,7 @@
 #include "Generator.hpp"
 
+#include "BlockType.hpp"
+#include "BlockTypeRegistry.hpp"
 #include "Chunk.hpp"
 #include "../rand/OctaveNoise.hpp"
 
@@ -8,18 +10,37 @@
 
 namespace blank {
 
-Generator::Generator(const Config &config) noexcept
-: solidNoise(config.seed)
-, typeNoise(config.seed)
-, stretch(1.0f/config.stretch)
-, solid_threshold(config.solid_threshold)
-// TODO: stable dynamic generator configuration
-, space(0)
-, light(13)
-, solids({ 1, 4, 7, 10 }) {
+namespace {
+
+struct Candidate {
+	const BlockType *type;
+	float threshold;
+	Candidate(const BlockType *type, float threshold)
+	: type(type), threshold(threshold) { }
+};
+
+std::vector<Candidate> candidates;
 
 }
 
+Generator::Generator(const Config &config, const BlockTypeRegistry &types) noexcept
+: config(config)
+, types(types)
+, solidity_noise(config.seed ^ config.solidity.seed_mask)
+, humidity_noise(config.seed ^ config.humidity.seed_mask)
+, temperature_noise(config.seed ^ config.temperature.seed_mask)
+, richness_noise(config.seed ^ config.richness.seed_mask)
+, random_noise(config.seed ^ config.randomness.seed_mask) {
+
+}
+
+void Generator::Scan() {
+	size_t count = 0;
+	for (size_t i = 0, end = types.Size(); i < end; ++i) {
+		if (types[i].generate) ++count;
+	}
+	candidates.reserve(count);
+}
 
 void Generator::operator ()(Chunk &chunk) const noexcept {
 	Chunk::Pos pos(chunk.Position());
@@ -28,26 +49,65 @@ void Generator::operator ()(Chunk &chunk) const noexcept {
 		for (int y = 0; y < Chunk::height; ++y) {
 			for (int x = 0; x < Chunk::width; ++x) {
 				Block::Pos block_pos(x, y, z);
-				glm::vec3 gen_pos = (coords + block_pos) * stretch;
-				float val = OctaveNoise(solidNoise, coords + block_pos, 3, 0.5f, stretch, 2.0f);
-				if (val > solid_threshold) {
-					int type_val = int((typeNoise(gen_pos) + 1.0f) * solids.size()) % solids.size();
-					chunk.SetBlock(block_pos, Block(solids[type_val]));
-				} else {
-					chunk.SetBlock(block_pos, Block(space));
-				}
+				chunk.SetBlock(block_pos, Generate(coords + block_pos));
 			}
 		}
 	}
-	unsigned int random = 263167 * pos.x + 2097593 * pos.y + 426389 * pos.z;
-	for (int index = 0; index < Chunk::size; ++index) {
-		if (chunk.IsSurface(index)) {
-			random = random * 666649 + 7778777;
-			if ((random % 32) == 0) {
-				chunk.SetBlock(index, Block(light));
-			}
+}
+
+Block Generator::Generate(const glm::vec3 &pos) const noexcept {
+	float solidity = GetValue(solidity_noise, pos, config.solidity);
+	float humidity = GetValue(humidity_noise, pos, config.humidity);
+	float temperature = GetValue(temperature_noise, pos, config.temperature);
+	float richness = GetValue(richness_noise, pos, config.richness);
+
+	candidates.clear();
+	float total = 0.0f;
+	for (size_t i = 0, end = types.Size(); i < end; ++i) {
+		const BlockType &type = types[i];
+		if (!type.generate) continue;
+		if (solidity < type.min_solidity || solidity > type.max_solidity) continue;
+		if (humidity < type.min_humidity || humidity > type.max_humidity) continue;
+		if (temperature < type.min_temperature || temperature > type.max_temperature) continue;
+		if (richness < type.min_richness || richness > type.max_richness) continue;
+		float solidity_match = 4.0f - ((solidity - type.mid_solidity) * (solidity - type.mid_solidity));
+		float humidity_match = 4.0f - ((humidity - type.mid_humidity) * (humidity - type.mid_humidity));
+		float temperature_match = 4.0f - ((temperature - type.mid_temperature) * (temperature - type.mid_temperature));
+		float richness_match = 4.0f - ((richness - type.mid_richness) * (richness - type.mid_richness));
+		float chance = (solidity_match + humidity_match + temperature_match + richness_match) * type.commonness;
+		total += chance;
+		candidates.emplace_back(&type, total);
+	}
+	if (candidates.empty()) {
+		return Block(0);
+	}
+	float random = GetValue(random_noise, pos, config.randomness);
+	if (random < 0.0f) random += 1.0f;
+	float value = random * total;
+	// TODO: change to binary search
+	for (const Candidate &cand : candidates) {
+		if (value < cand.threshold) {
+			return Block(cand.type->id);
 		}
 	}
+	// theoretically, this should never happen
+	return Block(candidates.back().type->id);
+}
+
+float Generator::GetValue(
+	const SimplexNoise &noise,
+	const glm::vec3 &pos,
+	const Config::NoiseParam &conf
+) noexcept {
+	return OctaveNoise(
+		noise,
+		pos,
+		conf.octaves,
+		conf.persistence,
+		conf.frequency,
+		conf.amplitude,
+		conf.growth
+	);
 }
 
 }
