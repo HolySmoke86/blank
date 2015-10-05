@@ -4,6 +4,6 @@ using namespace blank;
 
 int main(int argc, char *argv[]) {
 	Runtime rt;
-	rt.ReadArgs(argc, argv);
+	rt.Initialize(argc, argv);
 	return rt.Execute();
 }

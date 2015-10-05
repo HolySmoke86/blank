@@ -106,10 +106,10 @@ void Config::Save(std::ostream &out) {
 	out << "player.name = \"" << player.name << "\";" << std::endl;
 	out << "video.dblbuf = " << (video.dblbuf ? "on" : "off") << ';' << std::endl;
 	out << "video.vsync = " << (video.vsync ? "on" : "off") << ';' << std::endl;
-	out << "video.msaa = " << net.port << ';' << std::endl;
+	out << "video.msaa = " << video.msaa << ';' << std::endl;
 	out << "video.hud = " << (video.hud ? "on" : "off") << ';' << std::endl;
 	out << "video.world = " << (video.world ? "on" : "off") << ';' << std::endl;
-	out << "video.debug = " << (video.world ? "on" : "off") << ';' << std::endl;
+	out << "video.debug = " << (video.debug ? "on" : "off") << ';' << std::endl;
 }
 
 
@@ -168,6 +168,13 @@ Runtime::Runtime() noexcept
 
 }
 
+
+void Runtime::Initialize(int argc, const char *const *argv) {
+	ReadArgs(argc, argv);
+	if (mode == ERROR) return;
+	ReadPreferences();
+	ReadArgs(argc, argv);
+}
 
 void Runtime::ReadArgs(int argc, const char *const *argv) {
 	if (argc <= 0) return;
@@ -324,9 +331,20 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 
 	if (error) {
 		mode = ERROR;
-		return;
+	} else if (n > 0) {
+		if (t > 0) {
+			mode = FIXED_FRAME_LIMIT;
+		} else {
+			mode = FRAME_LIMIT;
+		}
+	} else if (t > 0) {
+		mode = TIME_LIMIT;
+	} else {
+		mode = NORMAL;
 	}
+}
 
+void Runtime::ReadPreferences() {
 	if (config.env.asset_path.empty()) {
 		config.env.asset_path = default_asset_path();
 	} else if (
@@ -344,16 +362,14 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 		config.env.save_path += '/';
 	}
 
-	if (n > 0) {
-		if (t > 0) {
-			mode = FIXED_FRAME_LIMIT;
-		} else {
-			mode = FRAME_LIMIT;
-		}
-	} else if (t > 0) {
-		mode = TIME_LIMIT;
+	string prefs_path = config.env.save_path + "prefs.conf";
+	if (is_file(prefs_path)) {
+		ifstream file(prefs_path);
+		config.game.Load(file);
 	} else {
-		mode = NORMAL;
+		make_dirs(config.env.save_path);
+		ofstream file(prefs_path);
+		config.game.Save(file);
 	}
 }
 

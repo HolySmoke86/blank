@@ -48,11 +48,14 @@ public:
 
 	Runtime() noexcept;
 
-	void ReadArgs(int argc, const char *const *argv);
+	void Initialize(int argc, const char *const *argv);
 
 	int Execute();
 
 private:
+	void ReadArgs(int argc, const char *const *argv);
+	void ReadPreferences();
+
 	void RunStandalone();
 	void RunServer();
 	void RunClient();
