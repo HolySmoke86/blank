@@ -174,7 +174,7 @@ void Tokenizer::ReadIdentifier() {
 
 	istream::char_type c;
 	while (in.get(c)) {
-		if (isalnum(c) || c == '_') {
+		if (isalnum(c) || c == '_' || c == '.') {
 			current.value += c;
 		} else {
 			in.putback(c);
