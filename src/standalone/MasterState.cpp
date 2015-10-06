@@ -34,7 +34,7 @@ MasterState::MasterState(
 , chunk_loader(world.Chunks(), generator, save)
 , chunk_renderer(player.GetChunks())
 , skeletons()
-, spawner(world, skeletons, gc.seed)
+, spawner(world, skeletons, env.rng)
 , sky(env.loader.LoadCubeMap("skybox"))
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save) {
@@ -45,7 +45,7 @@ MasterState::MasterState(
 	chunk_renderer.LoadTextures(env.loader, tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
 	skeletons.Load();
-	spawner.LimitSkeletons(0, skeletons.Size());
+	spawner.LimitSkeletons(0, skeletons.size());
 	if (save.Exists(player)) {
 		save.Read(player);
 	} else {

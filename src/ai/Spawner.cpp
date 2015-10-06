@@ -4,6 +4,7 @@
 #include "RandomWalk.hpp"
 #include "../model/CompositeModel.hpp"
 #include "../model/Skeletons.hpp"
+#include "../rand/GaloisLFSR.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/ChunkIndex.hpp"
@@ -17,18 +18,18 @@ using namespace std;
 
 namespace blank {
 
-Spawner::Spawner(World &world, Skeletons &skeletons, uint64_t seed)
+Spawner::Spawner(World &world, Skeletons &skeletons, GaloisLFSR &rand)
 : world(world)
 , skeletons(skeletons)
 , controllers()
-, random(seed)
+, random(rand)
 , timer(64)
 , despawn_range(128 * 128)
 , spawn_distance(16 * 16)
 , max_entities(16)
 , chunk_range(4)
 , skeletons_offset(0)
-, skeletons_length(skeletons.Size()) {
+, skeletons_length(skeletons.size()) {
 	timer.Start();
 }
 
@@ -40,7 +41,7 @@ Spawner::~Spawner() {
 
 
 void Spawner::LimitSkeletons(size_t begin, size_t end) {
-	if (begin >= skeletons.Size() || end > skeletons.Size() || begin >= end) {
+	if (begin >= skeletons.size() || end > skeletons.size() || begin >= end) {
 		cout << "warning, skeleton limit out of bounds or invalid range given" << endl;
 	} else {
 		skeletons_offset = begin;
@@ -101,15 +102,7 @@ void Spawner::TrySpawn() {
 	}
 	const Player &player = *i;
 
-	int index = random.Next<unsigned int>() % player.GetChunks().TotalChunks();
-
-	glm::ivec3 chunk(player.GetChunks().PositionOf(index));
-
-	glm::ivec3 pos(
-		random.Next<unsigned char>() % Chunk::width,
-		random.Next<unsigned char>() % Chunk::height,
-		random.Next<unsigned char>() % Chunk::depth
-	);
+	BlockLookup spawn_block(player.GetChunks().RandomBlock(random));
 
 	// distance check
 	//glm::vec3 diff(glm::vec3(chunk * Chunk::Extent() - pos) + player.entity->Position());
@@ -119,7 +112,6 @@ void Spawner::TrySpawn() {
 	//}
 
 	// check if the spawn block and the one above it are loaded and inhabitable
-	BlockLookup spawn_block(player.GetChunks()[index], pos);
 	if (!spawn_block || spawn_block.GetType().collide_block) {
 		return;
 	}
@@ -129,7 +121,7 @@ void Spawner::TrySpawn() {
 		return;
 	}
 
-	Spawn(player.GetEntity(), chunk, glm::vec3(pos) + glm::vec3(0.5f));
+	Spawn(player.GetEntity(), spawn_block.GetChunk().Position(), spawn_block.GetBlockCoords());
 }
 
 void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 &pos) {

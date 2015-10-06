@@ -48,6 +48,15 @@ public:
 		return (*this)(next);
 	}
 
+	template<class Container>
+	typename Container::reference From(Container &c) {
+		return c[Next<typename Container::size_type>() % c.size()];
+	}
+	template<class Container>
+	typename Container::const_reference From(const Container &c) {
+		return c[Next<typename Container::size_type>() % c.size()];
+	}
+
 private:
 	std::uint64_t state;
 	// bits 64, 63, 61, and 60 set to 1 (counting from 1 lo to hi)

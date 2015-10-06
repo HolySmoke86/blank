@@ -24,14 +24,14 @@ ServerState::ServerState(
 , generator(gc, block_types)
 , chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
-, spawner(world, skeletons, gc.seed)
+, spawner(world, skeletons, env.rng)
 , server(config.net, world, ws)
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	generator.Scan();
 	skeletons.LoadHeadless();
-	spawner.LimitSkeletons(1, skeletons.Size());
+	spawner.LimitSkeletons(1, skeletons.size());
 	server.SetPlayerModel(skeletons[0]);
 
 	loop_timer.Start();

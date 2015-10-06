@@ -1,7 +1,9 @@
 #ifndef BLANK_WORLD_CHUNKINDEX_HPP_
 #define BLANK_WORLD_CHUNKINDEX_HPP_
 
+#include "BlockLookup.hpp"
 #include "Chunk.hpp"
+#include "../rand/GaloisLFSR.hpp"
 
 #include <vector>
 
@@ -29,6 +31,13 @@ public:
 	const Chunk *Get(const Chunk::Pos &) const noexcept;
 	Chunk *operator [](int i) noexcept { return chunks[i]; }
 	const Chunk *operator [](int i) const noexcept { return chunks[i]; }
+
+	Chunk *RandomChunk(GaloisLFSR &rand) {
+		return rand.From(chunks);
+	}
+	BlockLookup RandomBlock(GaloisLFSR &rand) {
+		return BlockLookup(RandomChunk(rand), Chunk::ToPos(rand.Next<unsigned int>() % Chunk::size));
+	}
 
 	int Extent() const noexcept { return extent; }
 

@@ -14,16 +14,21 @@ class EntityModel;
 class Skeletons {
 
 public:
+	using size_type = std::size_t;
+	using reference = CompositeModel &;
+	using const_reference = const CompositeModel &;
+
+public:
 	Skeletons();
 	~Skeletons();
 
 	void LoadHeadless();
 	void Load();
 
-	std::size_t Size() const noexcept { return skeletons.size(); }
+	size_type size() const noexcept { return skeletons.size(); }
 
-	CompositeModel &operator[](std::size_t i) noexcept { return *skeletons[i]; }
-	const CompositeModel &operator[](std::size_t i) const noexcept { return *skeletons[i]; }
+	reference operator[](size_type i) noexcept { return *skeletons[i]; }
+	const_reference operator[](size_type i) const noexcept { return *skeletons[i]; }
 
 	CompositeModel *ByID(std::uint16_t) noexcept;
 	const CompositeModel *ByID(std::uint16_t) const noexcept;

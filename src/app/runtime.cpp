@@ -12,6 +12,7 @@
 
 #include <cctype>
 #include <cstdlib>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <SDL.h>
@@ -117,8 +118,17 @@ HeadlessEnvironment::HeadlessEnvironment(const Config &config)
 : config(config)
 , loader(config.asset_path)
 , counter()
-, state() {
-
+, state()
+, rng(
+#ifdef BLANK_PROFILING
+0
+#else
+std::time(nullptr)
+#endif
+){
+	for (int i = 0; i < 4; ++i) {
+		rng.Next<int>();
+	}
 }
 
 string HeadlessEnvironment::Config::GetWorldPath(const string &world_name) const {

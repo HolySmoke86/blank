@@ -7,6 +7,7 @@
 #include "StateControl.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
+#include "../rand/GaloisLFSR.hpp"
 #include "../ui/Keymap.hpp"
 
 #include <string>
@@ -36,6 +37,8 @@ struct HeadlessEnvironment {
 	FrameCounter counter;
 
 	StateControl state;
+
+	GaloisLFSR rng;
 
 
 	explicit HeadlessEnvironment(const Config &);

@@ -2,7 +2,6 @@
 #define BLANK_AI_SPAWNER_HPP_
 
 #include "../app/IntervalTimer.hpp"
-#include "../rand/GaloisLFSR.hpp"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -13,13 +12,14 @@ namespace blank {
 class CompositeModel;
 class Controller;
 class Entity;
+class GaloisLFSR;
 class Skeletons;
 class World;
 
 class Spawner {
 
 public:
-	Spawner(World &, Skeletons &, std::uint64_t seed);
+	Spawner(World &, Skeletons &, GaloisLFSR &);
 	~Spawner();
 
 	void LimitSkeletons(std::size_t begin, std::size_t end);
@@ -38,7 +38,7 @@ private:
 	Skeletons &skeletons;
 	std::vector<Controller *> controllers;
 
-	GaloisLFSR random;
+	GaloisLFSR &random;
 
 	IntervalTimer timer;
 	float despawn_range;
