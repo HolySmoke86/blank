@@ -45,8 +45,7 @@ void PacketTest::testSizes() {
 }
 
 void PacketTest::testControl() {
-	Packet::TControl ctrl;
-	ctrl.ack = 10;
+	Packet::TControl ctrl{ 0, 10, 0 };
 
 	CPPUNIT_ASSERT_MESSAGE(
 		"TControl should ack the packet in the ack field",
