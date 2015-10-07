@@ -28,6 +28,50 @@ SimplexNoise::SimplexNoise(std::uint64_t seed) noexcept
 	{  0.0f, -1.0f,  1.0f },
 	{  0.0f,  1.0f, -1.0f },
 	{  0.0f, -1.0f, -1.0f },
+})
+, second_ints({
+	             // x>y x>z y>z
+	{ 0, 0, 1 }, //  0   0   0  ZYX
+	{ 0, 1, 0 }, //  0   0   1  YZX
+	{ 0, 0, 1 }, //  0   1   0  illogical, but ZYX
+	{ 0, 1, 0 }, //  0   1   1  YXZ
+	{ 0, 0, 1 }, //  1   0   0  ZXY
+	{ 1, 0, 0 }, //  1   0   1  illogical, but XYZ
+	{ 1, 0, 0 }, //  1   1   0  XZY
+	{ 1, 0, 0 }, //  1   1   1  XYZ
+})
+, third_ints({
+	             // x>y x>z y>z
+	{ 0, 1, 1 }, //  0   0   0  ZYX
+	{ 0, 1, 1 }, //  0   0   1  YZX
+	{ 0, 1, 1 }, //  0   1   0  illogical, but ZYX
+	{ 1, 1, 0 }, //  0   1   1  YXZ
+	{ 1, 0, 1 }, //  1   0   0  ZXY
+	{ 1, 1, 0 }, //  1   0   1  illogical, but XYZ
+	{ 1, 0, 1 }, //  1   1   0  XZY
+	{ 1, 1, 0 }, //  1   1   1  XYZ
+})
+, second_floats({
+	                      // x>y x>z y>z
+	{ 0.0f, 0.0f, 1.0f }, //  0   0   0  ZYX
+	{ 0.0f, 1.0f, 0.0f }, //  0   0   1  YZX
+	{ 0.0f, 0.0f, 1.0f }, //  0   1   0  illogical, but ZYX
+	{ 0.0f, 1.0f, 0.0f }, //  0   1   1  YXZ
+	{ 0.0f, 0.0f, 1.0f }, //  1   0   0  ZXY
+	{ 1.0f, 0.0f, 0.0f }, //  1   0   1  illogical, but XYZ
+	{ 1.0f, 0.0f, 0.0f }, //  1   1   0  XZY
+	{ 1.0f, 0.0f, 0.0f }, //  1   1   1  XYZ
+})
+, third_floats({
+	                      // x>y x>z y>z
+	{ 0.0f, 1.0f, 1.0f }, //  0   0   0  ZYX
+	{ 0.0f, 1.0f, 1.0f }, //  0   0   1  YZX
+	{ 0.0f, 1.0f, 1.0f }, //  0   1   0  illogical, but ZYX
+	{ 1.0f, 1.0f, 0.0f }, //  0   1   1  YXZ
+	{ 1.0f, 0.0f, 1.0f }, //  1   0   0  ZXY
+	{ 1.0f, 1.0f, 0.0f }, //  1   0   1  illogical, but XYZ
+	{ 1.0f, 0.0f, 1.0f }, //  1   1   0  XZY
+	{ 1.0f, 1.0f, 0.0f }, //  1   1   1  XYZ
 }) {
 	GaloisLFSR random(seed ^ 0x0123456789ACBDEF);
 	unsigned char value;
@@ -50,34 +94,20 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const noexcept {
 	glm::vec3 unskewed(skewed - tr);
 	glm::vec3 relative(in - unskewed);
 
-	glm::vec3 second, third;
+	bool x_ge_y = relative.x >= relative.y;
+	bool x_ge_z = relative.x >= relative.z;
+	bool y_ge_z = relative.y >= relative.z;
+	unsigned int st = (x_ge_y << 2) | (x_ge_z << 1) | y_ge_z;
 
-	if (relative.x >= relative.y) {
-		if (relative.y >= relative.z) {
-			second = { 1, 0, 0 };
-			third = { 1, 1, 0 };
-		} else if (relative.x >= relative.z) {
-			second = { 1, 0, 0 };
-			third = { 1, 0, 1 };
-		} else {
-			second = { 0, 0, 1 };
-			third = { 1, 0, 1 };
-		}
-	} else if (relative.y < relative.z) {
-		second = { 0, 0, 1 };
-		third = { 0, 1, 1 };
-	} else if (relative.x < relative.z) {
-		second = { 0, 1, 0 };
-		third = { 0, 1, 1 };
-	} else {
-		second = { 0, 1, 0 };
-		third = { 1, 1, 0 };
-	}
+	glm::ivec3 second_int(second_ints[st]);
+	glm::ivec3 third_int(third_ints[st]);
+	glm::vec3 second_float(second_floats[st]);
+	glm::vec3 third_float(third_floats[st]);
 
 	glm::vec3 offset[4] = {
 		in - unskewed,
-		relative - second + one_sixth,
-		relative - third + one_third,
+		relative - second_float + one_sixth,
+		relative - third_float + one_third,
 		relative - 0.5f,
 	};
 
@@ -89,37 +119,31 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const noexcept {
 
 	float n = 0.0f;
 
+	// I know 0.6 is wrong, but for some reason it looks better than 0.5
+
 	// 0
-	float t = 0.6f - dot(offset[0], offset[0]);
-	if (t > 0.0f) {
-		t *= t;
-		int corner = Perm12(index[0] + Perm(index[1] + Perm(index[2])));
-		n += t * t * dot(Grad(corner), offset[0]);
-	}
+	float t = glm::clamp(0.6f - dot(offset[0], offset[0]), 0.0f, 1.0f);
+	t *= t;
+	int corner = Perm12(index[0] + Perm(index[1] + Perm(index[2])));
+	n += t * t * dot(Grad(corner), offset[0]);
 
 	// 1
-	t = 0.6f - dot(offset[1], offset[1]);
-	if (t > 0.0f) {
-		t *= t;
-		int corner = Perm12(index[0] + int(second.x) + Perm(index[1] + int(second.y) + Perm(index[2] + int(second.z))));
-		n += t * t * dot(Grad(corner), offset[1]);
-	}
+	t = glm::clamp(0.6f - dot(offset[1], offset[1]), 0.0f, 1.0f);
+	t *= t;
+	corner = Perm12(index[0] + second_int.x + Perm(index[1] + second_int.y + Perm(index[2] + second_int.z)));
+	n += t * t * dot(Grad(corner), offset[1]);
 
 	// 2
-	t = 0.6f - dot(offset[2], offset[2]);
-	if (t > 0.0f) {
-		t *= t;
-		int corner = Perm12(index[0] + int(third.x) + Perm(index[1] + int(third.y) + Perm(index[2] + int(third.z))));
-		n += t * t * dot(Grad(corner), offset[2]);
-	}
+	t = glm::clamp(0.6f - dot(offset[2], offset[2]), 0.0f, 1.0f);
+	t *= t;
+	corner = Perm12(index[0] + third_int.x + Perm(index[1] + third_int.y + Perm(index[2] + third_int.z)));
+	n += t * t * dot(Grad(corner), offset[2]);
 
 	// 3
-	t = 0.6f - dot(offset[3], offset[3]);
-	if (t > 0.0f) {
-		t *= t;
-		int corner = Perm12(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1)));
-		n += t * t * dot(Grad(corner), offset[3]);
-	}
+	t = glm::clamp(0.6f - dot(offset[3], offset[3]), 0.0f, 1.0f);
+	t *= t;
+	corner = Perm12(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1)));
+	n += t * t * dot(Grad(corner), offset[3]);
 
 	return 32.0f * n;
 }

@@ -7,7 +7,6 @@
 
 namespace blank {
 
-/// (3D only) adaptation of Stefan Gustavson's SimplexNoise java class
 class SimplexNoise {
 
 public:
@@ -24,6 +23,10 @@ private:
 	int perm[512];
 	int perm12[512];
 	glm::vec3 grad[12];
+	glm::ivec3 second_ints[8];
+	glm::ivec3 third_ints[8];
+	glm::vec3 second_floats[8];
+	glm::vec3 third_floats[8];
 
 };
 

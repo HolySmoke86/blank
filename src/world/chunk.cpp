@@ -32,6 +32,8 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 , neighbor{0}
 , blocks{}
 , light{0}
+, generated(false)
+, lighted(false)
 , position(0, 0, 0)
 , ref_count(0)
 , dirty_model(false)
@@ -159,7 +161,7 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	blocks[index] = block;
 	Invalidate();
 
-	if (&old_type == &new_type) return;
+	if (!lighted || &old_type == &new_type) return;
 
 	if (new_type.luminosity > old_type.luminosity) {
 		// light added
@@ -200,104 +202,27 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	}
 }
 
-namespace {
-
-// propagate light from a's edge to b
-void edge_light(
-	Chunk &a, const Chunk::Pos &a_pos,
-	Chunk &b, const Chunk::Pos &b_pos
-) noexcept {
-	if (a.GetLight(a_pos) > 1) {
-		const BlockType &b_type = b.Type(Chunk::ToIndex(b_pos));
-		if (!b_type.block_light) {
-			light_queue.emplace(&a, a_pos);
-		}
-		if (b_type.visible) {
-			b.Invalidate();
+void Chunk::ScanLights() {
+	int idx = 0;
+	Pos pos(0, 0, 0);
+	for (; pos.z < depth; ++pos.z) {
+		for (pos.y = 0; pos.y < height; ++pos.y) {
+			for (pos.x = 0; pos.x < width; ++pos.x, ++idx) {
+				const BlockType &type = Type(blocks[idx]);
+				if (type.luminosity) {
+					SetLight(idx, type.luminosity);
+					light_queue.emplace(this, pos);
+				}
+			}
 		}
 	}
-}
-
+	work_light();
+	lighted = true;
 }
 
 void Chunk::SetNeighbor(Block::Face face, Chunk &other) noexcept {
 	neighbor[face] = &other;
 	other.neighbor[Block::Opposite(face)] = this;
-
-	switch (face) {
-
-		default:
-			// error
-			break;
-
-		case Block::FACE_LEFT:
-			for (int z = 0; z < depth; ++z) {
-				for (int y = 0; y < height; ++y) {
-					Pos my_pos(0, y, z);
-					Pos other_pos(width - 1, y, z);
-					edge_light(*this, my_pos, other, other_pos);
-					edge_light(other, other_pos, *this, my_pos);
-				}
-			}
-			break;
-
-		case Block::FACE_RIGHT:
-			for (int z = 0; z < depth; ++z) {
-				for (int y = 0; y < height; ++y) {
-					Pos my_pos(width - 1, y, z);
-					Pos other_pos(0, y, z);
-					edge_light(*this, my_pos, other, other_pos);
-					edge_light(other, other_pos, *this, my_pos);
-				}
-			}
-			break;
-
-		case Block::FACE_DOWN:
-			for (int z = 0; z < depth; ++z) {
-				for (int x = 0; x < width; ++x) {
-					Pos my_pos(x, 0, z);
-					Pos other_pos(x, height - 1, z);
-					edge_light(*this, my_pos, other, other_pos);
-					edge_light(other, other_pos, *this, my_pos);
-				}
-			}
-			break;
-
-		case Block::FACE_UP:
-			for (int z = 0; z < depth; ++z) {
-				for (int x = 0; x < width; ++x) {
-					Pos my_pos(x, height - 1, z);
-					Pos other_pos(x, 0, z);
-					edge_light(*this, my_pos, other, other_pos);
-					edge_light(other, other_pos, *this, my_pos);
-				}
-			}
-			break;
-
-		case Block::FACE_BACK:
-			for (int y = 0; y < height; ++y) {
-				for (int x = 0; x < width; ++x) {
-					Pos my_pos(x, y, 0);
-					Pos other_pos(x, y, depth - 1);
-					edge_light(*this, my_pos, other, other_pos);
-					edge_light(other, other_pos, *this, my_pos);
-				}
-			}
-			break;
-
-		case Block::FACE_FRONT:
-			for (int y = 0; y < height; ++y) {
-				for (int x = 0; x < width; ++x) {
-					Pos my_pos(x, y, depth - 1);
-					Pos other_pos(x, y, 0);
-					edge_light(*this, my_pos, other, other_pos);
-					edge_light(other, other_pos, *this, my_pos);
-				}
-			}
-			break;
-
-	}
-	work_light();
 }
 
 void Chunk::Unlink() noexcept {
@@ -680,13 +605,35 @@ bool ChunkLoader::LoadOne() {
 		return false;
 	}
 
+	bool generated = false;
 	if (save.Exists(pos)) {
 		save.Read(*chunk);
-		return false;
 	} else {
 		gen(*chunk);
-		return true;
+		generated = true;
 	}
+
+	ChunkIndex *index = store.ClosestIndex(pos);
+	if (!index) {
+		return generated;
+	}
+
+	Chunk::Pos begin(pos - Chunk::Pos(1));
+	Chunk::Pos end(pos + Chunk::Pos(2));
+	for (Chunk::Pos iter(begin); iter.z < end.z; ++iter.z) {
+		for (iter.y = begin.y; iter.y < end.y; ++iter.y) {
+			for (iter.x = begin.x; iter.x < end.x; ++iter.x) {
+				if (index->IsBorder(iter)) continue;
+				Chunk *light_chunk = index->Get(iter);
+				if (!light_chunk || light_chunk->Lighted()) continue;
+				if (index->HasAllSurrounding(iter)) {
+					light_chunk->ScanLights();
+				}
+			}
+		}
+	}
+
+	return generated;
 }
 
 void ChunkLoader::LoadN(std::size_t n) {
@@ -766,7 +713,28 @@ ChunkIndex::~ChunkIndex() {
 }
 
 bool ChunkIndex::InRange(const Chunk::Pos &pos) const noexcept {
-	return manhattan_radius(pos - base) <= extent;
+	return Distance(pos) <= extent;
+}
+
+bool ChunkIndex::IsBorder(const Chunk::Pos &pos) const noexcept {
+	return Distance(pos) == extent;
+}
+
+int ChunkIndex::Distance(const Chunk::Pos &pos) const noexcept {
+	return manhattan_radius(pos - base);
+}
+
+bool ChunkIndex::HasAllSurrounding(const Chunk::Pos &pos) const noexcept {
+	Chunk::Pos begin(pos - Chunk::Pos(1));
+	Chunk::Pos end(pos + Chunk::Pos(2));
+	for (Chunk::Pos iter(begin); iter.z < end.z; ++iter.z) {
+		for (iter.y = begin.y; iter.y < end.y; ++iter.y) {
+			for (iter.x = begin.x; iter.x < end.x; ++iter.x) {
+				if (!Get(iter)) return false;
+			}
+		}
+	}
+	return true;
 }
 
 int ChunkIndex::IndexOf(const Chunk::Pos &pos) const noexcept {
@@ -960,6 +928,21 @@ void ChunkStore::UnregisterIndex(ChunkIndex &index) {
 			++i;
 		}
 	}
+}
+
+ChunkIndex *ChunkStore::ClosestIndex(const Chunk::Pos &pos) {
+	ChunkIndex *closest_index = nullptr;
+	int closest_distance = std::numeric_limits<int>::max();
+
+	for (ChunkIndex &index : indices) {
+		int distance = index.Distance(pos);
+		if (distance < closest_distance) {
+			closest_index = &index;
+			closest_distance = distance;
+		}
+	}
+
+	return closest_index;
 }
 
 Chunk *ChunkStore::Get(const Chunk::Pos &pos) {

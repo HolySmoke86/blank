@@ -21,7 +21,7 @@ ServerState::ServerState(
 , block_types()
 , world(block_types, wc)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
-, generator(gc, block_types)
+, generator(gc)
 , chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
 , spawner(world, skeletons, env.rng)
@@ -29,7 +29,7 @@ ServerState::ServerState(
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
-	generator.Scan();
+	generator.LoadTypes(block_types);
 	skeletons.LoadHeadless();
 	spawner.LimitSkeletons(1, skeletons.size());
 	server.SetPlayerModel(skeletons[0]);

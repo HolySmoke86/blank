@@ -380,6 +380,8 @@ void ChunkTest::testLight() {
 
 void ChunkTest::testLightPropagation() {
 	unique_ptr<Chunk> chunk(new Chunk(types));
+	// this is required to make the chunk do lighting propagation at all
+	chunk->ScanLights();
 
 	// 0 air, 1 solid, 2 solid and emits light level of 5
 	chunk->SetBlock(Chunk::Pos(7, 7, 7), Block(2));

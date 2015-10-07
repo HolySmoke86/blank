@@ -23,8 +23,14 @@ public:
 
 public:
 	bool InRange(const Chunk::Pos &) const noexcept;
+	bool IsBorder(const Chunk::Pos &) const noexcept;
+	int Distance(const Chunk::Pos &) const noexcept;
+
+	bool HasAllSurrounding(const Chunk::Pos &) const noexcept;
+
 	int IndexOf(const Chunk::Pos &) const noexcept;
 	Chunk::Pos PositionOf(int) const noexcept;
+
 	/// returns nullptr if given position is out of range or the chunk
 	/// is not loaded, so also works as a "has" function
 	Chunk *Get(const Chunk::Pos &) noexcept;

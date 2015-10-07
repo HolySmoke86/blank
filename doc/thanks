@@ -1,0 +1,23 @@
+I want to thank:
+
+Glenn Fiedler
+	for his excellent series on game programming in general and
+	networked physics in particular. The site is
+	http://gafferongames.com/ and I can highly recommend his articles.
+
+Stefan Gustavson
+	for his implementation of simplex noise. The one I'm using doesn't
+	resemble much of his original due to language adaptation,
+	customization, and optimization, but I started out from his and
+	it's working nicely.
+
+The libnoise Project
+	despite not using their library I have learned a lot about noise
+	and terrain generation there. The library as well as documentation
+	can be found on sourceforge: http://libnoise.sourceforge.net/
+
+The Folks at http://www.opengl-tutorial.org/
+	I made my first steps with OpenGL following this tutorial (and this
+	very project, as one can witness in earlier commits) and from there
+	acquired the rest through reading their sources and the OpenGL
+	documentation itself.

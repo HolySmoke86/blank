@@ -156,7 +156,12 @@ public:
 
 	void *BlockData() noexcept { return &blocks[0]; }
 	const void *BlockData() const noexcept { return &blocks[0]; }
-	static constexpr std::size_t BlockSize() noexcept { return sizeof(blocks) + sizeof(light); }
+	static constexpr std::size_t BlockSize() noexcept { return offsetof(Chunk, position) - offsetof(Chunk, blocks); }
+
+	bool Generated() const noexcept { return generated; }
+	void SetGenerated() noexcept { generated = true; }
+	bool Lighted() const noexcept { return lighted; }
+	void ScanLights();
 
 	void Ref() noexcept { ++ref_count; }
 	void UnRef() noexcept { --ref_count; }
@@ -174,8 +179,12 @@ public:
 private:
 	const BlockTypeRegistry *types;
 	Chunk *neighbor[Block::FACE_COUNT];
+
 	Block blocks[size];
 	unsigned char light[size];
+	bool generated;
+	bool lighted;
+
 	Pos position;
 	int ref_count;
 	bool dirty_model;

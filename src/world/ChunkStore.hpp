@@ -23,6 +23,8 @@ public:
 	ChunkIndex &MakeIndex(const Chunk::Pos &base, int extent);
 	void UnregisterIndex(ChunkIndex &);
 
+	ChunkIndex *ClosestIndex(const Chunk::Pos &pos);
+
 	/// returns nullptr if given position is not loaded
 	Chunk *Get(const Chunk::Pos &);
 	/// returns nullptr if given position is not indexed
