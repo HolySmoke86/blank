@@ -77,8 +77,8 @@ SDLError::SDLError(const std::string &msg)
 
 
 InitSDL::InitSDL() {
-	if (SDL_Init(0) != 0) {
-		throw SDLError("SDL_Init(0)");
+	if (SDL_Init(SDL_INIT_EVENTS) != 0) {
+		throw SDLError("SDL_Init(SDL_INIT_EVENTS)");
 	}
 }
 

@@ -98,6 +98,8 @@ void HeadlessApplication::Run() {
 
 void HeadlessApplication::Loop(int dt) {
 	env.counter.EnterFrame();
+	HandleEvents();
+	if (!HasState()) return;
 	Update(dt);
 	CommitStates();
 	if (!HasState()) return;
