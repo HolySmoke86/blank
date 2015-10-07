@@ -1012,7 +1012,7 @@ Chunk::Pos ChunkStore::NextMissing() noexcept {
 
 void ChunkStore::Clean() {
 	for (auto i = loaded.begin(), end = loaded.end(); i != end;) {
-		if (i->Referenced()) {
+		if (i->Referenced() || i->ShouldUpdateSave()) {
 			++i;
 		} else {
 			auto chunk = i;
