@@ -395,11 +395,6 @@ void ClientConnection::AttachPlayer(Player &player) {
 	DetachPlayer();
 	input.reset(new DirectInput(server.GetWorld(), player, server));
 	PlayerEntity().Ref();
-	if (server.GetWorldSave().Exists(player)) {
-		server.GetWorldSave().Read(player);
-	} else {
-		// TODO: spawn
-	}
 
 	old_base = PlayerChunks().Base();
 	Chunk::Pos begin = PlayerChunks().CoordsBegin();
@@ -411,6 +406,7 @@ void ClientConnection::AttachPlayer(Player &player) {
 			}
 		}
 	}
+	// TODO: should the server do this?
 	if (HasPlayerModel()) {
 		GetPlayerModel().Instantiate(PlayerEntity().GetModel());
 	}
@@ -489,7 +485,7 @@ void ClientConnection::On(const Packet::Login &pack) {
 	string name;
 	pack.ReadPlayerName(name);
 
-	Player *new_player = server.GetWorld().AddPlayer(name);
+	Player *new_player = server.JoinPlayer(name);
 
 	if (new_player) {
 		// success!
@@ -567,11 +563,16 @@ bool ClientConnection::ChunkInRange(const glm::ivec3 &pos) const noexcept {
 }
 
 
-Server::Server(const Config::Network &conf, World &world, const WorldSave &save)
+Server::Server(
+	const Config::Network &conf,
+	World &world,
+	const World::Config &wc,
+	const WorldSave &save)
 : serv_sock(nullptr)
 , serv_pack{ -1, nullptr, 0 }
 , clients()
 , world(world)
+, spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , save(save)
 , player_model(nullptr) {
 	serv_sock = SDLNet_UDP_Open(conf.port);
@@ -584,6 +585,7 @@ Server::Server(const Config::Network &conf, World &world, const WorldSave &save)
 }
 
 Server::~Server() {
+	world.Chunks().UnregisterIndex(spawn_index);
 	delete[] serv_pack.data;
 	SDLNet_UDP_Close(serv_sock);
 }
@@ -653,6 +655,22 @@ bool Server::HasPlayerModel() const noexcept {
 
 const CompositeModel &Server::GetPlayerModel() const noexcept {
 	return *player_model;
+}
+
+Player *Server::JoinPlayer(const string &name) {
+	if (spawn_index.MissingChunks() > 0) {
+		return nullptr;
+	}
+	Player *player = world.AddPlayer(name);
+	if (!player) {
+		return nullptr;
+	}
+	if (save.Exists(*player)) {
+		save.Read(*player);
+	} else {
+		// TODO: spawn
+	}
+	return player;
 }
 
 void Server::SetBlock(Chunk &chunk, int index, const Block &block) {

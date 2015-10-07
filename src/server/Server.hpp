@@ -2,6 +2,7 @@
 #define BLANK_SERVER_SERVER_HPP
 
 #include "../app/Config.hpp"
+#include "../world/World.hpp"
 #include "../world/WorldManipulator.hpp"
 
 #include <list>
@@ -10,8 +11,9 @@
 
 namespace blank {
 
+class ChunkIndex;
 class CompositeModel;
-class World;
+class Player;
 class WorldSave;
 
 namespace server {
@@ -22,7 +24,7 @@ class Server
 : public WorldManipulator {
 
 public:
-	Server(const Config::Network &, World &, const WorldSave &);
+	Server(const Config::Network &, World &, const World::Config &, const WorldSave &);
 	~Server();
 
 	void Handle();
@@ -39,6 +41,8 @@ public:
 	bool HasPlayerModel() const noexcept;
 	const CompositeModel &GetPlayerModel() const noexcept;
 
+	Player *JoinPlayer(const std::string &name);
+
 	void SetBlock(Chunk &, int, const Block &) override;
 
 private:
@@ -52,6 +56,7 @@ private:
 	std::list<ClientConnection> clients;
 
 	World &world;
+	ChunkIndex &spawn_index;
 	const WorldSave &save;
 	const CompositeModel *player_model;
 

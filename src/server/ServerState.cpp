@@ -2,6 +2,7 @@
 
 #include "../app/Environment.hpp"
 #include "../app/TextureIndex.hpp"
+#include "../io/WorldSave.hpp"
 #include "../net/io.hpp"
 
 #include <iostream>
@@ -20,12 +21,11 @@ ServerState::ServerState(
 : env(env)
 , block_types()
 , world(block_types, wc)
-, spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, ws)
 , skeletons()
 , spawner(world, skeletons, env.rng)
-, server(config.net, world, ws)
+, server(config.net, world, wc, ws)
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
@@ -40,12 +40,18 @@ ServerState::ServerState(
 }
 
 ServerState::~ServerState() {
-	world.Chunks().UnregisterIndex(spawn_index);
+
 }
 
 
 void ServerState::Handle(const SDL_Event &event) {
 	if (event.type == SDL_QUIT) {
+		std::cout << "saving remaining chunks" << std::endl;
+		for (Chunk &chunk : world.Chunks()) {
+			if (chunk.ShouldUpdateSave()) {
+				chunk_loader.SaveFile().Write(chunk);
+			}
+		}
 		env.state.PopAll();
 	}
 }
