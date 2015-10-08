@@ -12,17 +12,16 @@ UnloadState::UnloadState(
 	Environment &env,
 	ChunkStore &chunks,
 	const WorldSave &save)
-: env(env)
+: ProgressState(env, "Unloading chunks: %d/%d (%d%%)")
+, env(env)
 , chunks(chunks)
 , save(save)
-, progress(env.assets.large_ui_font)
 , cur(chunks.begin())
 , end(chunks.end())
 , done(0)
 , total(chunks.NumLoaded())
 , per_update(64) {
-	progress.Position(glm::vec3(0.0f), Gravity::CENTER);
-	progress.Template("Unloading chunks: %d/%d (%d%%)");
+
 }
 
 
@@ -45,14 +44,10 @@ void UnloadState::Update(int dt) {
 		}
 	}
 	if (cur == end) {
-		env.state.PopAll();
+		env.state.Pop();
 	} else {
-		progress.Update(done, total);
+		SetProgress(done, total);
 	}
-}
-
-void UnloadState::Render(Viewport &viewport) {
-	progress.Render(viewport);
 }
 
 }

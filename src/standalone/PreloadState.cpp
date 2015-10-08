@@ -9,21 +9,13 @@ namespace blank {
 namespace standalone {
 
 PreloadState::PreloadState(Environment &env, ChunkLoader &loader, ChunkRenderer &render)
-: env(env)
+: ProgressState(env, "Preloading chunks: %d/%d (%d%%)")
+, env(env)
 , loader(loader)
 , render(render)
-, progress(env.assets.large_ui_font)
 , total(loader.ToLoad())
 , per_update(64) {
-	progress.Position(glm::vec3(0.0f), Gravity::CENTER);
-	progress.Template("Preloading chunks: %d/%d (%d%%)");
-}
 
-
-void PreloadState::Handle(const SDL_Event &e) {
-	if (e.type == SDL_QUIT) {
-		env.state.PopAll();
-	}
 }
 
 void PreloadState::Update(int dt) {
@@ -32,12 +24,8 @@ void PreloadState::Update(int dt) {
 		env.state.Pop();
 		render.Update(render.MissingChunks());
 	} else {
-		progress.Update(total - loader.ToLoad(), total);
+		SetProgress(total - loader.ToLoad(), total);
 	}
-}
-
-void PreloadState::Render(Viewport &viewport) {
-	progress.Render(viewport);
 }
 
 }
