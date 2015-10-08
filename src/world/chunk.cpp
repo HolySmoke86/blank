@@ -668,7 +668,11 @@ void ChunkRenderer::LoadTextures(const AssetLoader &loader, const TextureIndex &
 
 void ChunkRenderer::Update(int dt) {
 	for (int i = 0, updates = 0; updates < dt && i < index.TotalChunks(); ++i) {
-		if (index[i] && index[i]->ShouldUpdateModel()) {
+		if (!index[i]) continue;
+		if (!index[i]->Lighted() && index.HasAllSurrounding(index[i]->Position())) {
+			index[i]->ScanLights();
+		}
+		if (index[i]->ShouldUpdateModel()) {
 			index[i]->Update(models[i]);
 			++updates;
 		}
