@@ -136,6 +136,19 @@ Player::~Player() {
 
 }
 
+bool Player::SuitableSpawn(BlockLookup &spawn_block) const noexcept {
+	if (!spawn_block || spawn_block.GetType().collide_block) {
+		return false;
+	}
+
+	BlockLookup head_block(spawn_block.Next(Block::FACE_UP));
+	if (!head_block || head_block.GetType().collide_block) {
+		return false;
+	}
+
+	return true;
+}
+
 void Player::Update(int dt) {
 	chunks.Rebase(entity.ChunkCoords());
 }

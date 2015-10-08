@@ -6,6 +6,7 @@
 
 namespace blank {
 
+class BlockLookup;
 class ChunkIndex;
 
 class Player {
@@ -22,6 +23,8 @@ public:
 
 	void SetInventorySlot(int i) noexcept { inv_slot = i; }
 	int GetInventorySlot() const noexcept { return inv_slot; }
+
+	bool SuitableSpawn(BlockLookup &) const noexcept;
 
 	void Update(int dt);
 

@@ -43,7 +43,8 @@ public:
 	);
 	~MasterState();
 
-	void OnEnter() override;
+	void OnResume() override;
+	void OnPause() override;
 
 	void Handle(const SDL_Event &) override;
 	void Update(int dt) override;
@@ -66,6 +67,7 @@ private:
 	World world;
 	ChunkIndex &spawn_index;
 	Player &player;
+	bool spawn_player;
 	HUD hud;
 	InteractiveManipulator manip;
 	DirectInput input;

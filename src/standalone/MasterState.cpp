@@ -26,6 +26,7 @@ MasterState::MasterState(
 , world(block_types, wc)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , player(*world.AddPlayer(config.player.name))
+, spawn_player(false)
 , hud(env, config, player)
 , manip(env, player.GetEntity())
 , input(world, player, manip)
@@ -49,7 +50,7 @@ MasterState::MasterState(
 	if (save.Exists(player)) {
 		save.Read(player);
 	} else {
-		// TODO: spawn
+		spawn_player = true;
 	}
 }
 
@@ -58,9 +59,21 @@ MasterState::~MasterState() {
 }
 
 
-void MasterState::OnEnter() {
-	env.state.Push(&preload);
-	env.window.GrabMouse();
+void MasterState::OnResume() {
+	if (spawn_index.MissingChunks() > 0) {
+		env.state.Push(&preload);
+	}
+	if (config.input.mouse) {
+		env.window.GrabMouse();
+	}
+	if (spawn_player) {
+		// TODO: spawn
+		spawn_player = false;
+	}
+}
+
+void MasterState::OnPause() {
+	env.window.ReleaseMouse();
 }
 
 
