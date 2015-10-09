@@ -151,7 +151,8 @@ void Skeletons::Load() {
 	{
 		CuboidShape shape(skeletons[0]->Bounds());
 		shape.Vertices(buf, 3.0f);
-		buf.colors.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
+		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
 		models[0].Update(buf);
 		skeletons[0]->SetNodeModel(&models[0]);
 	}
@@ -159,7 +160,8 @@ void Skeletons::Load() {
 		CuboidShape shape(skeletons[1]->Bounds());
 		buf.Clear();
 		shape.Vertices(buf, 0.0f);
-		buf.colors.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		buf.rgb_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		models[1].Update(buf);
 		skeletons[1]->SetNodeModel(&models[1]);
 	}
@@ -167,7 +169,8 @@ void Skeletons::Load() {
 		StairShape shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
 		buf.Clear();
 		shape.Vertices(buf, 1.0f);
-		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
+		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
 		models[2].Update(buf);
 		skeletons[2]->SetNodeModel(&models[2]);
 	}
@@ -175,7 +178,8 @@ void Skeletons::Load() {
 		CuboidShape shape(skeletons[3]->Bounds());
 		buf.Clear();
 		shape.Vertices(buf, 2.0f);
-		buf.colors.resize(shape.VertexCount(), { 1.0f, 0.25f, 0.5f });
+		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
+		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.25f, 0.5f });
 		models[3].Update(buf);
 		skeletons[3]->SetNodeModel(&models[3]);
 	}

@@ -337,8 +337,10 @@ void AssetLoader::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry 
 			} else if (name == "texture") {
 				in.ReadString(tex_name);
 				type.texture = tex_index.GetID(tex_name);
-			} else if (name == "color") {
-				in.ReadVec(type.color);
+			} else if (name == "rgb_mod") {
+				in.ReadVec(type.rgb_mod);
+			} else if (name == "hsl_mod") {
+				in.ReadVec(type.hsl_mod);
 			} else if (name == "outline") {
 				in.ReadVec(type.outline_color);
 			} else if (name == "label") {

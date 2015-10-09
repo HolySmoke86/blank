@@ -15,20 +15,21 @@ class EntityModel {
 public:
 	using Position = glm::vec3;
 	using TexCoord = glm::vec3;
-	using Color = glm::vec3;
+	using ColorMod = glm::vec3;
 	using Normal = glm::vec3;
 	using Index = unsigned int;
 
 	using Positions = std::vector<Position>;
 	using TexCoords = std::vector<TexCoord>;
-	using Colors = std::vector<Color>;
+	using ColorMods = std::vector<ColorMod>;
 	using Normals = std::vector<Normal>;
 	using Indices = std::vector<Index>;
 
 	enum Attribute {
 		ATTRIB_VERTEX,
 		ATTRIB_TEXCOORD,
-		ATTRIB_COLOR,
+		ATTRIB_HSL,
+		ATTRIB_RGB,
 		ATTRIB_NORMAL,
 		ATTRIB_INDEX,
 		ATTRIB_COUNT,
@@ -38,14 +39,16 @@ public:
 
 		Positions vertices;
 		TexCoords tex_coords;
-		Colors colors;
+		ColorMods hsl_mods;
+		ColorMods rgb_mods;
 		Normals normals;
 		Indices indices;
 
 		void Clear() noexcept {
 			vertices.clear();
 			tex_coords.clear();
-			colors.clear();
+			hsl_mods.clear();
+			rgb_mods.clear();
 			normals.clear();
 			indices.clear();
 		}
@@ -53,7 +56,8 @@ public:
 		void Reserve(size_t p, size_t i) {
 			vertices.reserve(p);
 			tex_coords.reserve(p);
-			colors.reserve(p);
+			hsl_mods.reserve(p);
+			rgb_mods.reserve(p);
 			normals.reserve(p);
 			indices.reserve(i);
 		}

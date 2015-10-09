@@ -69,18 +69,19 @@ std::ostream &operator <<(std::ostream &out, const Block::Turn &turn) {
 }
 
 
-BlockType::BlockType(bool v, const glm::vec3 &col, const Shape *s) noexcept
-: shape(s)
+BlockType::BlockType() noexcept
+: shape(&DEFAULT_SHAPE)
 , texture(0)
-, color(col)
+, hsl_mod(0.0f, 1.0f, 1.0f)
+, rgb_mod(1.0f, 1.0f, 1.0f)
 , outline_color(-1, -1, -1)
 , label("some block")
 , id(0)
 , luminosity(0)
-, visible(v)
-, block_light(false)
-, collision(false)
-, collide_block(false)
+, visible(true)
+, block_light(true)
+, collision(true)
+, collide_block(true)
 , generate(false)
 , min_solidity(0.5f)
 , mid_solidity(0.75f)
@@ -105,7 +106,8 @@ void BlockType::FillEntityModel(
 	EntityModel::Index idx_offset
 ) const noexcept {
 	shape->Vertices(buf, transform, texture, idx_offset);
-	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
+	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
+	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
 
 void BlockType::FillBlockModel(
@@ -114,7 +116,8 @@ void BlockType::FillBlockModel(
 	BlockModel::Index idx_offset
 ) const noexcept {
 	shape->Vertices(buf, transform, texture, idx_offset);
-	buf.colors.insert(buf.colors.end(), shape->VertexCount(), color);
+	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
+	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
 
 void BlockType::FillOutlineModel(OutlineModel::Buffer &buf) const noexcept {
@@ -124,7 +127,12 @@ void BlockType::FillOutlineModel(OutlineModel::Buffer &buf) const noexcept {
 
 
 BlockTypeRegistry::BlockTypeRegistry() {
-	Add(BlockType());
+	BlockType air;
+	air.visible = false;
+	air.block_light = false;
+	air.collision = false;
+	air.collide_block = false;
+	Add(air);
 }
 
 Block::Type BlockTypeRegistry::Add(const BlockType &t) {

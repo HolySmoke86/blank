@@ -18,7 +18,8 @@ struct BlockType {
 
 	const Shape *shape;
 	float texture;
-	glm::vec3 color;
+	glm::vec3 hsl_mod;
+	glm::vec3 rgb_mod;
 	glm::vec3 outline_color;
 
 	/// a string to display to the user
@@ -72,11 +73,7 @@ struct BlockType {
 		}
 	} fill;
 
-	explicit BlockType(
-		bool v = false,
-		const glm::vec3 &color = { 1, 1, 1 },
-		const Shape *shape = &DEFAULT_SHAPE
-	) noexcept;
+	BlockType() noexcept;
 
 	static const NullShape DEFAULT_SHAPE;
 
