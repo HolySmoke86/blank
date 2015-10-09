@@ -9,36 +9,61 @@
 
 namespace blank {
 
-bool is_dir(const char *path) {
+namespace {
 #ifdef _WIN32
-	struct _stat info;
-	if (_stat(path, &info) != 0) {
-		return false;
+	using Stat = struct _stat;
+	int do_stat(const char *path, Stat &info) {
+		return _stat(path, &info);
 	}
-	return (info.st_mode & _S_IFDIR) != 0;
+	bool is_dir(const Stat &info) {
+		return (info.st_mode & _S_IFDIR) != 0;
+	}
+	bool is_file(const Stat &info) {
+		return (info.st_mode & _S_IFEG) != 0;
+	}
 #else
-	struct stat info;
-	if (stat(path, &info) != 0) {
+	using Stat = struct stat;
+	int do_stat(const char *path, Stat &info) {
+		return stat(path, &info);
+	}
+	bool is_dir(const Stat &info) {
+		return S_ISDIR(info.st_mode);
+	}
+	bool is_file(const Stat &info) {
+		return S_ISREG(info.st_mode);
+	}
+#endif
+	std::time_t get_mtime(const Stat &info) {
+#ifdef __APPLE__
+		return info.st_mtimespec.tv_sec;
+#else
+	return info.st_mtime;
+#endif
+	}
+}
+
+bool is_dir(const char *path) {
+	Stat info;
+	if (do_stat(path, info) != 0) {
 		return false;
 	}
-	return S_ISDIR(info.st_mode);
-#endif
+	return is_dir(info);
 }
 
 bool is_file(const char *path) {
-#ifdef _WIN32
-	struct _stat info;
-	if (_stat(path, &info) != 0) {
+	Stat info;
+	if (do_stat(path, info) != 0) {
 		return false;
 	}
-	return (info.st_mode & _S_IFREG) != 0;
-#else
-	struct stat info;
-	if (stat(path, &info) != 0) {
-		return false;
+	return is_file(info);
+}
+
+std::time_t file_mtime(const char *path) {
+	Stat info;
+	if (do_stat(path, info) != 0) {
+		return 0;
 	}
-	return S_ISREG(info.st_mode);
-#endif
+	return get_mtime(info);
 }
 
 

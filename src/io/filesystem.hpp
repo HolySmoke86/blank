@@ -1,6 +1,7 @@
 #ifndef BLANK_IO_FILESYSTEM_HPP_
 #define BLANK_IO_FILESYSTEM_HPP_
 
+#include <ctime>
 #include <string>
 
 
@@ -15,6 +16,11 @@ inline bool is_dir(const std::string &s) {
 bool is_file(const char *);
 inline bool is_file(const std::string &s) {
 	return is_file(s.c_str());
+}
+/// get timestamp of last modification
+std::time_t file_mtime(const char *);
+inline std::time_t file_mtime(const std::string &s) {
+	return file_mtime(s.c_str());
 }
 
 /// create given directory
