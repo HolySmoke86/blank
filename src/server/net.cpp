@@ -9,6 +9,7 @@
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <zlib.h>
 #include <glm/gtx/io.hpp>
@@ -352,6 +353,23 @@ void ClientConnection::CheckPlayerFix() {
 	}
 }
 
+namespace {
+
+struct QueueCompare {
+	explicit QueueCompare(const glm::ivec3 &base)
+	: base(base) { }
+	bool operator ()(const glm::ivec3 &left, const glm::ivec3 &right) const noexcept {
+		const glm::ivec3 ld(left - base);
+		const glm::ivec3 rd(right - base);
+		return
+			ld.x * ld.x + ld.y * ld.y + ld.z * ld.z <
+			rd.x * rd.x + rd.y * rd.y + rd.z * rd.z;
+	}
+	const glm::ivec3 &base;
+};
+
+}
+
 void ClientConnection::CheckChunkQueue() {
 	if (PlayerChunks().Base() != old_base) {
 		Chunk::Pos begin = PlayerChunks().CoordsBegin();
@@ -366,6 +384,7 @@ void ClientConnection::CheckChunkQueue() {
 			}
 		}
 		old_base = PlayerChunks().Base();
+		sort(chunk_queue.begin(), chunk_queue.end(), QueueCompare(old_base));
 	}
 	if (transmitter.Transmitting()) {
 		transmitter.Transmit();
@@ -406,6 +425,7 @@ void ClientConnection::AttachPlayer(Player &player) {
 			}
 		}
 	}
+	sort(chunk_queue.begin(), chunk_queue.end(), QueueCompare(old_base));
 	// TODO: should the server do this?
 	if (HasPlayerModel()) {
 		GetPlayerModel().Instantiate(PlayerEntity().GetModel());
