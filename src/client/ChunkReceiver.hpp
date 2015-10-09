@@ -11,6 +11,7 @@
 namespace blank {
 
 class ChunkStore;
+class WorldSave;
 
 namespace client {
 
@@ -19,10 +20,17 @@ class ChunkTransmission;
 class ChunkReceiver {
 
 public:
-	explicit ChunkReceiver(ChunkStore &);
+	ChunkReceiver(ChunkStore &, const WorldSave &);
 	~ChunkReceiver();
 
 	void Update(int dt);
+
+	int ToLoad() const noexcept;
+
+	void LoadOne();
+	void LoadN(std::size_t n);
+
+	void StoreN(std::size_t n);
 
 	void Handle(const Packet::ChunkBegin &);
 	void Handle(const Packet::ChunkData &);
@@ -33,6 +41,7 @@ private:
 
 private:
 	ChunkStore &store;
+	const WorldSave &save;
 	std::list<ChunkTransmission> transmissions;
 	IntervalTimer timer;
 

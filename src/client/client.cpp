@@ -1,4 +1,3 @@
-#include "ChunkRequester.hpp"
 #include "InitialState.hpp"
 #include "InteractiveState.hpp"
 #include "MasterState.hpp"
@@ -19,63 +18,6 @@ using namespace std;
 
 namespace blank {
 namespace client {
-
-ChunkRequester::ChunkRequester(
-	ChunkStore &store,
-	const WorldSave &save
-) noexcept
-: store(store)
-, save(save) {
-
-}
-
-void ChunkRequester::Update(int dt) {
-	// check if there's chunks waiting to be loaded
-	LoadN(10);
-
-	// store a few chunks as well
-	constexpr int max_save = 10;
-	int saved = 0;
-	for (Chunk &chunk : store) {
-		if (chunk.ShouldUpdateSave()) {
-			save.Write(chunk);
-			++saved;
-			if (saved >= max_save) {
-				break;
-			}
-		}
-	}
-}
-
-int ChunkRequester::ToLoad() const noexcept {
-	return store.EstimateMissing();
-}
-
-void ChunkRequester::LoadOne() {
-	if (!store.HasMissing()) return;
-
-	Chunk::Pos pos = store.NextMissing();
-	Chunk *chunk = store.Allocate(pos);
-	if (!chunk) {
-		// chunk store corrupted?
-		return;
-	}
-
-	if (save.Exists(pos)) {
-		save.Read(*chunk);
-		// TODO: request chunk from server with cache tag
-	} else {
-		// TODO: request chunk from server
-	}
-}
-
-void ChunkRequester::LoadN(std::size_t n) {
-	std::size_t end = std::min(n, std::size_t(ToLoad()));
-	for (std::size_t i = 0; i < end && store.HasMissing(); ++i) {
-		LoadOne();
-	}
-}
-
 
 InitialState::InitialState(MasterState &master)
 : master(master)
@@ -114,9 +56,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , manip(master.GetEnv(), player.GetEntity())
 , input(world, player, master.GetClient())
 , interface(master.GetConfig(), master.GetEnv().keymap, input, *this)
-// TODO: looks like chunk requester and receiver can and should be merged
-, chunk_requester(world.Chunks(), save)
-, chunk_receiver(world.Chunks())
+, chunk_receiver(world.Chunks(), save)
 , chunk_renderer(player.GetChunks())
 , skeletons()
 , loop_timer(16)
@@ -181,7 +121,6 @@ void InteractiveState::Update(int dt) {
 	loop_timer.Update(dt);
 	master.Update(dt);
 	chunk_receiver.Update(dt);
-	chunk_requester.Update(dt);
 
 	hud.Update(dt);
 	int world_dt = 0;

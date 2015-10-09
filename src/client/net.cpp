@@ -4,6 +4,7 @@
 #include "NetworkedInput.hpp"
 
 #include "../app/init.hpp"
+#include "../io/WorldSave.hpp"
 #include "../net/Packet.hpp"
 #include "../world/Chunk.hpp"
 #include "../world/ChunkStore.hpp"
@@ -21,8 +22,9 @@ namespace blank {
 namespace client {
 
 
-ChunkReceiver::ChunkReceiver(ChunkStore &store)
+ChunkReceiver::ChunkReceiver(ChunkStore &store, const WorldSave &save)
 : store(store)
+, save(save)
 , transmissions()
 , timer(5000) {
 	timer.Start();
@@ -48,7 +50,49 @@ void ChunkReceiver::Update(int dt) {
 			}
 		}
 	}
+	LoadN(10);
+	StoreN(10);
 }
+
+int ChunkReceiver::ToLoad() const noexcept {
+	return store.EstimateMissing();
+}
+
+void ChunkReceiver::LoadOne() {
+	if (!store.HasMissing()) return;
+
+	Chunk::Pos pos = store.NextMissing();
+	Chunk *chunk = store.Allocate(pos);
+	if (!chunk) {
+		// chunk store corrupted?
+		return;
+	}
+
+	if (save.Exists(pos)) {
+		save.Read(*chunk);
+	}
+}
+
+void ChunkReceiver::LoadN(size_t n) {
+	size_t end = min(n, size_t(ToLoad()));
+	for (size_t i = 0; i < end && store.HasMissing(); ++i) {
+		LoadOne();
+	}
+}
+
+void ChunkReceiver::StoreN(size_t n) {
+	size_t saved = 0;
+	for (Chunk &chunk : store) {
+		if (chunk.ShouldUpdateSave()) {
+			save.Write(chunk);
+			++saved;
+			if (saved >= n) {
+				break;
+			}
+		}
+	}
+}
+
 
 void ChunkReceiver::Handle(const Packet::ChunkBegin &pack) {
 	uint32_t id;
@@ -244,8 +288,8 @@ uint16_t Client::SendPlayerUpdate(
 	const glm::vec3 &movement,
 	float pitch,
 	float yaw,
-	std::uint8_t actions,
-	std::uint8_t slot
+	uint8_t actions,
+	uint8_t slot
 ) {
 	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
 	pack.WritePredictedState(prediction);
@@ -279,7 +323,7 @@ void NetworkedInput::Update(int dt) {
 void NetworkedInput::PushPlayerUpdate(int dt) {
 	const EntityState &state = GetPlayer().GetEntity().GetState();
 
-	std::uint16_t packet = client.SendPlayerUpdate(
+	uint16_t packet = client.SendPlayerUpdate(
 		state,
 		GetMovement(),
 		GetPitch(),

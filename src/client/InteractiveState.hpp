@@ -5,7 +5,6 @@
 #include "../ui/ClientController.hpp"
 
 #include "ChunkReceiver.hpp"
-#include "ChunkRequester.hpp"
 #include "NetworkedInput.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../graphics/SkyBox.hpp"
@@ -67,7 +66,6 @@ private:
 	InteractiveManipulator manip;
 	NetworkedInput input;
 	Interface interface;
-	ChunkRequester chunk_requester;
 	ChunkReceiver chunk_receiver;
 	ChunkRenderer chunk_renderer;
 	Skeletons skeletons;
