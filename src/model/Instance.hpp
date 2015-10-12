@@ -1,5 +1,5 @@
-#ifndef BLANK_MODEL_COMPOSITEINSTANCE_HPP_
-#define BLANK_MODEL_COMPOSITEINSTANCE_HPP_
+#ifndef BLANK_MODEL_INSTANCE_HPP_
+#define BLANK_MODEL_INSTANCE_HPP_
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -8,20 +8,20 @@
 
 namespace blank {
 
-class CompositeModel;
+class Model;
 class DirectionalLighting;
 
 // TODO: this doesn't have to be a tree, actually
 //       linearizing might be a good opportunity to optimize
-class CompositeInstance {
+class Instance {
 
-	friend class CompositeModel;
+	friend class Model;
 
 public:
-	CompositeInstance();
+	Instance();
 
 	operator bool() const noexcept { return part_model; }
-	const CompositeModel &GetModel() const noexcept { return *part_model; }
+	const Model &GetModel() const noexcept { return *part_model; }
 
 	const glm::vec3 &Position() const noexcept { return position; }
 	void Position(const glm::vec3 &p) noexcept { position = p; }
@@ -35,19 +35,19 @@ public:
 	void Render(const glm::mat4 &, DirectionalLighting &) const;
 
 private:
-	CompositeInstance &AddPart();
+	Instance &AddPart();
 	bool HasParent() const noexcept { return parent; }
-	CompositeInstance &Parent() const noexcept { return *parent; }
+	Instance &Parent() const noexcept { return *parent; }
 	bool IsRoot() const noexcept { return !HasParent(); }
 
 private:
-	const CompositeModel *part_model;
-	CompositeInstance *parent;
+	const Model *part_model;
+	Instance *parent;
 
 	glm::vec3 position;
 	glm::quat orientation;
 
-	std::vector<CompositeInstance> parts;
+	std::vector<Instance> parts;
 
 };
 

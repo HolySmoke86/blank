@@ -9,10 +9,10 @@
 
 namespace blank {
 
-class CompositeModel;
 class Controller;
 class Entity;
 class GaloisLFSR;
+class Model;
 class Skeletons;
 class World;
 
@@ -31,7 +31,7 @@ private:
 	void TrySpawn();
 	void Spawn(Entity &reference, const glm::ivec3 &, const glm::vec3 &);
 
-	CompositeModel &RandomSkeleton() noexcept;
+	Model &RandomSkeleton() noexcept;
 
 private:
 	World &world;

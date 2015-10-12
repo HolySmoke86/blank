@@ -3,7 +3,7 @@
 
 #include "Chunk.hpp"
 #include "EntityState.hpp"
-#include "../model/CompositeInstance.hpp"
+#include "../model/Instance.hpp"
 #include "../model/geometry.hpp"
 
 #include <cstdint>
@@ -22,8 +22,8 @@ class Entity {
 public:
 	Entity() noexcept;
 
-	CompositeInstance &GetModel() noexcept { return model; }
-	const CompositeInstance &GetModel() const noexcept { return model; }
+	Instance &GetModel() noexcept { return model; }
+	const Instance &GetModel() const noexcept { return model; }
 
 	std::uint32_t ID() const noexcept { return id; }
 	void ID(std::uint32_t i) noexcept { id = i; }
@@ -83,7 +83,7 @@ public:
 	}
 
 private:
-	CompositeInstance model;
+	Instance model;
 
 	std::uint32_t id;
 	std::string name;

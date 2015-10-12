@@ -1,5 +1,5 @@
-#ifndef BLANK_MODEL_COMPOSITEMODEL_HPP_
-#define BLANK_MODEL_COMPOSITEMODEL_HPP_
+#ifndef BLANK_MODEL_MODEL_HPP_
+#define BLANK_MODEL_MODEL_HPP_
 
 #include "geometry.hpp"
 
@@ -11,16 +11,16 @@
 
 namespace blank {
 
-class CompositeInstance;
+class Instance;
 class EntityMesh;
 
-class CompositeModel {
+class Model {
 
 public:
-	CompositeModel();
+	Model();
 
-	CompositeModel(const CompositeModel &) = delete;
-	CompositeModel &operator =(const CompositeModel &) = delete;
+	Model(const Model &) = delete;
+	Model &operator =(const Model &) = delete;
 
 	std::uint32_t ID() const noexcept { return id; }
 	void ID(std::uint32_t i) noexcept { id = i; }
@@ -39,18 +39,18 @@ public:
 
 	const EntityMesh &NodeMesh() const noexcept { return *node_mesh; }
 
-	CompositeModel &AddPart();
+	Model &AddPart();
 	bool HasParent() const noexcept { return parent; }
-	CompositeModel &Parent() const noexcept { return *parent; }
+	Model &Parent() const noexcept { return *parent; }
 	bool IsRoot() const noexcept { return !HasParent(); }
 
 	glm::mat4 LocalTransform() const noexcept;
 	glm::mat4 GlobalTransform() const noexcept;
 
-	void Instantiate(CompositeInstance &) const;
+	void Instantiate(Instance &) const;
 
 private:
-	CompositeModel *parent;
+	Model *parent;
 	const EntityMesh *node_mesh;
 
 	std::uint32_t id;
@@ -60,7 +60,7 @@ private:
 	glm::vec3 position;
 	glm::quat orientation;
 
-	std::list<CompositeModel> parts;
+	std::list<Model> parts;
 
 };
 

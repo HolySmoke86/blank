@@ -4,7 +4,7 @@
 #include "Packet.hpp"
 
 #include "../app/init.hpp"
-#include "../model/CompositeModel.hpp"
+#include "../model/Model.hpp"
 #include "../world/Entity.hpp"
 #include "../world/EntityState.hpp"
 

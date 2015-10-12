@@ -2,7 +2,7 @@
 
 #include "Chaser.hpp"
 #include "RandomWalk.hpp"
-#include "../model/CompositeModel.hpp"
+#include "../model/Model.hpp"
 #include "../model/Skeletons.hpp"
 #include "../rand/GaloisLFSR.hpp"
 #include "../world/BlockLookup.hpp"
@@ -147,7 +147,7 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	controllers.emplace_back(ctrl);
 }
 
-CompositeModel &Spawner::RandomSkeleton() noexcept {
+Model &Spawner::RandomSkeleton() noexcept {
 	std::size_t offset = (random.Next<std::size_t>() % skeletons_length) + skeletons_offset;
 	return skeletons[offset];
 }

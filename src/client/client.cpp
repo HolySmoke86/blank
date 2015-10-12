@@ -5,7 +5,7 @@
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
 #include "../app/TextureIndex.hpp"
-#include "../model/CompositeModel.hpp"
+#include "../model/Model.hpp"
 #include "../io/WorldSave.hpp"
 #include "../world/ChunkIndex.hpp"
 #include "../world/ChunkStore.hpp"
@@ -327,7 +327,7 @@ void MasterState::On(const Packet::SpawnEntity &pack) {
 	pack.ReadEntity(entity);
 	uint32_t skel_id;
 	pack.ReadSkeletonID(skel_id);
-	CompositeModel *skel = state->GetSkeletons().ByID(skel_id);
+	Model *skel = state->GetSkeletons().ByID(skel_id);
 	if (skel) {
 		skel->Instantiate(entity.GetModel());
 	}

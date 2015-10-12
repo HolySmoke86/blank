@@ -19,7 +19,7 @@
 
 namespace blank {
 
-class CompositeModel;
+class Model;
 
 namespace server {
 
@@ -57,9 +57,9 @@ public:
 	ChunkIndex &PlayerChunks() noexcept { return input->GetPlayer().GetChunks(); }
 	const ChunkIndex &PlayerChunks() const noexcept { return input->GetPlayer().GetChunks(); }
 
-	void SetPlayerModel(const CompositeModel &) noexcept;
+	void SetPlayerModel(const Model &) noexcept;
 	bool HasPlayerModel() const noexcept;
-	const CompositeModel &GetPlayerModel() const noexcept;
+	const Model &GetPlayerModel() const noexcept;
 
 	bool ChunkInRange(const glm::ivec3 &) const noexcept;
 
@@ -100,7 +100,7 @@ private:
 	Server &server;
 	Connection conn;
 	std::unique_ptr<DirectInput> input;
-	const CompositeModel *player_model;
+	const Model *player_model;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;
 

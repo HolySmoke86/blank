@@ -1,6 +1,6 @@
 #include "PacketTest.hpp"
 
-#include "model/CompositeModel.hpp"
+#include "model/Model.hpp"
 #include "world/Entity.hpp"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::PacketTest);
@@ -229,7 +229,7 @@ void PacketTest::testSpawnEntity() {
 
 	Entity write_entity;
 	write_entity.ID(534574);
-	CompositeModel model;
+	Model model;
 	model.ID(23);
 	model.Instantiate(write_entity.GetModel());
 	write_entity.GetState().chunk_pos = { 7, 2, -3 };

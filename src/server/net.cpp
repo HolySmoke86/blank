@@ -4,7 +4,7 @@
 
 #include "../app/init.hpp"
 #include "../io/WorldSave.hpp"
-#include "../model/CompositeModel.hpp"
+#include "../model/Model.hpp"
 #include "../world/ChunkIndex.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
@@ -446,7 +446,7 @@ void ClientConnection::DetachPlayer() {
 	old_actions = 0;
 }
 
-void ClientConnection::SetPlayerModel(const CompositeModel &m) noexcept {
+void ClientConnection::SetPlayerModel(const Model &m) noexcept {
 	player_model = &m;
 	if (HasPlayer()) {
 		m.Instantiate(PlayerEntity().GetModel());
@@ -457,7 +457,7 @@ bool ClientConnection::HasPlayerModel() const noexcept {
 	return player_model;
 }
 
-const CompositeModel &ClientConnection::GetPlayerModel() const noexcept {
+const Model &ClientConnection::GetPlayerModel() const noexcept {
 	return *player_model;
 }
 
@@ -662,7 +662,7 @@ void Server::Update(int dt) {
 	}
 }
 
-void Server::SetPlayerModel(const CompositeModel &m) noexcept {
+void Server::SetPlayerModel(const Model &m) noexcept {
 	player_model = &m;
 	for (ClientConnection &client : clients) {
 		client.SetPlayerModel(m);
@@ -673,7 +673,7 @@ bool Server::HasPlayerModel() const noexcept {
 	return player_model;
 }
 
-const CompositeModel &Server::GetPlayerModel() const noexcept {
+const Model &Server::GetPlayerModel() const noexcept {
 	return *player_model;
 }
 

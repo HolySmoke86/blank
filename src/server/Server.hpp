@@ -12,7 +12,7 @@
 namespace blank {
 
 class ChunkIndex;
-class CompositeModel;
+class Model;
 class Player;
 class WorldSave;
 
@@ -37,9 +37,9 @@ public:
 	World &GetWorld() noexcept { return world; }
 	const WorldSave &GetWorldSave() noexcept { return save; }
 
-	void SetPlayerModel(const CompositeModel &) noexcept;
+	void SetPlayerModel(const Model &) noexcept;
 	bool HasPlayerModel() const noexcept;
-	const CompositeModel &GetPlayerModel() const noexcept;
+	const Model &GetPlayerModel() const noexcept;
 
 	Player *JoinPlayer(const std::string &name);
 
@@ -58,7 +58,7 @@ private:
 	World &world;
 	ChunkIndex &spawn_index;
 	const WorldSave &save;
-	const CompositeModel *player_model;
+	const Model *player_model;
 
 };
 
