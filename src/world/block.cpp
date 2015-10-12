@@ -11,7 +11,7 @@
 
 namespace blank {
 
-const NullShape BlockType::DEFAULT_SHAPE;
+const NullBounds BlockType::DEFAULT_SHAPE;
 
 
 std::ostream &operator <<(std::ostream &out, const Block &block) {

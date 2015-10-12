@@ -435,7 +435,7 @@ BlockMesh::Buffer buf;
 void Chunk::Update(BlockMesh &model) noexcept {
 	int vtx_count = 0, idx_count = 0;
 	for (const auto &block : blocks) {
-		const Shape *shape = Type(block).shape;
+		const CollisionBounds *shape = Type(block).shape;
 		vtx_count += shape->VertexCount();
 		idx_count += shape->VertexIndexCount();
 	}

@@ -15,7 +15,7 @@
 #include "../graphics/Font.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../io/TokenStreamReader.hpp"
-#include "../model/shapes.hpp"
+#include "../model/bounds.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/World.hpp"
 #include "../world/WorldManipulator.hpp"

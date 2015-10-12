@@ -5,7 +5,7 @@
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
 #include "../graphics/OutlineMesh.hpp"
-#include "../model/shapes.hpp"
+#include "../model/bounds.hpp"
 
 #include <glm/glm.hpp>
 
@@ -16,7 +16,7 @@ namespace blank {
 /// attributes of a type of block
 struct BlockType {
 
-	const Shape *shape;
+	const CollisionBounds *shape;
 	float texture;
 	glm::vec3 hsl_mod;
 	glm::vec3 rgb_mod;
@@ -75,7 +75,7 @@ struct BlockType {
 
 	BlockType() noexcept;
 
-	static const NullShape DEFAULT_SHAPE;
+	static const NullBounds DEFAULT_SHAPE;
 
 	bool FaceFilled(const Block &block, Block::Face face) const noexcept {
 		return fill[block.OrientedFace(face)];

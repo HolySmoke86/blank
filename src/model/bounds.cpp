@@ -1,10 +1,10 @@
-#include "Shape.hpp"
-#include "shapes.hpp"
+#include "bounds.hpp"
+#include "CollisionBounds.hpp"
 
 
 namespace blank {
 
-void Shape::Vertices(
+void CollisionBounds::Vertices(
 	EntityMesh::Buffer &out,
 	float tex_offset
 ) const {
@@ -22,7 +22,7 @@ void Shape::Vertices(
 	}
 }
 
-void Shape::Vertices(
+void CollisionBounds::Vertices(
 	EntityMesh::Buffer &out,
 	const glm::mat4 &transform,
 	float tex_offset,
@@ -42,7 +42,7 @@ void Shape::Vertices(
 	}
 }
 
-void Shape::Vertices(
+void CollisionBounds::Vertices(
 	BlockMesh::Buffer &out,
 	const glm::mat4 &transform,
 	float tex_offset,
@@ -59,12 +59,12 @@ void Shape::Vertices(
 	}
 }
 
-void Shape::Outline(OutlineMesh::Buffer &out) const {
+void CollisionBounds::Outline(OutlineMesh::Buffer &out) const {
 	out.vertices.insert(out.vertices.end(), out_pos.begin(), out_pos.end());
 	out.indices.insert(out.indices.end(), out_idx.begin(), out_idx.end());
 }
 
-void Shape::SetShape(
+void CollisionBounds::SetShape(
 	const EntityMesh::Positions &pos,
 	const EntityMesh::Normals &nrm,
 	const EntityMesh::Indices &idx
@@ -74,13 +74,13 @@ void Shape::SetShape(
 	vtx_idx = idx;
 }
 
-void Shape::SetTexture(
+void CollisionBounds::SetTexture(
 	const BlockMesh::TexCoords &tex_coords
 ) {
 	vtx_tex_coords = tex_coords;
 }
 
-void Shape::SetOutline(
+void CollisionBounds::SetOutline(
 	const OutlineMesh::Positions &pos,
 	const OutlineMesh::Indices &idx
 ) {
@@ -89,12 +89,12 @@ void Shape::SetOutline(
 }
 
 
-NullShape::NullShape()
-: Shape() {
+NullBounds::NullBounds()
+: CollisionBounds() {
 
 }
 
-bool NullShape::Intersects(
+bool NullBounds::Intersects(
 	const Ray &,
 	const glm::mat4 &,
 	float &, glm::vec3 &
@@ -102,7 +102,7 @@ bool NullShape::Intersects(
 	return false;
 }
 
-bool NullShape::Intersects(
+bool NullBounds::Intersects(
 	const glm::mat4 &,
 	const AABB &,
 	const glm::mat4 &,
@@ -113,8 +113,8 @@ bool NullShape::Intersects(
 }
 
 
-CuboidShape::CuboidShape(const AABB &b)
-: Shape()
+CuboidBounds::CuboidBounds(const AABB &b)
+: CollisionBounds()
 , bb(b) {
 	bb.Adjust();
 	SetShape({
@@ -217,7 +217,7 @@ CuboidShape::CuboidShape(const AABB &b)
 	});
 }
 
-bool CuboidShape::Intersects(
+bool CuboidBounds::Intersects(
 	const Ray &ray,
 	const glm::mat4 &M,
 	float &dist, glm::vec3 &normal
@@ -225,7 +225,7 @@ bool CuboidShape::Intersects(
 	return Intersection(ray, bb, M, &dist, &normal);
 }
 
-bool CuboidShape::Intersects(
+bool CuboidBounds::Intersects(
 	const glm::mat4 &M,
 	const AABB &box,
 	const glm::mat4 &box_M,
@@ -236,8 +236,8 @@ bool CuboidShape::Intersects(
 }
 
 
-StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
-: Shape()
+StairBounds::StairBounds(const AABB &bb, const glm::vec2 &clip)
+: CollisionBounds()
 , top({ { bb.min.x, clip.y, bb.min.z }, { bb.max.x, bb.max.y, clip.x } })
 , bot({ bb.min, { bb.max.x, clip.y, bb.max.z } }) {
 	SetShape({
@@ -398,7 +398,7 @@ StairShape::StairShape(const AABB &bb, const glm::vec2 &clip)
 	});
 }
 
-bool StairShape::Intersects(
+bool StairBounds::Intersects(
 	const Ray &ray,
 	const glm::mat4 &M,
 	float &dist,
@@ -434,7 +434,7 @@ bool StairShape::Intersects(
 	}
 }
 
-bool StairShape::Intersects(
+bool StairBounds::Intersects(
 	const glm::mat4 &M,
 	const AABB &box,
 	const glm::mat4 &box_M,

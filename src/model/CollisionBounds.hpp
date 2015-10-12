@@ -1,5 +1,5 @@
-#ifndef BLANK_MODEL_SHAPE_HPP_
-#define BLANK_MODEL_SHAPE_HPP_
+#ifndef BLANK_MODEL_COLLISIONBOUNDS_HPP_
+#define BLANK_MODEL_COLLISIONBOUNDS_HPP_
 
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
@@ -13,7 +13,7 @@ namespace blank {
 class AABB;
 class Ray;
 
-struct Shape {
+struct CollisionBounds {
 
 	/// the number of vertices (and normals) this shape has
 	size_t VertexCount() const noexcept { return vtx_pos.size(); }

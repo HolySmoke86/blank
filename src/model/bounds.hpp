@@ -1,8 +1,8 @@
-#ifndef BLANK_MODEL_SHAPES_HPP_
-#define BLANK_MODEL_SHAPES_HPP_
+#ifndef BLANK_MODEL_BOUNDS_HPP_
+#define BLANK_MODEL_BOUNDS_HPP_
 
+#include "CollisionBounds.hpp"
 #include "geometry.hpp"
-#include "Shape.hpp"
 
 #include <vector>
 #include <glm/glm.hpp>
@@ -10,11 +10,11 @@
 
 namespace blank {
 
-class NullShape
-: public Shape {
+class NullBounds
+: public CollisionBounds {
 
 public:
-	NullShape();
+	NullBounds();
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
@@ -22,11 +22,11 @@ public:
 };
 
 
-class CuboidShape
-: public Shape {
+class CuboidBounds
+: public CollisionBounds {
 
 public:
-	CuboidShape(const AABB &bounds);
+	CuboidBounds(const AABB &bounds);
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
@@ -37,11 +37,11 @@ private:
 };
 
 
-class StairShape
-: public Shape {
+class StairBounds
+: public CollisionBounds {
 
 public:
-	StairShape(const AABB &bounds, const glm::vec2 &clip);
+	StairBounds(const AABB &bounds, const glm::vec2 &clip);
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;

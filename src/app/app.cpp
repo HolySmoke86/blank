@@ -13,7 +13,7 @@
 #include "../graphics/Font.hpp"
 #include "../graphics/Texture.hpp"
 #include "../io/TokenStreamReader.hpp"
-#include "../model/shapes.hpp"
+#include "../model/bounds.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/Entity.hpp"
@@ -305,9 +305,9 @@ Assets::Assets(const AssetLoader &loader)
 
 namespace {
 
-CuboidShape block_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }});
-StairShape stair_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f });
-CuboidShape slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
+CuboidBounds block_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }});
+StairBounds stair_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f });
+CuboidBounds slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 
 }
 

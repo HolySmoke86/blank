@@ -2,7 +2,7 @@
 #include "Instance.hpp"
 #include "Skeletons.hpp"
 
-#include "shapes.hpp"
+#include "bounds.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 #include "../graphics/EntityMesh.hpp"
 
@@ -149,7 +149,7 @@ void Skeletons::Load() {
 	meshes.resize(4);
 	EntityMesh::Buffer buf;
 	{
-		CuboidShape shape(skeletons[0]->Bounds());
+		CuboidBounds shape(skeletons[0]->Bounds());
 		shape.Vertices(buf, 3.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
@@ -157,7 +157,7 @@ void Skeletons::Load() {
 		skeletons[0]->SetNodeMesh(&meshes[0]);
 	}
 	{
-		CuboidShape shape(skeletons[1]->Bounds());
+		CuboidBounds shape(skeletons[1]->Bounds());
 		buf.Clear();
 		shape.Vertices(buf, 0.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
@@ -166,7 +166,7 @@ void Skeletons::Load() {
 		skeletons[1]->SetNodeMesh(&meshes[1]);
 	}
 	{
-		StairShape shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
+		StairBounds shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
 		buf.Clear();
 		shape.Vertices(buf, 1.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
@@ -175,7 +175,7 @@ void Skeletons::Load() {
 		skeletons[2]->SetNodeMesh(&meshes[2]);
 	}
 	{
-		CuboidShape shape(skeletons[3]->Bounds());
+		CuboidBounds shape(skeletons[3]->Bounds());
 		buf.Clear();
 		shape.Vertices(buf, 2.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
