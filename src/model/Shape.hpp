@@ -1,10 +1,9 @@
 #ifndef BLANK_MODEL_SHAPE_HPP_
 #define BLANK_MODEL_SHAPE_HPP_
 
-#include "BlockModel.hpp"
-#include "EntityModel.hpp"
-#include "OutlineModel.hpp"
-#include "SkyBoxModel.hpp"
+#include "../graphics/BlockMesh.hpp"
+#include "../graphics/EntityMesh.hpp"
+#include "../graphics/OutlineMesh.hpp"
 
 #include <glm/glm.hpp>
 
@@ -21,33 +20,30 @@ struct Shape {
 	/// the number of vertex indices this shape has
 	size_t VertexIndexCount() const noexcept { return vtx_idx.size(); }
 
-	const EntityModel::Normal &VertexNormal(size_t idx) const noexcept { return vtx_nrm[idx]; }
-	EntityModel::Normal VertexNormal(
+	const EntityMesh::Normal &VertexNormal(size_t idx) const noexcept { return vtx_nrm[idx]; }
+	EntityMesh::Normal VertexNormal(
 		size_t idx, const glm::mat4 &transform
 	) const noexcept {
-		return EntityModel::Normal(transform * glm::vec4(vtx_nrm[idx], 0.0f));
+		return EntityMesh::Normal(transform * glm::vec4(vtx_nrm[idx], 0.0f));
 	}
 
 	/// fill given buffers with this shape's elements with an
 	/// optional transform and offset
 	void Vertices(
-		EntityModel::Buffer &out,
+		EntityMesh::Buffer &out,
 		float tex_offset = 0.0f
 	) const;
 	void Vertices(
-		EntityModel::Buffer &out,
+		EntityMesh::Buffer &out,
 		const glm::mat4 &transform,
 		float tex_offset = 0.0f,
-		EntityModel::Index idx_offset = 0
+		EntityMesh::Index idx_offset = 0
 	) const;
 	void Vertices(
-		BlockModel::Buffer &out,
+		BlockMesh::Buffer &out,
 		const glm::mat4 &transform,
 		float tex_offset = 0.0f,
-		BlockModel::Index idx_offset = 0
-	) const;
-	void Vertices(
-		SkyBoxModel::Buffer &out
+		BlockMesh::Index idx_offset = 0
 	) const;
 
 	/// the number of vertices this shape's outline has
@@ -56,7 +52,7 @@ struct Shape {
 	size_t OutlineIndexCount() const { return out_idx.size(); }
 
 	/// fill given buffers with this shape's outline's elements
-	void Outline(OutlineModel::Buffer &out) const;
+	void Outline(OutlineMesh::Buffer &out) const;
 
 	/// Check if given ray would pass though this shape if it were
 	/// transformed with given matrix.
@@ -81,24 +77,24 @@ struct Shape {
 
 protected:
 	void SetShape(
-		const EntityModel::Positions &pos,
-		const EntityModel::Normals &nrm,
-		const EntityModel::Indices &idx);
+		const EntityMesh::Positions &pos,
+		const EntityMesh::Normals &nrm,
+		const EntityMesh::Indices &idx);
 	void SetTexture(
-		const BlockModel::TexCoords &tex_coords);
+		const BlockMesh::TexCoords &tex_coords);
 	void SetOutline(
-		const OutlineModel::Positions &pos,
-		const OutlineModel::Indices &idx);
+		const OutlineMesh::Positions &pos,
+		const OutlineMesh::Indices &idx);
 
 private:
-	EntityModel::Positions vtx_pos;
-	EntityModel::Normals vtx_nrm;
-	EntityModel::Indices vtx_idx;
+	EntityMesh::Positions vtx_pos;
+	EntityMesh::Normals vtx_nrm;
+	EntityMesh::Indices vtx_idx;
 
-	BlockModel::TexCoords vtx_tex_coords;
+	BlockMesh::TexCoords vtx_tex_coords;
 
-	OutlineModel::Positions out_pos;
-	OutlineModel::Indices out_idx;
+	OutlineMesh::Positions out_pos;
+	OutlineMesh::Indices out_idx;
 
 };
 

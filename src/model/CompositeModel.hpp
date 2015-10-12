@@ -12,7 +12,7 @@
 namespace blank {
 
 class CompositeInstance;
-class EntityModel;
+class EntityMesh;
 
 class CompositeModel {
 
@@ -34,10 +34,10 @@ public:
 	const glm::quat &Orientation() const noexcept { return orientation; }
 	void Orientation(const glm::quat &o) noexcept { orientation = o; }
 
-	bool HasNodeModel() const noexcept { return node_model; }
-	void SetNodeModel(const EntityModel *m) noexcept { node_model = m; }
+	bool HasNodeMesh() const noexcept { return node_mesh; }
+	void SetNodeMesh(const EntityMesh *m) noexcept { node_mesh = m; }
 
-	const EntityModel &NodeModel() const noexcept { return *node_model; }
+	const EntityMesh &NodeMesh() const noexcept { return *node_mesh; }
 
 	CompositeModel &AddPart();
 	bool HasParent() const noexcept { return parent; }
@@ -51,7 +51,7 @@ public:
 
 private:
 	CompositeModel *parent;
-	const EntityModel *node_model;
+	const EntityMesh *node_mesh;
 
 	std::uint32_t id;
 

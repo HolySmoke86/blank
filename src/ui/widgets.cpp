@@ -110,7 +110,7 @@ void Text::Set(const Font &font, const char *text) {
 
 namespace {
 
-SpriteModel::Buffer sprite_buf;
+SpriteMesh::Buffer sprite_buf;
 
 }
 

@@ -1,10 +1,8 @@
-#include "BlockModel.hpp"
-#include "EntityModel.hpp"
-#include "OutlineModel.hpp"
-#include "SkyBoxModel.hpp"
-#include "SpriteModel.hpp"
-
-#include "shapes.hpp"
+#include "BlockMesh.hpp"
+#include "EntityMesh.hpp"
+#include "OutlineMesh.hpp"
+#include "SkyBoxMesh.hpp"
+#include "SpriteMesh.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -12,19 +10,19 @@
 
 namespace blank {
 
-void EntityModel::Update(const Buffer &buf) noexcept {
+void EntityMesh::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
 	if (buf.tex_coords.size() < buf.vertices.size()) {
-		std::cerr << "EntityModel: not enough tex coords!" << std::endl;
+		std::cerr << "EntityMesh: not enough tex coords!" << std::endl;
 	}
 	if (buf.hsl_mods.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough HSL modifiers!" << std::endl;
+		std::cerr << "BlockMesh: not enough HSL modifiers!" << std::endl;
 	}
 	if (buf.rgb_mods.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough RGB modifiers!" << std::endl;
+		std::cerr << "BlockMesh: not enough RGB modifiers!" << std::endl;
 	}
 	if (buf.normals.size() < buf.vertices.size()) {
-		std::cerr << "EntityModel: not enough normals!" << std::endl;
+		std::cerr << "EntityMesh: not enough normals!" << std::endl;
 	}
 #endif
 
@@ -38,24 +36,24 @@ void EntityModel::Update(const Buffer &buf) noexcept {
 }
 
 
-void EntityModel::Draw() const noexcept {
+void EntityMesh::Draw() const noexcept {
 	vao.DrawTriangleElements();
 }
 
 
-void BlockModel::Update(const Buffer &buf) noexcept {
+void BlockMesh::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
 	if (buf.tex_coords.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough tex coords!" << std::endl;
+		std::cerr << "BlockMesh: not enough tex coords!" << std::endl;
 	}
 	if (buf.hsl_mods.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough HSL modifiers!" << std::endl;
+		std::cerr << "BlockMesh: not enough HSL modifiers!" << std::endl;
 	}
 	if (buf.rgb_mods.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough RGB modifiers!" << std::endl;
+		std::cerr << "BlockMesh: not enough RGB modifiers!" << std::endl;
 	}
 	if (buf.lights.size() < buf.vertices.size()) {
-		std::cerr << "BlockModel: not enough lights!" << std::endl;
+		std::cerr << "BlockMesh: not enough lights!" << std::endl;
 	}
 #endif
 
@@ -69,15 +67,15 @@ void BlockModel::Update(const Buffer &buf) noexcept {
 }
 
 
-void BlockModel::Draw() const noexcept {
+void BlockMesh::Draw() const noexcept {
 	vao.DrawTriangleElements();
 }
 
 
-void OutlineModel::Update(const Buffer &buf) noexcept {
+void OutlineMesh::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
 	if (buf.colors.size() < buf.vertices.size()) {
-		std::cerr << "OutlineModel: not enough colors!" << std::endl;
+		std::cerr << "OutlineMesh: not enough colors!" << std::endl;
 	}
 #endif
 
@@ -88,32 +86,48 @@ void OutlineModel::Update(const Buffer &buf) noexcept {
 }
 
 
-void OutlineModel::Draw() noexcept {
+void OutlineMesh::Draw() noexcept {
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 	vao.DrawLineElements();
 }
 
 
-void SkyBoxModel::LoadUnitBox() {
+void SkyBoxMesh::LoadUnitBox() {
 	Buffer buffer;
-	CuboidShape shape({{ -1, -1, -1 }, { 1, 1, 1 }});
-	shape.Vertices(buffer);
+	buffer.vertices = {
+		{  1.0f,  1.0f,  1.0f },
+		{  1.0f,  1.0f, -1.0f },
+		{  1.0f, -1.0f,  1.0f },
+		{  1.0f, -1.0f, -1.0f },
+		{ -1.0f,  1.0f,  1.0f },
+		{ -1.0f,  1.0f, -1.0f },
+		{ -1.0f, -1.0f,  1.0f },
+		{ -1.0f, -1.0f, -1.0f },
+	};
+	buffer.indices = {
+		5, 7, 3,  3, 1, 5,
+		6, 7, 5,  5, 4, 6,
+		3, 2, 0,  0, 1, 3,
+		6, 4, 0,  0, 2, 6,
+		5, 1, 0,  0, 4, 5,
+		7, 6, 3,  3, 6, 2,
+	};
 	Update(buffer);
 }
 
-void SkyBoxModel::Update(const Buffer &buf) noexcept {
+void SkyBoxMesh::Update(const Buffer &buf) noexcept {
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
 }
 
-void SkyBoxModel::Draw() const noexcept {
+void SkyBoxMesh::Draw() const noexcept {
 	vao.DrawTriangleElements();
 }
 
 
-void SpriteModel::Buffer::LoadRect(
+void SpriteMesh::Buffer::LoadRect(
 	float w, float h,
 	const glm::vec2 &pivot,
 	const glm::vec2 &tex_begin,
@@ -136,10 +150,10 @@ void SpriteModel::Buffer::LoadRect(
 }
 
 
-void SpriteModel::Update(const Buffer &buf) noexcept {
+void SpriteMesh::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
 	if (buf.coords.size() < buf.vertices.size()) {
-		std::cerr << "SpriteModel: not enough coords!" << std::endl;
+		std::cerr << "SpriteMesh: not enough coords!" << std::endl;
 	}
 #endif
 
@@ -150,7 +164,7 @@ void SpriteModel::Update(const Buffer &buf) noexcept {
 }
 
 
-void SpriteModel::Draw() noexcept {
+void SpriteMesh::Draw() noexcept {
 	vao.DrawTriangleElements();
 }
 

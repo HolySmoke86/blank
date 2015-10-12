@@ -9,7 +9,7 @@
 namespace blank {
 
 class CompositeModel;
-class EntityModel;
+class EntityMesh;
 
 class Skeletons {
 
@@ -35,7 +35,7 @@ public:
 
 private:
 	std::vector<std::unique_ptr<CompositeModel>> skeletons;
-	std::vector<EntityModel> models;
+	std::vector<EntityMesh> meshes;
 
 };
 

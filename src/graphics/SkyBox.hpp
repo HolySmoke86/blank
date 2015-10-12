@@ -2,7 +2,7 @@
 #define BLANK_GRAPHICS_SKYBOX_HPP_
 
 #include "CubeMap.hpp"
-#include "../model/SkyBoxModel.hpp"
+#include "SkyBoxMesh.hpp"
 
 
 namespace blank {
@@ -18,7 +18,7 @@ public:
 
 private:
 	CubeMap texture;
-	SkyBoxModel model;
+	SkyBoxMesh mesh;
 
 };
 

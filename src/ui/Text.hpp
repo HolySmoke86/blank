@@ -3,7 +3,7 @@
 
 #include "../graphics/align.hpp"
 #include "../graphics/Texture.hpp"
-#include "../model/SpriteModel.hpp"
+#include "../graphics/SpriteMesh.hpp"
 
 #include <string>
 #include <glm/glm.hpp>
@@ -36,7 +36,7 @@ private:
 
 private:
 	Texture tex;
-	SpriteModel sprite;
+	SpriteMesh sprite;
 	glm::vec2 size;
 	Gravity pivot;
 	bool dirty;

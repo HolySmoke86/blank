@@ -9,9 +9,9 @@
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
 #include "../graphics/BlockLighting.hpp"
+#include "../graphics/BlockMesh.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../io/WorldSave.hpp"
-#include "../model/BlockModel.hpp"
 
 #include <algorithm>
 #include <limits>
@@ -36,19 +36,23 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 , lighted(false)
 , position(0, 0, 0)
 , ref_count(0)
-, dirty_model(false)
+, dirty_mesh(false)
 , dirty_save(false) {
 
 }
 
 Chunk::Chunk(Chunk &&other) noexcept
 : types(other.types)
+, generated(other.generated)
+, lighted(other.lighted)
 , position(other.position)
-, dirty_model(other.dirty_model)
+, ref_count(other.ref_count)
+, dirty_mesh(other.dirty_mesh)
 , dirty_save(other.dirty_save) {
 	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
 	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
 	std::copy(other.light, other.light + sizeof(light), light);
+	other.ref_count = 0;
 }
 
 Chunk &Chunk::operator =(Chunk &&other) noexcept {
@@ -56,8 +60,11 @@ Chunk &Chunk::operator =(Chunk &&other) noexcept {
 	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
 	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
 	std::copy(other.light, other.light + sizeof(light), light);
+	generated = other.generated;
+	lighted = other.lighted;
 	position = other.position;
-	dirty_model = other.dirty_save;
+	std::swap(ref_count, other.ref_count);
+	dirty_mesh = other.dirty_save;
 	dirty_save = other.dirty_save;
 	return *this;
 }
@@ -246,7 +253,7 @@ int Chunk::GetLight(int index) const noexcept {
 	return light[index];
 }
 
-float Chunk::GetVertexLight(const Pos &pos, const BlockModel::Position &vtx, const EntityModel::Normal &norm) const noexcept {
+float Chunk::GetVertexLight(const Pos &pos, const BlockMesh::Position &vtx, const EntityMesh::Normal &norm) const noexcept {
 	int index = ToIndex(pos);
 	float light = GetLight(index);
 
@@ -421,11 +428,11 @@ bool Chunk::Intersection(
 
 namespace {
 
-BlockModel::Buffer buf;
+BlockMesh::Buffer buf;
 
 }
 
-void Chunk::Update(BlockModel &model) noexcept {
+void Chunk::Update(BlockMesh &model) noexcept {
 	int vtx_count = 0, idx_count = 0;
 	for (const auto &block : blocks) {
 		const Shape *shape = Type(block).shape;
@@ -436,7 +443,7 @@ void Chunk::Update(BlockModel &model) noexcept {
 	buf.Reserve(vtx_count, idx_count);
 
 	int idx = 0;
-	BlockModel::Index vtx_counter = 0;
+	BlockMesh::Index vtx_counter = 0;
 	for (size_t z = 0; z < depth; ++z) {
 		for (size_t y = 0; y < height; ++y) {
 			for (size_t x = 0; x < width; ++x, ++idx) {
@@ -445,7 +452,7 @@ void Chunk::Update(BlockModel &model) noexcept {
 
 				if (!type.visible || Obstructed(pos).All()) continue;
 
-				type.FillBlockModel(buf, ToTransform(pos, idx), vtx_counter);
+				type.FillBlockMesh(buf, ToTransform(pos, idx), vtx_counter);
 				size_t vtx_begin = vtx_counter;
 				vtx_counter += type.shape->VertexCount();
 
@@ -461,7 +468,7 @@ void Chunk::Update(BlockModel &model) noexcept {
 	}
 
 	model.Update(buf);
-	ClearModel();
+	ClearMesh();
 }
 
 Block::FaceSet Chunk::Obstructed(const Pos &pos) const noexcept {
@@ -672,7 +679,7 @@ void ChunkRenderer::Update(int dt) {
 		if (!index[i]->Lighted() && index.HasAllSurrounding(index[i]->Position())) {
 			index[i]->ScanLights();
 		}
-		if (index[i]->ShouldUpdateModel()) {
+		if (index[i]->ShouldUpdateMesh()) {
 			index[i]->Update(models[i]);
 			++updates;
 		}
@@ -689,7 +696,7 @@ void ChunkRenderer::Render(Viewport &viewport) {
 		glm::mat4 m(index[i]->Transform(index.Base()));
 		glm::mat4 mvp(chunk_prog.GetVP() * m);
 		if (!CullTest(Chunk::Bounds(), mvp)) {
-			if (index[i]->ShouldUpdateModel()) {
+			if (index[i]->ShouldUpdateMesh()) {
 				index[i]->Update(models[i]);
 			}
 			chunk_prog.SetM(m);
@@ -1023,7 +1030,7 @@ void ChunkStore::Clean() {
 			++i;
 			free.splice(free.end(), loaded, chunk);
 			chunk->Unlink();
-			chunk->InvalidateModel();
+			chunk->InvalidateMesh();
 		}
 	}
 }

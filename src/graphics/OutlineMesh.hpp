@@ -1,25 +1,29 @@
-#ifndef BLANK_MODEL_SKYBOXMODEL_HPP_
-#define BLANK_MODEL_SKYBOXMODEL_HPP_
+#ifndef BLANK_GRAPHICS_OUTLINEMESH_HPP_
+#define BLANK_GRAPHICS_OUTLINEMESH_HPP_
 
-#include "../graphics/VertexArray.hpp"
+#include "VertexArray.hpp"
 
 #include <vector>
+#include <GL/glew.h>
 #include <glm/glm.hpp>
 
 
 namespace blank {
 
-class SkyBoxModel {
+class OutlineMesh {
 
 public:
 	using Position = glm::vec3;
-	using Index = unsigned int;
+	using Color = glm::vec3;
+	using Index = unsigned short;
 
 	using Positions = std::vector<Position>;
+	using Colors = std::vector<Color>;
 	using Indices = std::vector<Index>;
 
 	enum Attribute {
 		ATTRIB_VERTEX,
+		ATTRIB_COLOR,
 		ATTRIB_INDEX,
 		ATTRIB_COUNT,
 	};
@@ -27,15 +31,18 @@ public:
 	struct Buffer {
 
 		Positions vertices;
+		Colors colors;
 		Indices indices;
 
 		void Clear() noexcept {
 			vertices.clear();
+			colors.clear();
 			indices.clear();
 		}
 
 		void Reserve(size_t p, size_t i) {
 			vertices.reserve(p);
+			colors.reserve(p);
 			indices.reserve(i);
 		}
 
@@ -44,10 +51,9 @@ public:
 	using VAO = VertexArray<ATTRIB_COUNT>;
 
 public:
-	void LoadUnitBox();
 	void Update(const Buffer &) noexcept;
 
-	void Draw() const noexcept;
+	void Draw() noexcept;
 
 private:
 	VAO vao;

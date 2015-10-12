@@ -5,7 +5,7 @@
 namespace blank {
 
 void Shape::Vertices(
-	EntityModel::Buffer &out,
+	EntityMesh::Buffer &out,
 	float tex_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
@@ -23,10 +23,10 @@ void Shape::Vertices(
 }
 
 void Shape::Vertices(
-	EntityModel::Buffer &out,
+	EntityMesh::Buffer &out,
 	const glm::mat4 &transform,
 	float tex_offset,
-	EntityModel::Index idx_offset
+	EntityMesh::Index idx_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
 		out.vertices.emplace_back(transform * glm::vec4(pos, 1.0f));
@@ -43,10 +43,10 @@ void Shape::Vertices(
 }
 
 void Shape::Vertices(
-	BlockModel::Buffer &out,
+	BlockMesh::Buffer &out,
 	const glm::mat4 &transform,
 	float tex_offset,
-	BlockModel::Index idx_offset
+	BlockMesh::Index idx_offset
 ) const {
 	for (const auto &pos : vtx_pos) {
 		out.vertices.emplace_back(transform * glm::vec4(pos, 1.0f));
@@ -59,26 +59,15 @@ void Shape::Vertices(
 	}
 }
 
-void Shape::Vertices(
-	SkyBoxModel::Buffer &out
-) const {
-	for (const auto &pos : vtx_pos) {
-		out.vertices.emplace_back(pos);
-	}
-	for (auto idx : vtx_idx) {
-		out.indices.emplace_back(idx);
-	}
-}
-
-void Shape::Outline(OutlineModel::Buffer &out) const {
+void Shape::Outline(OutlineMesh::Buffer &out) const {
 	out.vertices.insert(out.vertices.end(), out_pos.begin(), out_pos.end());
 	out.indices.insert(out.indices.end(), out_idx.begin(), out_idx.end());
 }
 
 void Shape::SetShape(
-	const EntityModel::Positions &pos,
-	const EntityModel::Normals &nrm,
-	const EntityModel::Indices &idx
+	const EntityMesh::Positions &pos,
+	const EntityMesh::Normals &nrm,
+	const EntityMesh::Indices &idx
 ) {
 	vtx_pos = pos;
 	vtx_nrm = nrm;
@@ -86,14 +75,14 @@ void Shape::SetShape(
 }
 
 void Shape::SetTexture(
-	const BlockModel::TexCoords &tex_coords
+	const BlockMesh::TexCoords &tex_coords
 ) {
 	vtx_tex_coords = tex_coords;
 }
 
 void Shape::SetOutline(
-	const OutlineModel::Positions &pos,
-	const OutlineModel::Indices &idx
+	const OutlineMesh::Positions &pos,
+	const OutlineMesh::Indices &idx
 ) {
 	out_pos = pos;
 	out_idx = idx;

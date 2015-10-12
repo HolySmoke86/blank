@@ -100,27 +100,27 @@ BlockType::BlockType() noexcept
 
 }
 
-void BlockType::FillEntityModel(
-	EntityModel::Buffer &buf,
+void BlockType::FillEntityMesh(
+	EntityMesh::Buffer &buf,
 	const glm::mat4 &transform,
-	EntityModel::Index idx_offset
+	EntityMesh::Index idx_offset
 ) const noexcept {
 	shape->Vertices(buf, transform, texture, idx_offset);
 	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
 
-void BlockType::FillBlockModel(
-	BlockModel::Buffer &buf,
+void BlockType::FillBlockMesh(
+	BlockMesh::Buffer &buf,
 	const glm::mat4 &transform,
-	BlockModel::Index idx_offset
+	BlockMesh::Index idx_offset
 ) const noexcept {
 	shape->Vertices(buf, transform, texture, idx_offset);
 	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
 
-void BlockType::FillOutlineModel(OutlineModel::Buffer &buf) const noexcept {
+void BlockType::FillOutlineMesh(OutlineMesh::Buffer &buf) const noexcept {
 	shape->Outline(buf);
 	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
 }

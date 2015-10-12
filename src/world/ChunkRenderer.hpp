@@ -4,7 +4,7 @@
 #include "Block.hpp"
 #include "Chunk.hpp"
 #include "../graphics/ArrayTexture.hpp"
-#include "../model/BlockModel.hpp"
+#include "../graphics/BlockMesh.hpp"
 
 #include <vector>
 
@@ -12,7 +12,7 @@
 namespace blank {
 
 class AssetLoader;
-class BlockModel;
+class BlockMesh;
 class ChunkIndex;
 class TextureIndex;
 class Viewport;
@@ -34,7 +34,7 @@ public:
 
 private:
 	ChunkIndex &index;
-	std::vector<BlockModel> models;
+	std::vector<BlockMesh> models;
 
 	ArrayTexture block_tex;
 

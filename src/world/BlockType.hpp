@@ -2,9 +2,9 @@
 #define BLANK_WORLD_BLOCKTYPE_HPP_
 
 #include "Block.hpp"
-#include "../model/BlockModel.hpp"
-#include "../model/EntityModel.hpp"
-#include "../model/OutlineModel.hpp"
+#include "../graphics/BlockMesh.hpp"
+#include "../graphics/EntityMesh.hpp"
+#include "../graphics/OutlineMesh.hpp"
 #include "../model/shapes.hpp"
 
 #include <glm/glm.hpp>
@@ -81,17 +81,17 @@ struct BlockType {
 		return fill[block.OrientedFace(face)];
 	}
 
-	void FillEntityModel(
-		EntityModel::Buffer &m,
+	void FillEntityMesh(
+		EntityMesh::Buffer &m,
 		const glm::mat4 &transform = glm::mat4(1.0f),
-		EntityModel::Index idx_offset = 0
+		EntityMesh::Index idx_offset = 0
 	) const noexcept;
-	void FillBlockModel(
-		BlockModel::Buffer &m,
+	void FillBlockMesh(
+		BlockMesh::Buffer &m,
 		const glm::mat4 &transform = glm::mat4(1.0f),
-		BlockModel::Index idx_offset = 0
+		BlockMesh::Index idx_offset = 0
 	) const noexcept;
-	void FillOutlineModel(OutlineModel::Buffer &m) const noexcept;
+	void FillOutlineMesh(OutlineMesh::Buffer &m) const noexcept;
 
 };
 

@@ -1,7 +1,7 @@
-#ifndef BLANK_MODEL_BLOCKMODEL_HPP_
-#define BLANK_MODEL_BLOCKMODEL_HPP_
+#ifndef BLANK_GRAPHICS_ENTITYMESH_HPP_
+#define BLANK_GRAPHICS_ENTITYMESH_HPP_
 
-#include "../graphics/VertexArray.hpp"
+#include "VertexArray.hpp"
 
 #include <vector>
 #include <GL/glew.h>
@@ -10,19 +10,19 @@
 
 namespace blank {
 
-class BlockModel {
+class EntityMesh {
 
 public:
 	using Position = glm::vec3;
 	using TexCoord = glm::vec3;
 	using ColorMod = glm::vec3;
-	using Light = float;
+	using Normal = glm::vec3;
 	using Index = unsigned int;
 
 	using Positions = std::vector<Position>;
 	using TexCoords = std::vector<TexCoord>;
 	using ColorMods = std::vector<ColorMod>;
-	using Lights = std::vector<Light>;
+	using Normals = std::vector<Normal>;
 	using Indices = std::vector<Index>;
 
 	enum Attribute {
@@ -30,7 +30,7 @@ public:
 		ATTRIB_TEXCOORD,
 		ATTRIB_HSL,
 		ATTRIB_RGB,
-		ATTRIB_LIGHT,
+		ATTRIB_NORMAL,
 		ATTRIB_INDEX,
 		ATTRIB_COUNT,
 	};
@@ -41,7 +41,7 @@ public:
 		TexCoords tex_coords;
 		ColorMods hsl_mods;
 		ColorMods rgb_mods;
-		Lights lights;
+		Normals normals;
 		Indices indices;
 
 		void Clear() noexcept {
@@ -49,7 +49,7 @@ public:
 			tex_coords.clear();
 			hsl_mods.clear();
 			rgb_mods.clear();
-			lights.clear();
+			normals.clear();
 			indices.clear();
 		}
 
@@ -58,7 +58,7 @@ public:
 			tex_coords.reserve(p);
 			hsl_mods.reserve(p);
 			rgb_mods.reserve(p);
-			lights.reserve(p);
+			normals.reserve(p);
 			indices.reserve(i);
 		}
 

@@ -1,7 +1,7 @@
-#ifndef BLANK_MODEL_SPRITEMODEL_HPP_
-#define BLANK_MODEL_SPRITEMODEL_HPP_
+#ifndef BLANK_GRAPHICS_BLOCKMESH_HPP_
+#define BLANK_GRAPHICS_BLOCKMESH_HPP_
 
-#include "../graphics/VertexArray.hpp"
+#include "VertexArray.hpp"
 
 #include <vector>
 #include <GL/glew.h>
@@ -10,20 +10,27 @@
 
 namespace blank {
 
-class SpriteModel {
+class BlockMesh {
 
 public:
 	using Position = glm::vec3;
-	using TexCoord = glm::vec2;
-	using Index = unsigned short;
+	using TexCoord = glm::vec3;
+	using ColorMod = glm::vec3;
+	using Light = float;
+	using Index = unsigned int;
 
 	using Positions = std::vector<Position>;
 	using TexCoords = std::vector<TexCoord>;
+	using ColorMods = std::vector<ColorMod>;
+	using Lights = std::vector<Light>;
 	using Indices = std::vector<Index>;
 
 	enum Attribute {
 		ATTRIB_VERTEX,
 		ATTRIB_TEXCOORD,
+		ATTRIB_HSL,
+		ATTRIB_RGB,
+		ATTRIB_LIGHT,
 		ATTRIB_INDEX,
 		ATTRIB_COUNT,
 	};
@@ -31,27 +38,29 @@ public:
 	struct Buffer {
 
 		Positions vertices;
-		TexCoords coords;
+		TexCoords tex_coords;
+		ColorMods hsl_mods;
+		ColorMods rgb_mods;
+		Lights lights;
 		Indices indices;
 
 		void Clear() noexcept {
 			vertices.clear();
-			coords.clear();
+			tex_coords.clear();
+			hsl_mods.clear();
+			rgb_mods.clear();
+			lights.clear();
 			indices.clear();
 		}
 
 		void Reserve(size_t p, size_t i) {
 			vertices.reserve(p);
-			coords.reserve(p);
+			tex_coords.reserve(p);
+			hsl_mods.reserve(p);
+			rgb_mods.reserve(p);
+			lights.reserve(p);
 			indices.reserve(i);
 		}
-
-		void LoadRect(
-			float w, float h,
-			const glm::vec2 &pivot = glm::vec2(0.0f),
-			const glm::vec2 &tex_begin = glm::vec2(0.0f),
-			const glm::vec2 &tex_end = glm::vec2(1.0f, 1.0f)
-		);
 
 	};
 
@@ -60,7 +69,7 @@ public:
 public:
 	void Update(const Buffer &) noexcept;
 
-	void Draw() noexcept;
+	void Draw() const noexcept;
 
 private:
 	VAO vao;

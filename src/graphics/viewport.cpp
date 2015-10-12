@@ -76,14 +76,14 @@ void Canvas::UpdateProjection() noexcept {
 
 SkyBox::SkyBox(CubeMap &&tex)
 : texture(std::move(tex))
-, model() {
-	model.LoadUnitBox();
+, mesh() {
+	mesh.LoadUnitBox();
 }
 
 void SkyBox::Render(Viewport &viewport) noexcept {
 	SkyBoxShader &prog = viewport.SkyBoxProgram();
 	prog.SetTexture(texture);
-	model.Draw();
+	mesh.Draw();
 }
 
 

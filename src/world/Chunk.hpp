@@ -127,7 +127,7 @@ public:
 	int GetLight(const Pos &pos) const noexcept { return GetLight(ToIndex(pos)); }
 	int GetLight(const Block::Pos &pos) const noexcept { return GetLight(ToIndex(pos)); }
 
-	float GetVertexLight(const Pos &, const BlockModel::Position &, const EntityModel::Normal &) const noexcept;
+	float GetVertexLight(const Pos &, const BlockMesh::Position &, const EntityMesh::Normal &) const noexcept;
 
 	bool Intersection(
 		const Ray &ray,
@@ -167,14 +167,14 @@ public:
 	void UnRef() noexcept { --ref_count; }
 	bool Referenced() const noexcept { return ref_count > 0; }
 
-	void Invalidate() noexcept { dirty_model = dirty_save = true; }
-	void InvalidateModel() noexcept { dirty_model = true; }
-	void ClearModel() noexcept { dirty_model = false; }
+	void Invalidate() noexcept { dirty_mesh = dirty_save = true; }
+	void InvalidateMesh() noexcept { dirty_mesh = true; }
+	void ClearMesh() noexcept { dirty_mesh = false; }
 	void ClearSave() noexcept { dirty_save = false; }
-	bool ShouldUpdateModel() const noexcept { return dirty_model; }
+	bool ShouldUpdateMesh() const noexcept { return dirty_mesh; }
 	bool ShouldUpdateSave() const noexcept { return dirty_save; }
 
-	void Update(BlockModel &) noexcept;
+	void Update(BlockMesh &) noexcept;
 
 private:
 	const BlockTypeRegistry *types;
@@ -187,7 +187,7 @@ private:
 
 	Pos position;
 	int ref_count;
-	bool dirty_model;
+	bool dirty_mesh;
 	bool dirty_save;
 
 };

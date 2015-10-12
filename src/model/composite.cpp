@@ -2,9 +2,9 @@
 #include "CompositeInstance.hpp"
 #include "Skeletons.hpp"
 
-#include "EntityModel.hpp"
 #include "shapes.hpp"
 #include "../graphics/DirectionalLighting.hpp"
+#include "../graphics/EntityMesh.hpp"
 
 #include <glm/gtx/quaternion.hpp>
 
@@ -13,7 +13,7 @@ namespace blank {
 
 CompositeModel::CompositeModel()
 : parent(nullptr)
-, node_model(nullptr)
+, node_mesh(nullptr)
 , id(0)
 , bounds{{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }}
 , position(0.0f)
@@ -95,9 +95,9 @@ glm::mat4 CompositeInstance::GlobalTransform() const noexcept {
 
 void CompositeInstance::Render(const glm::mat4 &M, DirectionalLighting &prog) const {
 	glm::mat4 transform(M * LocalTransform());
-	if (part_model->HasNodeModel()) {
+	if (part_model->HasNodeMesh()) {
 		prog.SetM(transform);
-		part_model->NodeModel().Draw();
+		part_model->NodeMesh().Draw();
 	}
 	for (const CompositeInstance &part : parts) {
 		part.Render(transform, prog);
@@ -107,7 +107,7 @@ void CompositeInstance::Render(const glm::mat4 &M, DirectionalLighting &prog) co
 
 Skeletons::Skeletons()
 : skeletons()
-, models() {
+, meshes() {
 
 }
 
@@ -146,15 +146,15 @@ void Skeletons::LoadHeadless() {
 
 void Skeletons::Load() {
 	LoadHeadless();
-	models.resize(4);
-	EntityModel::Buffer buf;
+	meshes.resize(4);
+	EntityMesh::Buffer buf;
 	{
 		CuboidShape shape(skeletons[0]->Bounds());
 		shape.Vertices(buf, 3.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
-		models[0].Update(buf);
-		skeletons[0]->SetNodeModel(&models[0]);
+		meshes[0].Update(buf);
+		skeletons[0]->SetNodeMesh(&meshes[0]);
 	}
 	{
 		CuboidShape shape(skeletons[1]->Bounds());
@@ -162,8 +162,8 @@ void Skeletons::Load() {
 		shape.Vertices(buf, 0.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
-		models[1].Update(buf);
-		skeletons[1]->SetNodeModel(&models[1]);
+		meshes[1].Update(buf);
+		skeletons[1]->SetNodeMesh(&meshes[1]);
 	}
 	{
 		StairShape shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
@@ -171,8 +171,8 @@ void Skeletons::Load() {
 		shape.Vertices(buf, 1.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
-		models[2].Update(buf);
-		skeletons[2]->SetNodeModel(&models[2]);
+		meshes[2].Update(buf);
+		skeletons[2]->SetNodeMesh(&meshes[2]);
 	}
 	{
 		CuboidShape shape(skeletons[3]->Bounds());
@@ -180,8 +180,8 @@ void Skeletons::Load() {
 		shape.Vertices(buf, 2.0f);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.25f, 0.5f });
-		models[3].Update(buf);
-		skeletons[3]->SetNodeModel(&models[3]);
+		meshes[3].Update(buf);
+		skeletons[3]->SetNodeMesh(&meshes[3]);
 	}
 }
 

@@ -250,12 +250,12 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 	messages.Background(glm::vec4(0.5f));
 
 	// crosshair
-	OutlineModel::Buffer buf;
+	OutlineMesh::Buffer buf;
 	buf.vertices = std::vector<glm::vec3>({
 		{ -10.0f,   0.0f, 0.0f }, { 10.0f,  0.0f, 0.0f },
 		{   0.0f, -10.0f, 0.0f }, {  0.0f, 10.0f, 0.0f },
 	});
-	buf.indices = std::vector<OutlineModel::Index>({
+	buf.indices = std::vector<OutlineMesh::Index>({
 		0, 1, 2, 3
 	});
 	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f });
@@ -264,7 +264,7 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 
 namespace {
 
-OutlineModel::Buffer outl_buf;
+OutlineMesh::Buffer outl_buf;
 
 }
 
@@ -272,7 +272,7 @@ void HUD::FocusBlock(const Chunk &chunk, int index) {
 	const Block &block = chunk.BlockAt(index);
 	const BlockType &type = chunk.Type(index);
 	outl_buf.Clear();
-	type.FillOutlineModel(outl_buf);
+	type.FillOutlineMesh(outl_buf);
 	outline.Update(outl_buf);
 	outline_transform = chunk.Transform(player.GetEntity().ChunkCoords());
 	outline_transform *= chunk.ToTransform(Chunk::ToPos(index), index);
@@ -312,7 +312,7 @@ void HUD::DisplayNone() {
 
 void HUD::Display(const BlockType &type) {
 	block_buf.Clear();
-	type.FillEntityModel(block_buf);
+	type.FillEntityMesh(block_buf);
 	block.Update(block_buf);
 
 	block_label.Set(env.assets.small_ui_font, type.label);

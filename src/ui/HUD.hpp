@@ -3,8 +3,8 @@
 
 #include "FixedText.hpp"
 #include "MessageBox.hpp"
-#include "../model/EntityModel.hpp"
-#include "../model/OutlineModel.hpp"
+#include "../graphics/EntityMesh.hpp"
+#include "../graphics/OutlineMesh.hpp"
 
 #include <glm/glm.hpp>
 
@@ -57,13 +57,13 @@ private:
 	const Player &player;
 
 	// block focus
-	OutlineModel outline;
+	OutlineMesh outline;
 	glm::mat4 outline_transform;
 	bool outline_visible;
 
 	// "inventory"
-	EntityModel block;
-	EntityModel::Buffer block_buf;
+	EntityMesh block;
+	EntityMesh::Buffer block_buf;
 	glm::mat4 block_transform;
 	FixedText block_label;
 	bool block_visible;
@@ -82,7 +82,7 @@ private:
 	IntervalTimer msg_timer;
 
 	// crosshair
-	OutlineModel crosshair;
+	OutlineMesh crosshair;
 
 };
 
