@@ -48,6 +48,7 @@ void InitialState::Render(Viewport &viewport) {
 // TODO: this clutter is a giant mess
 InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
+, shapes()
 , block_types()
 , save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetConfig().net.host))
 , world(block_types, master.GetWorldConf())
@@ -65,6 +66,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 		save.Write(master.GetWorldConf());
 	}
 	TextureIndex tex_index;
+	master.GetEnv().loader.LoadShapes("default", shapes);
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
 	interface.SetInventorySlots(block_types.size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);

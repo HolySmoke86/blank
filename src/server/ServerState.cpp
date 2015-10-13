@@ -19,6 +19,7 @@ ServerState::ServerState(
 	const Config &config
 )
 : env(env)
+, shapes()
 , block_types()
 , world(block_types, wc)
 , generator(gc)
@@ -28,6 +29,7 @@ ServerState::ServerState(
 , server(config.net, world, wc, ws)
 , loop_timer(16) {
 	TextureIndex tex_index;
+	env.loader.LoadShapes("default", shapes);
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	generator.LoadTypes(block_types);
 	skeletons.LoadHeadless();

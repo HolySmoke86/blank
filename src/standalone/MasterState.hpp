@@ -8,6 +8,7 @@
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
 #include "../graphics/SkyBox.hpp"
+#include "../model/ShapeRegistry.hpp"
 #include "../model/Skeletons.hpp"
 #include "../ui/DirectInput.hpp"
 #include "../ui/HUD.hpp"
@@ -62,6 +63,7 @@ public:
 private:
 	Config &config;
 	Environment &env;
+	ShapeRegistry shapes;
 	BlockTypeRegistry block_types;
 	const WorldSave &save;
 	World world;

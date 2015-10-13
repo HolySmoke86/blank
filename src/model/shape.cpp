@@ -1,4 +1,5 @@
 #include "Shape.hpp"
+#include "ShapeRegistry.hpp"
 
 #include "bounds.hpp"
 #include "../io/TokenStreamReader.hpp"
@@ -17,20 +18,20 @@ Shape::Shape()
 
 }
 
-
 void Shape::Read(TokenStreamReader &in) {
 	bounds.reset();
 	vertices.clear();
 	indices.clear();
 
 	string name;
-	while (in.HasMore()) {
+	in.Skip(Token::ANGLE_BRACKET_OPEN);
+	while (in.HasMore() && in.Peek().type != Token::ANGLE_BRACKET_CLOSE) {
 		in.ReadIdentifier(name);
 		in.Skip(Token::EQUALS);
 		if (name == "bounds") {
 			string bounds_class;
 			in.ReadIdentifier(bounds_class);
-			in.Skip(Token::BRACKET_OPEN);
+			in.Skip(Token::PARENTHESIS_OPEN);
 			if (bounds_class == "Cuboid") {
 				glm::vec3 min;
 				glm::vec3 max;
@@ -49,11 +50,11 @@ void Shape::Read(TokenStreamReader &in) {
 				in.ReadVec(split);
 				bounds.reset(new StairBounds(AABB{min, max}, split));
 			} else {
-				while (in.Peek().type != Token::BRACKET_CLOSE) {
+				while (in.Peek().type != Token::PARENTHESIS_CLOSE) {
 					in.Next();
 				}
 			}
-			in.Skip(Token::BRACKET_CLOSE);
+			in.Skip(Token::PARENTHESIS_CLOSE);
 
 		} else if (name == "vertices") {
 			in.Skip(Token::ANGLE_BRACKET_OPEN);
@@ -75,6 +76,7 @@ void Shape::Read(TokenStreamReader &in) {
 					in.Skip(Token::COMMA);
 				}
 			}
+			in.Skip(Token::ANGLE_BRACKET_CLOSE);
 
 		} else if (name == "indices") {
 			in.Skip(Token::ANGLE_BRACKET_OPEN);
@@ -84,6 +86,7 @@ void Shape::Read(TokenStreamReader &in) {
 					in.Skip(Token::COMMA);
 				}
 			}
+			in.Skip(Token::ANGLE_BRACKET_CLOSE);
 
 		} else {
 			// try to skip, might fail though
@@ -93,6 +96,7 @@ void Shape::Read(TokenStreamReader &in) {
 		}
 		in.Skip(Token::SEMICOLON);
 	}
+	in.Skip(Token::ANGLE_BRACKET_CLOSE);
 }
 
 float Shape::TexR(const vector<float> &tex_map, size_t off) noexcept {
@@ -146,6 +150,39 @@ void Shape::Fill(
 	}
 	for (auto idx : indices) {
 		buf.indices.emplace_back(idx_offset + idx);
+	}
+}
+
+
+ShapeRegistry::ShapeRegistry()
+: shapes() {
+
+}
+
+Shape &ShapeRegistry::Add(const string &name) {
+	auto result = shapes.emplace(name, Shape());
+	if (result.second) {
+		return result.first->second;
+	} else {
+		throw runtime_error("duplicate shape " + name);
+	}
+}
+
+Shape &ShapeRegistry::Get(const string &name) {
+	auto entry = shapes.find(name);
+	if (entry != shapes.end()) {
+		return entry->second;
+	} else {
+		throw runtime_error("unknown shape " + name);
+	}
+}
+
+const Shape &ShapeRegistry::Get(const string &name) const {
+	auto entry = shapes.find(name);
+	if (entry != shapes.end()) {
+		return entry->second;
+	} else {
+		throw runtime_error("unknown shape " + name);
 	}
 }
 

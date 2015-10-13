@@ -21,6 +21,7 @@ MasterState::MasterState(
 )
 : config(config)
 , env(env)
+, shapes()
 , block_types()
 , save(save)
 , world(block_types, wc)
@@ -40,6 +41,7 @@ MasterState::MasterState(
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save) {
 	TextureIndex tex_index;
+	env.loader.LoadShapes("default", shapes);
 	env.loader.LoadBlockTypes("default", block_types, tex_index);
 	interface.SetInventorySlots(block_types.size() - 1);
 	generator.LoadTypes(block_types);

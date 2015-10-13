@@ -9,6 +9,7 @@
 #include "../app/IntervalTimer.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
+#include "../model/ShapeRegistry.hpp"
 #include "../model/Skeletons.hpp"
 #include "../net/Packet.hpp"
 #include "../ui/HUD.hpp"
@@ -58,6 +59,7 @@ public:
 
 private:
 	MasterState &master;
+	ShapeRegistry shapes;
 	BlockTypeRegistry block_types;
 	WorldSave save;
 	World world;

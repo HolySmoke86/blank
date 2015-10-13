@@ -8,6 +8,7 @@
 #include "../model/bounds.hpp"
 
 #include <glm/glm.hpp>
+#include <vector>
 
 
 namespace blank {
@@ -17,7 +18,7 @@ namespace blank {
 struct BlockType {
 
 	const CollisionBounds *shape;
-	float texture;
+	std::vector<float> textures;
 	glm::vec3 hsl_mod;
 	glm::vec3 rgb_mod;
 	glm::vec3 outline_color;

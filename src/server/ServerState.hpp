@@ -5,6 +5,7 @@
 #include "../ai/Spawner.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../app/State.hpp"
+#include "../model/ShapeRegistry.hpp"
 #include "../model/Skeletons.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkLoader.hpp"
@@ -39,6 +40,7 @@ public:
 
 private:
 	HeadlessEnvironment &env;
+	ShapeRegistry shapes;
 	BlockTypeRegistry block_types;
 	World world;
 	Generator generator;

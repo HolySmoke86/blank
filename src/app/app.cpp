@@ -14,6 +14,8 @@
 #include "../graphics/Texture.hpp"
 #include "../io/TokenStreamReader.hpp"
 #include "../model/bounds.hpp"
+#include "../model/Shape.hpp"
+#include "../model/ShapeRegistry.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/Entity.hpp"
@@ -311,7 +313,7 @@ CuboidBounds slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 
 }
 
-void AssetLoader::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &reg, TextureIndex &tex_index) const {
+void AssetLoader::LoadBlockTypes(const string &set_name, BlockTypeRegistry &reg, TextureIndex &tex_index) const {
 	string full = data + set_name + ".types";
 	std::ifstream file(full);
 	if (!file) {
@@ -336,7 +338,17 @@ void AssetLoader::LoadBlockTypes(const std::string &set_name, BlockTypeRegistry 
 				type.visible = in.GetBool();
 			} else if (name == "texture") {
 				in.ReadString(tex_name);
-				type.texture = tex_index.GetID(tex_name);
+				type.textures.push_back(tex_index.GetID(tex_name));
+			} else if (name == "textures") {
+				in.Skip(Token::BRACKET_OPEN);
+				while (in.Peek().type != Token::BRACKET_CLOSE) {
+					in.ReadString(tex_name);
+					type.textures.push_back(tex_index.GetID(tex_name));
+					if (in.Peek().type == Token::COMMA) {
+						in.Skip(Token::COMMA);
+					}
+				}
+				in.Skip(Token::BRACKET_CLOSE);
 			} else if (name == "rgb_mod") {
 				in.ReadVec(type.rgb_mod);
 			} else if (name == "hsl_mod") {
@@ -483,6 +495,23 @@ CubeMap AssetLoader::LoadCubeMap(const string &name) const {
 Font AssetLoader::LoadFont(const string &name, int size) const {
 	string full = fonts + name + ".ttf";
 	return Font(full.c_str(), size);
+}
+
+void AssetLoader::LoadShapes(const string &set_name, ShapeRegistry &shapes) const {
+	string full = data + set_name + ".shapes";
+	std::ifstream file(full);
+	if (!file) {
+		throw std::runtime_error("failed to open shape file " + full);
+	}
+	TokenStreamReader in(file);
+	string shape_name;
+	while (in.HasMore()) {
+		in.ReadIdentifier(shape_name);
+		in.Skip(Token::EQUALS);
+		Shape &shape = shapes.Add(shape_name);
+		shape.Read(in);
+		in.Skip(Token::SEMICOLON);
+	}
 }
 
 Sound AssetLoader::LoadSound(const string &name) const {

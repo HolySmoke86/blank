@@ -71,7 +71,7 @@ std::ostream &operator <<(std::ostream &out, const Block::Turn &turn) {
 
 BlockType::BlockType() noexcept
 : shape(&DEFAULT_SHAPE)
-, texture(0)
+, textures()
 , hsl_mod(0.0f, 1.0f, 1.0f)
 , rgb_mod(1.0f, 1.0f, 1.0f)
 , outline_color(-1, -1, -1)
@@ -105,7 +105,11 @@ void BlockType::FillEntityMesh(
 	const glm::mat4 &transform,
 	EntityMesh::Index idx_offset
 ) const noexcept {
-	shape->Vertices(buf, transform, texture, idx_offset);
+	if (textures.empty()) {
+		shape->Vertices(buf, transform, 0.0f, idx_offset);
+	} else {
+		shape->Vertices(buf, transform, textures[0], idx_offset);
+	}
 	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
@@ -115,7 +119,11 @@ void BlockType::FillBlockMesh(
 	const glm::mat4 &transform,
 	BlockMesh::Index idx_offset
 ) const noexcept {
-	shape->Vertices(buf, transform, texture, idx_offset);
+	if (textures.empty()) {
+		shape->Vertices(buf, transform, 0.0f, idx_offset);
+	} else {
+		shape->Vertices(buf, transform, textures[0], idx_offset);
+	}
 	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }

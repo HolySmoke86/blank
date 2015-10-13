@@ -45,7 +45,7 @@ private:
 	struct Vertex {
 		glm::vec3 position;
 		glm::vec3 normal;
-		glm::vec3 tex_st;
+		glm::vec2 tex_st;
 		std::size_t tex_id;
 	};
 	std::vector<Vertex> vertices;
