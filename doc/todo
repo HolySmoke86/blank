@@ -5,7 +5,7 @@ block placement/removal timers
 
 composite entity animations
 
-	complex entities are made up of part which have their own local
+	complex entities are made up of parts which have their own local
 	transform that can be animated (like e.g. an arm or head)
 
 font rendering
@@ -19,7 +19,7 @@ font rendering
 
 command line
 
-	usefull for development and later on world administration
+	useful for development and later on world administration
 
 persistence
 
@@ -77,23 +77,20 @@ block attributes
 	become interesting. like labels on signs and contents of
 	containers
 
-chunk traversal
-
-	maybe the chunk loader should keep an index of interesting, if not
-	all chunks by position, possibly base-relative
-
-	profiling indicates that this is not neccessary atm. maybe it will
-	when there's some more action in the world
-
 transparency (blocks and entities)
 
 	transparent blocks because awesome
 
 world generator that is not boring
 
-	maybe store a min/max solidity, humidity, temperature, rarity, etc.
-	for each block type (with the option to deactivate generation
-	altogether) and use different noise overlays for each
+	well, it's different
+	still needs way more block types and structure generation
+	a minimum distance from origin could be interesting as well, to ensure
+	the spawn vicinity doesn't contain bloks with would be useless at the
+	beginning (if there even is such a thing), also it would encourage
+	exploration
+	biomes seem too small, maybe that will become easier to tune when
+	there's a little more diversity between them
 
 entity/world collision
 
@@ -115,3 +112,7 @@ spawning
 	how much space has to be cleared and how to make sure the spawning
 	space connects to "open space" I don't know yet, it's all a little
 	fuzzy anyway
+
+sprite/particle system
+
+	these could help make the world seem more alive
