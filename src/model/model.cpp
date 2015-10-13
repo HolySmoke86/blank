@@ -2,7 +2,9 @@
 #include "Instance.hpp"
 #include "Skeletons.hpp"
 
-#include "bounds.hpp"
+#include "Shape.hpp"
+#include "ShapeRegistry.hpp"
+#include "../app/TextureIndex.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 #include "../graphics/EntityMesh.hpp"
 
@@ -118,66 +120,64 @@ Skeletons::~Skeletons() {
 void Skeletons::LoadHeadless() {
 	skeletons.clear();
 	skeletons.reserve(4);
+	AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
 	{
-		AABB bounds{{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }};
 		skeletons.emplace_back(new Model);
 		skeletons[0]->ID(1);
 		skeletons[0]->Bounds(bounds);
 	}
 	{
-		AABB bounds{{ -0.5f, -0.25f, -0.5f }, { 0.5f, 0.25f, 0.5f }};
 		skeletons.emplace_back(new Model);
 		skeletons[1]->ID(2);
 		skeletons[1]->Bounds(bounds);
 	}
 	{
-		AABB bounds{{ -0.25f, -0.5f, -0.25f }, { 0.25f, 0.5f, 0.25f }};
 		skeletons.emplace_back(new Model);
 		skeletons[2]->ID(3);
 		skeletons[2]->Bounds(bounds);
 	}
 	{
-		AABB bounds{{ -0.25f, -0.5f, -0.35f }, { 0.25f, 0.5f, 0.35f }};
 		skeletons.emplace_back(new Model);
 		skeletons[3]->ID(4);
 		skeletons[3]->Bounds(bounds);
 	}
 }
 
-void Skeletons::Load() {
+void Skeletons::Load(const ShapeRegistry &shapes, TextureIndex &tex_index) {
 	LoadHeadless();
 	meshes.resize(4);
+	const Shape &shape = shapes.Get("player_head_block");
 	EntityMesh::Buffer buf;
+	std::vector<float> tex_map;
+	tex_map.push_back(tex_index.GetID("rock-1"));
+	tex_map.push_back(tex_index.GetID("rock-face"));
+	buf.Reserve(shape.VertexCount(), shape.IndexCount());
 	{
-		CuboidBounds shape(skeletons[0]->Bounds());
-		shape.Vertices(buf, 3.0f);
+		shape.Fill(buf, tex_map);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
 		meshes[0].Update(buf);
 		skeletons[0]->SetNodeMesh(&meshes[0]);
 	}
 	{
-		CuboidBounds shape(skeletons[1]->Bounds());
 		buf.Clear();
-		shape.Vertices(buf, 0.0f);
+		shape.Fill(buf, tex_map);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		meshes[1].Update(buf);
 		skeletons[1]->SetNodeMesh(&meshes[1]);
 	}
 	{
-		StairBounds shape(skeletons[2]->Bounds(), { 0.4f, 0.4f });
 		buf.Clear();
-		shape.Vertices(buf, 1.0f);
+		shape.Fill(buf, tex_map);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
 		meshes[2].Update(buf);
 		skeletons[2]->SetNodeMesh(&meshes[2]);
 	}
 	{
-		CuboidBounds shape(skeletons[3]->Bounds());
 		buf.Clear();
-		shape.Vertices(buf, 2.0f);
+		shape.Fill(buf, tex_map);
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.25f, 0.5f });
 		meshes[3].Update(buf);

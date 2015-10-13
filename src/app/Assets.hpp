@@ -21,7 +21,11 @@ class AssetLoader {
 public:
 	explicit AssetLoader(const std::string &base);
 
-	void LoadBlockTypes(const std::string &set_name, BlockTypeRegistry &, TextureIndex &) const;
+	void LoadBlockTypes(
+		const std::string &set_name,
+		BlockTypeRegistry &,
+		TextureIndex &,
+		const ShapeRegistry &) const;
 	CubeMap LoadCubeMap(const std::string &name) const;
 	Font LoadFont(const std::string &name, int size) const;
 	void LoadShapes(const std::string &set_name, ShapeRegistry &) const;

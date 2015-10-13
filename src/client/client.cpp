@@ -67,11 +67,11 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	}
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadShapes("default", shapes);
-	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index);
+	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index, shapes);
+	skeletons.Load(shapes, tex_index);
 	interface.SetInventorySlots(block_types.size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
-	skeletons.Load();
 	loop_timer.Start();
 	if (save.Exists(player)) {
 		save.Read(player);

@@ -10,18 +10,6 @@
 
 namespace blank {
 
-class NullBounds
-: public CollisionBounds {
-
-public:
-	NullBounds();
-
-	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
-	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
-
-};
-
-
 class CuboidBounds
 : public CollisionBounds {
 

@@ -5,7 +5,7 @@
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
 #include "../graphics/OutlineMesh.hpp"
-#include "../model/bounds.hpp"
+#include "../model/Shape.hpp"
 
 #include <glm/glm.hpp>
 #include <vector>
@@ -17,7 +17,7 @@ namespace blank {
 /// attributes of a type of block
 struct BlockType {
 
-	const CollisionBounds *shape;
+	const Shape *shape;
 	std::vector<float> textures;
 	glm::vec3 hsl_mod;
 	glm::vec3 rgb_mod;
@@ -61,31 +61,15 @@ struct BlockType {
 	/// commonness factor, random chance is multiplied by this
 	float commonness;
 
-	struct Faces {
-		bool face[Block::FACE_COUNT];
-		Faces &operator =(const Faces &other) noexcept {
-			for (int i = 0; i < Block::FACE_COUNT; ++i) {
-				face[i] = other.face[i];
-			}
-			return *this;
-		}
-		bool operator [](Block::Face f) const noexcept {
-			return face[f];
-		}
-	} fill;
-
 	BlockType() noexcept;
 
-	static const NullBounds DEFAULT_SHAPE;
-
 	bool FaceFilled(const Block &block, Block::Face face) const noexcept {
-		return fill[block.OrientedFace(face)];
+		return shape && shape->FaceFilled(block.OrientedFace(face));
 	}
 
 	void FillEntityMesh(
 		EntityMesh::Buffer &m,
-		const glm::mat4 &transform = glm::mat4(1.0f),
-		EntityMesh::Index idx_offset = 0
+		const glm::mat4 &transform = glm::mat4(1.0f)
 	) const noexcept;
 	void FillBlockMesh(
 		BlockMesh::Buffer &m,

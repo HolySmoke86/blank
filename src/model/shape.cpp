@@ -14,7 +14,8 @@ namespace blank {
 Shape::Shape()
 : bounds()
 , vertices()
-, indices() {
+, indices()
+, fill({ false, false, false, false, false, false }) {
 
 }
 
@@ -22,6 +23,7 @@ void Shape::Read(TokenStreamReader &in) {
 	bounds.reset();
 	vertices.clear();
 	indices.clear();
+	fill = { false, false, false, false, false, false };
 
 	string name;
 	in.Skip(Token::ANGLE_BRACKET_OPEN);
@@ -75,6 +77,7 @@ void Shape::Read(TokenStreamReader &in) {
 				if (in.Peek().type == Token::COMMA) {
 					in.Skip(Token::COMMA);
 				}
+				vertices.push_back(vtx);
 			}
 			in.Skip(Token::ANGLE_BRACKET_CLOSE);
 
@@ -87,6 +90,21 @@ void Shape::Read(TokenStreamReader &in) {
 				}
 			}
 			in.Skip(Token::ANGLE_BRACKET_CLOSE);
+
+		} else if (name == "fill") {
+			in.Skip(Token::BRACKET_OPEN);
+			fill.face[Block::FACE_UP] = in.GetBool();
+			in.Skip(Token::COMMA);
+			fill.face[Block::FACE_DOWN] = in.GetBool();
+			in.Skip(Token::COMMA);
+			fill.face[Block::FACE_RIGHT] = in.GetBool();
+			in.Skip(Token::COMMA);
+			fill.face[Block::FACE_LEFT] = in.GetBool();
+			in.Skip(Token::COMMA);
+			fill.face[Block::FACE_FRONT] = in.GetBool();
+			in.Skip(Token::COMMA);
+			fill.face[Block::FACE_BACK] = in.GetBool();
+			in.Skip(Token::BRACKET_CLOSE);
 
 		} else {
 			// try to skip, might fail though
@@ -150,6 +168,55 @@ void Shape::Fill(
 	}
 	for (auto idx : indices) {
 		buf.indices.emplace_back(idx_offset + idx);
+	}
+}
+
+size_t Shape::OutlineCount() const noexcept {
+	if (bounds) {
+		return bounds->OutlineCount();
+	} else {
+		return 0;
+	}
+}
+
+size_t Shape::OutlineIndexCount() const noexcept {
+	if (bounds) {
+		return bounds->OutlineIndexCount();
+	} else {
+		return 0;
+	}
+}
+
+void Shape::Outline(OutlineMesh::Buffer &out) const {
+	if (bounds) {
+		bounds->Outline(out);
+	}
+}
+
+bool Shape::Intersects(
+	const Ray &ray,
+	const glm::mat4 &M,
+	float &dist,
+	glm::vec3 &normal
+) const noexcept {
+	if (bounds) {
+		return bounds->Intersects(ray, M, dist, normal);
+	} else {
+		return false;
+	}
+}
+
+bool Shape::Intersects(
+	const glm::mat4 &M,
+	const AABB &box,
+	const glm::mat4 &box_M,
+	float &depth,
+	glm::vec3 &normal
+) const noexcept {
+	if (bounds) {
+		return bounds->Intersects(M, box, box_M, depth, normal);
+	} else {
+		return false;
 	}
 }
 

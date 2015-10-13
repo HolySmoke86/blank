@@ -313,7 +313,12 @@ CuboidBounds slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 
 }
 
-void AssetLoader::LoadBlockTypes(const string &set_name, BlockTypeRegistry &reg, TextureIndex &tex_index) const {
+void AssetLoader::LoadBlockTypes(
+	const string &set_name,
+	BlockTypeRegistry &reg,
+	TextureIndex &tex_index,
+	const ShapeRegistry &shapes
+) const {
 	string full = data + set_name + ".types";
 	std::ifstream file(full);
 	if (!file) {
@@ -395,20 +400,12 @@ void AssetLoader::LoadBlockTypes(const string &set_name, BlockTypeRegistry &reg,
 				type.commonness = in.GetFloat();
 			} else if (name == "shape") {
 				in.ReadIdentifier(shape_name);
-				if (shape_name == "block") {
-					type.shape = &block_shape;
-					type.fill = {  true,  true,  true,  true,  true,  true };
-				} else if (shape_name == "slab") {
-					type.shape = &slab_shape;
-					type.fill = { false,  true, false, false, false, false };
-				} else if (shape_name == "stair") {
-					type.shape = &stair_shape;
-					type.fill = { false,  true, false, false, false,  true };
-				} else {
-					throw runtime_error("unknown block shape: " + shape_name);
-				}
+				type.shape = &shapes.Get(shape_name);
 			} else {
-				throw runtime_error("unknown block property: " + name);
+				std::cerr << "warning: unknown block type property " << name << std::endl;
+				while (in.Peek().type != Token::SEMICOLON) {
+					in.Next();
+				}
 			}
 			in.Skip(Token::SEMICOLON);
 		}

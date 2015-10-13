@@ -371,7 +371,7 @@ bool Chunk::Intersection(
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x, ++idx) {
 				const BlockType &type = Type(idx);
-				if (!type.visible) {
+				if (!type.collision || !type.shape) {
 					continue;
 				}
 				float cur_dist;
@@ -412,7 +412,7 @@ bool Chunk::Intersection(
 		for (int y = 0; y < height; ++y) {
 			for (int x = 0; x < width; ++x, ++idx) {
 				const BlockType &type = Type(idx);
-				if (!type.collision) {
+				if (!type.collision || !type.shape) {
 					continue;
 				}
 				if (type.shape->Intersects(Mchunk * ToTransform(Pos(x, y, z), idx), box, Mbox, penetration, normal)) {
@@ -435,33 +435,37 @@ BlockMesh::Buffer buf;
 void Chunk::Update(BlockMesh &model) noexcept {
 	int vtx_count = 0, idx_count = 0;
 	for (const auto &block : blocks) {
-		const CollisionBounds *shape = Type(block).shape;
-		vtx_count += shape->VertexCount();
-		idx_count += shape->VertexIndexCount();
+		const BlockType &type = Type(block);
+		if (type.visible && type.shape) {
+			vtx_count += type.shape->VertexCount();
+			idx_count += type.shape->IndexCount();
+		}
 	}
 	buf.Clear();
 	buf.Reserve(vtx_count, idx_count);
 
-	int idx = 0;
-	BlockMesh::Index vtx_counter = 0;
-	for (size_t z = 0; z < depth; ++z) {
-		for (size_t y = 0; y < height; ++y) {
-			for (size_t x = 0; x < width; ++x, ++idx) {
-				const BlockType &type = Type(BlockAt(idx));
-				const Pos pos(x, y, z);
+	if (idx_count > 0) {
+		int idx = 0;
+		BlockMesh::Index vtx_counter = 0;
+		for (size_t z = 0; z < depth; ++z) {
+			for (size_t y = 0; y < height; ++y) {
+				for (size_t x = 0; x < width; ++x, ++idx) {
+					const BlockType &type = Type(BlockAt(idx));
+					const Pos pos(x, y, z);
 
-				if (!type.visible || Obstructed(pos).All()) continue;
+					if (!type.visible || !type.shape || Obstructed(pos).All()) continue;
 
-				type.FillBlockMesh(buf, ToTransform(pos, idx), vtx_counter);
-				size_t vtx_begin = vtx_counter;
-				vtx_counter += type.shape->VertexCount();
+					type.FillBlockMesh(buf, ToTransform(pos, idx), vtx_counter);
+					size_t vtx_begin = vtx_counter;
+					vtx_counter += type.shape->VertexCount();
 
-				for (size_t vtx = vtx_begin; vtx < vtx_counter; ++vtx) {
-					buf.lights.emplace_back(GetVertexLight(
-						pos,
-						buf.vertices[vtx],
-						type.shape->VertexNormal(vtx - vtx_begin, BlockAt(idx).Transform())
-					));
+					for (size_t vtx = vtx_begin; vtx < vtx_counter; ++vtx) {
+						buf.lights.emplace_back(GetVertexLight(
+							pos,
+							buf.vertices[vtx],
+							type.shape->VertexNormal(vtx - vtx_begin, BlockAt(idx).Transform())
+						));
+					}
 				}
 			}
 		}

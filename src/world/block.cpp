@@ -11,9 +11,6 @@
 
 namespace blank {
 
-const NullBounds BlockType::DEFAULT_SHAPE;
-
-
 std::ostream &operator <<(std::ostream &out, const Block &block) {
 	return out << "Block(" << block.type << ", " << block.GetFace() << ", " << block.GetTurn() << ')';
 }
@@ -70,7 +67,7 @@ std::ostream &operator <<(std::ostream &out, const Block::Turn &turn) {
 
 
 BlockType::BlockType() noexcept
-: shape(&DEFAULT_SHAPE)
+: shape(nullptr)
 , textures()
 , hsl_mod(0.0f, 1.0f, 1.0f)
 , rgb_mod(1.0f, 1.0f, 1.0f)
@@ -95,21 +92,16 @@ BlockType::BlockType() noexcept
 , min_richness(-1.0f)
 , mid_richness(0.0f)
 , max_richness(1.0f)
-, commonness(1.0f)
-, fill({ false, false, false, false, false, false }) {
+, commonness(1.0f) {
 
 }
 
 void BlockType::FillEntityMesh(
 	EntityMesh::Buffer &buf,
-	const glm::mat4 &transform,
-	EntityMesh::Index idx_offset
+	const glm::mat4 &transform
 ) const noexcept {
-	if (textures.empty()) {
-		shape->Vertices(buf, transform, 0.0f, idx_offset);
-	} else {
-		shape->Vertices(buf, transform, textures[0], idx_offset);
-	}
+	if (!shape) return;
+	shape->Fill(buf, transform, textures);
 	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
@@ -119,16 +111,14 @@ void BlockType::FillBlockMesh(
 	const glm::mat4 &transform,
 	BlockMesh::Index idx_offset
 ) const noexcept {
-	if (textures.empty()) {
-		shape->Vertices(buf, transform, 0.0f, idx_offset);
-	} else {
-		shape->Vertices(buf, transform, textures[0], idx_offset);
-	}
+	if (!shape) return;
+	shape->Fill(buf, transform, textures, idx_offset);
 	buf.hsl_mods.insert(buf.hsl_mods.end(), shape->VertexCount(), hsl_mod);
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
 
 void BlockType::FillOutlineMesh(OutlineMesh::Buffer &buf) const noexcept {
+	if (!shape) return;
 	shape->Outline(buf);
 	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
 }

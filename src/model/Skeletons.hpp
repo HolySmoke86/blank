@@ -10,6 +10,8 @@ namespace blank {
 
 class Model;
 class EntityMesh;
+class ShapeRegistry;
+class TextureIndex;
 
 class Skeletons {
 
@@ -23,7 +25,7 @@ public:
 	~Skeletons();
 
 	void LoadHeadless();
-	void Load();
+	void Load(const ShapeRegistry &, TextureIndex &);
 
 	size_type size() const noexcept { return skeletons.size(); }
 

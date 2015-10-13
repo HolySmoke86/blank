@@ -30,7 +30,7 @@ ServerState::ServerState(
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadShapes("default", shapes);
-	env.loader.LoadBlockTypes("default", block_types, tex_index);
+	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
 	generator.LoadTypes(block_types);
 	skeletons.LoadHeadless();
 	spawner.LimitSkeletons(1, skeletons.size());
