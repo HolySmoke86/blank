@@ -13,96 +13,102 @@
 
 namespace blank {
 
-Model::Model()
-: parent(nullptr)
-, node_mesh(nullptr)
-, id(0)
-, bounds{{ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }}
-, position(0.0f)
-, orientation(1.0f, 0.0f, 0.0f, 0.0f)
-, parts() {
-
-}
-
-
-Model &Model::AddPart() {
-	parts.emplace_back();
-	parts.back().parent = this;
-	return parts.back();
-}
-
-
-glm::mat4 Model::LocalTransform() const noexcept {
-	glm::mat4 transform(toMat4(orientation));
-	transform[3].x = position.x;
-	transform[3].y = position.y;
-	transform[3].z = position.z;
-	return transform;
-}
-
-glm::mat4 Model::GlobalTransform() const noexcept {
-	if (HasParent()) {
-		return Parent().GlobalTransform() * LocalTransform();
-	} else {
-		return LocalTransform();
-	}
-}
-
-
-void Model::Instantiate(Instance &inst) const {
-	inst.part_model = this;
-	inst.position = position;
-	inst.orientation = orientation;
-	inst.parts.clear();
-	inst.parts.reserve(parts.size());
-	for (const Model &part : parts) {
-		part.Instantiate(inst.AddPart());
-	}
-}
-
-
 Instance::Instance()
-: part_model(nullptr)
-, parent(nullptr)
-, position(0.0f)
-, orientation(1.0f, 0.0f, 0.0f, 0.0f)
-, parts() {
+: model(nullptr)
+, state() {
 
 }
-
-
-Instance &Instance::AddPart() {
-	parts.emplace_back();
-	parts.back().parent = this;
-	return parts.back();
-}
-
-
-glm::mat4 Instance::LocalTransform() const noexcept {
-	glm::mat4 transform(toMat4(orientation));
-	transform[3].x = position.x;
-	transform[3].y = position.y;
-	transform[3].z = position.z;
-	return transform;
-}
-
-glm::mat4 Instance::GlobalTransform() const noexcept {
-	if (HasParent()) {
-		return Parent().GlobalTransform() * LocalTransform();
-	} else {
-		return LocalTransform();
-	}
-}
-
 
 void Instance::Render(const glm::mat4 &M, DirectionalLighting &prog) const {
-	glm::mat4 transform(M * LocalTransform());
-	if (part_model->HasNodeMesh()) {
-		prog.SetM(transform);
-		part_model->NodeMesh().Draw();
+	model->RootPart().Render(M, state, prog);
+}
+
+
+Model::Model()
+: id(0)
+, root()
+, part() {
+
+}
+
+void Model::Enumerate() {
+	part.clear();
+	part.resize(root.Enumerate(0), nullptr);
+	root.Index(part);
+}
+
+void Model::Instantiate(Instance &inst) const {
+	inst.model = this;
+	inst.state.clear();
+	inst.state.resize(part.size());
+}
+
+
+Part::Part()
+: id(0)
+, bounds{ glm::vec3(0.0f), glm::vec3(0.0f) }
+, initial()
+, mesh(nullptr)
+, parent(nullptr)
+, children() {
+
+}
+
+Part::~Part() {
+
+}
+
+Part &Part::AddChild() {
+	children.emplace_back();
+	children.back().parent = this;
+	return children.back();
+}
+
+std::uint16_t Part::Enumerate(std::uint16_t counter) noexcept {
+	id = counter++;
+	for (Part &part : children) {
+		counter = part.Enumerate(counter);
 	}
-	for (const Instance &part : parts) {
-		part.Render(transform, prog);
+	return counter;
+}
+
+void Part::Index(std::vector<Part *> &index) noexcept {
+	index[id] = this;
+	for (Part &part : children) {
+		part.Index(index);
+	}
+}
+
+glm::mat4 Part::LocalTransform(
+	const std::vector<State> &state
+) const noexcept {
+	glm::mat4 transform(toMat4(initial.orientation * state[id].orientation));
+	transform[3] = glm::vec4(initial.position + state[id].position, 1.0f);
+	return transform;
+}
+
+glm::mat4 Part::GlobalTransform(
+	const std::vector<State> &state
+) const noexcept {
+	if (parent) {
+		return parent->GlobalTransform(state) * LocalTransform(state);
+	} else {
+		return LocalTransform(state);
+	}
+}
+
+void Part::Render(
+	const glm::mat4 &M,
+	const std::vector<State> &state,
+	DirectionalLighting &prog
+) const {
+	glm::mat4 transform = M * LocalTransform(state);
+	if (mesh) {
+		prog.SetM(transform);
+		mesh->Draw();
+	}
+	for (const Part &part : children) {
+		part.Render(transform, state, prog);
 	}
 }
 
@@ -124,22 +130,26 @@ void Skeletons::LoadHeadless() {
 	{
 		skeletons.emplace_back(new Model);
 		skeletons[0]->ID(1);
-		skeletons[0]->Bounds(bounds);
+		skeletons[0]->RootPart().bounds = bounds;
+		skeletons[0]->Enumerate();
 	}
 	{
 		skeletons.emplace_back(new Model);
 		skeletons[1]->ID(2);
-		skeletons[1]->Bounds(bounds);
+		skeletons[1]->RootPart().bounds = bounds;
+		skeletons[1]->Enumerate();
 	}
 	{
 		skeletons.emplace_back(new Model);
 		skeletons[2]->ID(3);
-		skeletons[2]->Bounds(bounds);
+		skeletons[2]->RootPart().bounds = bounds;
+		skeletons[2]->Enumerate();
 	}
 	{
 		skeletons.emplace_back(new Model);
 		skeletons[3]->ID(4);
-		skeletons[3]->Bounds(bounds);
+		skeletons[3]->RootPart().bounds = bounds;
+		skeletons[3]->Enumerate();
 	}
 }
 
@@ -157,7 +167,7 @@ void Skeletons::Load(const ShapeRegistry &shapes, TextureIndex &tex_index) {
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 1.0f, 0.0f });
 		meshes[0].Update(buf);
-		skeletons[0]->SetNodeMesh(&meshes[0]);
+		skeletons[0]->RootPart().mesh = &meshes[0];
 	}
 	{
 		buf.Clear();
@@ -165,7 +175,7 @@ void Skeletons::Load(const ShapeRegistry &shapes, TextureIndex &tex_index) {
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		meshes[1].Update(buf);
-		skeletons[1]->SetNodeMesh(&meshes[1]);
+		skeletons[1]->RootPart().mesh = &meshes[1];
 	}
 	{
 		buf.Clear();
@@ -173,7 +183,7 @@ void Skeletons::Load(const ShapeRegistry &shapes, TextureIndex &tex_index) {
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.0f, 1.0f });
 		meshes[2].Update(buf);
-		skeletons[2]->SetNodeMesh(&meshes[2]);
+		skeletons[2]->RootPart().mesh = &meshes[2];
 	}
 	{
 		buf.Clear();
@@ -181,7 +191,7 @@ void Skeletons::Load(const ShapeRegistry &shapes, TextureIndex &tex_index) {
 		buf.hsl_mods.resize(shape.VertexCount(), { 0.0f, 1.0f, 1.0f });
 		buf.rgb_mods.resize(shape.VertexCount(), { 1.0f, 0.25f, 0.5f });
 		meshes[3].Update(buf);
-		skeletons[3]->SetNodeMesh(&meshes[3]);
+		skeletons[3]->RootPart().mesh = &meshes[3];
 	}
 }
 
