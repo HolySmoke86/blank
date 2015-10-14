@@ -32,8 +32,9 @@ ServerState::ServerState(
 	env.loader.LoadShapes("default", shapes);
 	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
 	generator.LoadTypes(block_types);
-	skeletons.LoadHeadless();
+	skeletons.Load(shapes);
 	spawner.LimitSkeletons(1, skeletons.size());
+	spawner.LoadTextures(tex_index);
 	server.SetPlayerModel(skeletons[0]);
 
 	loop_timer.Start();

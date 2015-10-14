@@ -9,9 +9,7 @@
 namespace blank {
 
 class Model;
-class EntityMesh;
 class ShapeRegistry;
-class TextureIndex;
 
 class Skeletons {
 
@@ -24,8 +22,7 @@ public:
 	Skeletons();
 	~Skeletons();
 
-	void LoadHeadless();
-	void Load(const ShapeRegistry &, TextureIndex &);
+	void Load(const ShapeRegistry &);
 
 	size_type size() const noexcept { return skeletons.size(); }
 
@@ -37,7 +34,6 @@ public:
 
 private:
 	std::vector<std::unique_ptr<Model>> skeletons;
-	std::vector<EntityMesh> meshes;
 
 };
 

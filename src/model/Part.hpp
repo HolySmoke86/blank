@@ -13,8 +13,9 @@
 namespace blank {
 
 class DirectionalLighting;
-class EntityMesh;
+class Instance;
 class Model;
+class Shape;
 
 struct Part {
 
@@ -24,7 +25,7 @@ struct Part {
 		glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f);
 		glm::quat orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	} initial;
-	const EntityMesh *mesh;
+	const Shape *shape;
 
 	Part();
 	~Part();
@@ -35,10 +36,14 @@ struct Part {
 	std::uint16_t Enumerate(std::uint16_t) noexcept;
 	void Index(std::vector<Part *> &) noexcept;
 
-	glm::mat4 LocalTransform(const std::vector<State> &) const noexcept;
-	glm::mat4 GlobalTransform(const std::vector<State> &) const noexcept;
+	glm::mat4 LocalTransform(const Instance &) const noexcept;
+	glm::mat4 GlobalTransform(const Instance &) const noexcept;
 
-	void Render(const glm::mat4 &, const std::vector<State> &, DirectionalLighting &) const;
+	void LoadMeshes(Instance &) const;
+	void Render(
+		const glm::mat4 &,
+		const Instance &,
+		DirectionalLighting &) const;
 
 private:
 	const Part *parent;

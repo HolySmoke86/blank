@@ -43,12 +43,13 @@ MasterState::MasterState(
 	TextureIndex tex_index;
 	env.loader.LoadShapes("default", shapes);
 	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	skeletons.Load(shapes, tex_index);
+	skeletons.Load(shapes);
+	spawner.LimitSkeletons(0, skeletons.size());
+	spawner.LoadTextures(tex_index);
 	interface.SetInventorySlots(block_types.size() - 1);
 	generator.LoadTypes(block_types);
 	chunk_renderer.LoadTextures(env.loader, tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
-	spawner.LimitSkeletons(0, skeletons.size());
 	if (save.Exists(player)) {
 		save.Read(player);
 	} else {

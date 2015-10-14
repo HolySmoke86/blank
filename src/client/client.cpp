@@ -61,14 +61,18 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , chunk_renderer(player.GetChunks())
 , skeletons()
 , loop_timer(16)
-, sky(master.GetEnv().loader.LoadCubeMap("skybox")) {
+, sky(master.GetEnv().loader.LoadCubeMap("skybox"))
+, tex_map()
+, update_status() {
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
 	}
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadShapes("default", shapes);
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	skeletons.Load(shapes, tex_index);
+	skeletons.Load(shapes);
+	tex_map.push_back(tex_index.GetID("rock-1"));
+	tex_map.push_back(tex_index.GetID("rock-face"));
 	interface.SetInventorySlots(block_types.size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
@@ -155,8 +159,91 @@ void InteractiveState::Render(Viewport &viewport) {
 	hud.Render(viewport);
 }
 
-void InteractiveState::MergePlayerCorrection(std::uint16_t pack, const EntityState &state) {
-	input.MergePlayerCorrection(pack, state);
+void InteractiveState::Handle(const Packet::SpawnEntity &pack) {
+	uint32_t entity_id;
+	pack.ReadEntityID(entity_id);
+	Entity &entity = world.ForceAddEntity(entity_id);
+	UpdateEntity(entity_id, pack.Seq());
+	pack.ReadEntity(entity);
+	uint32_t skel_id;
+	pack.ReadSkeletonID(skel_id);
+	Model *skel = skeletons.ByID(skel_id);
+	if (skel) {
+		skel->Instantiate(entity.GetModel());
+		entity.GetModel().SetTextures(tex_map);
+	}
+	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
+		<< ") at " << entity.AbsolutePosition() << endl;
+}
+
+void InteractiveState::Handle(const Packet::DespawnEntity &pack) {
+	uint32_t entity_id;
+	pack.ReadEntityID(entity_id);
+	ClearEntity(entity_id);
+	for (Entity &entity : world.Entities()) {
+		if (entity.ID() == entity_id) {
+			entity.Kill();
+			cout << "despawned entity #" << entity_id << " (" << entity.Name() << ") at " << entity.AbsolutePosition() << endl;
+			return;
+		}
+	}
+}
+
+void InteractiveState::Handle(const Packet::EntityUpdate &pack) {
+	auto world_iter = world.Entities().begin();
+	auto world_end = world.Entities().end();
+
+	uint32_t count = 0;
+	pack.ReadEntityCount(count);
+
+	for (uint32_t i = 0; i < count; ++i) {
+		uint32_t entity_id = 0;
+		pack.ReadEntityID(entity_id, i);
+
+		while (world_iter != world_end && world_iter->ID() < entity_id) {
+			++world_iter;
+		}
+		if (world_iter == world_end) {
+			// nothing can be done from here
+			return;
+		}
+		if (world_iter->ID() == entity_id) {
+			if (UpdateEntity(entity_id, pack.Seq())) {
+				pack.ReadEntityState(world_iter->GetState(), i);
+			}
+		}
+	}
+}
+
+bool InteractiveState::UpdateEntity(uint32_t entity_id, uint16_t seq) {
+	auto entry = update_status.find(entity_id);
+	if (entry == update_status.end()) {
+		update_status.emplace(entity_id, UpdateStatus{ seq, loop_timer.Elapsed() });
+		return true;
+	}
+
+	int16_t pack_diff = int16_t(seq) - int16_t(entry->second.last_packet);
+	int time_diff = loop_timer.Elapsed() - entry->second.last_update;
+	entry->second.last_update = loop_timer.Elapsed();
+
+	if (pack_diff > 0 || time_diff > 1500) {
+		entry->second.last_packet = seq;
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void InteractiveState::ClearEntity(uint32_t entity_id) {
+	update_status.erase(entity_id);
+}
+
+void InteractiveState::Handle(const Packet::PlayerCorrection &pack) {
+	uint16_t pack_seq;
+	EntityState corrected_state;
+	pack.ReadPacketSeq(pack_seq);
+	pack.ReadPlayerState(corrected_state);
+	input.MergePlayerCorrection(pack_seq, corrected_state);
 }
 
 void InteractiveState::Handle(const Packet::BlockUpdate &pack) {
@@ -232,11 +319,8 @@ MasterState::MasterState(
 , state()
 , client(config.net)
 , init_state(*this)
-, login_packet(-1)
-, update_status()
-, update_timer(16) {
+, login_packet(-1) {
 	client.GetConnection().SetHandler(this);
-	update_timer.Start();
 }
 
 void MasterState::Quit() {
@@ -259,7 +343,6 @@ void MasterState::Handle(const SDL_Event &event) {
 
 
 void MasterState::Update(int dt) {
-	update_timer.Update(dt);
 	client.Handle();
 	client.Update(dt);
 }
@@ -322,19 +405,7 @@ void MasterState::On(const Packet::SpawnEntity &pack) {
 		cout << "got entity spawn before world was created" << endl;
 		return;
 	}
-	uint32_t entity_id;
-	pack.ReadEntityID(entity_id);
-	Entity &entity = state->GetWorld().ForceAddEntity(entity_id);
-	UpdateEntity(entity_id, pack.Seq());
-	pack.ReadEntity(entity);
-	uint32_t skel_id;
-	pack.ReadSkeletonID(skel_id);
-	Model *skel = state->GetSkeletons().ByID(skel_id);
-	if (skel) {
-		skel->Instantiate(entity.GetModel());
-	}
-	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
-		<< ") at " << entity.AbsolutePosition() << endl;
+	state->Handle(pack);
 }
 
 void MasterState::On(const Packet::DespawnEntity &pack) {
@@ -342,16 +413,7 @@ void MasterState::On(const Packet::DespawnEntity &pack) {
 		cout << "got entity despawn before world was created" << endl;
 		return;
 	}
-	uint32_t entity_id;
-	pack.ReadEntityID(entity_id);
-	ClearEntity(entity_id);
-	for (Entity &entity : state->GetWorld().Entities()) {
-		if (entity.ID() == entity_id) {
-			entity.Kill();
-			cout << "despawned entity #" << entity_id << " (" << entity.Name() << ") at " << entity.AbsolutePosition() << endl;
-			return;
-		}
-	}
+	state->Handle(pack);
 }
 
 void MasterState::On(const Packet::EntityUpdate &pack) {
@@ -359,53 +421,7 @@ void MasterState::On(const Packet::EntityUpdate &pack) {
 		cout << "got entity update before world was created" << endl;
 		return;
 	}
-
-	auto world_iter = state->GetWorld().Entities().begin();
-	auto world_end = state->GetWorld().Entities().end();
-
-	uint32_t count = 0;
-	pack.ReadEntityCount(count);
-
-	for (uint32_t i = 0; i < count; ++i) {
-		uint32_t entity_id = 0;
-		pack.ReadEntityID(entity_id, i);
-
-		while (world_iter != world_end && world_iter->ID() < entity_id) {
-			++world_iter;
-		}
-		if (world_iter == world_end) {
-			// nothing can be done from here
-			return;
-		}
-		if (world_iter->ID() == entity_id) {
-			if (UpdateEntity(entity_id, pack.Seq())) {
-				pack.ReadEntityState(world_iter->GetState(), i);
-			}
-		}
-	}
-}
-
-bool MasterState::UpdateEntity(uint32_t entity_id, uint16_t seq) {
-	auto entry = update_status.find(entity_id);
-	if (entry == update_status.end()) {
-		update_status.emplace(entity_id, UpdateStatus{ seq, update_timer.Elapsed() });
-		return true;
-	}
-
-	int16_t pack_diff = int16_t(seq) - int16_t(entry->second.last_packet);
-	int time_diff = update_timer.Elapsed() - entry->second.last_update;
-	entry->second.last_update = update_timer.Elapsed();
-
-	if (pack_diff > 0 || time_diff > 1500) {
-		entry->second.last_packet = seq;
-		return true;
-	} else {
-		return false;
-	}
-}
-
-void MasterState::ClearEntity(uint32_t entity_id) {
-	update_status.erase(entity_id);
+	state->Handle(pack);
 }
 
 void MasterState::On(const Packet::PlayerCorrection &pack) {
@@ -413,11 +429,7 @@ void MasterState::On(const Packet::PlayerCorrection &pack) {
 		cout << "got player correction without a player :S" << endl;
 		return;
 	}
-	uint16_t pack_seq;
-	EntityState corrected_state;
-	pack.ReadPacketSeq(pack_seq);
-	pack.ReadPlayerState(corrected_state);
-	state->MergePlayerCorrection(pack_seq, corrected_state);
+	state->Handle(pack);
 }
 
 void MasterState::On(const Packet::ChunkBegin &pack) {

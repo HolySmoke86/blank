@@ -14,6 +14,7 @@ class Entity;
 class GaloisLFSR;
 class Model;
 class Skeletons;
+class TextureIndex;
 class World;
 
 class Spawner {
@@ -23,6 +24,7 @@ public:
 	~Spawner();
 
 	void LimitSkeletons(std::size_t begin, std::size_t end);
+	void LoadTextures(TextureIndex &);
 
 	void Update(int dt);
 
@@ -48,6 +50,8 @@ private:
 
 	std::size_t skeletons_offset;
 	std::size_t skeletons_length;
+
+	std::vector<float> tex_map;
 
 };
 

@@ -48,7 +48,10 @@ public:
 	void Update(int dt) override;
 	void Render(Viewport &) override;
 
-	void MergePlayerCorrection(std::uint16_t, const EntityState &);
+	void Handle(const Packet::SpawnEntity &);
+	void Handle(const Packet::DespawnEntity &);
+	void Handle(const Packet::EntityUpdate &);
+	void Handle(const Packet::PlayerCorrection &);
 	void Handle(const Packet::BlockUpdate &);
 
 	void SetAudio(bool) override;
@@ -56,6 +59,13 @@ public:
 	void SetHUD(bool) override;
 	void SetDebug(bool) override;
 	void Exit() override;
+
+private:
+	/// flag entity as updated by given packet
+	/// returns false if the update should be ignored
+	bool UpdateEntity(std::uint32_t id, std::uint16_t seq);
+	/// drop update information or given entity
+	void ClearEntity(std::uint32_t id);
 
 private:
 	MasterState &master;
@@ -74,6 +84,14 @@ private:
 	IntervalTimer loop_timer;
 
 	SkyBox sky;
+
+	std::vector<float> tex_map;
+
+	struct UpdateStatus {
+		std::uint16_t last_packet;
+		int last_update;
+	};
+	std::map<std::uint32_t, UpdateStatus> update_status;
 
 };
 

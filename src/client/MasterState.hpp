@@ -63,13 +63,6 @@ public:
 	void On(const Packet::BlockUpdate &) override;
 
 private:
-	/// flag entity as updated by given packet
-	/// returns false if the update should be ignored
-	bool UpdateEntity(std::uint32_t id, std::uint16_t seq);
-	/// drop update information or given entity
-	void ClearEntity(std::uint32_t id);
-
-private:
 	Environment &env;
 	Config &config;
 	World::Config world_conf;
@@ -79,13 +72,6 @@ private:
 	InitialState init_state;
 
 	int login_packet;
-
-	struct UpdateStatus {
-		std::uint16_t last_packet;
-		int last_update;
-	};
-	std::map<std::uint32_t, UpdateStatus> update_status;
-	IntervalTimer update_timer;
 
 };
 

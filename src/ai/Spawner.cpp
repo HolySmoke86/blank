@@ -2,6 +2,7 @@
 
 #include "Chaser.hpp"
 #include "RandomWalk.hpp"
+#include "../app/TextureIndex.hpp"
 #include "../model/Model.hpp"
 #include "../model/Skeletons.hpp"
 #include "../rand/GaloisLFSR.hpp"
@@ -29,7 +30,8 @@ Spawner::Spawner(World &world, Skeletons &skeletons, GaloisLFSR &rand)
 , max_entities(16)
 , chunk_range(4)
 , skeletons_offset(0)
-, skeletons_length(skeletons.size()) {
+, skeletons_length(skeletons.size())
+, tex_map() {
 	timer.Start();
 }
 
@@ -47,6 +49,12 @@ void Spawner::LimitSkeletons(size_t begin, size_t end) {
 		skeletons_offset = begin;
 		skeletons_length = end - begin;
 	}
+}
+
+void Spawner::LoadTextures(TextureIndex &tex_index) {
+	tex_map.clear();
+	tex_map.push_back(tex_index.GetID("rock-1"));
+	tex_map.push_back(tex_index.GetID("rock-face"));
 }
 
 void Spawner::Update(int dt) {
@@ -135,6 +143,7 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
 	RandomSkeleton().Instantiate(e.GetModel());
+	e.GetModel().SetTextures(tex_map);
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (random()) {
