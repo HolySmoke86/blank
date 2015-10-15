@@ -636,9 +636,13 @@ bool ChunkLoader::LoadOne() {
 			for (iter.x = begin.x; iter.x < end.x; ++iter.x) {
 				if (index->IsBorder(iter)) continue;
 				Chunk *light_chunk = index->Get(iter);
-				if (!light_chunk || light_chunk->Lighted()) continue;
+				if (!light_chunk) continue;
 				if (index->HasAllSurrounding(iter)) {
-					light_chunk->ScanLights();
+					if (!light_chunk->Lighted()) {
+						light_chunk->ScanLights();
+					} else {
+						light_chunk->InvalidateMesh();
+					}
 				}
 			}
 		}
