@@ -8,8 +8,8 @@
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
 #include "../graphics/SkyBox.hpp"
+#include "../model/ModelRegistry.hpp"
 #include "../model/ShapeRegistry.hpp"
-#include "../model/Skeletons.hpp"
 #include "../ui/DirectInput.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"
@@ -65,6 +65,7 @@ private:
 	Environment &env;
 	ShapeRegistry shapes;
 	BlockTypeRegistry block_types;
+	ModelRegistry models;
 	const WorldSave &save;
 	World world;
 	ChunkIndex &spawn_index;
@@ -77,7 +78,6 @@ private:
 	Generator generator;
 	ChunkLoader chunk_loader;
 	ChunkRenderer chunk_renderer;
-	Skeletons skeletons;
 	Spawner spawner;
 
 	SkyBox sky;

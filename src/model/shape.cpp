@@ -108,7 +108,7 @@ void Shape::Read(TokenStreamReader &in) {
 
 		} else {
 			// try to skip, might fail though
-			while (in.Peek().type != Token::SEMICOLON) {
+			while (in.HasMore() && in.Peek().type != Token::SEMICOLON) {
 				in.Next();
 			}
 		}

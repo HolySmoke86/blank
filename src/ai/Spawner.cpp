@@ -2,9 +2,8 @@
 
 #include "Chaser.hpp"
 #include "RandomWalk.hpp"
-#include "../app/TextureIndex.hpp"
 #include "../model/Model.hpp"
-#include "../model/Skeletons.hpp"
+#include "../model/ModelRegistry.hpp"
 #include "../rand/GaloisLFSR.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/BlockType.hpp"
@@ -19,9 +18,9 @@ using namespace std;
 
 namespace blank {
 
-Spawner::Spawner(World &world, Skeletons &skeletons, GaloisLFSR &rand)
+Spawner::Spawner(World &world, ModelRegistry &models, GaloisLFSR &rand)
 : world(world)
-, skeletons(skeletons)
+, models(models)
 , controllers()
 , random(rand)
 , timer(64)
@@ -29,9 +28,8 @@ Spawner::Spawner(World &world, Skeletons &skeletons, GaloisLFSR &rand)
 , spawn_distance(16 * 16)
 , max_entities(16)
 , chunk_range(4)
-, skeletons_offset(0)
-, skeletons_length(skeletons.size())
-, tex_map() {
+, model_offset(0)
+, model_length(models.size()) {
 	timer.Start();
 }
 
@@ -42,19 +40,13 @@ Spawner::~Spawner() {
 }
 
 
-void Spawner::LimitSkeletons(size_t begin, size_t end) {
-	if (begin >= skeletons.size() || end > skeletons.size() || begin >= end) {
-		cout << "warning, skeleton limit out of bounds or invalid range given" << endl;
+void Spawner::LimitModels(size_t begin, size_t end) {
+	if (begin >= models.size() || end > models.size() || begin >= end) {
+		cout << "warning, models limit out of bounds or invalid range given" << endl;
 	} else {
-		skeletons_offset = begin;
-		skeletons_length = end - begin;
+		model_offset = begin;
+		model_length = end - begin;
 	}
-}
-
-void Spawner::LoadTextures(TextureIndex &tex_index) {
-	tex_map.clear();
-	tex_map.push_back(tex_index.GetID("rock-1"));
-	tex_map.push_back(tex_index.GetID("rock-face"));
 }
 
 void Spawner::Update(int dt) {
@@ -99,7 +91,7 @@ void Spawner::CheckDespawn() noexcept {
 }
 
 void Spawner::TrySpawn() {
-	if (controllers.size() >= max_entities || skeletons_length == 0) return;
+	if (controllers.size() >= max_entities || model_length == 0) return;
 
 	// select random player to punish
 	auto &players = world.Players();
@@ -142,8 +134,7 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
-	RandomSkeleton().Instantiate(e.GetModel());
-	e.GetModel().SetTextures(tex_map);
+	RandomModel().Instantiate(e.GetModel());
 	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (random()) {
@@ -156,9 +147,9 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	controllers.emplace_back(ctrl);
 }
 
-Model &Spawner::RandomSkeleton() noexcept {
-	std::size_t offset = (random.Next<std::size_t>() % skeletons_length) + skeletons_offset;
-	return skeletons[offset];
+Model &Spawner::RandomModel() noexcept {
+	std::size_t offset = (random.Next<std::size_t>() % model_length) + model_offset;
+	return models[offset];
 }
 
 }

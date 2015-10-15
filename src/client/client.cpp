@@ -50,6 +50,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
 , shapes()
 , block_types()
+, models()
 , save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetConfig().net.host))
 , world(block_types, master.GetWorldConf())
 , player(*world.AddPlayer(master.GetConfig().player.name))
@@ -59,10 +60,8 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , interface(master.GetConfig(), master.GetEnv().keymap, input, *this)
 , chunk_receiver(world.Chunks(), save)
 , chunk_renderer(player.GetChunks())
-, skeletons()
 , loop_timer(16)
 , sky(master.GetEnv().loader.LoadCubeMap("skybox"))
-, tex_map()
 , update_status() {
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
@@ -70,9 +69,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	TextureIndex tex_index;
 	master.GetEnv().loader.LoadShapes("default", shapes);
 	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	skeletons.Load(shapes);
-	tex_map.push_back(tex_index.GetID("rock-1"));
-	tex_map.push_back(tex_index.GetID("rock-face"));
+	master.GetEnv().loader.LoadModels("default", models, tex_index, shapes);
 	interface.SetInventorySlots(block_types.size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
@@ -167,10 +164,9 @@ void InteractiveState::Handle(const Packet::SpawnEntity &pack) {
 	pack.ReadEntity(entity);
 	uint32_t skel_id;
 	pack.ReadSkeletonID(skel_id);
-	Model *skel = skeletons.ByID(skel_id);
-	if (skel) {
-		skel->Instantiate(entity.GetModel());
-		entity.GetModel().SetTextures(tex_map);
+	if (skel_id > 0 && skel_id <= models.size()) {
+		Model &skel = models.Get(skel_id);
+		skel.Instantiate(entity.GetModel());
 	}
 	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
 		<< ") at " << entity.AbsolutePosition() << endl;

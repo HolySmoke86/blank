@@ -21,21 +21,23 @@ ServerState::ServerState(
 : env(env)
 , shapes()
 , block_types()
+, models()
 , world(block_types, wc)
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, ws)
-, skeletons()
-, spawner(world, skeletons, env.rng)
+, spawner(world, models, env.rng)
 , server(config.net, world, wc, ws)
 , loop_timer(16) {
 	TextureIndex tex_index;
 	env.loader.LoadShapes("default", shapes);
 	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
+	env.loader.LoadModels("default", models, tex_index, shapes);
+	if (models.size() < 2) {
+		throw std::runtime_error("need at least two models to run");
+	}
 	generator.LoadTypes(block_types);
-	skeletons.Load(shapes);
-	spawner.LimitSkeletons(1, skeletons.size());
-	spawner.LoadTextures(tex_index);
-	server.SetPlayerModel(skeletons[0]);
+	spawner.LimitModels(1, models.size());
+	server.SetPlayerModel(models[0]);
 
 	loop_timer.Start();
 

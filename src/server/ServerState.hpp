@@ -5,8 +5,8 @@
 #include "../ai/Spawner.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../app/State.hpp"
+#include "../model/ModelRegistry.hpp"
 #include "../model/ShapeRegistry.hpp"
-#include "../model/Skeletons.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkLoader.hpp"
 #include "../world/Generator.hpp"
@@ -42,10 +42,10 @@ private:
 	HeadlessEnvironment &env;
 	ShapeRegistry shapes;
 	BlockTypeRegistry block_types;
+	ModelRegistry models;
 	World world;
 	Generator generator;
 	ChunkLoader chunk_loader;
-	Skeletons skeletons;
 	Spawner spawner;
 	Server server;
 	IntervalTimer loop_timer;

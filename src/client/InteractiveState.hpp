@@ -9,8 +9,8 @@
 #include "../app/IntervalTimer.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
+#include "../model/ModelRegistry.hpp"
 #include "../model/ShapeRegistry.hpp"
-#include "../model/Skeletons.hpp"
 #include "../net/Packet.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"
@@ -40,7 +40,7 @@ public:
 	World &GetWorld() noexcept { return world; }
 	Player &GetPlayer() noexcept { return player; }
 	ChunkReceiver &GetChunkReceiver() noexcept { return chunk_receiver; }
-	Skeletons &GetSkeletons() noexcept { return skeletons; }
+	ModelRegistry &GetModels() noexcept { return models; }
 
 	void OnEnter() override;
 
@@ -71,6 +71,7 @@ private:
 	MasterState &master;
 	ShapeRegistry shapes;
 	BlockTypeRegistry block_types;
+	ModelRegistry models;
 	WorldSave save;
 	World world;
 	Player &player;
@@ -80,12 +81,9 @@ private:
 	Interface interface;
 	ChunkReceiver chunk_receiver;
 	ChunkRenderer chunk_renderer;
-	Skeletons skeletons;
 	IntervalTimer loop_timer;
 
 	SkyBox sky;
-
-	std::vector<float> tex_map;
 
 	struct UpdateStatus {
 		std::uint16_t last_packet;

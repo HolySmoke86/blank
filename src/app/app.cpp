@@ -14,6 +14,8 @@
 #include "../graphics/Texture.hpp"
 #include "../io/TokenStreamReader.hpp"
 #include "../model/bounds.hpp"
+#include "../model/Model.hpp"
+#include "../model/ModelRegistry.hpp"
 #include "../model/Shape.hpp"
 #include "../model/ShapeRegistry.hpp"
 #include "../world/BlockType.hpp"
@@ -492,6 +494,43 @@ CubeMap AssetLoader::LoadCubeMap(const string &name) const {
 Font AssetLoader::LoadFont(const string &name, int size) const {
 	string full = fonts + name + ".ttf";
 	return Font(full.c_str(), size);
+}
+
+void AssetLoader::LoadModels(
+	const string &set_name,
+	ModelRegistry &models,
+	TextureIndex &tex_index,
+	const ShapeRegistry &shapes
+) const {
+	string full = data + set_name + ".models";
+	std::ifstream file(full);
+	if (!file) {
+		throw std::runtime_error("failed to open model file " + full);
+	}
+	TokenStreamReader in(file);
+	string model_name;
+	string prop_name;
+	while (in.HasMore()) {
+		in.ReadIdentifier(model_name);
+		in.Skip(Token::EQUALS);
+		in.Skip(Token::ANGLE_BRACKET_OPEN);
+		Model &model = models.Add(model_name);
+		while (in.HasMore() && in.Peek().type != Token::ANGLE_BRACKET_CLOSE) {
+			in.ReadIdentifier(prop_name);
+			in.Skip(Token::EQUALS);
+			if (prop_name == "root") {
+				model.RootPart().Read(in, tex_index, shapes);
+			} else {
+				while (in.HasMore() && in.Peek().type != Token::SEMICOLON) {
+					in.Next();
+				}
+			}
+			in.Skip(Token::SEMICOLON);
+		}
+		model.Enumerate();
+		in.Skip(Token::ANGLE_BRACKET_CLOSE);
+		in.Skip(Token::SEMICOLON);
+	}
 }
 
 void AssetLoader::LoadShapes(const string &set_name, ShapeRegistry &shapes) const {

@@ -23,6 +23,7 @@ MasterState::MasterState(
 , env(env)
 , shapes()
 , block_types()
+, models()
 , save(save)
 , world(block_types, wc)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
@@ -35,17 +36,18 @@ MasterState::MasterState(
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, save)
 , chunk_renderer(player.GetChunks())
-, skeletons()
-, spawner(world, skeletons, env.rng)
+, spawner(world, models, env.rng)
 , sky(env.loader.LoadCubeMap("skybox"))
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save) {
 	TextureIndex tex_index;
 	env.loader.LoadShapes("default", shapes);
 	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	skeletons.Load(shapes);
-	spawner.LimitSkeletons(0, skeletons.size());
-	spawner.LoadTextures(tex_index);
+	env.loader.LoadModels("default", models, tex_index, shapes);
+	if (models.size() < 2) {
+		throw std::runtime_error("need at least two models to run");
+	}
+	spawner.LimitModels(0, models.size());
 	interface.SetInventorySlots(block_types.size() - 1);
 	generator.LoadTypes(block_types);
 	chunk_renderer.LoadTextures(env.loader, tex_index);

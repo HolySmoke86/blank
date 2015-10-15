@@ -11,6 +11,7 @@ namespace blank {
 class ArrayTexture;
 class BlockTypeRegistry;
 class CubeMap;
+class ModelRegistry;
 class ShapeRegistry;
 class Sound;
 class Texture;
@@ -28,6 +29,11 @@ public:
 		const ShapeRegistry &) const;
 	CubeMap LoadCubeMap(const std::string &name) const;
 	Font LoadFont(const std::string &name, int size) const;
+	void LoadModels(
+		const std::string &set_name,
+		ModelRegistry &,
+		TextureIndex &,
+		const ShapeRegistry &) const;
 	void LoadShapes(const std::string &set_name, ShapeRegistry &) const;
 	Sound LoadSound(const std::string &name) const;
 	Texture LoadTexture(const std::string &name) const;

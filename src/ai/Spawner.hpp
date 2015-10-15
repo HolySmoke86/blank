@@ -13,18 +13,16 @@ class Controller;
 class Entity;
 class GaloisLFSR;
 class Model;
-class Skeletons;
-class TextureIndex;
+class ModelRegistry;
 class World;
 
 class Spawner {
 
 public:
-	Spawner(World &, Skeletons &, GaloisLFSR &);
+	Spawner(World &, ModelRegistry &, GaloisLFSR &);
 	~Spawner();
 
-	void LimitSkeletons(std::size_t begin, std::size_t end);
-	void LoadTextures(TextureIndex &);
+	void LimitModels(std::size_t begin, std::size_t end);
 
 	void Update(int dt);
 
@@ -33,11 +31,11 @@ private:
 	void TrySpawn();
 	void Spawn(Entity &reference, const glm::ivec3 &, const glm::vec3 &);
 
-	Model &RandomSkeleton() noexcept;
+	Model &RandomModel() noexcept;
 
 private:
 	World &world;
-	Skeletons &skeletons;
+	ModelRegistry &models;
 	std::vector<Controller *> controllers;
 
 	GaloisLFSR &random;
@@ -48,10 +46,8 @@ private:
 	unsigned int max_entities;
 	int chunk_range;
 
-	std::size_t skeletons_offset;
-	std::size_t skeletons_length;
-
-	std::vector<float> tex_map;
+	std::size_t model_offset;
+	std::size_t model_length;
 
 };
 
