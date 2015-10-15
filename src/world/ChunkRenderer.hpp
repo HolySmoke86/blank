@@ -14,7 +14,7 @@ namespace blank {
 class AssetLoader;
 class BlockMesh;
 class ChunkIndex;
-class TextureIndex;
+class ResourceIndex;
 class Viewport;
 
 class ChunkRenderer {
@@ -23,7 +23,7 @@ public:
 	explicit ChunkRenderer(ChunkIndex &);
 	~ChunkRenderer();
 
-	void LoadTextures(const AssetLoader &, const TextureIndex &);
+	void LoadTextures(const AssetLoader &, const ResourceIndex &);
 	void FogDensity(float d) noexcept { fog_density = d; }
 
 	int MissingChunks() const noexcept;

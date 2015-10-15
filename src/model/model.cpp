@@ -5,10 +5,10 @@
 
 #include "Shape.hpp"
 #include "ShapeRegistry.hpp"
-#include "../app/TextureIndex.hpp"
 #include "../io/TokenStreamReader.hpp"
 #include "../graphics/DirectionalLighting.hpp"
 #include "../graphics/EntityMesh.hpp"
+#include "../shared/ResourceIndex.hpp"
 
 #include <iostream>
 #include <glm/gtx/quaternion.hpp>
@@ -101,7 +101,7 @@ Part::~Part() {
 
 }
 
-void Part::Read(TokenStreamReader &in, TextureIndex &tex_index, const ShapeRegistry &shapes) {
+void Part::Read(TokenStreamReader &in, ResourceIndex &tex_index, const ShapeRegistry &shapes) {
 	std::string name;
 	std::string shape_name;
 	std::string tex_name;

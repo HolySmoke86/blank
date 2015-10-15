@@ -17,9 +17,9 @@ class DirectionalLighting;
 class EntityMesh;
 class Instance;
 class Model;
+class ResourceIndex;
 class Shape;
 class ShapeRegistry;
-class TextureIndex;
 class TokenStreamReader;
 
 struct Part {
@@ -33,7 +33,7 @@ public:
 	Part();
 	~Part();
 
-	void Read(TokenStreamReader &, TextureIndex &, const ShapeRegistry &);
+	void Read(TokenStreamReader &, ResourceIndex &, const ShapeRegistry &);
 
 	Part &AddChild();
 	const std::list<Part> &Children() const noexcept { return children; }

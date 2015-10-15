@@ -4,7 +4,6 @@
 
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
-#include "../app/TextureIndex.hpp"
 #include "../model/Model.hpp"
 #include "../io/WorldSave.hpp"
 #include "../world/ChunkIndex.hpp"
@@ -48,11 +47,9 @@ void InitialState::Render(Viewport &viewport) {
 // TODO: this clutter is a giant mess
 InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
-, shapes()
-, block_types()
-, models()
+, res()
 , save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetConfig().net.host))
-, world(block_types, master.GetWorldConf())
+, world(res.block_types, master.GetWorldConf())
 , player(*world.AddPlayer(master.GetConfig().player.name))
 , hud(master.GetEnv(), master.GetConfig(), player)
 , manip(master.GetEnv(), player.GetEntity())
@@ -66,12 +63,9 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
 	}
-	TextureIndex tex_index;
-	master.GetEnv().loader.LoadShapes("default", shapes);
-	master.GetEnv().loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	master.GetEnv().loader.LoadModels("default", models, tex_index, shapes);
-	interface.SetInventorySlots(block_types.size() - 1);
-	chunk_renderer.LoadTextures(master.GetEnv().loader, tex_index);
+	res.Load(master.GetEnv().loader, "default");
+	interface.SetInventorySlots(res.block_types.size() - 1);
+	chunk_renderer.LoadTextures(master.GetEnv().loader, res.tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
 	loop_timer.Start();
 	if (save.Exists(player)) {
@@ -120,7 +114,7 @@ void InteractiveState::Update(int dt) {
 	} else {
 		hud.FocusNone();
 	}
-	hud.Display(block_types[player.GetInventorySlot() + 1]);
+	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
 	loop_timer.Update(dt);
 	master.Update(dt);
 	chunk_receiver.Update(dt);
@@ -164,8 +158,8 @@ void InteractiveState::Handle(const Packet::SpawnEntity &pack) {
 	pack.ReadEntity(entity);
 	uint32_t skel_id;
 	pack.ReadSkeletonID(skel_id);
-	if (skel_id > 0 && skel_id <= models.size()) {
-		Model &skel = models.Get(skel_id);
+	if (skel_id > 0 && skel_id <= res.models.size()) {
+		Model &skel = res.models.Get(skel_id);
 		skel.Instantiate(entity.GetModel());
 	}
 	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
@@ -257,7 +251,7 @@ void InteractiveState::Handle(const Packet::BlockUpdate &pack) {
 		Block block;
 		pack.ReadIndex(index, i);
 		pack.ReadBlock(block, i);
-		if (index < Chunk::size && block.type < block_types.size()) {
+		if (index < Chunk::size && block.type < res.block_types.size()) {
 			manip.SetBlock(*chunk, index, block);
 		}
 	}

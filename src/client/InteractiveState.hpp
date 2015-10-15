@@ -9,13 +9,11 @@
 #include "../app/IntervalTimer.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
-#include "../model/ModelRegistry.hpp"
-#include "../model/ShapeRegistry.hpp"
 #include "../net/Packet.hpp"
+#include "../shared/WorldResources.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"
 #include "../ui/Interface.hpp"
-#include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkRenderer.hpp"
 #include "../world/EntityState.hpp"
 #include "../world/Player.hpp"
@@ -40,7 +38,6 @@ public:
 	World &GetWorld() noexcept { return world; }
 	Player &GetPlayer() noexcept { return player; }
 	ChunkReceiver &GetChunkReceiver() noexcept { return chunk_receiver; }
-	ModelRegistry &GetModels() noexcept { return models; }
 
 	void OnEnter() override;
 
@@ -69,9 +66,7 @@ private:
 
 private:
 	MasterState &master;
-	ShapeRegistry shapes;
-	BlockTypeRegistry block_types;
-	ModelRegistry models;
+	WorldResources res;
 	WorldSave save;
 	World world;
 	Player &player;

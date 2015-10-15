@@ -8,13 +8,11 @@
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
 #include "../graphics/SkyBox.hpp"
-#include "../model/ModelRegistry.hpp"
-#include "../model/ShapeRegistry.hpp"
+#include "../shared/WorldResources.hpp"
 #include "../ui/DirectInput.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"
 #include "../ui/Interface.hpp"
-#include "../world/BlockTypeRegistry.hpp"
 #include "../world/ChunkIndex.hpp"
 #include "../world/ChunkLoader.hpp"
 #include "../world/ChunkRenderer.hpp"
@@ -63,9 +61,7 @@ public:
 private:
 	Config &config;
 	Environment &env;
-	ShapeRegistry shapes;
-	BlockTypeRegistry block_types;
-	ModelRegistry models;
+	WorldResources res;
 	const WorldSave &save;
 	World world;
 	ChunkIndex &spawn_index;

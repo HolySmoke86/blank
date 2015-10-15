@@ -3,7 +3,6 @@
 #include "../app/Config.hpp"
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
-#include "../app/TextureIndex.hpp"
 #include "../io/WorldSave.hpp"
 
 #include <SDL.h>
@@ -21,11 +20,9 @@ MasterState::MasterState(
 )
 : config(config)
 , env(env)
-, shapes()
-, block_types()
-, models()
+, res()
 , save(save)
-, world(block_types, wc)
+, world(res.block_types, wc)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , player(*world.AddPlayer(config.player.name))
 , spawn_player(false)
@@ -36,21 +33,18 @@ MasterState::MasterState(
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, save)
 , chunk_renderer(player.GetChunks())
-, spawner(world, models, env.rng)
+, spawner(world, res.models, env.rng)
 , sky(env.loader.LoadCubeMap("skybox"))
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save) {
-	TextureIndex tex_index;
-	env.loader.LoadShapes("default", shapes);
-	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	env.loader.LoadModels("default", models, tex_index, shapes);
-	if (models.size() < 2) {
+	res.Load(env.loader, "default");
+	if (res.models.size() < 2) {
 		throw std::runtime_error("need at least two models to run");
 	}
-	spawner.LimitModels(0, models.size());
-	interface.SetInventorySlots(block_types.size() - 1);
-	generator.LoadTypes(block_types);
-	chunk_renderer.LoadTextures(env.loader, tex_index);
+	spawner.LimitModels(0, res.models.size());
+	interface.SetInventorySlots(res.block_types.size() - 1);
+	generator.LoadTypes(res.block_types);
+	chunk_renderer.LoadTextures(env.loader, res.tex_index);
 	chunk_renderer.FogDensity(wc.fog_density);
 	if (save.Exists(player)) {
 		save.Read(player);
@@ -119,7 +113,7 @@ void MasterState::Update(int dt) {
 	} else {
 		hud.FocusNone();
 	}
-	hud.Display(block_types[player.GetInventorySlot() + 1]);
+	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
 	hud.Update(dt);
 	spawner.Update(dt);
 	world.Update(dt);

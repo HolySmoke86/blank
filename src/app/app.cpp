@@ -4,7 +4,6 @@
 #include "FrameCounter.hpp"
 #include "State.hpp"
 #include "StateControl.hpp"
-#include "TextureIndex.hpp"
 
 #include "init.hpp"
 #include "../audio/Sound.hpp"
@@ -18,6 +17,7 @@
 #include "../model/ModelRegistry.hpp"
 #include "../model/Shape.hpp"
 #include "../model/ShapeRegistry.hpp"
+#include "../shared/ResourceIndex.hpp"
 #include "../world/BlockType.hpp"
 #include "../world/BlockTypeRegistry.hpp"
 #include "../world/Entity.hpp"
@@ -318,7 +318,7 @@ CuboidBounds slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 void AssetLoader::LoadBlockTypes(
 	const string &set_name,
 	BlockTypeRegistry &reg,
-	TextureIndex &tex_index,
+	ResourceIndex &tex_index,
 	const ShapeRegistry &shapes
 ) const {
 	string full = data + set_name + ".types";
@@ -499,7 +499,7 @@ Font AssetLoader::LoadFont(const string &name, int size) const {
 void AssetLoader::LoadModels(
 	const string &set_name,
 	ModelRegistry &models,
-	TextureIndex &tex_index,
+	ResourceIndex &tex_index,
 	const ShapeRegistry &shapes
 ) const {
 	string full = data + set_name + ".models";
@@ -584,27 +584,11 @@ void AssetLoader::LoadTexture(const string &name, ArrayTexture &tex, int layer) 
 	SDL_FreeSurface(srf);
 }
 
-void AssetLoader::LoadTextures(const TextureIndex &index, ArrayTexture &tex) const {
+void AssetLoader::LoadTextures(const ResourceIndex &index, ArrayTexture &tex) const {
 	// TODO: where the hell should that size come from?
 	tex.Reserve(16, 16, index.Size(), Format());
 	for (const auto &entry : index.Entries()) {
 		LoadTexture(entry.first, tex, entry.second);
-	}
-}
-
-
-TextureIndex::TextureIndex()
-: id_map() {
-
-}
-
-int TextureIndex::GetID(const string &name) {
-	auto entry = id_map.find(name);
-	if (entry == id_map.end()) {
-		auto result = id_map.emplace(name, Size());
-		return result.first->second;
-	} else {
-		return entry->second;
 	}
 }
 

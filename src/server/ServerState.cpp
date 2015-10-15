@@ -1,7 +1,6 @@
 #include "ServerState.hpp"
 
 #include "../app/Environment.hpp"
-#include "../app/TextureIndex.hpp"
 #include "../io/WorldSave.hpp"
 #include "../net/io.hpp"
 
@@ -19,25 +18,20 @@ ServerState::ServerState(
 	const Config &config
 )
 : env(env)
-, shapes()
-, block_types()
-, models()
-, world(block_types, wc)
+, res()
+, world(res.block_types, wc)
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, ws)
-, spawner(world, models, env.rng)
+, spawner(world, res.models, env.rng)
 , server(config.net, world, wc, ws)
 , loop_timer(16) {
-	TextureIndex tex_index;
-	env.loader.LoadShapes("default", shapes);
-	env.loader.LoadBlockTypes("default", block_types, tex_index, shapes);
-	env.loader.LoadModels("default", models, tex_index, shapes);
-	if (models.size() < 2) {
+	res.Load(env.loader, "default");
+	if (res.models.size() < 2) {
 		throw std::runtime_error("need at least two models to run");
 	}
-	generator.LoadTypes(block_types);
-	spawner.LimitModels(1, models.size());
-	server.SetPlayerModel(models[0]);
+	generator.LoadTypes(res.block_types);
+	spawner.LimitModels(1, res.models.size());
+	server.SetPlayerModel(res.models[0]);
 
 	loop_timer.Start();
 

@@ -675,7 +675,7 @@ int ChunkRenderer::MissingChunks() const noexcept {
 	return index.MissingChunks();
 }
 
-void ChunkRenderer::LoadTextures(const AssetLoader &loader, const TextureIndex &tex_index) {
+void ChunkRenderer::LoadTextures(const AssetLoader &loader, const ResourceIndex &tex_index) {
 	block_tex.Bind();
 	loader.LoadTextures(tex_index, block_tex);
 	block_tex.FilterNearest();

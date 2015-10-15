@@ -12,10 +12,10 @@ class ArrayTexture;
 class BlockTypeRegistry;
 class CubeMap;
 class ModelRegistry;
+class ResourceIndex;
 class ShapeRegistry;
 class Sound;
 class Texture;
-class TextureIndex;
 
 class AssetLoader {
 
@@ -25,20 +25,20 @@ public:
 	void LoadBlockTypes(
 		const std::string &set_name,
 		BlockTypeRegistry &,
-		TextureIndex &,
+		ResourceIndex &,
 		const ShapeRegistry &) const;
 	CubeMap LoadCubeMap(const std::string &name) const;
 	Font LoadFont(const std::string &name, int size) const;
 	void LoadModels(
 		const std::string &set_name,
 		ModelRegistry &,
-		TextureIndex &,
+		ResourceIndex &,
 		const ShapeRegistry &) const;
 	void LoadShapes(const std::string &set_name, ShapeRegistry &) const;
 	Sound LoadSound(const std::string &name) const;
 	Texture LoadTexture(const std::string &name) const;
 	void LoadTexture(const std::string &name, ArrayTexture &, int layer) const;
-	void LoadTextures(const TextureIndex &, ArrayTexture &) const;
+	void LoadTextures(const ResourceIndex &, ArrayTexture &) const;
 
 private:
 	std::string fonts;
