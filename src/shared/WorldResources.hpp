@@ -19,6 +19,7 @@ struct WorldResources {
 	BlockTypeRegistry block_types;
 	ModelRegistry models;
 
+	ResourceIndex snd_index;
 	ResourceIndex tex_index;
 
 

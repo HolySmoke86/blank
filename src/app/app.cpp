@@ -318,6 +318,7 @@ CuboidBounds slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
 void AssetLoader::LoadBlockTypes(
 	const string &set_name,
 	BlockTypeRegistry &reg,
+	ResourceIndex &snd_index,
 	ResourceIndex &tex_index,
 	const ShapeRegistry &shapes
 ) const {
@@ -364,6 +365,12 @@ void AssetLoader::LoadBlockTypes(
 				in.ReadVec(type.outline_color);
 			} else if (name == "label") {
 				in.ReadString(type.label);
+			} else if (name == "place_sound") {
+				in.ReadString(tex_name);
+				type.place_sound = snd_index.GetID(tex_name);
+			} else if (name == "remove_sound") {
+				in.ReadString(tex_name);
+				type.remove_sound = snd_index.GetID(tex_name);
 			} else if (name == "luminosity") {
 				type.luminosity = in.GetInt();
 			} else if (name == "block_light") {

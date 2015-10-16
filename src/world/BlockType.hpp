@@ -26,6 +26,9 @@ struct BlockType {
 	/// a string to display to the user
 	std::string label;
 
+	int place_sound;
+	int remove_sound;
+
 	Block::Type id;
 
 	/// light level that blocks of this type emit

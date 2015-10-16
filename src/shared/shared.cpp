@@ -26,13 +26,14 @@ WorldResources::WorldResources()
 : shapes()
 , block_types()
 , models()
+, snd_index()
 , tex_index() {
 
 }
 
 void WorldResources::Load(const AssetLoader &loader, const std::string &set) {
 	loader.LoadShapes("default", shapes);
-	loader.LoadBlockTypes("default", block_types, tex_index, shapes);
+	loader.LoadBlockTypes("default", block_types, snd_index, tex_index, shapes);
 	loader.LoadModels("default", models, tex_index, shapes);
 }
 

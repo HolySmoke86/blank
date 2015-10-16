@@ -12,6 +12,7 @@
 #include "../app/FrameCounter.hpp"
 #include "../app/init.hpp"
 #include "../audio/Audio.hpp"
+#include "../audio/SoundBank.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../io/TokenStreamReader.hpp"
@@ -424,22 +425,26 @@ void HUD::Render(Viewport &viewport) noexcept {
 }
 
 
-InteractiveManipulator::InteractiveManipulator(Environment &env, Entity &player)
+InteractiveManipulator::InteractiveManipulator(Audio &audio, const SoundBank &sounds, Entity &player)
 : player(player)
-, audio(env.audio)
-, place_sound(env.loader.LoadSound("thump"))
-, remove_sound(env.loader.LoadSound("plop")) {
+, audio(audio)
+, sounds(sounds) {
 
 }
 
 void InteractiveManipulator::SetBlock(Chunk &chunk, int index, const Block &block) {
+	const BlockType &old_type = chunk.Type(index);
 	chunk.SetBlock(index, block);
+	const BlockType &new_type = chunk.Type(index);
 	glm::vec3 coords = chunk.ToSceneCoords(player.ChunkCoords(), Chunk::ToCoords(index));
-	// TODO: get sound effect from block type
-	if (block.type == 0) {
-		audio.Play(remove_sound, coords);
+	if (new_type.id == 0) {
+		if (old_type.remove_sound >= 0) {
+			audio.Play(sounds[old_type.remove_sound], coords);
+		}
 	} else {
-		audio.Play(place_sound, coords);
+		if (new_type.place_sound >= 0) {
+			audio.Play(sounds[new_type.place_sound], coords);
+		}
 	}
 }
 

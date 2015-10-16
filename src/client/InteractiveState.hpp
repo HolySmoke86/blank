@@ -7,6 +7,7 @@
 #include "ChunkReceiver.hpp"
 #include "NetworkedInput.hpp"
 #include "../app/IntervalTimer.hpp"
+#include "../audio/SoundBank.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
 #include "../net/Packet.hpp"
@@ -67,6 +68,7 @@ private:
 private:
 	MasterState &master;
 	WorldResources res;
+	SoundBank sounds;
 	WorldSave save;
 	World world;
 	Player &player;

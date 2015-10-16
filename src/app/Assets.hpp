@@ -25,7 +25,8 @@ public:
 	void LoadBlockTypes(
 		const std::string &set_name,
 		BlockTypeRegistry &,
-		ResourceIndex &,
+		ResourceIndex &snd,
+		ResourceIndex &tex,
 		const ShapeRegistry &) const;
 	CubeMap LoadCubeMap(const std::string &name) const;
 	Font LoadFont(const std::string &name, int size) const;

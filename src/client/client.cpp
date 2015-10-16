@@ -48,11 +48,12 @@ void InitialState::Render(Viewport &viewport) {
 InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 : master(master)
 , res()
+, sounds()
 , save(master.GetEnv().config.GetWorldPath(master.GetWorldConf().name, master.GetConfig().net.host))
 , world(res.block_types, master.GetWorldConf())
 , player(*world.AddPlayer(master.GetConfig().player.name))
 , hud(master.GetEnv(), master.GetConfig(), player)
-, manip(master.GetEnv(), player.GetEntity())
+, manip(master.GetEnv().audio, sounds, player.GetEntity())
 , input(world, player, master.GetClient())
 , interface(master.GetConfig(), master.GetEnv().keymap, input, *this)
 , chunk_receiver(world.Chunks(), save)
@@ -64,6 +65,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 		save.Write(master.GetWorldConf());
 	}
 	res.Load(master.GetEnv().loader, "default");
+	sounds.Load(master.GetEnv().loader, res.snd_index);
 	interface.SetInventorySlots(res.block_types.size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, res.tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);

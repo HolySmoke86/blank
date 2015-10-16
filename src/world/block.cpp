@@ -73,6 +73,8 @@ BlockType::BlockType() noexcept
 , rgb_mod(1.0f, 1.0f, 1.0f)
 , outline_color(-1, -1, -1)
 , label("some block")
+, place_sound(-1)
+, remove_sound(-1)
 , id(0)
 , luminosity(0)
 , visible(true)

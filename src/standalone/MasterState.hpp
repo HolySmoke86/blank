@@ -7,6 +7,7 @@
 #include "PreloadState.hpp"
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
+#include "../audio/SoundBank.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../shared/WorldResources.hpp"
 #include "../ui/DirectInput.hpp"
@@ -62,6 +63,7 @@ private:
 	Config &config;
 	Environment &env;
 	WorldResources res;
+	SoundBank sounds;
 	const WorldSave &save;
 	World world;
 	ChunkIndex &spawn_index;

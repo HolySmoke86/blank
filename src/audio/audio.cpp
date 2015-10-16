@@ -1,6 +1,10 @@
 #include "ALError.hpp"
 #include "Audio.hpp"
 #include "Sound.hpp"
+#include "SoundBank.hpp"
+
+#include "../app/Assets.hpp"
+#include "../shared/ResourceIndex.hpp"
 
 #include <algorithm>
 #include <alut.h>
@@ -148,11 +152,7 @@ int Audio::NextFree() noexcept {
 Sound::Sound()
 : handle(AL_NONE)
 , duration(0) {
-	alGenBuffers(1, &handle);
-	ALenum err = alGetError();
-	if (err != AL_NO_ERROR) {
-		throw ALError(err, "alGenBuffers");
-	}
+
 }
 
 Sound::Sound(const char *file)
@@ -176,23 +176,38 @@ Sound::~Sound() {
 		ALenum err = alGetError();
 		if (err != AL_NO_ERROR) {
 			std::cerr << "warning: alDeleteBuffers failed with " << al_error_string(err) << std::endl;
-			//throw ALError(err, "alDeleteBuffers");
 		}
 	}
 }
 
 Sound::Sound(Sound &&other)
-: handle(other.handle) {
+: handle(other.handle)
+, duration(other.duration) {
 	other.handle = AL_NONE;
 }
 
 Sound &Sound::operator =(Sound &&other) {
 	std::swap(handle, other.handle);
+	std::swap(duration, other.duration);
 	return *this;
 }
 
 void Sound::Bind(ALuint src) const {
 	alSourcei(src, AL_BUFFER, handle);
+}
+
+
+SoundBank::SoundBank()
+: sounds() {
+
+}
+
+void SoundBank::Load(const AssetLoader &loader, const ResourceIndex &index) {
+	sounds.clear();
+	sounds.resize(index.Size());
+	for (const auto &entry : index.Entries()) {
+		sounds[entry.second] = loader.LoadSound(entry.first);
+	}
 }
 
 }

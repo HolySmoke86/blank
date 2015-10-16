@@ -21,13 +21,14 @@ MasterState::MasterState(
 : config(config)
 , env(env)
 , res()
+, sounds()
 , save(save)
 , world(res.block_types, wc)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , player(*world.AddPlayer(config.player.name))
 , spawn_player(false)
 , hud(env, config, player)
-, manip(env, player.GetEntity())
+, manip(env.audio, sounds, player.GetEntity())
 , input(world, player, manip)
 , interface(config, env.keymap, input, *this)
 , generator(gc)
@@ -41,6 +42,7 @@ MasterState::MasterState(
 	if (res.models.size() < 2) {
 		throw std::runtime_error("need at least two models to run");
 	}
+	sounds.Load(env.loader, res.snd_index);
 	spawner.LimitModels(0, res.models.size());
 	interface.SetInventorySlots(res.block_types.size() - 1);
 	generator.LoadTypes(res.block_types);

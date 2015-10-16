@@ -10,21 +10,20 @@ namespace blank {
 
 class Audio;
 class Entity;
-class Environment;
+class SoundBank;
 
 class InteractiveManipulator
 : public WorldManipulator {
 
 public:
-	explicit InteractiveManipulator(Environment &, Entity &);
+	explicit InteractiveManipulator(Audio &, const SoundBank &, Entity &);
 
 	void SetBlock(Chunk &, int, const Block &) override;
 
 private:
 	Entity &player;
 	Audio &audio;
-	Sound place_sound;
-	Sound remove_sound;
+	const SoundBank &sounds;
 
 };
 
