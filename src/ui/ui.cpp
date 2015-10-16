@@ -86,7 +86,7 @@ void PlayerController::UpdatePlayer() noexcept {
 	constexpr float max_vel = 0.005f;
 	if (dirty) {
 		player.GetEntity().Orientation(glm::quat(glm::vec3(pitch, yaw, 0.0f)));
-		player.GetEntity().Velocity(glm::rotateY(move_dir * max_vel, yaw));
+		player.GetEntity().TargetVelocity(glm::rotateY(move_dir * max_vel, yaw));
 
 		Ray aim = player.Aim();
 		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {

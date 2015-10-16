@@ -332,10 +332,11 @@ void NetworkedInput::PushPlayerUpdate(int dt) {
 		InventorySlot()
 	);
 	if (player_hist.size() < 16) {
-		player_hist.emplace_back(state, dt, packet);
+		player_hist.emplace_back(state, GetPlayer().GetEntity().TargetVelocity(), dt, packet);
 	} else {
 		auto entry = player_hist.begin();
 		entry->state = state;
+		entry->tgt_vel = GetPlayer().GetEntity().TargetVelocity();
 		entry->delta_t = dt;
 		entry->packet = packet;
 		player_hist.splice(player_hist.end(), player_hist, entry);
@@ -378,6 +379,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	vector<WorldCollision> col;
 	while (entry != end) {
 		replay.Velocity(entry->state.velocity);
+		replay.TargetVelocity(entry->tgt_vel);
 		replay.Update(entry->delta_t);
 		if (GetWorld().Intersection(replay, col)) {
 			GetWorld().Resolve(replay, col);

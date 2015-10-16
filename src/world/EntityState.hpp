@@ -23,9 +23,6 @@ struct EntityState {
 	/// make sure block_pos is within chunk bounds
 	void AdjustPosition() noexcept;
 
-	/// do an integration step of dt milliseconds
-	void Update(int dt) noexcept;
-
 	/// get a position vector relative to the (0,0,0) chunk
 	glm::vec3 AbsolutePosition() const noexcept {
 		return glm::vec3(chunk_pos * Chunk::Extent()) + block_pos;

@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+#include "EntityDerivative.hpp"
 #include "EntityState.hpp"
 #include "Player.hpp"
 #include "World.hpp"
@@ -12,6 +13,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
 #include <limits>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/quaternion.hpp>
@@ -26,6 +28,7 @@ Entity::Entity() noexcept
 , name("anonymous")
 , bounds()
 , state()
+, tgt_vel(0.0f)
 , ref_count(0)
 , world_collision(false)
 , dead(false) {
@@ -68,7 +71,56 @@ glm::quat delta_rot(const glm::vec3 &av, float dt) {
 }
 
 void Entity::Update(int dt) noexcept {
-	state.Update(dt);
+	float fdt = float(dt);
+
+	// euler
+	//state.block_pos += state.velocity * fdt;
+	//state.velocity += ControlForce(state) * fdt;
+	//state.orient = delta_rot(state.ang_vel, fdt) * state.orient;
+	//state.AdjustPosition();
+
+	// RK4
+	EntityDerivative a(CalculateStep(state, 0.0f, EntityDerivative()));
+	EntityDerivative b(CalculateStep(state, fdt * 0.5f, a));
+	EntityDerivative c(CalculateStep(state, fdt * 0.5f, b));
+	EntityDerivative d(CalculateStep(state, fdt, c));
+
+	EntityDerivative f;
+	constexpr float sixth = 1.0f / 6.0f;
+	f.position = sixth * ((a.position + 2.0f * (b.position + c.position)) + d.position);
+	f.velocity = sixth * ((a.velocity + 2.0f * (b.velocity + c.velocity)) + d.velocity);
+	f.orient = sixth * ((a.orient + 2.0f * (b.orient + c.orient)) + d.orient);
+
+	state.block_pos += f.position * fdt;
+	state.velocity += f.velocity * fdt;
+	state.orient = delta_rot(f.orient, fdt) * state.orient;
+	state.AdjustPosition();
+}
+
+EntityDerivative Entity::CalculateStep(
+	const EntityState &cur,
+	float dt,
+	const EntityDerivative &delta
+) const noexcept {
+	EntityState next(cur);
+	next.block_pos += delta.position * dt;
+	next.velocity += delta.velocity * dt;
+	next.orient = delta_rot(cur.ang_vel, dt) * cur.orient;
+	next.AdjustPosition();
+
+	EntityDerivative out;
+	out.position = next.velocity;
+	out.velocity = ControlForce(next); // plus other forces and then by mass
+	return out;
+}
+
+glm::vec3 Entity::ControlForce(const EntityState &cur) const noexcept {
+	constexpr float k = 1.0f; // spring constant
+	constexpr float b = 1.0f; // damper constant
+	constexpr float t = 0.01f; // 1/time constant
+	const glm::vec3 x(-tgt_vel); // endpoint displacement from equilibrium
+	const glm::vec3 v(cur.velocity); // relative velocity between endpoints
+	return (((-k) * x) - (b * v)) * t; // times mass = 1
 }
 
 
@@ -79,13 +131,6 @@ EntityState::EntityState()
 , orient(1.0f, 0.0f, 0.0f, 0.0f)
 , ang_vel(0.0f) {
 
-}
-
-void EntityState::Update(int dt) noexcept {
-	float fdt = float(dt);
-	block_pos += velocity * fdt;
-	orient = delta_rot(ang_vel, fdt) * orient;
-	AdjustPosition();
 }
 
 void EntityState::AdjustPosition() noexcept {

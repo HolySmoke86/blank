@@ -36,7 +36,7 @@ void Chaser::Update(int dt) {
 	glm::vec3 diff(Target().AbsoluteDifference(Controlled()));
 	float dist = length(diff);
 	if (dist < std::numeric_limits<float>::epsilon()) {
-		Controlled().Velocity(glm::vec3(0.0f));
+		Controlled().TargetVelocity(glm::vec3(0.0f));
 		return;
 	}
 	glm::vec3 norm_diff(diff / dist);
@@ -49,13 +49,13 @@ void Chaser::Update(int dt) {
 	}
 
 	if (!line_of_sight) {
-		Controlled().Velocity(glm::vec3(0.0f));
+		Controlled().TargetVelocity(glm::vec3(0.0f));
 	} else if (dist > stop_dist) {
-		Controlled().Velocity(norm_diff * chase_speed);
+		Controlled().TargetVelocity(norm_diff * chase_speed);
 	} else if (dist < flee_dist) {
-		Controlled().Velocity(norm_diff * flee_speed);
+		Controlled().TargetVelocity(norm_diff * flee_speed);
 	} else {
-		Controlled().Velocity(glm::vec3(0.0f));
+		Controlled().TargetVelocity(glm::vec3(0.0f));
 	}
 }
 
@@ -97,10 +97,10 @@ void RandomWalk::Update(int dt) {
 		Change();
 	} else if (lerp_time > 0) {
 		float a = std::min(lerp_time / lerp_max, 1.0f);
-		Controlled().Velocity(mix(target_vel, start_vel, a));
+		Controlled().TargetVelocity(mix(target_vel, start_vel, a));
 		Controlled().AngularVelocity(mix(target_rot, start_rot, a));
 	} else {
-		Controlled().Velocity(target_vel);
+		Controlled().TargetVelocity(target_vel);
 		Controlled().AngularVelocity(target_rot);
 	}
 }

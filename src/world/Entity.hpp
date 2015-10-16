@@ -15,6 +15,7 @@
 namespace blank {
 
 class DirectionalLighting;
+struct EntityDerivative;
 class Shape;
 
 class Entity {
@@ -36,6 +37,9 @@ public:
 
 	bool WorldCollidable() const noexcept { return world_collision; }
 	void WorldCollidable(bool b) noexcept { world_collision = b; }
+
+	const glm::vec3 &TargetVelocity() const noexcept { return tgt_vel; }
+	void TargetVelocity(const glm::vec3 &v) noexcept { tgt_vel = v; }
 
 	const glm::vec3 &Velocity() const noexcept { return state.velocity; }
 	void Velocity(const glm::vec3 &v) noexcept { state.velocity = v; }
@@ -83,6 +87,14 @@ public:
 	}
 
 private:
+	EntityDerivative CalculateStep(
+		const EntityState &cur,
+		float dt,
+		const EntityDerivative &prev
+	) const noexcept;
+	glm::vec3 ControlForce(const EntityState &) const noexcept;
+
+private:
 	Instance model;
 
 	std::uint32_t id;
@@ -90,6 +102,7 @@ private:
 
 	AABB bounds;
 	EntityState state;
+	glm::vec3 tgt_vel;
 
 	int ref_count;
 

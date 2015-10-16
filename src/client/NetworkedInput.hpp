@@ -36,10 +36,11 @@ private:
 
 	struct PlayerHistory {
 		EntityState state;
+		glm::vec3 tgt_vel;
 		int delta_t;
 		std::uint16_t packet;
-		PlayerHistory(EntityState s, int dt, std::uint16_t p)
-		: state(s), delta_t(dt), packet(p) { }
+		PlayerHistory(EntityState s, const glm::vec3 &tv, int dt, std::uint16_t p)
+		: state(s), tgt_vel(tv), delta_t(dt), packet(p) { }
 	};
 	std::list<PlayerHistory> player_hist;
 
