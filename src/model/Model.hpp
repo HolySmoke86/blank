@@ -32,7 +32,6 @@ public:
 	const Part &GetPart(std::size_t i) const noexcept { return *part[i]; }
 
 	void SetEyes(std::uint16_t id) { eyes_id = id; }
-
 	const Part &GetEyesPart() const noexcept { return GetPart(eyes_id); }
 
 	void Enumerate();

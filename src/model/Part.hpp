@@ -41,6 +41,8 @@ public:
 	std::uint16_t Enumerate(std::uint16_t) noexcept;
 	void Index(std::vector<Part *> &) noexcept;
 
+	std::uint16_t ID() const noexcept { return id; }
+
 	glm::mat4 LocalTransform(const Instance &) const noexcept;
 	glm::mat4 GlobalTransform(const Instance &) const noexcept;
 

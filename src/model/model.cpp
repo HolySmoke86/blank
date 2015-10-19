@@ -27,6 +27,10 @@ Instance::~Instance() {
 
 }
 
+Part::State &Instance::EyesState() noexcept {
+	return state[model->GetEyesPart().ID()];
+}
+
 glm::mat4 Instance::EyesTransform() const noexcept {
 	return model->GetEyesPart().GlobalTransform(*this);
 }

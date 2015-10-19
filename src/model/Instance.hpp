@@ -27,6 +27,7 @@ public:
 	const Model &GetModel() const noexcept { return *model; }
 
 	glm::mat4 EyesTransform() const noexcept;
+	Part::State &EyesState() noexcept;
 
 	void Render(const glm::mat4 &, DirectionalLighting &);
 
