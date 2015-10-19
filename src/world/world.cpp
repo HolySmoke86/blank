@@ -35,7 +35,6 @@ Entity::Entity() noexcept
 
 }
 
-
 void Entity::Position(const glm::ivec3 &c, const glm::vec3 &b) noexcept {
 	state.chunk_pos = c;
 	state.block_pos = b;
@@ -53,74 +52,6 @@ Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
 	glm::vec4 to = transform * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
 	to /= to.w;
 	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
-}
-
-namespace {
-
-glm::quat delta_rot(const glm::vec3 &av, float dt) {
-	glm::vec3 half(av * dt * 0.5f);
-	float mag = length(half);
-	if (mag > 0.0f) {
-		float smag = std::sin(mag) / mag;
-		return glm::quat(std::cos(mag), half * smag);
-	} else {
-		return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-	}
-}
-
-}
-
-void Entity::Update(int dt) noexcept {
-	float fdt = float(dt);
-
-	// euler
-	//state.block_pos += state.velocity * fdt;
-	//state.velocity += ControlForce(state) * fdt;
-	//state.orient = delta_rot(state.ang_vel, fdt) * state.orient;
-	//state.AdjustPosition();
-
-	// RK4
-	EntityDerivative a(CalculateStep(state, 0.0f, EntityDerivative()));
-	EntityDerivative b(CalculateStep(state, fdt * 0.5f, a));
-	EntityDerivative c(CalculateStep(state, fdt * 0.5f, b));
-	EntityDerivative d(CalculateStep(state, fdt, c));
-
-	EntityDerivative f;
-	constexpr float sixth = 1.0f / 6.0f;
-	f.position = sixth * ((a.position + 2.0f * (b.position + c.position)) + d.position);
-	f.velocity = sixth * ((a.velocity + 2.0f * (b.velocity + c.velocity)) + d.velocity);
-	f.orient = sixth * ((a.orient + 2.0f * (b.orient + c.orient)) + d.orient);
-
-	state.block_pos += f.position * fdt;
-	state.velocity += f.velocity * fdt;
-	state.orient = delta_rot(f.orient, fdt) * state.orient;
-	state.AdjustPosition();
-}
-
-EntityDerivative Entity::CalculateStep(
-	const EntityState &cur,
-	float dt,
-	const EntityDerivative &delta
-) const noexcept {
-	EntityState next(cur);
-	next.block_pos += delta.position * dt;
-	next.velocity += delta.velocity * dt;
-	next.orient = delta_rot(cur.ang_vel, dt) * cur.orient;
-	next.AdjustPosition();
-
-	EntityDerivative out;
-	out.position = next.velocity;
-	out.velocity = ControlForce(next); // plus other forces and then by mass
-	return out;
-}
-
-glm::vec3 Entity::ControlForce(const EntityState &cur) const noexcept {
-	constexpr float k = 1.0f; // spring constant
-	constexpr float b = 1.0f; // damper constant
-	constexpr float t = 0.01f; // 1/time constant
-	const glm::vec3 x(-tgt_vel); // endpoint displacement from equilibrium
-	const glm::vec3 v(cur.velocity); // relative velocity between endpoints
-	return (((-k) * x) - (b * v)) * t; // times mass = 1
 }
 
 
@@ -391,13 +322,13 @@ bool World::Intersection(
 	return coll.entity;
 }
 
-bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
+bool World::Intersection(const Entity &e, const EntityState &s, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
-	Chunk::Pos reference = e.ChunkCoords();
-	glm::mat4 M = e.Transform(reference);
+	Chunk::Pos reference = s.chunk_pos;
+	glm::mat4 M = s.Transform(reference);
 	bool any = false;
 	for (Chunk &cur_chunk : chunks) {
-		if (manhattan_radius(cur_chunk.Position() - e.ChunkCoords()) > 1) {
+		if (manhattan_radius(cur_chunk.Position() - reference) > 1) {
 			// chunk is not one of the 3x3x3 surrounding the entity
 			// since there's no entity which can extent over 16 blocks, they can be skipped
 			continue;
@@ -410,22 +341,10 @@ bool World::Intersection(const Entity &e, std::vector<WorldCollision> &col) {
 }
 
 
-namespace {
-
-std::vector<WorldCollision> col;
-
-}
-
 void World::Update(int dt) {
+	float fdt(dt);
 	for (Entity &entity : entities) {
-		entity.Update(dt);
-	}
-	for (Entity &entity : entities) {
-		col.clear();
-		if (entity.WorldCollidable() && Intersection(entity, col)) {
-			// entity collides with the world
-			Resolve(entity, col);
-		}
+		Update(entity, fdt);
 	}
 	for (Player &player : players) {
 		player.Update(dt);
@@ -439,36 +358,126 @@ void World::Update(int dt) {
 	}
 }
 
-void World::Resolve(Entity &e, std::vector<WorldCollision> &col) {
-	// determine displacement for each cardinal axis and move entity accordingly
-	glm::vec3 min_disp(0.0f);
-	glm::vec3 max_disp(0.0f);
-	for (const WorldCollision &c : col) {
-		if (!c.Blocks()) continue;
-		glm::vec3 local_disp(c.normal * c.depth);
-		// swap if neccessary (normal may point away from the entity)
-		if (dot(c.normal, e.Position() - c.BlockCoords()) < 0) {
-			local_disp *= -1;
-		}
-		min_disp = min(min_disp, local_disp);
-		max_disp = max(max_disp, local_disp);
+namespace {
+
+glm::quat delta_rot(const glm::vec3 &av, float dt) {
+	glm::vec3 half(av * dt * 0.5f);
+	float mag = length(half);
+	if (mag > 0.0f) {
+		float smag = std::sin(mag) / mag;
+		return glm::quat(std::cos(mag), half * smag);
+	} else {
+		return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	}
-	// for each axis
-	// if only one direction is set, use that as the final
-	// if both directions are set, use average
-	glm::vec3 final_disp(0.0f);
-	for (int axis = 0; axis < 3; ++axis) {
-		if (std::abs(min_disp[axis]) > std::numeric_limits<float>::epsilon()) {
-			if (std::abs(max_disp[axis]) > std::numeric_limits<float>::epsilon()) {
-				final_disp[axis] = (min_disp[axis] + max_disp[axis]) * 0.5f;
-			} else {
-				final_disp[axis] = min_disp[axis];
+}
+
+}
+
+void World::Update(Entity &entity, float dt) {
+	EntityState state(entity.GetState());
+
+	EntityDerivative a(CalculateStep(entity, state, 0.0f, EntityDerivative()));
+	EntityDerivative b(CalculateStep(entity, state, dt * 0.5f, a));
+	EntityDerivative c(CalculateStep(entity, state, dt * 0.5f, b));
+	EntityDerivative d(CalculateStep(entity, state, dt, c));
+
+	EntityDerivative f;
+	constexpr float sixth = 1.0f / 6.0f;
+	f.position = sixth * ((a.position + 2.0f * (b.position + c.position)) + d.position);
+	f.velocity = sixth * ((a.velocity + 2.0f * (b.velocity + c.velocity)) + d.velocity);
+	f.orient = sixth * ((a.orient + 2.0f * (b.orient + c.orient)) + d.orient);
+
+	state.block_pos += f.position * dt;
+	state.velocity += f.velocity * dt;
+	state.orient = delta_rot(f.orient, dt) * state.orient;
+	state.AdjustPosition();
+
+	entity.SetState(state);
+}
+
+EntityDerivative World::CalculateStep(
+	const Entity &entity,
+	const EntityState &cur,
+	float dt,
+	const EntityDerivative &delta
+) {
+	EntityState next(cur);
+	next.block_pos += delta.position * dt;
+	next.velocity += delta.velocity * dt;
+	next.orient = delta_rot(cur.ang_vel, dt) * cur.orient;
+	next.AdjustPosition();
+
+	EntityDerivative out;
+	out.position = next.velocity;
+	out.velocity = CalculateForce(entity, next); // by mass = 1
+	return out;
+}
+
+glm::vec3 World::CalculateForce(
+	const Entity &entity,
+	const EntityState &state
+) {
+	return ControlForce(entity, state) + CollisionForce(entity, state) + Gravity(entity, state);
+}
+
+glm::vec3 World::ControlForce(
+	const Entity &entity,
+	const EntityState &state
+) {
+	constexpr float k = 1.0f; // spring constant
+	constexpr float b = 1.0f; // damper constant
+	constexpr float t = 0.01f; // 1/time constant
+	const glm::vec3 x(-entity.TargetVelocity()); // endpoint displacement from equilibrium
+	const glm::vec3 v(state.velocity); // relative velocity between endpoints
+	return (((-k) * x) - (b * v)) * t; // times mass = 1
+}
+
+namespace {
+
+std::vector<WorldCollision> col;
+
+}
+
+glm::vec3 World::CollisionForce(
+	const Entity &entity,
+	const EntityState &state
+) {
+	col.clear();
+	if (entity.WorldCollidable() && Intersection(entity, state, col)) {
+		// determine displacement for each cardinal axis and move entity accordingly
+		glm::vec3 min_pen(0.0f);
+		glm::vec3 max_pen(0.0f);
+		for (const WorldCollision &c : col) {
+			if (!c.Blocks()) continue;
+			glm::vec3 local_pen(c.normal * c.depth);
+			// swap if neccessary (normal may point away from the entity)
+			if (dot(c.normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) > 0) {
+				local_pen *= -1;
 			}
-		} else if (std::abs(max_disp[axis]) > std::numeric_limits<float>::epsilon()) {
-			final_disp[axis] = max_disp[axis];
+			min_pen = min(min_pen, local_pen);
+			max_pen = max(max_pen, local_pen);
 		}
+		glm::vec3 penetration(min_pen + max_pen);
+		glm::vec3 normal(normalize(penetration) * -1.0f);
+		glm::vec3 normal_velocity(normal * dot(state.velocity, normal));
+		// apply force proportional to penetration
+		// use velocity projected onto normal as damper
+		constexpr float k = 1.0f; // spring constant
+		constexpr float b = 1.0f; // damper constant
+		constexpr float t = 0.001f; // 1/time constant
+		const glm::vec3 x(penetration); // endpoint displacement from equilibrium
+		const glm::vec3 v(normal_velocity); // relative velocity between endpoints
+		return (((-k) * x) - (b * v)) * t; // times mass = 1
+	} else {
+		return glm::vec3(0.0f);
 	}
-	e.Position(e.Position() + final_disp);
+}
+
+glm::vec3 World::Gravity(
+	const Entity &entity,
+	const EntityState &state
+) {
+	return glm::vec3(0.0f);
 }
 
 World::EntityHandle World::RemoveEntity(EntityHandle &eh) {

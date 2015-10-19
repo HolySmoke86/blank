@@ -15,7 +15,6 @@
 namespace blank {
 
 class DirectionalLighting;
-struct EntityDerivative;
 class Shape;
 
 class Entity {
@@ -80,19 +79,9 @@ public:
 	bool Dead() const noexcept { return dead; }
 	bool CanRemove() const noexcept { return dead && ref_count <= 0; }
 
-	void Update(int dt) noexcept;
-
 	void Render(const glm::mat4 &M, DirectionalLighting &prog) noexcept {
 		if (model) model.Render(M, prog);
 	}
-
-private:
-	EntityDerivative CalculateStep(
-		const EntityState &cur,
-		float dt,
-		const EntityDerivative &prev
-	) const noexcept;
-	glm::vec3 ControlForce(const EntityState &) const noexcept;
 
 private:
 	Instance model;

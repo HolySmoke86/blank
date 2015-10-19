@@ -380,11 +380,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	while (entry != end) {
 		replay.Velocity(entry->state.velocity);
 		replay.TargetVelocity(entry->tgt_vel);
-		replay.Update(entry->delta_t);
-		if (GetWorld().Intersection(replay, col)) {
-			GetWorld().Resolve(replay, col);
-			col.clear();
-		}
+		GetWorld().Update(replay, entry->delta_t);
 		entry->state.chunk_pos = replay.GetState().chunk_pos;
 		entry->state.block_pos = replay.GetState().block_pos;
 		++entry;

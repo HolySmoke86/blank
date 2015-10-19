@@ -17,6 +17,7 @@ namespace blank {
 
 class BlockTypeRegistry;
 class EntityCollision;
+struct EntityDerivative;
 class Viewport;
 class WorldCollision;
 
@@ -61,8 +62,10 @@ public:
 		EntityCollision &);
 
 	/// check if given entity intersects with the world
-	bool Intersection(const Entity &e, std::vector<WorldCollision> &);
-	void Resolve(Entity &e, std::vector<WorldCollision> &);
+//	bool Intersection(const Entity &e, std::vector<WorldCollision> &col) {
+//		return Intersection(e, e.GetState(), col);
+//	}
+	bool Intersection(const Entity &e, const EntityState &, std::vector<WorldCollision> &);
 
 	const BlockTypeRegistry &BlockTypes() noexcept { return block_type; }
 	ChunkStore &Chunks() noexcept { return chunks; }
@@ -87,12 +90,36 @@ public:
 	const std::list<Entity> &Entities() const noexcept { return entities; }
 
 	void Update(int dt);
+	void Update(Entity &, float dt);
 
 	void Render(Viewport &);
 
 private:
 	using EntityHandle = std::list<Entity>::iterator;
 	EntityHandle RemoveEntity(EntityHandle &);
+
+	EntityDerivative CalculateStep(
+		const Entity &,
+		const EntityState &cur,
+		float dt,
+		const EntityDerivative &prev
+	);
+	glm::vec3 CalculateForce(
+		const Entity &,
+		const EntityState &cur
+	);
+	glm::vec3 ControlForce(
+		const Entity &,
+		const EntityState &
+	);
+	glm::vec3 CollisionForce(
+		const Entity &,
+		const EntityState &
+	);
+	glm::vec3 Gravity(
+		const Entity &,
+		const EntityState &
+	);
 
 private:
 	Config config;
