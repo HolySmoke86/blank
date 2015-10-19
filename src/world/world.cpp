@@ -468,14 +468,28 @@ glm::vec3 World::CollisionForce(
 			min_pen = min(min_pen, local_pen);
 			max_pen = max(max_pen, local_pen);
 		}
-		glm::vec3 penetration(min_pen + max_pen);
-		glm::vec3 normal(normalize(penetration) * -1.0f);
+		glm::vec3 correction(0.0f);
+		// only apply correction for axes where penetration is only in one direction
+		for (std::size_t i = 0; i < 3; ++i) {
+			if (min_pen[i] < -std::numeric_limits<float>::epsilon()) {
+				if (max_pen[i] < std::numeric_limits<float>::epsilon()) {
+					correction[i] = -min_pen[i];
+				}
+			} else {
+				correction[i] = -max_pen[i];
+			}
+		}
+		// correction may be zero in which case normalize() returns NaNs
+		if (dot(correction, correction) < std::numeric_limits<float>::epsilon()) {
+			return glm::vec3(0.0f);
+		}
+		glm::vec3 normal(normalize(correction));
 		glm::vec3 normal_velocity(normal * dot(state.velocity, normal));
 		// apply force proportional to penetration
 		// use velocity projected onto normal as damper
 		constexpr float k = 1000.0f; // spring constant
-		constexpr float b = 100.0f; // damper constant
-		const glm::vec3 x(penetration); // endpoint displacement from equilibrium in m
+		constexpr float b = 10.0f; // damper constant
+		const glm::vec3 x(-correction); // endpoint displacement from equilibrium in m
 		const glm::vec3 v(normal_velocity); // relative velocity between endpoints in m/s
 		return (((-k) * x) - (b * v)); // times 1kg/s, in kg*m/s²
 	} else {
