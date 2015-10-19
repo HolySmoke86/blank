@@ -38,6 +38,7 @@ public:
 
 	World &GetWorld() noexcept { return world; }
 	Player &GetPlayer() noexcept { return player; }
+	PlayerController &GetPlayerController() noexcept { return input; }
 	ChunkReceiver &GetChunkReceiver() noexcept { return chunk_receiver; }
 
 	void OnEnter() override;

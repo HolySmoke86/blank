@@ -51,6 +51,8 @@ MasterState::MasterState(
 	chunk_renderer.FogDensity(wc.fog_density);
 	if (save.Exists(player)) {
 		save.Read(player);
+		glm::vec3 orient(glm::eulerAngles(player.GetEntity().Orientation()));
+		input.TurnHead(orient.x, orient.y);
 	} else {
 		spawn_player = true;
 	}

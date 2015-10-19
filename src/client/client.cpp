@@ -380,6 +380,8 @@ void MasterState::On(const Packet::Join &pack) {
 	state.reset(new InteractiveState(*this, player_id));
 
 	pack.ReadPlayerState(state->GetPlayer().GetEntity().GetState());
+	glm::vec3 orient(glm::eulerAngles(state->GetPlayer().GetEntity().Orientation()));
+	state->GetPlayerController().TurnHead(orient.x, orient.y);
 
 	env.state.PopAfter(this);
 	env.state.Push(state.get());
