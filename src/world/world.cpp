@@ -45,8 +45,20 @@ void Entity::Position(const glm::vec3 &pos) noexcept {
 	state.AdjustPosition();
 }
 
+glm::mat4 Entity::Transform(const glm::ivec3 &reference) const noexcept {
+	return state.Transform(reference);
+}
+
+glm::mat4 Entity::ViewTransform(const glm::ivec3 &reference) const noexcept {
+	glm::mat4 transform = Transform(reference);
+	if (model) {
+		transform *= model.EyesTransform();
+	}
+	return transform;
+}
+
 Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
-	glm::mat4 transform = Transform(chunk_offset);
+	glm::mat4 transform = ViewTransform(chunk_offset);
 	glm::vec4 from = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	from /= from.w;
 	glm::vec4 to = transform * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);

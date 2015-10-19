@@ -45,6 +45,9 @@ void Camera::Clip(float n, float f) noexcept {
 	UpdateProjection();
 }
 
+void Camera::View(const glm::mat4 &v) noexcept {
+	view = v;
+}
 
 void Camera::UpdateProjection() noexcept {
 	projection = glm::perspective(fov, aspect, near, far);
@@ -256,7 +259,9 @@ BlendedSprite &Viewport::SpriteProgram() noexcept {
 
 
 void Viewport::WorldPosition(const glm::mat4 &t) noexcept {
-	cam.View(glm::inverse(t));
+	const glm::vec3 offset(0.0f, 0.0f, 0.0f);
+	//const glm::vec3 offset(0.0f, 0.0f, -5.0f);
+	cam.View(glm::translate(glm::inverse(t), glm::vec3(t * glm::vec4(offset, 0.0f))));
 	ChunkProgram().SetView(cam.View());
 	sky_prog.Activate();
 	SkyBoxProgram().SetView(cam.View());

@@ -63,9 +63,11 @@ public:
 	const glm::quat &Orientation() const noexcept { return state.orient; }
 	void Orientation(const glm::quat &o) noexcept { state.orient = o; }
 
-	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept {
-		return state.Transform(reference);
-	}
+	/// get a transform for this entity's coordinate space
+	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept;
+	/// get a transform for this entity's view space
+	glm::mat4 ViewTransform(const glm::ivec3 &reference) const noexcept;
+	/// get a ray in entity's face direction originating from center of vision
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
 	void SetState(const EntityState &s) noexcept { state = s; }

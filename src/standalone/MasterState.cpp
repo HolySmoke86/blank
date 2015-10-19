@@ -42,8 +42,9 @@ MasterState::MasterState(
 	if (res.models.size() < 2) {
 		throw std::runtime_error("need at least two models to run");
 	}
+	res.models[0].Instantiate(player.GetEntity().GetModel());
 	sounds.Load(env.loader, res.snd_index);
-	spawner.LimitModels(0, res.models.size());
+	spawner.LimitModels(1, res.models.size());
 	interface.SetInventorySlots(res.block_types.size() - 1);
 	generator.LoadTypes(res.block_types);
 	chunk_renderer.LoadTextures(env.loader, res.tex_index);
@@ -131,7 +132,9 @@ void MasterState::Update(int dt) {
 }
 
 void MasterState::Render(Viewport &viewport) {
-	viewport.WorldPosition(player.GetEntity().Transform(player.GetEntity().ChunkCoords()));
+	viewport.WorldPosition(
+		player.GetEntity().Transform(player.GetEntity().ChunkCoords())
+		* player.GetEntity().GetModel().EyesTransform());
 	if (config.video.world) {
 		chunk_renderer.Render(viewport);
 		world.Render(viewport);

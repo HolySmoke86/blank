@@ -65,6 +65,10 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 		save.Write(master.GetWorldConf());
 	}
 	res.Load(master.GetEnv().loader, "default");
+	if (res.models.size() < 1) {
+		throw std::runtime_error("need at least one model to run");
+	}
+	res.models[0].Instantiate(player.GetEntity().GetModel());
 	sounds.Load(master.GetEnv().loader, res.snd_index);
 	interface.SetInventorySlots(res.block_types.size() - 1);
 	chunk_renderer.LoadTextures(master.GetEnv().loader, res.tex_index);

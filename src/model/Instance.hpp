@@ -26,6 +26,8 @@ public:
 	operator bool() const noexcept { return model; }
 	const Model &GetModel() const noexcept { return *model; }
 
+	glm::mat4 EyesTransform() const noexcept;
+
 	void Render(const glm::mat4 &, DirectionalLighting &);
 
 private:

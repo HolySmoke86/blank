@@ -31,6 +31,10 @@ public:
 	Part &GetPart(std::size_t i) noexcept { return *part[i]; }
 	const Part &GetPart(std::size_t i) const noexcept { return *part[i]; }
 
+	void SetEyes(std::uint16_t id) { eyes_id = id; }
+
+	const Part &GetEyesPart() const noexcept { return GetPart(eyes_id); }
+
 	void Enumerate();
 	void Instantiate(Instance &) const;
 
@@ -38,6 +42,7 @@ private:
 	std::uint32_t id;
 	Part root;
 	std::vector<Part *> part;
+	std::uint16_t eyes_id;
 
 };
 

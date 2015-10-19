@@ -19,7 +19,7 @@ public:
 
 	const glm::mat4 &Projection() const noexcept { return projection; }
 	const glm::mat4 &View() const noexcept { return view; }
-	void View(const glm::mat4 &v) noexcept { view = v; }
+	void View(const glm::mat4 &v) noexcept;
 
 private:
 	void UpdateProjection() noexcept;

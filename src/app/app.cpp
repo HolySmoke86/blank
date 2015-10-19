@@ -527,6 +527,8 @@ void AssetLoader::LoadModels(
 			in.Skip(Token::EQUALS);
 			if (prop_name == "root") {
 				model.RootPart().Read(in, tex_index, shapes);
+			} else if (prop_name == "eyes") {
+				model.SetEyes(in.GetULong());
 			} else {
 				while (in.HasMore() && in.Peek().type != Token::SEMICOLON) {
 					in.Next();

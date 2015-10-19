@@ -27,6 +27,10 @@ Instance::~Instance() {
 
 }
 
+glm::mat4 Instance::EyesTransform() const noexcept {
+	return model->GetEyesPart().GlobalTransform(*this);
+}
+
 void Instance::Render(const glm::mat4 &M, DirectionalLighting &prog) {
 	model->RootPart().Render(M, *this, prog);
 }
@@ -35,7 +39,8 @@ void Instance::Render(const glm::mat4 &M, DirectionalLighting &prog) {
 Model::Model()
 : id(0)
 , root()
-, part() {
+, part()
+, eyes_id(0) {
 
 }
 
