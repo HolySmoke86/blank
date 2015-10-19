@@ -16,8 +16,8 @@ Chaser::Chaser(World &world, Entity &ctrl, Entity &tgt) noexcept
 : Controller(ctrl)
 , world(world)
 , tgt(tgt)
-, chase_speed(0.002f)
-, flee_speed(-0.005f)
+, chase_speed(2.0f)
+, flee_speed(-5.0f)
 , stop_dist(10)
 , flee_dist(5) {
 	tgt.Ref();
@@ -109,7 +109,7 @@ void RandomWalk::Change() noexcept {
 	start_vel = target_vel;
 	start_rot = target_rot;
 
-	constexpr float base = 0.000001f;
+	constexpr float base = 0.001f;
 
 	target_vel.x = base * (random.Next<short>() % 1024);
 	target_vel.y = base * (random.Next<short>() % 1024);

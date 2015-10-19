@@ -332,12 +332,12 @@ void NetworkedInput::PushPlayerUpdate(int dt) {
 		InventorySlot()
 	);
 	if (player_hist.size() < 16) {
-		player_hist.emplace_back(state, GetPlayer().GetEntity().TargetVelocity(), dt, packet);
+		player_hist.emplace_back(state, GetPlayer().GetEntity().TargetVelocity(), dt * 0.001f, packet);
 	} else {
 		auto entry = player_hist.begin();
 		entry->state = state;
 		entry->tgt_vel = GetPlayer().GetEntity().TargetVelocity();
-		entry->delta_t = dt;
+		entry->delta_t = dt * 0.001f;
 		entry->packet = packet;
 		player_hist.splice(player_hist.end(), player_hist, entry);
 	}

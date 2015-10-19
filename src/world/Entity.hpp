@@ -56,7 +56,7 @@ public:
 		return state.Diff(other.state);
 	}
 
-	/// direction is rotation axis, magnitude is speed in rad/ms
+	/// direction is rotation axis, magnitude is speed in rad/s
 	const glm::vec3 &AngularVelocity() const noexcept { return state.ang_vel; }
 	void AngularVelocity(const glm::vec3 &v) noexcept { state.ang_vel = v; }
 

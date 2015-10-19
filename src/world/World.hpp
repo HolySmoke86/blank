@@ -89,7 +89,9 @@ public:
 	std::list<Entity> &Entities() noexcept { return entities; }
 	const std::list<Entity> &Entities() const noexcept { return entities; }
 
+	// dt in ms
 	void Update(int dt);
+	// dt in s
 	void Update(Entity &, float dt);
 
 	void Render(Viewport &);

@@ -342,7 +342,7 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 
 
 void World::Update(int dt) {
-	float fdt(dt);
+	float fdt(dt * 0.001f);
 	for (Entity &entity : entities) {
 		Update(entity, fdt);
 	}
@@ -409,7 +409,7 @@ EntityDerivative World::CalculateStep(
 
 	EntityDerivative out;
 	out.position = next.velocity;
-	out.velocity = CalculateForce(entity, next); // by mass = 1
+	out.velocity = CalculateForce(entity, next); // by mass = 1kg
 	return out;
 }
 
@@ -424,12 +424,11 @@ glm::vec3 World::ControlForce(
 	const Entity &entity,
 	const EntityState &state
 ) {
-	constexpr float k = 1.0f; // spring constant
-	constexpr float b = 1.0f; // damper constant
-	constexpr float t = 0.01f; // 1/time constant
-	const glm::vec3 x(-entity.TargetVelocity()); // endpoint displacement from equilibrium
-	const glm::vec3 v(state.velocity); // relative velocity between endpoints
-	return (((-k) * x) - (b * v)) * t; // times mass = 1
+	constexpr float k = 10.0f; // spring constant
+	constexpr float b = 10.0f; // damper constant
+	const glm::vec3 x(-entity.TargetVelocity()); // endpoint displacement from equilibrium, by 1s, in m
+	const glm::vec3 v(state.velocity); // relative velocity between endpoints in m/s
+	return ((-k) * x) - (b * v); // times 1kg/s, in kg*m/s²
 }
 
 namespace {
@@ -462,12 +461,11 @@ glm::vec3 World::CollisionForce(
 		glm::vec3 normal_velocity(normal * dot(state.velocity, normal));
 		// apply force proportional to penetration
 		// use velocity projected onto normal as damper
-		constexpr float k = 1.0f; // spring constant
-		constexpr float b = 1.0f; // damper constant
-		constexpr float t = 0.001f; // 1/time constant
-		const glm::vec3 x(penetration); // endpoint displacement from equilibrium
-		const glm::vec3 v(normal_velocity); // relative velocity between endpoints
-		return (((-k) * x) - (b * v)) * t; // times mass = 1
+		constexpr float k = 1000.0f; // spring constant
+		constexpr float b = 100.0f; // damper constant
+		const glm::vec3 x(penetration); // endpoint displacement from equilibrium in m
+		const glm::vec3 v(normal_velocity); // relative velocity between endpoints in m/s
+		return (((-k) * x) - (b * v)); // times 1kg/s, in kg*m/s²
 	} else {
 		return glm::vec3(0.0f);
 	}
