@@ -187,7 +187,7 @@ size_t Shape::OutlineIndexCount() const noexcept {
 	}
 }
 
-void Shape::Outline(OutlineMesh::Buffer &out) const {
+void Shape::Outline(PrimitiveMesh::Buffer &out) const {
 	if (bounds) {
 		bounds->Outline(out);
 	}

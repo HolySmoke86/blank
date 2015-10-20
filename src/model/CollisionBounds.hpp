@@ -1,7 +1,7 @@
 #ifndef BLANK_MODEL_COLLISIONBOUNDS_HPP_
 #define BLANK_MODEL_COLLISIONBOUNDS_HPP_
 
-#include "../graphics/OutlineMesh.hpp"
+#include "../graphics/PrimitiveMesh.hpp"
 
 #include <glm/glm.hpp>
 
@@ -19,7 +19,7 @@ struct CollisionBounds {
 	std::size_t OutlineIndexCount() const { return out_idx.size(); }
 
 	/// fill given buffers with these bounds' outline's elements
-	void Outline(OutlineMesh::Buffer &out) const;
+	void Outline(PrimitiveMesh::Buffer &out) const;
 
 	/// Check if given ray would pass though this shape if it were
 	/// transformed with given matrix.
@@ -44,12 +44,12 @@ struct CollisionBounds {
 
 protected:
 	void SetOutline(
-		const OutlineMesh::Positions &pos,
-		const OutlineMesh::Indices &idx);
+		const PrimitiveMesh::Positions &pos,
+		const PrimitiveMesh::Indices &idx);
 
 private:
-	OutlineMesh::Positions out_pos;
-	OutlineMesh::Indices out_idx;
+	PrimitiveMesh::Positions out_pos;
+	PrimitiveMesh::Indices out_idx;
 
 };
 

@@ -4,7 +4,7 @@
 #include "FixedText.hpp"
 #include "MessageBox.hpp"
 #include "../graphics/EntityMesh.hpp"
-#include "../graphics/OutlineMesh.hpp"
+#include "../graphics/PrimitiveMesh.hpp"
 
 #include <glm/glm.hpp>
 
@@ -57,7 +57,7 @@ private:
 	const Player &player;
 
 	// block focus
-	OutlineMesh outline;
+	PrimitiveMesh outline;
 	glm::mat4 outline_transform;
 	bool outline_visible;
 
@@ -82,7 +82,7 @@ private:
 	IntervalTimer msg_timer;
 
 	// crosshair
-	OutlineMesh crosshair;
+	PrimitiveMesh crosshair;
 
 };
 

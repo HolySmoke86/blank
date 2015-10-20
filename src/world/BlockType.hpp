@@ -4,7 +4,7 @@
 #include "Block.hpp"
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
-#include "../graphics/OutlineMesh.hpp"
+#include "../graphics/PrimitiveMesh.hpp"
 #include "../model/Shape.hpp"
 
 #include <glm/glm.hpp>
@@ -79,7 +79,7 @@ struct BlockType {
 		const glm::mat4 &transform = glm::mat4(1.0f),
 		BlockMesh::Index idx_offset = 0
 	) const noexcept;
-	void FillOutlineMesh(OutlineMesh::Buffer &m) const noexcept;
+	void OutlinePrimitiveMesh(PrimitiveMesh::Buffer &) const noexcept;
 
 };
 

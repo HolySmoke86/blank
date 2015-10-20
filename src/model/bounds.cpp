@@ -4,14 +4,14 @@
 
 namespace blank {
 
-void CollisionBounds::Outline(OutlineMesh::Buffer &out) const {
+void CollisionBounds::Outline(PrimitiveMesh::Buffer &out) const {
 	out.vertices.insert(out.vertices.end(), out_pos.begin(), out_pos.end());
 	out.indices.insert(out.indices.end(), out_idx.begin(), out_idx.end());
 }
 
 void CollisionBounds::SetOutline(
-	const OutlineMesh::Positions &pos,
-	const OutlineMesh::Indices &idx
+	const PrimitiveMesh::Positions &pos,
+	const PrimitiveMesh::Indices &idx
 ) {
 	out_pos = pos;
 	out_idx = idx;

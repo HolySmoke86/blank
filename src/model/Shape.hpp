@@ -70,7 +70,7 @@ public:
 
 	size_t OutlineCount() const noexcept;
 	size_t OutlineIndexCount() const noexcept;
-	void Outline(OutlineMesh::Buffer &out) const;
+	void Outline(PrimitiveMesh::Buffer &out) const;
 
 	bool Intersects(
 		const Ray &,

@@ -52,8 +52,8 @@ public:
 	BlockLighting &ChunkProgram() noexcept;
 	DirectionalLighting &EntityProgram() noexcept;
 	DirectionalLighting &HUDProgram() noexcept;
-	PlainColor &WorldOutlineProgram() noexcept;
-	PlainColor &HUDOutlineProgram() noexcept;
+	PlainColor &WorldColorProgram() noexcept;
+	PlainColor &HUDColorProgram() noexcept;
 	SkyBoxShader &SkyBoxProgram() noexcept;
 	BlendedSprite &SpriteProgram() noexcept;
 
@@ -70,7 +70,7 @@ private:
 
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;
-	PlainColor outline_prog;
+	PlainColor color_prog;
 	SkyBoxShader sky_prog;
 	BlendedSprite sprite_prog;
 
@@ -79,8 +79,8 @@ private:
 		CHUNK,
 		ENTITY,
 		HUD,
-		OUTLINE_WORLD,
-		OUTLINE_HUD,
+		COLOR_WORLD,
+		COLOR_HUD,
 		SKY_BOX,
 		SPRITE,
 	} active_prog;

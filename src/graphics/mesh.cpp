@@ -1,6 +1,6 @@
 #include "BlockMesh.hpp"
 #include "EntityMesh.hpp"
-#include "OutlineMesh.hpp"
+#include "PrimitiveMesh.hpp"
 #include "SkyBoxMesh.hpp"
 #include "SpriteMesh.hpp"
 
@@ -72,10 +72,29 @@ void BlockMesh::Draw() const noexcept {
 }
 
 
-void OutlineMesh::Update(const Buffer &buf) noexcept {
+void PrimitiveMesh::Buffer::FillRect(
+	float w, float h,
+	const glm::vec4 &color,
+	const glm::vec2 &pivot
+) {
+	Clear();
+	Reserve(4, 6);
+
+	vertices.emplace_back( -pivot.x,  -pivot.y, 0.0f);
+	vertices.emplace_back(w-pivot.x,  -pivot.y, 0.0f);
+	vertices.emplace_back( -pivot.x, h-pivot.y, 0.0f);
+	vertices.emplace_back(w-pivot.x, h-pivot.y, 0.0f);
+
+	colors.resize(4, color);
+
+	indices.assign({ 0, 2, 1, 1, 2, 3 });
+}
+
+
+void PrimitiveMesh::Update(const Buffer &buf) noexcept {
 #ifndef NDEBUG
 	if (buf.colors.size() < buf.vertices.size()) {
-		std::cerr << "OutlineMesh: not enough colors!" << std::endl;
+		std::cerr << "PrimitiveMesh: not enough colors!" << std::endl;
 	}
 #endif
 
@@ -86,10 +105,14 @@ void OutlineMesh::Update(const Buffer &buf) noexcept {
 }
 
 
-void OutlineMesh::Draw() noexcept {
+void PrimitiveMesh::DrawLines() noexcept {
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 	vao.DrawLineElements();
+}
+
+void PrimitiveMesh::DrawTriangles() noexcept {
+	vao.DrawTriangleElements();
 }
 
 

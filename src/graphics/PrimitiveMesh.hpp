@@ -1,5 +1,5 @@
-#ifndef BLANK_GRAPHICS_OUTLINEMESH_HPP_
-#define BLANK_GRAPHICS_OUTLINEMESH_HPP_
+#ifndef BLANK_GRAPHICS_PRIMITIVEMESH_HPP_
+#define BLANK_GRAPHICS_PRIMITIVEMESH_HPP_
 
 #include "VertexArray.hpp"
 
@@ -10,11 +10,11 @@
 
 namespace blank {
 
-class OutlineMesh {
+class PrimitiveMesh {
 
 public:
 	using Position = glm::vec3;
-	using Color = glm::vec3;
+	using Color = glm::vec4;
 	using Index = unsigned short;
 
 	using Positions = std::vector<Position>;
@@ -46,6 +46,12 @@ public:
 			indices.reserve(i);
 		}
 
+		void FillRect(
+			float w, float h,
+			const glm::vec4 &color = glm::vec4(0.0f),
+			const glm::vec2 &pivot = glm::vec2(0.0f)
+		);
+
 	};
 
 	using VAO = VertexArray<ATTRIB_COUNT>;
@@ -53,7 +59,8 @@ public:
 public:
 	void Update(const Buffer &) noexcept;
 
-	void Draw() noexcept;
+	void DrawLines() noexcept;
+	void DrawTriangles() noexcept;
 
 private:
 	VAO vao;

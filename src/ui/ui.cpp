@@ -252,21 +252,21 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 	messages.Background(glm::vec4(0.5f));
 
 	// crosshair
-	OutlineMesh::Buffer buf;
+	PrimitiveMesh::Buffer buf;
 	buf.vertices = std::vector<glm::vec3>({
 		{ -10.0f,   0.0f, 0.0f }, { 10.0f,  0.0f, 0.0f },
 		{   0.0f, -10.0f, 0.0f }, {  0.0f, 10.0f, 0.0f },
 	});
-	buf.indices = std::vector<OutlineMesh::Index>({
+	buf.indices = std::vector<PrimitiveMesh::Index>({
 		0, 1, 2, 3
 	});
-	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f });
+	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f, 1.0f });
 	crosshair.Update(buf);
 }
 
 namespace {
 
-OutlineMesh::Buffer outl_buf;
+PrimitiveMesh::Buffer outl_buf;
 
 }
 
@@ -274,7 +274,7 @@ void HUD::FocusBlock(const Chunk &chunk, int index) {
 	const Block &block = chunk.BlockAt(index);
 	const BlockType &type = chunk.Type(index);
 	outl_buf.Clear();
-	type.FillOutlineMesh(outl_buf);
+	type.OutlinePrimitiveMesh(outl_buf);
 	outline.Update(outl_buf);
 	outline_transform = chunk.Transform(player.GetEntity().ChunkCoords());
 	outline_transform *= chunk.ToTransform(Chunk::ToPos(index), index);
@@ -377,9 +377,9 @@ void HUD::Update(int dt) {
 void HUD::Render(Viewport &viewport) noexcept {
 	// block focus
 	if (outline_visible && config.video.world) {
-		PlainColor &outline_prog = viewport.WorldOutlineProgram();
+		PlainColor &outline_prog = viewport.WorldColorProgram();
 		outline_prog.SetM(outline_transform);
-		outline.Draw();
+		outline.DrawLines();
 	}
 
 	// clear depth buffer so everything renders above the world
@@ -405,11 +405,11 @@ void HUD::Render(Viewport &viewport) noexcept {
 		}
 
 		// crosshair
-		PlainColor &outline_prog = viewport.HUDOutlineProgram();
+		PlainColor &outline_prog = viewport.HUDColorProgram();
 		viewport.EnableInvertBlending();
 		viewport.SetCursor(glm::vec3(0.0f), Gravity::CENTER);
 		outline_prog.SetM(viewport.Cursor());
-		crosshair.Draw();
+		crosshair.DrawLines();
 	}
 
 	// debug overlay

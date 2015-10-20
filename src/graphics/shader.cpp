@@ -617,9 +617,9 @@ PlainColor::PlainColor()
 		GL_VERTEX_SHADER,
 		"#version 330 core\n"
 		"layout(location = 0) in vec3 vtx_position;\n"
-		"layout(location = 1) in vec3 vtx_color;\n"
+		"layout(location = 1) in vec4 vtx_color;\n"
 		"uniform mat4 MVP;\n"
-		"out vec3 frag_color;\n"
+		"out vec4 frag_color;\n"
 		"void main() {\n"
 			"gl_Position = MVP * vec4(vtx_position, 1);\n"
 			"frag_color = vtx_color;\n"
@@ -628,8 +628,8 @@ PlainColor::PlainColor()
 	program.LoadShader(
 		GL_FRAGMENT_SHADER,
 		"#version 330 core\n"
-		"in vec3 frag_color;\n"
-		"out vec3 color;\n"
+		"in vec4 frag_color;\n"
+		"out vec4 color;\n"
 		"void main() {\n"
 			"color = frag_color;\n"
 		"}\n"

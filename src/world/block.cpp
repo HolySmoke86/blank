@@ -119,10 +119,10 @@ void BlockType::FillBlockMesh(
 	buf.rgb_mods.insert(buf.rgb_mods.end(), shape->VertexCount(), rgb_mod);
 }
 
-void BlockType::FillOutlineMesh(OutlineMesh::Buffer &buf) const noexcept {
+void BlockType::OutlinePrimitiveMesh(PrimitiveMesh::Buffer &buf) const noexcept {
 	if (!shape) return;
 	shape->Outline(buf);
-	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
+	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), glm::vec4(outline_color, 1.0f));
 }
 
 
