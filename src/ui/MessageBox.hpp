@@ -3,6 +3,7 @@
 
 #include "Text.hpp"
 #include "../graphics/align.hpp"
+#include "../graphics/PrimitiveMesh.hpp"
 
 #include <deque>
 #include <string>
@@ -22,7 +23,7 @@ public:
 	void Position(const glm::vec3 &, Gravity) noexcept;
 
 	void Foreground(const glm::vec4 &col) noexcept { fg = col; }
-	void Background(const glm::vec4 &col) noexcept { bg = col; }
+	void Background(const glm::vec4 &col) noexcept { bg = col; dirty = true; }
 
 	void PushLine(const char *);
 	void PushLine(const std::string &l) {
@@ -32,17 +33,24 @@ public:
 	void Render(Viewport &) noexcept;
 
 private:
+	void Recalc();
+
+private:
 	const Font &font;
 	std::deque<Text> lines;
 	std::size_t max_lines;
 
 	glm::vec3 pos;
 	glm::vec3 adv;
+	glm::vec2 size;
 
 	glm::vec4 bg;
 	glm::vec4 fg;
 
+	PrimitiveMesh bg_mesh;
+
 	Gravity grav;
+	bool dirty;
 
 };
 

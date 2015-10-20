@@ -29,6 +29,8 @@ public:
 		dirty = true;
 	}
 
+	const glm::vec2 &Size() const noexcept { return size; }
+
 	void Render(Viewport &) noexcept;
 
 private:
