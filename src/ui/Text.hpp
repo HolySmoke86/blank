@@ -24,7 +24,8 @@ public:
 		Set(f, s.c_str());
 	}
 
-	void Pivot(Gravity p) {
+	Gravity Pivot() const noexcept { return pivot; }
+	void Pivot(Gravity p) noexcept {
 		pivot = p;
 		dirty = true;
 	}

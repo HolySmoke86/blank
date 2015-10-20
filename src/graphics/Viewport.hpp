@@ -44,9 +44,11 @@ public:
 	void Clear() noexcept;
 	void ClearDepth() noexcept;
 
-	void SetCursor(const glm::vec3 &);
-	void SetCursor(const glm::vec3 &, Gravity);
-	void MoveCursor(const glm::vec3 &);
+	glm::vec2 GetPosition(const glm::vec2 &off, Gravity grav) const noexcept;
+
+	void SetCursor(const glm::vec3 &) noexcept;
+	void SetCursor(const glm::vec3 &, Gravity) noexcept;
+	void MoveCursor(const glm::vec3 &) noexcept;
 	const glm::mat4 &Cursor() const noexcept { return cursor; }
 
 	BlockLighting &ChunkProgram() noexcept;

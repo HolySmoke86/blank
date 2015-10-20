@@ -7,6 +7,7 @@
 #include "PreloadState.hpp"
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
+#include "../app/ChatState.hpp"
 #include "../audio/SoundBank.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../shared/WorldResources.hpp"
@@ -31,7 +32,8 @@ namespace standalone {
 
 class MasterState
 : public State
-, public ClientController {
+, public ClientController
+, public ChatState::Responder {
 
 public:
 	MasterState(
@@ -59,6 +61,8 @@ public:
 	void SetDebug(bool) override;
 	void Exit() override;
 
+	void OnLineSubmit(const std::string &) override;
+
 private:
 	Config &config;
 	Environment &env;
@@ -82,6 +86,7 @@ private:
 
 	PreloadState preload;
 	UnloadState unload;
+	ChatState chat;
 
 };
 

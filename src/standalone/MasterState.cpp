@@ -37,7 +37,8 @@ MasterState::MasterState(
 , spawner(world, res.models, env.rng)
 , sky(env.loader.LoadCubeMap("skybox"))
 , preload(env, chunk_loader, chunk_renderer)
-, unload(env, world.Chunks(), save) {
+, unload(env, world.Chunks(), save)
+, chat(env, *this, *this) {
 	res.Load(env.loader, "default");
 	if (res.models.size() < 2) {
 		throw std::runtime_error("need at least two models to run");
@@ -74,6 +75,7 @@ void MasterState::OnResume() {
 		// TODO: spawn
 		spawn_player = false;
 	}
+	hud.KeepMessages(false);
 }
 
 void MasterState::OnPause() {
@@ -84,7 +86,13 @@ void MasterState::OnPause() {
 void MasterState::Handle(const SDL_Event &event) {
 	switch (event.type) {
 		case SDL_KEYDOWN:
-			interface.HandlePress(event.key);
+			// TODO: move to interface?
+			if (event.key.keysym.sym == SDLK_RETURN) {
+				env.state.Push(&chat);
+				hud.KeepMessages(true);
+			} else {
+				interface.HandlePress(event.key);
+			}
 			break;
 		case SDL_KEYUP:
 			interface.HandleRelease(event.key);
@@ -185,6 +193,10 @@ void MasterState::SetDebug(bool b) {
 void MasterState::Exit() {
 	save.Write(player);
 	env.state.Switch(&unload);
+}
+
+void MasterState::OnLineSubmit(const std::string &line) {
+	hud.PostMessage(line);
 }
 
 }

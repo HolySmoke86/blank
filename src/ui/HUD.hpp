@@ -47,6 +47,8 @@ public:
 	void PostMessage(const std::string &msg) {
 		PostMessage(msg.c_str());
 	}
+	// whether to always render message box regardless of last post
+	void KeepMessages(bool k) { msg_keep = k; }
 
 	void Update(int dt);
 	void Render(Viewport &) noexcept;
@@ -80,6 +82,7 @@ private:
 	// message box
 	MessageBox messages;
 	IntervalTimer msg_timer;
+	bool msg_keep;
 
 	// crosshair
 	PrimitiveMesh crosshair;

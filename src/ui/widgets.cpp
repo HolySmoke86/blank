@@ -2,11 +2,16 @@
 #include "MessageBox.hpp"
 #include "Progress.hpp"
 #include "Text.hpp"
+#include "TextInput.hpp"
 
 #include "../graphics/Font.hpp"
 #include "../graphics/Viewport.hpp"
 
 #include <cstdio>
+#include <cstring>
+#include <limits>
+
+using namespace std;
 
 
 namespace blank {
@@ -59,7 +64,7 @@ PrimitiveMesh::Buffer bg_buf;
 void MessageBox::Recalc() {
 	size = glm::vec2(0.0f, 0.0f);
 	for (const Text &line : lines) {
-		size.x = std::max(size.x, line.Size().x);
+		size.x = max(size.x, line.Size().x);
 		size.y += line.Size().y;
 	}
 	bg_buf.FillRect(size.x, size.y, bg, align(grav, size));
@@ -70,7 +75,7 @@ void MessageBox::Recalc() {
 
 void MessageBox::Render(Viewport &viewport) noexcept {
 	viewport.SetCursor(pos, grav);
-	if (bg.a > std::numeric_limits<float>::epsilon()) {
+	if (bg.a > numeric_limits<float>::epsilon()) {
 		if (dirty) {
 			Recalc();
 		}
@@ -104,7 +109,7 @@ char buf[128] = { '\0' };
 }
 
 void Progress::Update(int current, int total) {
-	std::snprintf(buf, sizeof(buf), tpl, current, total, current * 100 / total);
+	snprintf(buf, sizeof(buf), tpl, current, total, current * 100 / total);
 	text.Set(font, buf);
 }
 
@@ -166,6 +171,183 @@ void Text::Render(Viewport &viewport) noexcept {
 	BlendedSprite &prog = viewport.SpriteProgram();
 	prog.SetTexture(tex);
 	sprite.Draw();
+}
+
+
+TextInput::TextInput(const Font &font)
+: font(font)
+, input()
+, cursor(0)
+, text()
+, bg_mesh()
+, cursor_mesh()
+, bg(1.0f, 1.0f, 1.0f, 0.0f)
+, fg(1.0f, 1.0f, 1.0f, 1.0f)
+, position(0.0f)
+, size(font.LineSkip())
+, gravity(Gravity::NORTH_WEST)
+, active(false)
+, dirty_box(true)
+, dirty_cursor(true)
+, dirty_text(true) {
+
+}
+
+void TextInput::Focus(Viewport &viewport) noexcept {
+	SDL_StartTextInput();
+	active = true;
+
+	glm::vec2 p(viewport.GetPosition(glm::vec2(position), gravity));
+	SDL_Rect rect;
+	rect.x = p.x;
+	rect.y = p.y;
+	rect.w = size.x;
+	rect.h = size.y;
+	SDL_SetTextInputRect(&rect);
+}
+
+void TextInput::Blur() noexcept {
+	SDL_StopTextInput();
+	active = false;
+}
+
+void TextInput::Clear() noexcept {
+	input.clear();
+	cursor = 0;
+	dirty_text = true;
+}
+
+void TextInput::Backspace() noexcept {
+	string::size_type previous(cursor);
+	MoveBackward();
+	input.erase(cursor, previous - cursor);
+	dirty_text = true;
+}
+
+void TextInput::Delete() noexcept {
+	string::size_type previous(cursor);
+	MoveForward();
+	input.erase(previous, cursor - previous);
+	cursor = previous;
+	dirty_text = true;
+}
+
+void TextInput::MoveBegin() noexcept {
+	cursor = 0;
+}
+
+void TextInput::MoveBackward() noexcept {
+	if (AtBegin()) return;
+	--cursor;
+	while (cursor > 0 && (input[cursor] & 0xC0) == 0x80) {
+		--cursor;
+	}
+}
+
+void TextInput::MoveForward() noexcept {
+	if (AtEnd()) return;
+	++cursor;
+	while (cursor <= input.size() && (input[cursor] & 0xC0) == 0x80) {
+		++cursor;
+	}
+}
+
+void TextInput::MoveEnd() noexcept {
+	cursor = input.size();
+}
+
+void TextInput::Insert(const char *str) {
+	size_t len = strlen(str);
+	input.insert(cursor, str, len);
+	cursor += len;
+	dirty_text = true;
+}
+
+bool TextInput::AtBegin() const noexcept {
+	return cursor == 0;
+}
+
+bool TextInput::AtEnd() const noexcept {
+	return cursor == input.size();
+}
+
+void TextInput::Position(const glm::vec3 &p, Gravity g, Gravity pv) noexcept {
+	position = p;
+	gravity = g;
+	text.Pivot(pv);
+	dirty_box = true;
+}
+
+void TextInput::Width(float w) noexcept {
+	size.x = w;
+	dirty_box = true;
+}
+
+void TextInput::Handle(const SDL_TextInputEvent &e) {
+	Insert(e.text);
+}
+
+void TextInput::Handle(const SDL_TextEditingEvent &e) {
+}
+
+void TextInput::Refresh() {
+	if (dirty_box) {
+		bg_buf.FillRect(size.x, size.y, bg, align(gravity, size));
+		bg_mesh.Update(bg_buf);
+		bg_buf.Clear();
+		dirty_box = false;
+	}
+	if (dirty_cursor) {
+		bg_buf.Reserve(2, 2);
+		bg_buf.vertices.emplace_back(0.0f, 0.0f, 0.0f);
+		bg_buf.vertices.emplace_back(0.0f, float(font.LineSkip()), 0.0f);
+		bg_buf.colors.resize(2, fg);
+		bg_buf.indices.push_back(0);
+		bg_buf.indices.push_back(1);
+		cursor_mesh.Update(bg_buf);
+		bg_buf.Clear();
+		dirty_cursor = false;
+	}
+	if (dirty_text) {
+		if (!input.empty()) {
+			text.Set(font, input.c_str());
+		}
+		dirty_text = false;
+	}
+}
+
+void TextInput::Render(Viewport &viewport) {
+	Refresh();
+	viewport.SetCursor(position, gravity);
+	if (bg.a > numeric_limits<float>::epsilon()) {
+		viewport.EnableAlphaBlending();
+		PlainColor &prog = viewport.HUDColorProgram();
+		prog.SetM(viewport.Cursor());
+		bg_mesh.DrawTriangles();
+		viewport.MoveCursor(glm::vec3(0.0f, 0.0f, -1.0f));
+	}
+	if (!input.empty()) {
+		BlendedSprite &prog = viewport.SpriteProgram();
+		prog.SetBG(glm::vec4(0.0f));
+		prog.SetFG(fg);
+		prog.SetM(viewport.Cursor());
+		text.Render(viewport);
+	}
+	if (active) {
+		glm::vec2 offset(0.0f);
+		if (input.empty() || AtBegin()) {
+			// a okay
+			offset = -align(text.Pivot(), glm::vec2(0.0f, font.LineSkip()));
+		} else if (AtEnd()) {
+			offset = -align(text.Pivot(), text.Size(), glm::vec2(-text.Size().x, 0.0f));
+		} else {
+			offset = -align(text.Pivot(), text.Size(), glm::vec2(-font.TextSize(input.substr(0, cursor).c_str()).x, 0.0f));
+		}
+		viewport.MoveCursor(glm::vec3(offset, -1.0f));
+		PlainColor &prog = viewport.HUDColorProgram();
+		prog.SetM(viewport.Cursor());
+		cursor_mesh.DrawLines();
+	}
 }
 
 }

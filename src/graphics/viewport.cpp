@@ -165,20 +165,24 @@ void Viewport::ClearDepth() noexcept {
 }
 
 
-void Viewport::SetCursor(const glm::vec3 &pos) {
+glm::vec2 Viewport::GetPosition(const glm::vec2 &off, Gravity grav) const noexcept {
+	return align(grav, canv.Size(), off + canv.Offset());
+}
+
+void Viewport::SetCursor(const glm::vec3 &pos) noexcept {
 	cursor[3].x = pos.x;
 	cursor[3].y = pos.y;
 	cursor[3].z = pos.z;
 }
 
-void Viewport::SetCursor(const glm::vec3 &pos, Gravity grav) {
-	glm::vec2 p(align(grav, canv.Size(), glm::vec2(pos) + canv.Offset()));
+void Viewport::SetCursor(const glm::vec3 &pos, Gravity grav) noexcept {
+	glm::vec2 p(GetPosition(glm::vec2(pos), grav));
 	cursor[3].x = p.x;
 	cursor[3].y = p.y;
 	cursor[3].z = pos.z;
 }
 
-void Viewport::MoveCursor(const glm::vec3 &d) {
+void Viewport::MoveCursor(const glm::vec3 &d) noexcept {
 	cursor[3].x += d.x;
 	cursor[3].y += d.y;
 	cursor[3].z += d.z;

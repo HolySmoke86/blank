@@ -161,13 +161,14 @@ void Application::Handle(const SDL_Event &event) {
 void Application::Handle(const SDL_WindowEvent &event) {
 	switch (event.event) {
 		case SDL_WINDOWEVENT_FOCUS_GAINED:
-			env.window.GrabMouse();
+			GetState().OnFocus();
 			break;
 		case SDL_WINDOWEVENT_FOCUS_LOST:
-			env.window.ReleaseMouse();
+			GetState().OnBlur();
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
 			env.viewport.Resize(event.data1, event.data2);
+			GetState().OnResize(env.viewport);
 			break;
 		default:
 			break;

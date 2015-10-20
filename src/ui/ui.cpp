@@ -212,8 +212,11 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 // message box
 , messages(env.assets.small_ui_font)
 , msg_timer(5000)
+, msg_keep(false)
 // crosshair
 , crosshair() {
+	const float ls = env.assets.small_ui_font.LineSkip();
+
 	// "inventory"
 	block_transform = glm::translate(block_transform, glm::vec3(50.0f, 50.0f, 0.0f));
 	block_transform = glm::scale(block_transform, glm::vec3(50.0f));
@@ -231,23 +234,23 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 	counter_text.Position(glm::vec3(-25.0f, 25.0f, 0.0f), Gravity::NORTH_EAST);
 	counter_text.Foreground(glm::vec4(1.0f));
 	counter_text.Background(glm::vec4(0.5f));
-	position_text.Position(glm::vec3(-25.0f, 25.0f + env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	position_text.Position(glm::vec3(-25.0f, 25.0f + ls, 0.0f), Gravity::NORTH_EAST);
 	position_text.Foreground(glm::vec4(1.0f));
 	position_text.Background(glm::vec4(0.5f));
-	orientation_text.Position(glm::vec3(-25.0f, 25.0f + 2 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	orientation_text.Position(glm::vec3(-25.0f, 25.0f + 2 * ls, 0.0f), Gravity::NORTH_EAST);
 	orientation_text.Foreground(glm::vec4(1.0f));
 	orientation_text.Background(glm::vec4(0.5f));
-	block_text.Position(glm::vec3(-25.0f, 25.0f + 4 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	block_text.Position(glm::vec3(-25.0f, 25.0f + 4 * ls, 0.0f), Gravity::NORTH_EAST);
 	block_text.Foreground(glm::vec4(1.0f));
 	block_text.Background(glm::vec4(0.5f));
 	block_text.Set(env.assets.small_ui_font, "Block: none");
-	entity_text.Position(glm::vec3(-25.0f, 25.0f + 4 * env.assets.small_ui_font.LineSkip(), 0.0f), Gravity::NORTH_EAST);
+	entity_text.Position(glm::vec3(-25.0f, 25.0f + 4 * ls, 0.0f), Gravity::NORTH_EAST);
 	entity_text.Foreground(glm::vec4(1.0f));
 	entity_text.Background(glm::vec4(0.5f));
 	entity_text.Set(env.assets.small_ui_font, "Entity: none");
 
 	// message box
-	messages.Position(glm::vec3(25.0f, -25.0f, 0.0f), Gravity::SOUTH_WEST);
+	messages.Position(glm::vec3(25.0f, -25.0f - 2 * ls, 0.0f), Gravity::SOUTH_WEST);
 	messages.Foreground(glm::vec4(1.0f));
 	messages.Background(glm::vec4(0.5f));
 
@@ -400,7 +403,7 @@ void HUD::Render(Viewport &viewport) noexcept {
 		}
 
 		// message box
-		if (msg_timer.Running()) {
+		if (msg_keep || msg_timer.Running()) {
 			messages.Render(viewport);
 		}
 

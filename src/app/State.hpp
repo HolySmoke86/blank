@@ -11,6 +11,7 @@ class Viewport;
 
 struct State {
 
+	friend class Application;
 	friend class HeadlessApplication;
 
 	virtual void Handle(const SDL_Event &) = 0;
@@ -27,6 +28,10 @@ private:
 	virtual void OnResume() { }
 	virtual void OnPause() { }
 	virtual void OnExit() { }
+
+	virtual void OnFocus() { }
+	virtual void OnBlur() { }
+	virtual void OnResize(Viewport &) { }
 
 };
 
