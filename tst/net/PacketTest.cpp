@@ -510,6 +510,46 @@ void PacketTest::testBlockUpdate() {
 	);
 }
 
+void PacketTest::testMessage() {
+	auto pack = Packet::Make<Packet::Message>(udp_pack);
+	AssertPacket("Message", 12, 6, 455, pack);
+
+	const uint8_t write_type = 1;
+	const uint32_t write_ref = 6433235;
+	const string write_msg("hello, world");
+
+	pack.length = Packet::Message::GetSize(write_msg);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"length not correctly set in BlockUpdate packet",
+		size_t(5 + write_msg.size() + 1), pack.length
+	);
+
+	pack.WriteType(write_type);
+	pack.WriteReferral(write_ref);
+	pack.WriteMessage(write_msg);
+
+	uint8_t read_type = 5;
+	uint32_t read_ref = 884373;
+	string read_msg;
+
+	pack.ReadType(read_type);
+	pack.ReadReferral(read_ref);
+	pack.ReadMessage(read_msg);
+
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"type not correctly transported in Message packet",
+		write_type, read_type
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"referral not correctly transported in Message packet",
+		write_ref, read_ref
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"message not correctly transported in Message packet",
+		write_msg, read_msg
+	);
+}
+
 
 void PacketTest::AssertPacket(
 	const string &name,

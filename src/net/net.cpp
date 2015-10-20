@@ -27,6 +27,8 @@ constexpr size_t Packet::PlayerCorrection::MAX_LEN;
 constexpr size_t Packet::ChunkBegin::MAX_LEN;
 constexpr size_t Packet::ChunkData::MAX_LEN;
 constexpr size_t Packet::BlockUpdate::MAX_LEN;
+constexpr size_t Packet::Message::MAX_LEN;
+constexpr size_t Packet::Message::MAX_MESSAGE_LEN;
 
 Connection::Connection(const IPaddress &addr)
 : handler(nullptr)
@@ -214,6 +216,8 @@ const char *Packet::Type2String(uint8_t t) noexcept {
 			return "ChunkData";
 		case BlockUpdate::TYPE:
 			return "BlockUpdate";
+		case Message::TYPE:
+			return "Message";
 		default:
 			return "Unknown";
 	}
@@ -541,6 +545,30 @@ void Packet::BlockUpdate::ReadBlock(Block &block, uint32_t num) const noexcept {
 	Read(block, off);
 }
 
+void Packet::Message::WriteType(uint8_t type) noexcept {
+	Write(type, 0);
+}
+
+void Packet::Message::ReadType(uint8_t &type) const noexcept {
+	Read(type, 0);
+}
+
+void Packet::Message::WriteReferral(uint32_t ref) noexcept {
+	Write(ref, 1);
+}
+
+void Packet::Message::ReadReferral(uint32_t &ref) const noexcept {
+	Read(ref, 1);
+}
+
+void Packet::Message::WriteMessage(const string &msg) noexcept {
+	WriteString(msg, 5, MAX_MESSAGE_LEN);
+}
+
+void Packet::Message::ReadMessage(string &msg) const noexcept {
+	ReadString(msg, 5, MAX_MESSAGE_LEN);
+}
+
 
 void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 	const Packet &pack = *reinterpret_cast<const Packet *>(udp_pack.data);
@@ -580,6 +608,9 @@ void ConnectionHandler::Handle(const UDPpacket &udp_pack) {
 			break;
 		case Packet::BlockUpdate::TYPE:
 			On(Packet::As<Packet::BlockUpdate>(udp_pack));
+			break;
+		case Packet::Message::TYPE:
+			On(Packet::As<Packet::Message>(udp_pack));
 			break;
 		default:
 			// drop unknown or unhandled packets

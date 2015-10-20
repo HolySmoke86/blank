@@ -218,6 +218,23 @@ struct Packet {
 		void ReadBlock(Block &, std::uint32_t) const noexcept;
 	};
 
+	struct Message : public Payload {
+		static constexpr std::uint8_t TYPE = 12;
+		static constexpr std::size_t MAX_LEN = 455;
+
+		static constexpr std::size_t MAX_MESSAGE_LEN = 450;
+		static std::size_t GetSize(const std::string &msg) noexcept {
+			return 5 + std::min(msg.size() + 1, MAX_MESSAGE_LEN);
+		}
+
+		void WriteType(std::uint8_t) noexcept;
+		void ReadType(std::uint8_t &) const noexcept;
+		void WriteReferral(std::uint32_t) noexcept;
+		void ReadReferral(std::uint32_t &) const noexcept;
+		void WriteMessage(const std::string &) noexcept;
+		void ReadMessage(std::string &) const noexcept;
+	};
+
 
 	template<class PayloadType>
 	PayloadType As() {

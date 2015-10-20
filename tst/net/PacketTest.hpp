@@ -35,6 +35,7 @@ CPPUNIT_TEST(testPlayerCorrection);
 CPPUNIT_TEST(testChunkBegin);
 CPPUNIT_TEST(testChunkData);
 CPPUNIT_TEST(testBlockUpdate);
+CPPUNIT_TEST(testMessage);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -56,6 +57,7 @@ public:
 	void testChunkBegin();
 	void testChunkData();
 	void testBlockUpdate();
+	void testMessage();
 
 private:
 	static void AssertPacket(

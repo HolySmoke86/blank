@@ -42,6 +42,7 @@ private:
 	virtual void On(const Packet::ChunkBegin &) { }
 	virtual void On(const Packet::ChunkData &) { }
 	virtual void On(const Packet::BlockUpdate &) { }
+	virtual void On(const Packet::Message &) { }
 
 private:
 	unsigned int packets_lost;

@@ -196,3 +196,17 @@ Payload:
 	18 first block data, 32bit
 	22 second block index...
 Length: 16 + multiple of 6, max 484
+
+
+Message
+-------
+
+Sent by the client when the user submits a line on the chat input.
+Sent by the server on various events like player chat, server status, command output, etc.
+
+Code: 12
+Payload:
+	 0 message type, 8bit unsigned int: 0 = notification, 1 = chat
+	 1 referral, 32bit unsigned int, entity ID if type = 1
+	 5 message, max 450 byte UTF-8 string, should be zero terminated if shorter
+Length: 6-455
