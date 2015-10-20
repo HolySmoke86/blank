@@ -86,7 +86,7 @@ void MasterState::OnPause() {
 void MasterState::Handle(const SDL_Event &event) {
 	switch (event.type) {
 		case SDL_KEYDOWN:
-			// TODO: move to interface?
+			// TODO: move to interface
 			if (event.key.keysym.sym == SDLK_RETURN) {
 				env.state.Push(&chat);
 				hud.KeepMessages(true);

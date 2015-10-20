@@ -306,6 +306,18 @@ uint16_t Client::SendPart() {
 	return conn.Send(client_pack, client_sock);
 }
 
+uint16_t Client::SendMessage(
+	uint8_t type,
+	uint32_t ref,
+	const string &msg
+) {
+	auto pack = Packet::Make<Packet::Message>(client_pack);
+	pack.WriteType(type);
+	pack.WriteReferral(ref);
+	pack.WriteMessage(msg);
+	client_pack.len = sizeof(Packet::Header) + Packet::Message::GetSize(msg);
+	return conn.Send(client_pack, client_sock);
+}
 
 NetworkedInput::NetworkedInput(World &world, Player &player, Client &client)
 : PlayerController(world, player)

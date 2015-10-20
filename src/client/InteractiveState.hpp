@@ -6,6 +6,7 @@
 
 #include "ChunkReceiver.hpp"
 #include "NetworkedInput.hpp"
+#include "../app/ChatState.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../audio/SoundBank.hpp"
 #include "../graphics/SkyBox.hpp"
@@ -31,7 +32,8 @@ class MasterState;
 
 class InteractiveState
 : public State
-, public ClientController {
+, public ClientController
+, public ChatState::Responder {
 
 public:
 	explicit InteractiveState(MasterState &, std::uint32_t player_id);
@@ -52,12 +54,15 @@ public:
 	void Handle(const Packet::EntityUpdate &);
 	void Handle(const Packet::PlayerCorrection &);
 	void Handle(const Packet::BlockUpdate &);
+	void Handle(const Packet::Message &);
 
 	void SetAudio(bool) override;
 	void SetVideo(bool) override;
 	void SetHUD(bool) override;
 	void SetDebug(bool) override;
 	void Exit() override;
+
+	void OnLineSubmit(const std::string &) override;
 
 private:
 	/// flag entity as updated by given packet
@@ -88,6 +93,8 @@ private:
 		int last_update;
 	};
 	std::map<std::uint32_t, UpdateStatus> update_status;
+
+	ChatState chat;
 
 };
 

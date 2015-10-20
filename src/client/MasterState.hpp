@@ -61,6 +61,7 @@ public:
 	void On(const Packet::ChunkBegin &) override;
 	void On(const Packet::ChunkData &) override;
 	void On(const Packet::BlockUpdate &) override;
+	void On(const Packet::Message &) override;
 
 private:
 	Environment &env;

@@ -60,7 +60,8 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , chunk_renderer(player.GetChunks())
 , loop_timer(16)
 , sky(master.GetEnv().loader.LoadCubeMap("skybox"))
-, update_status() {
+, update_status()
+, chat(master.GetEnv(), *this, *this) {
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
 	}
@@ -86,7 +87,13 @@ void InteractiveState::OnEnter() {
 void InteractiveState::Handle(const SDL_Event &event) {
 	switch (event.type) {
 		case SDL_KEYDOWN:
-			interface.HandlePress(event.key);
+			// TODO: move to interface
+			if (event.key.keysym.sym == SDLK_RETURN) {
+				master.GetEnv().state.Push(&chat);
+				hud.KeepMessages(true);
+			} else {
+				interface.HandlePress(event.key);
+			}
 			break;
 		case SDL_KEYUP:
 			interface.HandleRelease(event.key);
@@ -265,6 +272,12 @@ void InteractiveState::Handle(const Packet::BlockUpdate &pack) {
 	}
 }
 
+void InteractiveState::Handle(const Packet::Message &pack) {
+	string msg;
+	pack.ReadMessage(msg);
+	hud.PostMessage(msg);
+}
+
 void InteractiveState::SetAudio(bool b) {
 	master.GetConfig().audio.enabled = b;
 	if (b) {
@@ -304,6 +317,10 @@ void InteractiveState::SetDebug(bool b) {
 void InteractiveState::Exit() {
 	save.Write(player);
 	master.Quit();
+}
+
+void InteractiveState::OnLineSubmit(const string &line) {
+	master.GetClient().SendMessage(1, 0, line);
 }
 
 
@@ -456,6 +473,16 @@ void MasterState::On(const Packet::BlockUpdate &pack) {
 		return;
 	}
 	state->Handle(pack);
+}
+
+void MasterState::On(const Packet::Message &pack) {
+	if (state) {
+		state->Handle(pack);
+	} else {
+		string msg;
+		pack.ReadMessage(msg);
+		cout << "got message before interface was created: " << msg << endl;
+	}
 }
 
 }
