@@ -431,12 +431,17 @@ void ClientConnection::AttachPlayer(Player &player) {
 		GetPlayerModel().Instantiate(PlayerEntity().GetModel());
 	}
 
-	cout << "player \"" << player.Name() << "\" joined" << endl;
+	string msg = "player \"" + player.Name() + "\" joined";
+	cout << msg << endl;
+	server.DistributeMessage(0, 0, msg);
 }
 
 void ClientConnection::DetachPlayer() {
 	if (!HasPlayer()) return;
-	cout << "player \"" << input->GetPlayer().Name() << "\" left" << endl;
+	string msg = "player \"" + input->GetPlayer().Name() + "\" left";
+	cout << msg << endl;
+	server.DistributeMessage(0, 0, msg);
+
 	server.GetWorldSave().Write(input->GetPlayer());
 	PlayerEntity().Kill();
 	PlayerEntity().UnRef();
