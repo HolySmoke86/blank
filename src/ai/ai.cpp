@@ -75,8 +75,6 @@ RandomWalk::RandomWalk(Entity &e, std::uint64_t seed) noexcept
 , random(seed)
 , start_vel(e.Velocity())
 , target_vel(start_vel)
-, start_rot(e.AngularVelocity())
-, target_rot(start_rot)
 , switch_time(0)
 , lerp_max(1.0f)
 , lerp_time(0.0f) {
@@ -98,26 +96,19 @@ void RandomWalk::Update(int dt) {
 	} else if (lerp_time > 0) {
 		float a = std::min(lerp_time / lerp_max, 1.0f);
 		Controlled().TargetVelocity(mix(target_vel, start_vel, a));
-		Controlled().AngularVelocity(mix(target_rot, start_rot, a));
 	} else {
 		Controlled().TargetVelocity(target_vel);
-		Controlled().AngularVelocity(target_rot);
 	}
 }
 
 void RandomWalk::Change() noexcept {
 	start_vel = target_vel;
-	start_rot = target_rot;
 
 	constexpr float base = 0.001f;
 
 	target_vel.x = base * (random.Next<short>() % 1024);
 	target_vel.y = base * (random.Next<short>() % 1024);
 	target_vel.z = base * (random.Next<short>() % 1024);
-
-	target_rot.x = base * (random.Next<short>() % 1024);
-	target_rot.y = base * (random.Next<short>() % 1024);
-	target_rot.z = base * (random.Next<short>() % 1024);
 }
 
 }

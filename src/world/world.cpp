@@ -71,8 +71,7 @@ EntityState::EntityState()
 : chunk_pos(0)
 , block_pos(0.0f)
 , velocity(0.0f)
-, orient(1.0f, 0.0f, 0.0f, 0.0f)
-, ang_vel(0.0f) {
+, orient(1.0f, 0.0f, 0.0f, 0.0f) {
 
 }
 
@@ -370,21 +369,6 @@ void World::Update(int dt) {
 	}
 }
 
-namespace {
-
-glm::quat delta_rot(const glm::vec3 &av, float dt) {
-	glm::vec3 half(av * dt * 0.5f);
-	float mag = length(half);
-	if (mag > 0.0f) {
-		float smag = std::sin(mag) / mag;
-		return glm::quat(std::cos(mag), half * smag);
-	} else {
-		return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-	}
-}
-
-}
-
 void World::Update(Entity &entity, float dt) {
 	EntityState state(entity.GetState());
 
@@ -397,11 +381,9 @@ void World::Update(Entity &entity, float dt) {
 	constexpr float sixth = 1.0f / 6.0f;
 	f.position = sixth * ((a.position + 2.0f * (b.position + c.position)) + d.position);
 	f.velocity = sixth * ((a.velocity + 2.0f * (b.velocity + c.velocity)) + d.velocity);
-	f.orient = sixth * ((a.orient + 2.0f * (b.orient + c.orient)) + d.orient);
 
 	state.block_pos += f.position * dt;
 	state.velocity += f.velocity * dt;
-	state.orient = delta_rot(f.orient, dt) * state.orient;
 	state.AdjustPosition();
 
 	entity.SetState(state);
@@ -416,7 +398,6 @@ EntityDerivative World::CalculateStep(
 	EntityState next(cur);
 	next.block_pos += delta.position * dt;
 	next.velocity += delta.velocity * dt;
-	next.orient = delta_rot(cur.ang_vel, dt) * cur.orient;
 	next.AdjustPosition();
 
 	EntityDerivative out;

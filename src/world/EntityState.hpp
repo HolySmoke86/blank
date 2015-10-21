@@ -16,7 +16,6 @@ struct EntityState {
 	glm::vec3 velocity;
 
 	glm::quat orient;
-	glm::vec3 ang_vel;
 
 	EntityState();
 

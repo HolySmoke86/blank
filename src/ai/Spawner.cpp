@@ -125,17 +125,11 @@ void Spawner::TrySpawn() {
 }
 
 void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 &pos) {
-	glm::vec3 rot(0.000001f);
-	rot.x *= (random.Next<unsigned short>() % 1024);
-	rot.y *= (random.Next<unsigned short>() % 1024);
-	rot.z *= (random.Next<unsigned short>() % 1024);
-
 	Entity &e = world.AddEntity();
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
 	RandomModel().Instantiate(e.GetModel());
-	e.AngularVelocity(rot);
 	Controller *ctrl;
 	if (random()) {
 		ctrl = new RandomWalk(e, random.Next<std::uint64_t>());

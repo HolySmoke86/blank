@@ -116,7 +116,6 @@ void PacketTest::testJoin() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
 	uint32_t read_id = 0;
 	EntityState read_state;
 	pack.WritePlayer(write_entity);
@@ -164,7 +163,6 @@ void PacketTest::testPlayerUpdate() {
 	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_state.ang_vel = { 0.01f, 0.00302f, 0.0985f };
 	glm::vec3 write_movement(0.5f, -1.0f, 1.0f);
 	float write_pitch = 1.25f;
 	float write_yaw = -2.5f;
@@ -228,7 +226,6 @@ void PacketTest::testSpawnEntity() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
 	write_entity.Bounds({{ -1, -1, -1 }, { 1, 1, 1 }});
 	write_entity.WorldCollidable(true);
 	write_entity.Name("blah");
@@ -317,7 +314,6 @@ void PacketTest::testEntityUpdate() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
 	pack.WriteEntity(write_entity, write_base, 1);
 	pack.WriteEntity(write_entity, write_base, 0);
 	pack.WriteEntity(write_entity, write_base, 2);
@@ -354,7 +350,6 @@ void PacketTest::testPlayerCorrection() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
 	pack.WritePlayer(write_entity);
 
 	EntityState read_state;
@@ -614,10 +609,6 @@ void PacketTest::AssertEqual(
 	AssertEqual(
 		message + ": bad orientation",
 		expected.orient, actual.orient
-	);
-	AssertEqual(
-		message + ": bad angular velocity",
-		expected.ang_vel, actual.ang_vel
 	);
 }
 

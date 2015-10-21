@@ -281,7 +281,6 @@ void Packet::Payload::Write(const EntityState &state, size_t off) noexcept {
 	WritePackU(state.block_pos * (1.0f / 16.0f), off + 12);
 	Write(state.velocity, off + 18);
 	Write(state.orient, off + 30);
-	Write(state.ang_vel, off + 38);
 }
 
 void Packet::Payload::Read(EntityState &state, size_t off) const noexcept {
@@ -289,7 +288,6 @@ void Packet::Payload::Read(EntityState &state, size_t off) const noexcept {
 	ReadPackU(state.block_pos, off + 12);
 	Read(state.velocity, off + 18);
 	Read(state.orient, off + 30);
-	Read(state.ang_vel, off + 38);
 	state.block_pos *= 16.0f;
 }
 
@@ -298,7 +296,6 @@ void Packet::Payload::Write(const EntityState &state, const glm::ivec3 &base, si
 	WritePackU(state.block_pos * (1.0f / 16.0f), off + 3);
 	Write(state.velocity, off + 9);
 	Write(state.orient, off + 21);
-	Write(state.ang_vel, off + 29);
 }
 
 void Packet::Payload::Read(EntityState &state, const glm::ivec3 &base, size_t off) const noexcept {
@@ -306,7 +303,6 @@ void Packet::Payload::Read(EntityState &state, const glm::ivec3 &base, size_t of
 	ReadPackU(state.block_pos, off + 3);
 	Read(state.velocity, off + 9);
 	Read(state.orient, off + 21);
-	Read(state.ang_vel, off + 29);
 	state.chunk_pos += base;
 	state.block_pos *= 16.0f;
 }

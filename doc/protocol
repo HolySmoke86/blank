@@ -35,7 +35,7 @@ entity state  50    [ 0] vec3i chunk pos (there's a variation where this is a ve
                     [12] vec3u block pos by 16,
                     [18] vec3 velocity,
                     [30] quat orientation,
-                    [38] vec3 angular velocity
+                    [38] 12 reserved bytes (used to be angular velocity)
 
 
 Packets

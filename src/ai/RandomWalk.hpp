@@ -29,9 +29,6 @@ private:
 	glm::vec3 start_vel;
 	glm::vec3 target_vel;
 
-	glm::vec3 start_rot;
-	glm::vec3 target_rot;
-
 	int switch_time;
 	float lerp_max;
 	float lerp_time;
