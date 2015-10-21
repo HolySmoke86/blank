@@ -23,8 +23,19 @@ Common Types
 Name          Size  Type
 vec3          12    3x 32bit float
 vec3i         12    3x 32bit signed int
-quat          16    4x 32bit float
-entity state  64    vec3i, vec3, vec3, quat, vec3
+vec3b          3    3x 8bit signed int
+packn          2    16bit signed int representing a float value normalized to [-1,1]
+                    	it can be unpacked by dividing by 32767
+packu          2    16bit unsigned  int representing a float value normalized to [0,1]
+                    	it can be unpacked by dividing by 65535
+vec3n          6    3x packn
+vec3u          6    3x packu
+quat           8    4x packn float
+entity state  50    [ 0] vec3i chunk pos (there's a variation where this is a vec3b)
+                    [12] vec3u block pos by 16,
+                    [18] vec3 velocity,
+                    [30] quat orientation,
+                    [38] vec3 angular velocity
 
 
 Packets
@@ -45,7 +56,7 @@ Length: 0
 Login
 -----
 
-Sent from client to serveri as a request to join. The server may
+Sent from client to server as a request to join. The server may
 respond negatively if the player name is already taken or some cap has
 been reached.
 
@@ -66,9 +77,9 @@ Code: 2
 Payload:
 	 0 entity ID of the player, 32bit unsigned int
 	 4 entity state of the player
-	68 name of the world the server's currently running
+	54 name of the world the server's currently running
 	   max 32 byte UTF-8 string
-Length: 68-100
+Length: 54-86
 
 
 Part
@@ -91,12 +102,12 @@ Sent by clients to notify the server of their changes to the player.
 Code: 4
 Payload:
 	 0 player's entity state as predicted by the client
-	64 movement input, 3x 16bit signed int, each component mapped from [-1,1] to [-32767,32767]
-	70 pitch input, 16bit signed int, mapped from [-PI/2,PI/2] to [-32767,32767]
-	72 yaw input, 16bit signed int, mapped from [-PI,PI] to [-32767,32767]
-	74 active actions, 8bit bit field, first three bits are primary, secondary, and tertiary
-	75 selected inventory slot, 8bit unsigned int
-Length: 76
+	50 movement input, vec3n
+	56 pitch input by PI/2, packn
+	58 yaw input by PI, packn
+	60 active actions, 8bit bit field, first three bits are primary, secondary, and tertiary
+	61 selected inventory slot, 8bit unsigned int
+Length: 62
 
 
 Spawn Entity
@@ -106,14 +117,14 @@ Sent by the server to notify the client of an entity entering spawn range.
 
 Code: 5
 Payload:
-	  0 entity ID, 32bit unsigned int
-	  4 entity's skeleton ID, 32bit unsigned int
-	  8 entity state
-	 72 bounding box of the entity, 6x 32bit float
-	 96 flags, 32bit bitfield with boolean values
-	    1: world collision
-	100 entity name, max 32 byte UTF-8 string
-Length: 100 - 132
+	 0 entity ID, 32bit unsigned int
+	 4 entity's model ID, 32bit unsigned int
+	 8 entity state
+	58 bounding box of the entity, 6x 32bit float
+	82 flags, 32bit bitfield with boolean values
+	   1: world collision
+	86 entity name, max 32 byte UTF-8 string
+Length: 87 - 118
 
 
 Despawn Entity
@@ -135,11 +146,12 @@ Contained entities must be ordered by ascending entity ID.
 
 Code: 7
 Payload:
-	 0 number of entities, 32bit int, 1-7
-	 4 entity ID, 32bit unsigned int
-	 8 entity state
-	72 next entity...
-Length: 4 + multiple of 68, max 480
+	 0 number of entities, 32bit int, 1-10
+	 4 base for chunk coordinates, vec3i
+	16 entity ID, 32bit unsigned int
+	20 entity state with vec3b as chunk position (rather than vec3i)
+	62 next entity...
+Length: 16 + multiple of 45, max 466
 
 
 Player Correction
@@ -151,7 +163,7 @@ Code: 8
 Payload:
 	 0 sequence number of the offending packet, 16bit unsigned int
 	 2 entity state of the player's entity on the server
-Length: 66
+Length: 52
 
 
 Chunk Begin

@@ -317,10 +317,12 @@ void ClientConnection::QueueUpdate(SpawnStatus &status) {
 }
 
 void ClientConnection::SendUpdates() {
+	auto base = PlayerChunks().Base();
 	auto pack = Prepare<Packet::EntityUpdate>();
+	pack.WriteChunkBase(base);
 	int entity_pos = 0;
 	for (SpawnStatus *status : entity_updates) {
-		pack.WriteEntity(*status->entity, entity_pos);
+		pack.WriteEntity(*status->entity, base, entity_pos);
 		++entity_pos;
 		if (entity_pos == Packet::EntityUpdate::MAX_ENTITIES) {
 			pack.WriteEntityCount(entity_pos);

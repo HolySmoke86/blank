@@ -34,14 +34,6 @@ void PacketTest::testSizes() {
 		"unexpected size of vec3i",
 		size_t(12), sizeof(glm::ivec3)
 	);
-	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"unexpected size of quat",
-		size_t(16), sizeof(glm::quat)
-	);
-	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"unexpected size of entity state",
-		size_t(64), sizeof(EntityState)
-	);
 }
 
 void PacketTest::testControl() {
@@ -116,7 +108,7 @@ void PacketTest::testLogin() {
 
 void PacketTest::testJoin() {
 	auto pack = Packet::Make<Packet::Join>(udp_pack);
-	AssertPacket("Join", 2, 68, 100, pack);
+	AssertPacket("Join", 2, 54, 86, pack);
 
 	Entity write_entity;
 	write_entity.ID(534574);
@@ -165,7 +157,7 @@ void PacketTest::testPart() {
 
 void PacketTest::testPlayerUpdate() {
 	auto pack = Packet::Make<Packet::PlayerUpdate>(udp_pack);
-	AssertPacket("PlayerUpdate", 4, 76, pack);
+	AssertPacket("PlayerUpdate", 4, 62, pack);
 
 	EntityState write_state;
 	write_state.chunk_pos = { 7, 2, -3 };
@@ -225,7 +217,7 @@ void PacketTest::testPlayerUpdate() {
 
 void PacketTest::testSpawnEntity() {
 	auto pack = Packet::Make<Packet::SpawnEntity>(udp_pack);
-	AssertPacket("SpawnEntity", 5, 100, 132, pack);
+	AssertPacket("SpawnEntity", 5, 87, 118, pack);
 
 	Entity write_entity;
 	write_entity.ID(534574);
@@ -243,10 +235,10 @@ void PacketTest::testSpawnEntity() {
 	pack.WriteEntity(write_entity);
 
 	uint32_t entity_id;
-	uint32_t skeleton_id;
+	uint32_t model_id;
 	Entity read_entity;
 	pack.ReadEntityID(entity_id);
-	pack.ReadSkeletonID(skeleton_id);
+	pack.ReadModelID(model_id);
 	pack.ReadEntity(read_entity);
 
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
@@ -254,8 +246,8 @@ void PacketTest::testSpawnEntity() {
 		write_entity.ID(), entity_id
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"skeleton ID not correctly transported in SpawnEntity packet",
-		write_entity.GetModel().GetModel().ID(), skeleton_id
+		"model ID not correctly transported in SpawnEntity packet",
+		write_entity.GetModel().GetModel().ID(), model_id
 	);
 	AssertEqual(
 		"entity state not correctly transported in PlayerUpdate packet",
@@ -292,21 +284,31 @@ void PacketTest::testDespawnEntity() {
 
 void PacketTest::testEntityUpdate() {
 	auto pack = Packet::Make<Packet::EntityUpdate>(udp_pack);
-	AssertPacket("EntityUpdate", 7, 4, 480, pack);
+	AssertPacket("EntityUpdate", 7, 16, 466, pack);
 
 	pack.length = Packet::EntityUpdate::GetSize(3);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"length not correctly set in EntityUpdate packet",
-		size_t(4 + 3 * 68), pack.length
+		size_t(16 + 3 * 45), pack.length
 	);
 
 	uint32_t write_count = 3;
-	uint32_t read_count;
+	glm::ivec3 write_base(8, -15, 1);
 	pack.WriteEntityCount(write_count);
+	pack.WriteChunkBase(write_base);
+
+	uint32_t read_count;
+	glm::ivec3 read_base;
 	pack.ReadEntityCount(read_count);
+	pack.ReadChunkBase(read_base);
+
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"entity count not correctly transported in EntityUpdate packet",
 		write_count, read_count
+	);
+	AssertEqual(
+		"chunk base not correctly transported in EntityUpdate packet",
+		write_base, read_base
 	);
 
 	Entity write_entity;
@@ -316,14 +318,14 @@ void PacketTest::testEntityUpdate() {
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	write_entity.GetState().ang_vel = { 0.01f, 0.00302f, 0.0985f };
-	pack.WriteEntity(write_entity, 1);
-	pack.WriteEntity(write_entity, 0);
-	pack.WriteEntity(write_entity, 2);
+	pack.WriteEntity(write_entity, write_base, 1);
+	pack.WriteEntity(write_entity, write_base, 0);
+	pack.WriteEntity(write_entity, write_base, 2);
 
 	uint32_t read_id;
 	EntityState read_state;
 	pack.ReadEntityID(read_id, 1);
-	pack.ReadEntityState(read_state, 1);
+	pack.ReadEntityState(read_state, write_base, 1);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"entity ID not correctly transported in EntityUpdate packet",
 		write_entity.ID(), read_id
@@ -336,7 +338,7 @@ void PacketTest::testEntityUpdate() {
 
 void PacketTest::testPlayerCorrection() {
 	auto pack = Packet::Make<Packet::PlayerCorrection>(udp_pack);
-	AssertPacket("PlayerCorrection", 8, 66, pack);
+	AssertPacket("PlayerCorrection", 8, 52, pack);
 
 	uint16_t write_seq = 50050;
 	uint16_t read_seq;
@@ -603,7 +605,7 @@ void PacketTest::AssertEqual(
 	);
 	AssertEqual(
 		message + ": bad block position",
-		expected.block_pos, actual.block_pos
+		expected.block_pos, actual.block_pos, 16.0f/65535.0f // that's about the max accuracy that packing's going to give us
 	);
 	AssertEqual(
 		message + ": bad velocity",

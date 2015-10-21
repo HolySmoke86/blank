@@ -171,11 +171,10 @@ void InteractiveState::Handle(const Packet::SpawnEntity &pack) {
 	Entity &entity = world.ForceAddEntity(entity_id);
 	UpdateEntity(entity_id, pack.Seq());
 	pack.ReadEntity(entity);
-	uint32_t skel_id;
-	pack.ReadSkeletonID(skel_id);
-	if (skel_id > 0 && skel_id <= res.models.size()) {
-		Model &skel = res.models.Get(skel_id);
-		skel.Instantiate(entity.GetModel());
+	uint32_t model_id;
+	pack.ReadModelID(model_id);
+	if (model_id > 0 && model_id <= res.models.size()) {
+		res.models.Get(model_id).Instantiate(entity.GetModel());
 	}
 	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
 		<< ") at " << entity.AbsolutePosition() << endl;
@@ -199,7 +198,9 @@ void InteractiveState::Handle(const Packet::EntityUpdate &pack) {
 	auto world_end = world.Entities().end();
 
 	uint32_t count = 0;
+	glm::ivec3 base;
 	pack.ReadEntityCount(count);
+	pack.ReadChunkBase(base);
 
 	for (uint32_t i = 0; i < count; ++i) {
 		uint32_t entity_id = 0;
@@ -214,7 +215,7 @@ void InteractiveState::Handle(const Packet::EntityUpdate &pack) {
 		}
 		if (world_iter->ID() == entity_id) {
 			if (UpdateEntity(entity_id, pack.Seq())) {
-				pack.ReadEntityState(world_iter->GetState(), i);
+				pack.ReadEntityState(world_iter->GetState(), base, i);
 			}
 		}
 	}

@@ -13,6 +13,9 @@ constexpr float PI_0p5 = PI * 0.5f;
 constexpr float PI_1p5 = PI * 1.5f;
 constexpr float PI_2p0 = PI * 2.0f;
 
+constexpr float PI_inv = 1.0f / PI;
+constexpr float PI_0p5_inv = 1.0f / PI_0p5;
+
 constexpr float DEG_RAD_FACTOR = PI / 180.0f;
 constexpr float RAD_DEG_FACTOR = 180.0f / PI;
 

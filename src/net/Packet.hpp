@@ -73,8 +73,28 @@ struct Packet {
 		template<class T>
 		void Read(T &, size_t off) const noexcept;
 
+		void Write(const glm::quat &, size_t off) noexcept;
+		void Read(glm::quat &, size_t off) const noexcept;
+		void Write(const EntityState &, size_t off) noexcept;
+		void Read(EntityState &, size_t off) const noexcept;
+		void Write(const EntityState &, const glm::ivec3 &, size_t off) noexcept;
+		void Read(EntityState &, const glm::ivec3 &, size_t off) const noexcept;
+
 		void WriteString(const std::string &src, std::size_t off, std::size_t maxlen) noexcept;
 		void ReadString(std::string &dst, std::size_t off, std::size_t maxlen) const noexcept;
+
+		void WritePackB(const glm::ivec3 &, size_t off) noexcept;
+		void ReadPackB(glm::ivec3 &, size_t off) const noexcept;
+
+		void WritePackN(float, size_t off) noexcept;
+		void ReadPackN(float &, size_t off) const noexcept;
+		void WritePackN(const glm::vec3 &, size_t off) noexcept;
+		void ReadPackN(glm::vec3 &, size_t off) const noexcept;
+
+		void WritePackU(float, size_t off) noexcept;
+		void ReadPackU(float &, size_t off) const noexcept;
+		void WritePackU(const glm::vec3 &, size_t off) noexcept;
+		void ReadPackU(glm::vec3 &, size_t off) const noexcept;
 	};
 
 	struct Ping : public Payload {
@@ -92,7 +112,7 @@ struct Packet {
 
 	struct Join : public Payload {
 		static constexpr std::uint8_t TYPE = 2;
-		static constexpr std::size_t MAX_LEN = 100;
+		static constexpr std::size_t MAX_LEN = 86;
 
 		void WritePlayer(const Entity &) noexcept;
 		void ReadPlayerID(std::uint32_t &) const noexcept;
@@ -108,7 +128,7 @@ struct Packet {
 
 	struct PlayerUpdate : public Payload {
 		static constexpr std::uint8_t TYPE = 4;
-		static constexpr std::size_t MAX_LEN = 76;
+		static constexpr std::size_t MAX_LEN = 62;
 
 		void WritePredictedState(const EntityState &) noexcept;
 		void ReadPredictedState(EntityState &) const noexcept;
@@ -126,11 +146,11 @@ struct Packet {
 
 	struct SpawnEntity : public Payload {
 		static constexpr std::uint8_t TYPE = 5;
-		static constexpr std::size_t MAX_LEN = 132;
+		static constexpr std::size_t MAX_LEN = 118;
 
 		void WriteEntity(const Entity &) noexcept;
 		void ReadEntityID(std::uint32_t &) const noexcept;
-		void ReadSkeletonID(std::uint32_t &) const noexcept;
+		void ReadModelID(std::uint32_t &) const noexcept;
 		void ReadEntity(Entity &) const noexcept;
 	};
 
@@ -144,24 +164,26 @@ struct Packet {
 
 	struct EntityUpdate : public Payload {
 		static constexpr std::uint8_t TYPE = 7;
-		static constexpr std::size_t MAX_LEN = 480;
+		static constexpr std::size_t MAX_LEN = 466;
 
-		static constexpr std::uint32_t MAX_ENTITIES = 7;
+		static constexpr std::uint32_t MAX_ENTITIES = 10;
 		static constexpr std::size_t GetSize(std::uint32_t num) noexcept {
-			return 4 + (num * 68);
+			return 16 + (num * 45);
 		}
 
 		void WriteEntityCount(std::uint32_t) noexcept;
 		void ReadEntityCount(std::uint32_t &) const noexcept;
+		void WriteChunkBase(const glm::ivec3 &) noexcept;
+		void ReadChunkBase(glm::ivec3 &) const noexcept;
 
-		void WriteEntity(const Entity &, std::uint32_t) noexcept;
+		void WriteEntity(const Entity &, const glm::ivec3 &, std::uint32_t) noexcept;
 		void ReadEntityID(std::uint32_t &, std::uint32_t) const noexcept;
-		void ReadEntityState(EntityState &, std::uint32_t) const noexcept;
+		void ReadEntityState(EntityState &, const glm::ivec3 &, std::uint32_t) const noexcept;
 	};
 
 	struct PlayerCorrection : public Payload {
 		static constexpr std::uint8_t TYPE = 8;
-		static constexpr std::size_t MAX_LEN = 66;
+		static constexpr std::size_t MAX_LEN = 52;
 
 		void WritePacketSeq(std::uint16_t) noexcept;
 		void ReadPacketSeq(std::uint16_t &) const noexcept;

@@ -261,6 +261,118 @@ void Packet::Payload::ReadString(string &dst, size_t off, size_t maxlen) const n
 	}
 }
 
+void Packet::Payload::Write(const glm::quat &val, size_t off) noexcept {
+	WritePackN(val.w, off);
+	WritePackN(val.x, off + 2);
+	WritePackN(val.y, off + 4);
+	WritePackN(val.z, off + 6);
+}
+
+void Packet::Payload::Read(glm::quat &val, size_t off) const noexcept {
+	ReadPackN(val.w, off);
+	ReadPackN(val.x, off + 2);
+	ReadPackN(val.y, off + 4);
+	ReadPackN(val.z, off + 6);
+	val = normalize(val);
+}
+
+void Packet::Payload::Write(const EntityState &state, size_t off) noexcept {
+	Write(state.chunk_pos, off);
+	WritePackU(state.block_pos * (1.0f / 16.0f), off + 12);
+	Write(state.velocity, off + 18);
+	Write(state.orient, off + 30);
+	Write(state.ang_vel, off + 38);
+}
+
+void Packet::Payload::Read(EntityState &state, size_t off) const noexcept {
+	Read(state.chunk_pos, off);
+	ReadPackU(state.block_pos, off + 12);
+	Read(state.velocity, off + 18);
+	Read(state.orient, off + 30);
+	Read(state.ang_vel, off + 38);
+	state.block_pos *= 16.0f;
+}
+
+void Packet::Payload::Write(const EntityState &state, const glm::ivec3 &base, size_t off) noexcept {
+	WritePackB(state.chunk_pos - base, off);
+	WritePackU(state.block_pos * (1.0f / 16.0f), off + 3);
+	Write(state.velocity, off + 9);
+	Write(state.orient, off + 21);
+	Write(state.ang_vel, off + 29);
+}
+
+void Packet::Payload::Read(EntityState &state, const glm::ivec3 &base, size_t off) const noexcept {
+	ReadPackB(state.chunk_pos, off);
+	ReadPackU(state.block_pos, off + 3);
+	Read(state.velocity, off + 9);
+	Read(state.orient, off + 21);
+	Read(state.ang_vel, off + 29);
+	state.chunk_pos += base;
+	state.block_pos *= 16.0f;
+}
+
+void Packet::Payload::WritePackN(float val, size_t off) noexcept {
+	int16_t raw = glm::clamp(glm::round(val * 32767.0f), -32767.0f, 32767.0f);
+	Write(raw, off);
+}
+
+void Packet::Payload::WritePackB(const glm::ivec3 &val, size_t off) noexcept {
+	Write(int8_t(val.x), off);
+	Write(int8_t(val.y), off + 1);
+	Write(int8_t(val.z), off + 2);
+}
+
+void Packet::Payload::ReadPackB(glm::ivec3 &val, size_t off) const noexcept {
+	int8_t conv = 0;
+	Read(conv, off);
+	val.x = conv;
+	Read(conv, off + 1);
+	val.y = conv;
+	Read(conv, off + 2);
+	val.z = conv;
+}
+
+void Packet::Payload::ReadPackN(float &val, size_t off) const noexcept {
+	int16_t raw = 0;
+	Read(raw, off);
+	val = raw * (1.0f/32767.0f);
+}
+
+void Packet::Payload::WritePackN(const glm::vec3 &val, size_t off) noexcept {
+	WritePackN(val.x, off);
+	WritePackN(val.y, off + 2);
+	WritePackN(val.z, off + 4);
+}
+
+void Packet::Payload::ReadPackN(glm::vec3 &val, size_t off) const noexcept {
+	ReadPackN(val.x, off);
+	ReadPackN(val.y, off + 2);
+	ReadPackN(val.z, off + 4);
+}
+
+void Packet::Payload::WritePackU(float val, size_t off) noexcept {
+	uint16_t raw = glm::clamp(glm::round(val * 65535.0f), 0.0f, 65535.0f);
+	Write(raw, off);
+}
+
+void Packet::Payload::ReadPackU(float &val, size_t off) const noexcept {
+	uint16_t raw = 0;
+	Read(raw, off);
+	val = raw * (1.0f/65535.0f);
+}
+
+void Packet::Payload::WritePackU(const glm::vec3 &val, size_t off) noexcept {
+	WritePackU(val.x, off);
+	WritePackU(val.y, off + 2);
+	WritePackU(val.z, off + 4);
+}
+
+void Packet::Payload::ReadPackU(glm::vec3 &val, size_t off) const noexcept {
+	ReadPackU(val.x, off);
+	ReadPackU(val.y, off + 2);
+	ReadPackU(val.z, off + 4);
+}
+
 
 void Packet::Login::WritePlayerName(const string &name) noexcept {
 	WriteString(name, 0, 32);
@@ -284,11 +396,11 @@ void Packet::Join::ReadPlayerState(EntityState &state) const noexcept {
 }
 
 void Packet::Join::WriteWorldName(const string &name) noexcept {
-	WriteString(name, 68, 32);
+	WriteString(name, 54, 32);
 }
 
 void Packet::Join::ReadWorldName(string &name) const noexcept {
-	ReadString(name, 68, 32);
+	ReadString(name, 54, 32);
 }
 
 void Packet::PlayerUpdate::WritePredictedState(const EntityState &state) noexcept {
@@ -300,56 +412,47 @@ void Packet::PlayerUpdate::ReadPredictedState(EntityState &state) const noexcept
 }
 
 void Packet::PlayerUpdate::WriteMovement(const glm::vec3 &mov) noexcept {
-	glm::ivec3 conv = clamp(glm::ivec3(mov * 32767.0f), -32767, 32767);
-	Write(int16_t(conv.x), 64);
-	Write(int16_t(conv.y), 66);
-	Write(int16_t(conv.z), 68);
+	WritePackN(mov, 50);
 }
 
 void Packet::PlayerUpdate::ReadMovement(glm::vec3 &mov) const noexcept {
-	int16_t x, y, z;
-	Read(x, 64);
-	Read(y, 66);
-	Read(z, 68);
-	mov = glm::vec3(x, y, z) * .00003051850947599719f;
+	ReadPackN(mov, 50);
 }
 
 void Packet::PlayerUpdate::WritePitch(float pitch) noexcept {
-	int16_t conv = pitch * 20860.12008116853786870640f;
-	Write(conv, 70);
+	float conv = pitch * PI_0p5_inv;
+	WritePackN(conv, 56);
 }
 
 void Packet::PlayerUpdate::ReadPitch(float &pitch) const noexcept {
-	int16_t conv = 0;
-	Read(conv, 70);
-	pitch = conv * .00004793836258415163f;
+	ReadPackN(pitch, 56);
+	pitch *= PI_0p5;
 }
 
 void Packet::PlayerUpdate::WriteYaw(float yaw) noexcept {
-	int16_t conv = yaw * 10430.06004058426893435320f;
-	Write(conv, 72);
+	float conv = yaw * PI_inv;
+	WritePackN(conv, 58);
 }
 
 void Packet::PlayerUpdate::ReadYaw(float &yaw) const noexcept {
-	int16_t conv = 0;
-	Read(conv, 72);
-	yaw = conv * .00009587672516830326f;
+	ReadPackN(yaw, 58);
+	yaw *= PI;
 }
 
 void Packet::PlayerUpdate::WriteActions(uint8_t actions) noexcept {
-	Write(actions, 74);
+	Write(actions, 60);
 }
 
 void Packet::PlayerUpdate::ReadActions(uint8_t &actions) const noexcept {
-	Read(actions, 74);
+	Read(actions, 60);
 }
 
 void Packet::PlayerUpdate::WriteSlot(uint8_t slot) noexcept {
-	Write(slot, 75);
+	Write(slot, 61);
 }
 
 void Packet::PlayerUpdate::ReadSlot(uint8_t &slot) const noexcept {
-	Read(slot, 75);
+	Read(slot, 61);
 }
 
 void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
@@ -360,20 +463,20 @@ void Packet::SpawnEntity::WriteEntity(const Entity &e) noexcept {
 		Write(uint32_t(0), 4);
 	}
 	Write(e.GetState(), 8);
-	Write(e.Bounds(), 72);
+	Write(e.Bounds(), 58);
 	uint32_t flags = 0;
 	if (e.WorldCollidable()) {
 		flags |= 1;
 	}
-	Write(flags, 96);
-	WriteString(e.Name(), 100, 32);
+	Write(flags, 82);
+	WriteString(e.Name(), 86, 32);
 }
 
 void Packet::SpawnEntity::ReadEntityID(uint32_t &id) const noexcept {
 	Read(id, 0);
 }
 
-void Packet::SpawnEntity::ReadSkeletonID(uint32_t &id) const noexcept {
+void Packet::SpawnEntity::ReadModelID(uint32_t &id) const noexcept {
 	Read(id, 4);
 }
 
@@ -384,9 +487,9 @@ void Packet::SpawnEntity::ReadEntity(Entity &e) const noexcept {
 	string name;
 
 	Read(state, 8);
-	Read(bounds, 72);
-	Read(flags, 96);
-	ReadString(name, 100, 32);
+	Read(bounds, 58);
+	Read(flags, 82);
+	ReadString(name, 86, 32);
 
 	e.SetState(state);
 	e.Bounds(bounds);
@@ -410,11 +513,19 @@ void Packet::EntityUpdate::ReadEntityCount(uint32_t &count) const noexcept {
 	Read(count, 0);
 }
 
-void Packet::EntityUpdate::WriteEntity(const Entity &entity, uint32_t num) noexcept {
+void Packet::EntityUpdate::WriteChunkBase(const glm::ivec3 &base) noexcept {
+	Write(base, 4);
+}
+
+void Packet::EntityUpdate::ReadChunkBase(glm::ivec3 &base) const noexcept {
+	Read(base, 4);
+}
+
+void Packet::EntityUpdate::WriteEntity(const Entity &entity, const glm::ivec3 &base, uint32_t num) noexcept {
 	uint32_t off = GetSize(num);
 
 	Write(entity.ID(), off);
-	Write(entity.GetState(), off + 4);
+	Write(entity.GetState(), base, off + 4);
 }
 
 void Packet::EntityUpdate::ReadEntityID(uint32_t &id, uint32_t num) const noexcept {
@@ -422,9 +533,9 @@ void Packet::EntityUpdate::ReadEntityID(uint32_t &id, uint32_t num) const noexce
 	Read(id, off);
 }
 
-void Packet::EntityUpdate::ReadEntityState(EntityState &state, uint32_t num) const noexcept {
+void Packet::EntityUpdate::ReadEntityState(EntityState &state, const glm::ivec3 &base, uint32_t num) const noexcept {
 	uint32_t off = GetSize(num);
-	Read(state, off + 4);
+	Read(state, base, off + 4);
 }
 
 void Packet::PlayerCorrection::WritePacketSeq(std::uint16_t s) noexcept {
