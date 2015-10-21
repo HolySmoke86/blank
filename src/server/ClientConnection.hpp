@@ -83,6 +83,7 @@ private:
 	void On(const Packet::Login &) override;
 	void On(const Packet::Part &) override;
 	void On(const Packet::PlayerUpdate &) override;
+	void On(const Packet::Message &) override;
 
 	bool CanSpawn(const Entity &) const noexcept;
 	bool CanDespawn(const Entity &) const noexcept;

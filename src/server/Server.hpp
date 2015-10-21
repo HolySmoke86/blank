@@ -5,6 +5,7 @@
 #include "../world/World.hpp"
 #include "../world/WorldManipulator.hpp"
 
+#include <cstdint>
 #include <list>
 #include <SDL_net.h>
 
@@ -45,10 +46,15 @@ public:
 
 	void SetBlock(Chunk &, int, const Block &) override;
 
+	/// send message to all connected clients
+	void DistributeMessage(std::uint8_t type, std::uint32_t ref, const std::string &msg);
+
 private:
 	void HandlePacket(const UDPpacket &);
 
 	ClientConnection &GetClient(const IPaddress &);
+
+	void SendAll();
 
 private:
 	UDPsocket serv_sock;

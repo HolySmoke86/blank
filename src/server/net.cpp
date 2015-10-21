@@ -582,6 +582,19 @@ bool ClientConnection::ChunkInRange(const glm::ivec3 &pos) const noexcept {
 	return HasPlayer() && PlayerChunks().InRange(pos);
 }
 
+void ClientConnection::On(const Packet::Message &pack) {
+	uint8_t type;
+	uint32_t ref;
+	string msg;
+	pack.ReadType(type);
+	pack.ReadReferral(ref);
+	pack.ReadMessage(msg);
+
+	if (type == 1 && HasPlayer()) {
+		server.DistributeMessage(1, PlayerEntity().ID(), msg);
+	}
+}
+
 
 Server::Server(
 	const Config::Network &conf,
@@ -706,6 +719,21 @@ void Server::SetBlock(Chunk &chunk, int index, const Block &block) {
 		if (client.ChunkInRange(chunk.Position())) {
 			client.Send();
 		}
+	}
+}
+
+void Server::DistributeMessage(uint8_t type, uint32_t ref, const string &msg) {
+	auto pack = Packet::Make<Packet::Message>(serv_pack);
+	pack.WriteType(type);
+	pack.WriteReferral(ref);
+	pack.WriteMessage(msg);
+	serv_pack.len = sizeof(Packet::Header) + Packet::Message::GetSize(msg);
+	SendAll();
+}
+
+void Server::SendAll() {
+	for (ClientConnection &client : clients) {
+		client.GetConnection().Send(serv_pack, serv_sock);
 	}
 }
 
