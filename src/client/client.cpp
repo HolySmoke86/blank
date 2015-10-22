@@ -201,6 +201,7 @@ void InteractiveState::Handle(const Packet::EntityUpdate &pack) {
 	glm::ivec3 base;
 	pack.ReadEntityCount(count);
 	pack.ReadChunkBase(base);
+	EntityState state;
 
 	for (uint32_t i = 0; i < count; ++i) {
 		uint32_t entity_id = 0;
@@ -215,7 +216,8 @@ void InteractiveState::Handle(const Packet::EntityUpdate &pack) {
 		}
 		if (world_iter->ID() == entity_id) {
 			if (UpdateEntity(entity_id, pack.Seq())) {
-				pack.ReadEntityState(world_iter->GetState(), base, i);
+				pack.ReadEntityState(state, base, i);
+				world_iter->SetState(state);
 			}
 		}
 	}
@@ -399,9 +401,9 @@ void MasterState::On(const Packet::Join &pack) {
 	pack.ReadPlayerID(player_id);
 	state.reset(new InteractiveState(*this, player_id));
 
-	pack.ReadPlayerState(state->GetPlayer().GetEntity().GetState());
-	glm::vec3 orient(glm::eulerAngles(state->GetPlayer().GetEntity().Orientation()));
-	state->GetPlayerController().TurnHead(orient.x, orient.y);
+	EntityState player_state;
+	pack.ReadPlayerState(player_state);
+	state->GetPlayer().GetEntity().SetState(player_state);
 
 	env.state.PopAfter(this);
 	env.state.Push(state.get());

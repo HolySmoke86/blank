@@ -112,12 +112,14 @@ void PacketTest::testJoin() {
 
 	Entity write_entity;
 	write_entity.ID(534574);
-	write_entity.GetState().chunk_pos = { 7, 2, -3 };
-	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
-	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
-	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().pitch = 0.3f;
-	write_entity.GetState().yaw = -2.3f;
+	EntityState write_state;
+	write_state.chunk_pos = { 7, 2, -3 };
+	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.velocity = { 0.025f, 0.001f, 0.0f };
+	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.pitch = 0.3f;
+	write_state.yaw = -2.3f;
+	write_entity.SetState(write_state);
 	uint32_t read_id = 0;
 	EntityState read_state;
 	pack.WritePlayer(write_entity);
@@ -207,13 +209,16 @@ void PacketTest::testSpawnEntity() {
 	write_entity.ID(534574);
 	Model model;
 	model.ID(23);
+	model.Enumerate();
 	model.Instantiate(write_entity.GetModel());
-	write_entity.GetState().chunk_pos = { 7, 2, -3 };
-	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
-	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
-	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().pitch = 0.3f;
-	write_entity.GetState().yaw = -2.3f;
+	EntityState write_state;
+	write_state.chunk_pos = { 7, 2, -3 };
+	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.velocity = { 0.025f, 0.001f, 0.0f };
+	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.pitch = 0.3f;
+	write_state.yaw = -2.3f;
+	write_entity.SetState(write_state);
 	write_entity.Bounds({{ -1, -1, -1 }, { 1, 1, 1 }});
 	write_entity.WorldCollidable(true);
 	write_entity.Name("blah");
@@ -298,12 +303,14 @@ void PacketTest::testEntityUpdate() {
 
 	Entity write_entity;
 	write_entity.ID(8567234);
-	write_entity.GetState().chunk_pos = { 7, 2, -3 };
-	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
-	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
-	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().pitch = 0.3f;
-	write_entity.GetState().yaw = -2.3f;
+	EntityState write_state;
+	write_state.chunk_pos = { 7, 2, -3 };
+	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.velocity = { 0.025f, 0.001f, 0.0f };
+	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.pitch = 0.3f;
+	write_state.yaw = -2.3f;
+	write_entity.SetState(write_state);
 	pack.WriteEntity(write_entity, write_base, 1);
 	pack.WriteEntity(write_entity, write_base, 0);
 	pack.WriteEntity(write_entity, write_base, 2);
@@ -336,12 +343,14 @@ void PacketTest::testPlayerCorrection() {
 	);
 
 	Entity write_entity;
-	write_entity.GetState().chunk_pos = { 7, 2, -3 };
-	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
-	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
-	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
-	write_entity.GetState().pitch = 0.3f;
-	write_entity.GetState().yaw = -2.3f;
+	EntityState write_state;
+	write_state.chunk_pos = { 7, 2, -3 };
+	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.velocity = { 0.025f, 0.001f, 0.0f };
+	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.pitch = 0.3f;
+	write_state.yaw = -2.3f;
+	write_entity.SetState(write_state);
 	pack.WritePlayer(write_entity);
 
 	EntityState read_state;

@@ -74,8 +74,7 @@ public:
 	/// get a ray in entity's face direction originating from center of vision
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
-	void SetState(const EntityState &s) noexcept { state = s; }
-	EntityState &GetState() noexcept { return state; }
+	void SetState(const EntityState &s) noexcept { state = s; UpdateModel(); }
 	const EntityState &GetState() const noexcept { return state; }
 
 	void Ref() noexcept { ++ref_count; }

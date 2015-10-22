@@ -376,7 +376,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 		}
 	}
 
-	EntityState &player_state = GetPlayer().GetEntity().GetState();
+	EntityState player_state = GetPlayer().GetEntity().GetState();
 	Entity replay(GetPlayer().GetEntity());
 	replay.SetState(corrected_state);
 
@@ -418,6 +418,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 		displacement *= 0.01f / sqrt(disp_squared);
 		player_state.block_pos += displacement;
 	}
+	GetPlayer().GetEntity().SetState(player_state);
 }
 
 void NetworkedInput::StartPrimaryAction() {
