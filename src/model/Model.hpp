@@ -31,6 +31,9 @@ public:
 	Part &GetPart(std::size_t i) noexcept { return *part[i]; }
 	const Part &GetPart(std::size_t i) const noexcept { return *part[i]; }
 
+	void SetBody(std::uint16_t id) { body_id = id; }
+	const Part &GetBodyPart() const noexcept { return GetPart(body_id); }
+
 	void SetEyes(std::uint16_t id) { eyes_id = id; }
 	const Part &GetEyesPart() const noexcept { return GetPart(eyes_id); }
 
@@ -41,6 +44,7 @@ private:
 	std::uint32_t id;
 	Part root;
 	std::vector<Part *> part;
+	std::uint16_t body_id;
 	std::uint16_t eyes_id;
 
 };

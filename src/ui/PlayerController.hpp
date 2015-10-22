@@ -35,9 +35,9 @@ public:
 	void TurnHead(float pitch, float yaw) noexcept;
 
 	/// get player pitch in radians, normalized to [-PI/2,PI/2]
-	float GetPitch() const noexcept { return pitch; }
+	float GetPitch() const noexcept;
 	/// get player yaw in radians, normalized to [-PI,PI]
-	float GetYaw() const noexcept { return yaw; }
+	float GetYaw() const noexcept;
 
 	/// start doing primary action
 	/// what exactly this means depends on the active item
@@ -62,8 +62,6 @@ private:
 	World &world;
 	Player &player;
 	glm::vec3 move_dir;
-	float pitch;
-	float yaw;
 	bool dirty;
 
 	WorldCollision aim_world;

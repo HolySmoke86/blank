@@ -550,21 +550,17 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 		return;
 	}
 	glm::vec3 movement(0.0f);
-	float pitch = 0.0f;
-	float yaw = 0.0f;
 	uint8_t new_actions;
 	uint8_t slot;
 
 	player_update_pack = pack.Seq();
 	pack.ReadPredictedState(player_update_state);
 	pack.ReadMovement(movement);
-	pack.ReadPitch(pitch);
-	pack.ReadYaw(yaw);
 	pack.ReadActions(new_actions);
 	pack.ReadSlot(slot);
 
 	input->SetMovement(movement);
-	input->TurnHead(pitch - input->GetPitch(), yaw - input->GetYaw());
+	input->TurnHead(player_update_state.pitch - input->GetPitch(), player_update_state.yaw - input->GetYaw());
 	input->SelectInventory(slot);
 
 	if ((new_actions & 0x01) && !(old_actions & 0x01)) {

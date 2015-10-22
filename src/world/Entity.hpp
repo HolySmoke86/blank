@@ -37,6 +37,7 @@ public:
 	bool WorldCollidable() const noexcept { return world_collision; }
 	void WorldCollidable(bool b) noexcept { world_collision = b; }
 
+	/// desired velocity in local coordinate system
 	const glm::vec3 &TargetVelocity() const noexcept { return tgt_vel; }
 	void TargetVelocity(const glm::vec3 &v) noexcept { tgt_vel = v; }
 
@@ -56,8 +57,15 @@ public:
 		return state.Diff(other.state);
 	}
 
+	/// orientation of local coordinate system
 	const glm::quat &Orientation() const noexcept { return state.orient; }
 	void Orientation(const glm::quat &o) noexcept { state.orient = o; }
+
+	/// orientation of head within local coordinate system, in radians
+	float Pitch() const noexcept { return state.pitch; }
+	float Yaw() const noexcept { return state.yaw; }
+	void TurnHead(float delta_pitch, float delta_yaw) noexcept;
+	void SetHead(float pitch, float yaw) noexcept;
 
 	/// get a transform for this entity's coordinate space
 	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept;
@@ -80,6 +88,9 @@ public:
 	void Render(const glm::mat4 &M, DirectionalLighting &prog) noexcept {
 		if (model) model.Render(M, prog);
 	}
+
+private:
+	void UpdateModel() noexcept;
 
 private:
 	Instance model;

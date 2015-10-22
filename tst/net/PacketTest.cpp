@@ -108,7 +108,7 @@ void PacketTest::testLogin() {
 
 void PacketTest::testJoin() {
 	auto pack = Packet::Make<Packet::Join>(udp_pack);
-	AssertPacket("Join", 2, 54, 86, pack);
+	AssertPacket("Join", 2, 47, 78, pack);
 
 	Entity write_entity;
 	write_entity.ID(534574);
@@ -116,6 +116,8 @@ void PacketTest::testJoin() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_entity.GetState().pitch = 0.3f;
+	write_entity.GetState().yaw = -2.3f;
 	uint32_t read_id = 0;
 	EntityState read_state;
 	pack.WritePlayer(write_entity);
@@ -156,7 +158,7 @@ void PacketTest::testPart() {
 
 void PacketTest::testPlayerUpdate() {
 	auto pack = Packet::Make<Packet::PlayerUpdate>(udp_pack);
-	AssertPacket("PlayerUpdate", 4, 62, pack);
+	AssertPacket("PlayerUpdate", 4, 50, pack);
 
 	EntityState write_state;
 	write_state.chunk_pos = { 7, 2, -3 };
@@ -164,27 +166,19 @@ void PacketTest::testPlayerUpdate() {
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	glm::vec3 write_movement(0.5f, -1.0f, 1.0f);
-	float write_pitch = 1.25f;
-	float write_yaw = -2.5f;
 	uint8_t write_actions = 0x05;
 	uint8_t write_slot = 3;
 	pack.WritePredictedState(write_state);
 	pack.WriteMovement(write_movement);
-	pack.WritePitch(write_pitch);
-	pack.WriteYaw(write_yaw);
 	pack.WriteActions(write_actions);
 	pack.WriteSlot(write_slot);
 
 	EntityState read_state;
 	glm::vec3 read_movement;
-	float read_pitch;
-	float read_yaw;
 	uint8_t read_actions;
 	uint8_t read_slot;
 	pack.ReadPredictedState(read_state);
 	pack.ReadMovement(read_movement);
-	pack.ReadPitch(read_pitch);
-	pack.ReadYaw(read_yaw);
 	pack.ReadActions(read_actions);
 	pack.ReadSlot(read_slot);
 	AssertEqual(
@@ -194,14 +188,6 @@ void PacketTest::testPlayerUpdate() {
 	AssertEqual(
 		"player movement input not correctly transported in PlayerUpdate packet",
 		write_movement, read_movement, 0.0001f
-	);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
-		"player pitch input not correctly transported in PlayerUpdate packet",
-		write_pitch, read_pitch, 0.0001f
-	);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
-		"player yaw input not correctly transported in PlayerUpdate packet",
-		write_yaw, read_yaw, 0.0001f
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"player actions not correctly transported in PlayerUpdate packet",
@@ -215,7 +201,7 @@ void PacketTest::testPlayerUpdate() {
 
 void PacketTest::testSpawnEntity() {
 	auto pack = Packet::Make<Packet::SpawnEntity>(udp_pack);
-	AssertPacket("SpawnEntity", 5, 87, 118, pack);
+	AssertPacket("SpawnEntity", 5, 79, 110, pack);
 
 	Entity write_entity;
 	write_entity.ID(534574);
@@ -226,6 +212,8 @@ void PacketTest::testSpawnEntity() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_entity.GetState().pitch = 0.3f;
+	write_entity.GetState().yaw = -2.3f;
 	write_entity.Bounds({{ -1, -1, -1 }, { 1, 1, 1 }});
 	write_entity.WorldCollidable(true);
 	write_entity.Name("blah");
@@ -281,12 +269,12 @@ void PacketTest::testDespawnEntity() {
 
 void PacketTest::testEntityUpdate() {
 	auto pack = Packet::Make<Packet::EntityUpdate>(udp_pack);
-	AssertPacket("EntityUpdate", 7, 16, 466, pack);
+	AssertPacket("EntityUpdate", 7, 16, 460, pack);
 
 	pack.length = Packet::EntityUpdate::GetSize(3);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"length not correctly set in EntityUpdate packet",
-		size_t(16 + 3 * 45), pack.length
+		size_t(16 + 3 * 37), pack.length
 	);
 
 	uint32_t write_count = 3;
@@ -314,6 +302,8 @@ void PacketTest::testEntityUpdate() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_entity.GetState().pitch = 0.3f;
+	write_entity.GetState().yaw = -2.3f;
 	pack.WriteEntity(write_entity, write_base, 1);
 	pack.WriteEntity(write_entity, write_base, 0);
 	pack.WriteEntity(write_entity, write_base, 2);
@@ -334,7 +324,7 @@ void PacketTest::testEntityUpdate() {
 
 void PacketTest::testPlayerCorrection() {
 	auto pack = Packet::Make<Packet::PlayerCorrection>(udp_pack);
-	AssertPacket("PlayerCorrection", 8, 52, pack);
+	AssertPacket("PlayerCorrection", 8, 44, pack);
 
 	uint16_t write_seq = 50050;
 	uint16_t read_seq;
@@ -350,6 +340,8 @@ void PacketTest::testPlayerCorrection() {
 	write_entity.GetState().block_pos = { 1.5f, 0.9f, 12.0f };
 	write_entity.GetState().velocity = { 0.025f, 0.001f, 0.0f };
 	write_entity.GetState().orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_entity.GetState().pitch = 0.3f;
+	write_entity.GetState().yaw = -2.3f;
 	pack.WritePlayer(write_entity);
 
 	EntityState read_state;
@@ -609,6 +601,14 @@ void PacketTest::AssertEqual(
 	AssertEqual(
 		message + ": bad orientation",
 		expected.orient, actual.orient
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		message + ": bad pitch",
+		expected.pitch, actual.pitch, PI/65534.0f
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		message + ": bad yaw",
+		expected.yaw, actual.yaw, PI/32767.0f
 	);
 }
 

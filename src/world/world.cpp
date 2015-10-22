@@ -45,6 +45,17 @@ void Entity::Position(const glm::vec3 &pos) noexcept {
 	state.AdjustPosition();
 }
 
+void Entity::TurnHead(float dp, float dy) noexcept {
+	SetHead(state.pitch + dp, state.yaw + dy);
+}
+
+void Entity::SetHead(float p, float y) noexcept {
+	state.pitch = p;
+	state.yaw = y;
+	// TODO: I feel like this could be delayed
+	UpdateModel();
+}
+
 glm::mat4 Entity::Transform(const glm::ivec3 &reference) const noexcept {
 	return state.Transform(reference);
 }
@@ -66,12 +77,28 @@ Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
 	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
 }
 
+void Entity::UpdateModel() noexcept {
+	state.AdjustHeading();
+	if (model) {
+		Part::State &body_state = model.BodyState();
+		Part::State &eyes_state = model.EyesState();
+		if (&body_state != &eyes_state) {
+			body_state.orientation = glm::quat(glm::vec3(0.0f, state.yaw, 0.0f));
+			eyes_state.orientation = glm::quat(glm::vec3(state.pitch, 0.0f, 0.0f));
+		} else {
+			eyes_state.orientation = glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f));
+		}
+	}
+}
+
 
 EntityState::EntityState()
 : chunk_pos(0)
 , block_pos(0.0f)
 , velocity(0.0f)
-, orient(1.0f, 0.0f, 0.0f, 0.0f) {
+, orient(1.0f, 0.0f, 0.0f, 0.0f)
+, pitch(0.0f)
+, yaw(0.0f) {
 
 }
 
@@ -99,6 +126,21 @@ void EntityState::AdjustPosition() noexcept {
 	while (block_pos.z < 0) {
 		block_pos.z += Chunk::depth;
 		--chunk_pos.z;
+	}
+}
+
+void EntityState::AdjustHeading() noexcept {
+	while (pitch > PI / 2) {
+		pitch = PI / 2;
+	}
+	while (pitch < -PI / 2) {
+		pitch = -PI / 2;
+	}
+	while (yaw > PI) {
+		yaw -= PI * 2;
+	}
+	while (yaw < -PI) {
+		yaw += PI * 2;
 	}
 }
 
@@ -165,7 +207,7 @@ Player *World::AddPlayer(const std::string &name) {
 	}
 	Entity &entity = AddEntity();
 	entity.Name(name);
-	entity.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	entity.Bounds({ { -0.4f, -0.9f, -0.4f }, { 0.4f, 0.9f, 0.4f } });
 	entity.WorldCollidable(true);
 	ChunkIndex &index = chunks.MakeIndex(entity.ChunkCoords(), 6);
 	players.emplace_back(entity, index);
@@ -183,7 +225,7 @@ Player *World::AddPlayer(const std::string &name, std::uint32_t id) {
 		return nullptr;
 	}
 	entity->Name(name);
-	entity->Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
+	entity->Bounds({ { -0.4f, -0.9f, -0.4f }, { 0.4f, 0.9f, 0.4f } });
 	entity->WorldCollidable(true);
 	ChunkIndex &index = chunks.MakeIndex(entity->ChunkCoords(), 6);
 	players.emplace_back(*entity, index);

@@ -16,11 +16,15 @@ struct EntityState {
 	glm::vec3 velocity;
 
 	glm::quat orient;
+	float pitch;
+	float yaw;
 
 	EntityState();
 
 	/// make sure block_pos is within chunk bounds
 	void AdjustPosition() noexcept;
+	/// make sure pitch and yaw are normalized
+	void AdjustHeading() noexcept;
 
 	/// get a position vector relative to the (0,0,0) chunk
 	glm::vec3 AbsolutePosition() const noexcept {

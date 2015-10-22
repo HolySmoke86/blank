@@ -294,8 +294,6 @@ uint16_t Client::SendPlayerUpdate(
 	auto pack = Packet::Make<Packet::PlayerUpdate>(client_pack);
 	pack.WritePredictedState(prediction);
 	pack.WriteMovement(movement);
-	pack.WritePitch(pitch);
-	pack.WriteYaw(yaw);
 	pack.WriteActions(actions);
 	pack.WriteSlot(slot);
 	return conn.Send(client_pack, client_sock);

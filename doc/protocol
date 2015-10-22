@@ -31,11 +31,12 @@ packu          2    16bit unsigned  int representing a float value normalized to
 vec3n          6    3x packn
 vec3u          6    3x packu
 quat           8    4x packn float
-entity state  50    [ 0] vec3i chunk pos (there's a variation where this is a vec3b)
+entity state  42    [ 0] vec3i chunk pos (there's a variation where this is a vec3b)
                     [12] vec3u block pos by 16,
                     [18] vec3 velocity,
                     [30] quat orientation,
-                    [38] 12 reserved bytes (used to be angular velocity)
+                    [38] packn pitch by PI/2
+					[40] packn yaw by PI
 
 
 Packets
@@ -77,9 +78,9 @@ Code: 2
 Payload:
 	 0 entity ID of the player, 32bit unsigned int
 	 4 entity state of the player
-	54 name of the world the server's currently running
+	46 name of the world the server's currently running
 	   max 32 byte UTF-8 string
-Length: 54-86
+Length: 47-78
 
 
 Part
@@ -102,12 +103,10 @@ Sent by clients to notify the server of their changes to the player.
 Code: 4
 Payload:
 	 0 player's entity state as predicted by the client
-	50 movement input, vec3n
-	56 pitch input by PI/2, packn
-	58 yaw input by PI, packn
-	60 active actions, 8bit bit field, first three bits are primary, secondary, and tertiary
-	61 selected inventory slot, 8bit unsigned int
-Length: 62
+	42 movement input, vec3n
+	48 active actions, 8bit bit field, first three bits are primary, secondary, and tertiary
+	49 selected inventory slot, 8bit unsigned int
+Length: 50
 
 
 Spawn Entity
@@ -120,11 +119,11 @@ Payload:
 	 0 entity ID, 32bit unsigned int
 	 4 entity's model ID, 32bit unsigned int
 	 8 entity state
-	58 bounding box of the entity, 6x 32bit float
-	82 flags, 32bit bitfield with boolean values
+	50 bounding box of the entity, 6x 32bit float
+	74 flags, 32bit bitfield with boolean values
 	   1: world collision
-	86 entity name, max 32 byte UTF-8 string
-Length: 87 - 118
+	78 entity name, max 32 byte UTF-8 string
+Length: 79 - 110
 
 
 Despawn Entity
@@ -146,12 +145,12 @@ Contained entities must be ordered by ascending entity ID.
 
 Code: 7
 Payload:
-	 0 number of entities, 32bit int, 1-10
+	 0 number of entities, 32bit int, 1-12
 	 4 base for chunk coordinates, vec3i
 	16 entity ID, 32bit unsigned int
 	20 entity state with vec3b as chunk position (rather than vec3i)
-	62 next entity...
-Length: 16 + multiple of 45, max 466
+	53 next entity...
+Length: 16 + multiple of 37, max 460
 
 
 Player Correction
@@ -163,7 +162,7 @@ Code: 8
 Payload:
 	 0 sequence number of the offending packet, 16bit unsigned int
 	 2 entity state of the player's entity on the server
-Length: 52
+Length: 44
 
 
 Chunk Begin

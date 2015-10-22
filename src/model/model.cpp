@@ -27,6 +27,14 @@ Instance::~Instance() {
 
 }
 
+Part::State &Instance::BodyState() noexcept {
+	return state[model->GetBodyPart().ID()];
+}
+
+glm::mat4 Instance::BodyTransform() const noexcept {
+	return model->GetBodyPart().GlobalTransform(*this);
+}
+
 Part::State &Instance::EyesState() noexcept {
 	return state[model->GetEyesPart().ID()];
 }
@@ -44,6 +52,7 @@ Model::Model()
 : id(0)
 , root()
 , part()
+, body_id(0)
 , eyes_id(0) {
 
 }

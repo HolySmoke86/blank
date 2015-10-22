@@ -37,8 +37,6 @@ PlayerController::PlayerController(World &world, Player &player)
 : world(world)
 , player(player)
 , move_dir(0.0f)
-, pitch(0.0f)
-, yaw(0.0f)
 , dirty(true)
 , aim_world()
 , aim_entity() {
@@ -55,19 +53,15 @@ void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 }
 
 void PlayerController::TurnHead(float dp, float dy) noexcept {
-	pitch += dp;
-	if (pitch > PI / 2) {
-		pitch = PI / 2;
-	} else if (pitch < -PI / 2) {
-		pitch = -PI / 2;
-	}
-	yaw += dy;
-	if (yaw > PI) {
-		yaw -= PI * 2;
-	} else if (yaw < -PI) {
-		yaw += PI * 2;
-	}
-	Invalidate();
+	player.GetEntity().TurnHead(dp, dy);
+}
+
+float PlayerController::GetPitch() const noexcept {
+	return player.GetEntity().Pitch();
+}
+
+float PlayerController::GetYaw() const noexcept {
+	return player.GetEntity().Yaw();
 }
 
 void PlayerController::SelectInventory(int i) noexcept {
@@ -85,9 +79,7 @@ void PlayerController::Invalidate() noexcept {
 void PlayerController::UpdatePlayer() noexcept {
 	constexpr float max_vel = 5.0f; // in m/s
 	if (dirty) {
-		player.GetEntity().Orientation(glm::quat(glm::vec3(0.0f, yaw, 0.0f)));
-		player.GetEntity().GetModel().EyesState().orientation = glm::quat(glm::vec3(pitch, 0.0f, 0.0f));
-		player.GetEntity().TargetVelocity(glm::rotateY(move_dir * max_vel, yaw));
+		player.GetEntity().TargetVelocity(glm::rotateY(move_dir * max_vel, player.GetEntity().Yaw()));
 
 		Ray aim = player.Aim();
 		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {

@@ -26,6 +26,9 @@ public:
 	operator bool() const noexcept { return model; }
 	const Model &GetModel() const noexcept { return *model; }
 
+	glm::mat4 BodyTransform() const noexcept;
+	Part::State &BodyState() noexcept;
+
 	glm::mat4 EyesTransform() const noexcept;
 	Part::State &EyesState() noexcept;
 

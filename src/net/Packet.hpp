@@ -112,7 +112,7 @@ struct Packet {
 
 	struct Join : public Payload {
 		static constexpr std::uint8_t TYPE = 2;
-		static constexpr std::size_t MAX_LEN = 86;
+		static constexpr std::size_t MAX_LEN = 78;
 
 		void WritePlayer(const Entity &) noexcept;
 		void ReadPlayerID(std::uint32_t &) const noexcept;
@@ -128,16 +128,12 @@ struct Packet {
 
 	struct PlayerUpdate : public Payload {
 		static constexpr std::uint8_t TYPE = 4;
-		static constexpr std::size_t MAX_LEN = 62;
+		static constexpr std::size_t MAX_LEN = 50;
 
 		void WritePredictedState(const EntityState &) noexcept;
 		void ReadPredictedState(EntityState &) const noexcept;
 		void WriteMovement(const glm::vec3 &) noexcept;
 		void ReadMovement(glm::vec3 &) const noexcept;
-		void WritePitch(float) noexcept;
-		void ReadPitch(float &) const noexcept;
-		void WriteYaw(float) noexcept;
-		void ReadYaw(float &) const noexcept;
 		void WriteActions(std::uint8_t) noexcept;
 		void ReadActions(std::uint8_t &) const noexcept;
 		void WriteSlot(std::uint8_t) noexcept;
@@ -146,7 +142,7 @@ struct Packet {
 
 	struct SpawnEntity : public Payload {
 		static constexpr std::uint8_t TYPE = 5;
-		static constexpr std::size_t MAX_LEN = 118;
+		static constexpr std::size_t MAX_LEN = 110;
 
 		void WriteEntity(const Entity &) noexcept;
 		void ReadEntityID(std::uint32_t &) const noexcept;
@@ -164,11 +160,11 @@ struct Packet {
 
 	struct EntityUpdate : public Payload {
 		static constexpr std::uint8_t TYPE = 7;
-		static constexpr std::size_t MAX_LEN = 466;
+		static constexpr std::size_t MAX_LEN = 460;
 
-		static constexpr std::uint32_t MAX_ENTITIES = 10;
+		static constexpr std::uint32_t MAX_ENTITIES = 12;
 		static constexpr std::size_t GetSize(std::uint32_t num) noexcept {
-			return 16 + (num * 45);
+			return 16 + (num * 37);
 		}
 
 		void WriteEntityCount(std::uint32_t) noexcept;
@@ -183,7 +179,7 @@ struct Packet {
 
 	struct PlayerCorrection : public Payload {
 		static constexpr std::uint8_t TYPE = 8;
-		static constexpr std::size_t MAX_LEN = 52;
+		static constexpr std::size_t MAX_LEN = 44;
 
 		void WritePacketSeq(std::uint16_t) noexcept;
 		void ReadPacketSeq(std::uint16_t &) const noexcept;

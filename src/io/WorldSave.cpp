@@ -130,6 +130,10 @@ void WorldSave::Read(Player &player) const {
 			in.ReadVec(state.block_pos);
 		} else if (name == "orientation") {
 			in.ReadQuat(state.orient);
+		} else if (name == "pitch") {
+			state.pitch = in.GetFloat();
+		} else if (name == "yaw") {
+			state.yaw = in.GetFloat();
 		} else if (name == "slot") {
 			int slot;
 			in.ReadNumber(slot);
@@ -151,6 +155,8 @@ void WorldSave::Write(const Player &player) const {
 	out << "chunk = " << state.chunk_pos << ';' << endl;
 	out << "position = " << state.block_pos << ';' << endl;
 	out << "orientation = " << state.orient << ';' << endl;
+	out << "pitch = " << state.pitch << ';' << endl;
+	out << "yaw = " << state.yaw << ';' << endl;
 	out << "slot = " << player.GetInventorySlot() << ';' << endl;
 }
 
