@@ -43,7 +43,11 @@ public:
 	PlayerController &GetPlayerController() noexcept { return input; }
 	ChunkReceiver &GetChunkReceiver() noexcept { return chunk_receiver; }
 
-	void OnEnter() override;
+	void OnResume() override;
+	void OnPause() override;
+
+	void OnFocus() override;
+	void OnBlur() override;
 
 	void Handle(const SDL_Event &) override;
 	void Update(int dt) override;

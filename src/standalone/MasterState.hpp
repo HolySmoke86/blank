@@ -48,6 +48,9 @@ public:
 	void OnResume() override;
 	void OnPause() override;
 
+	void OnFocus() override;
+	void OnBlur() override;
+
 	void Handle(const SDL_Event &) override;
 	void Update(int dt) override;
 	void Render(Viewport &) override;

@@ -457,10 +457,20 @@ Interface::Interface(
 , fwd(0)
 , rev(0)
 , slot(0)
-, num_slots(10) {
+, num_slots(10)
+, locked(false) {
 
 }
 
+void Interface::Lock() {
+	fwd = glm::ivec3(0);
+	rev = glm::ivec3(0);
+	locked = true;
+}
+
+void Interface::Unlock() {
+	locked = false;
+}
 
 void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 	if (!config.input.keyboard) return;
@@ -592,7 +602,7 @@ void Interface::HandleRelease(const SDL_KeyboardEvent &event) {
 }
 
 void Interface::Handle(const SDL_MouseMotionEvent &event) {
-	if (!config.input.mouse) return;
+	if (locked || !config.input.mouse) return;
 	player_ctrl.TurnHead(
 		event.yrel * config.input.pitch_sensitivity,
 		event.xrel * config.input.yaw_sensitivity);

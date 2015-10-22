@@ -20,6 +20,9 @@ public:
 
 	void SetInventorySlots(int num) { num_slots = num; }
 
+	void Lock();
+	void Unlock();
+
 	void HandlePress(const SDL_KeyboardEvent &);
 	void HandleRelease(const SDL_KeyboardEvent &);
 	void Handle(const SDL_MouseMotionEvent &);
@@ -41,6 +44,8 @@ private:
 	glm::ivec3 fwd, rev;
 	int slot;
 	int num_slots;
+
+	bool locked;
 
 };
 

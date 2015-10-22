@@ -80,8 +80,24 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	}
 }
 
-void InteractiveState::OnEnter() {
-	master.GetEnv().window.GrabMouse();
+void InteractiveState::OnResume() {
+	OnFocus();
+}
+
+void InteractiveState::OnPause() {
+	OnBlur();
+}
+
+void InteractiveState::OnFocus() {
+	if (master.GetConfig().input.mouse) {
+		master.GetEnv().window.GrabMouse();
+	}
+	interface.Unlock();
+}
+
+void InteractiveState::OnBlur() {
+	master.GetEnv().window.ReleaseMouse();
+	interface.Lock();
 }
 
 void InteractiveState::Handle(const SDL_Event &event) {

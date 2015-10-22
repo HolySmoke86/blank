@@ -67,19 +67,30 @@ MasterState::~MasterState() {
 void MasterState::OnResume() {
 	if (spawn_index.MissingChunks() > 0) {
 		env.state.Push(&preload);
-	}
-	if (config.input.mouse) {
-		env.window.GrabMouse();
+		return;
 	}
 	if (spawn_player) {
 		// TODO: spawn
 		spawn_player = false;
 	}
 	hud.KeepMessages(false);
+	OnFocus();
 }
 
 void MasterState::OnPause() {
+	OnBlur();
+}
+
+void MasterState::OnFocus() {
+	if (config.input.mouse) {
+		env.window.GrabMouse();
+	}
+	interface.Unlock();
+}
+
+void MasterState::OnBlur() {
 	env.window.ReleaseMouse();
+	interface.Lock();
 }
 
 
