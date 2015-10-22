@@ -196,7 +196,9 @@ void MasterState::Exit() {
 }
 
 void MasterState::OnLineSubmit(const std::string &line) {
-	hud.PostMessage(line);
+	if (!line.empty()) {
+		hud.PostMessage(line);
+	}
 }
 
 }

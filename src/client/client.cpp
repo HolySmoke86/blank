@@ -323,7 +323,9 @@ void InteractiveState::Exit() {
 }
 
 void InteractiveState::OnLineSubmit(const string &line) {
-	master.GetClient().SendMessage(1, 0, line);
+	if (!line.empty()) {
+		master.GetClient().SendMessage(1, 0, line);
+	}
 }
 
 
