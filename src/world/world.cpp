@@ -507,6 +507,10 @@ EntityDerivative World::CalculateStep(
 	next.velocity += delta.velocity * dt;
 	next.AdjustPosition();
 
+	if (dot(next.velocity, next.velocity) > entity.MaxVelocity() * entity.MaxVelocity()) {
+		next.velocity = normalize(next.velocity) * entity.MaxVelocity();
+	}
+
 	EntityDerivative out;
 	out.position = next.velocity;
 	out.velocity = CalculateForce(entity, next); // by mass = 1kg
@@ -517,7 +521,12 @@ glm::vec3 World::CalculateForce(
 	const Entity &entity,
 	const EntityState &state
 ) {
-	return ControlForce(entity, state) + CollisionForce(entity, state) + Gravity(entity, state);
+	glm::vec3 force(ControlForce(entity, state) + CollisionForce(entity, state) + Gravity(entity, state));
+	if (dot(force, force) > entity.MaxControlForce() * entity.MaxControlForce()) {
+		return normalize(force) * entity.MaxControlForce();
+	} else {
+		return force;
+	}
 }
 
 glm::vec3 World::ControlForce(
