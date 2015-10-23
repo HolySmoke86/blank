@@ -35,6 +35,13 @@ struct EntityController {
 	) noexcept {
 		return (target - state.velocity) * n;
 	}
+	/// give a force that makes state come to a halt over 1/n seconds
+	static inline glm::vec3 Halt(
+		const EntityState &state,
+		float n
+	) noexcept {
+		return state.velocity * -n;
+	}
 
 };
 

@@ -1,17 +1,16 @@
-#ifndef BLANK_AI_IDLESTATE_HPP_
-#define BLANK_AI_IDLESTATE_HPP_
+#ifndef BLANK_AI_ROAMSTATE_HPP_
+#define BLANK_AI_ROAMSTATE_HPP_
 
 #include "AIState.hpp"
 
 
 namespace blank {
 
-/// stand around and do nothing
-/// occasionally look in a different direction
-/// start roaming at random
+/// randomly waltz about the landscape
+/// hold at random
 /// start chasing a player if one comes near
 
-class IdleState
+class RoamState
 : public AIState {
 
 	void Enter(AIController &) const override;
