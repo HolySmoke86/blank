@@ -24,15 +24,15 @@ AIController::AIController(GaloisLFSR &rand)
 : random(rand)
 , state(&idle)
 , flee_target(nullptr)
-, flee_speed(-5.0f)
+, flee_speed(5.0f)
 , seek_target(nullptr)
-, seek_speed(-5.0f)
+, seek_speed(5.0f)
 , wandering(false)
 , wander_pos(1.0f, 0.0f, 0.0f)
+, wander_speed(1.0f)
 , wander_dist(2.0f)
-, wander_radius(1.0f)
-, wander_disp(1.0f)
-, wander_speed(1.0f) {
+, wander_radius(1.5f)
+, wander_disp(1.0f) {
 	state->Enter(*this);
 }
 
@@ -48,13 +48,15 @@ void AIController::SetState(const AIState &s) {
 
 void AIController::Update(Entity &e, float dt) {
 	// movement: for now, wander only
-	glm::vec3 displacement(
-		random.SNorm() * wander_disp,
-		random.SNorm() * wander_disp,
-		random.SNorm() * wander_disp
-	);
-	if (dot(displacement, displacement) > std::numeric_limits<float>::epsilon()) {
-		wander_pos = normalize(wander_pos + displacement * dt) * wander_radius;
+	if (wandering) {
+		glm::vec3 displacement(
+			random.SNorm() * wander_disp,
+			random.SNorm() * wander_disp,
+			random.SNorm() * wander_disp
+		);
+		if (!iszero(displacement)) {
+			wander_pos = normalize(wander_pos + displacement * dt) * wander_radius;
+		}
 	}
 
 	if (e.Moving()) {
@@ -66,22 +68,25 @@ void AIController::Update(Entity &e, float dt) {
 	}
 }
 
-glm::vec3 AIController::ControlForce(const EntityState &state) const {
+glm::vec3 AIController::ControlForce(const Entity &entity, const EntityState &state) const {
 	glm::vec3 force(0.0f);
 	if (IsFleeing()) {
 		glm::vec3 diff(GetFleeTarget().GetState().Diff(state));
-		if (dot(diff, diff) > std::numeric_limits<float>::epsilon()) {
-			force += normalize(diff) * flee_speed;
+		if (MaxOutForce(force, TargetVelocity(normalize(diff) * flee_speed, state, 0.5f), entity.MaxControlForce())) {
+			return force;
 		}
 	}
 	if (IsSeeking()) {
 		glm::vec3 diff(state.Diff(GetSeekTarget().GetState()));
-		if (dot(diff, diff) > std::numeric_limits<float>::epsilon()) {
-			force += normalize(diff) * seek_speed;
+		if (MaxOutForce(force, TargetVelocity(normalize(diff) * seek_speed, state, 0.5f), entity.MaxControlForce())) {
+			return force;
 		}
 	}
 	if (wandering) {
-		force += (Heading(state) * wander_dist + wander_pos) * wander_speed;
+		glm::vec3 wander_target(normalize(Heading(state) * wander_dist + wander_pos) * wander_speed);
+		if (MaxOutForce(force, TargetVelocity(wander_target, state, 2.0f), entity.MaxControlForce())) {
+			return force;
+		}
 	}
 	return force;
 }
@@ -129,8 +134,17 @@ const Entity &AIController::GetSeekTarget() const noexcept {
 	return *seek_target;
 }
 
-void AIController::StartWandering() noexcept {
+void AIController::StartWandering(
+	float speed,
+	float distance,
+	float radius,
+	float displacement
+) noexcept {
 	wandering = true;
+	wander_speed = speed;
+	wander_dist = distance;
+	wander_radius = radius;
+	wander_disp = displacement;
 }
 void AIController::StopWandering() noexcept {
 	wandering = false;
@@ -138,7 +152,7 @@ void AIController::StopWandering() noexcept {
 
 
 void IdleState::Enter(AIController &ctrl) const {
-	ctrl.StartWandering();
+	ctrl.StartWandering(1.0f);
 }
 
 void IdleState::Update(AIController &ctrl, Entity &e, float dt) const {

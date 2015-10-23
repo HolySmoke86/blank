@@ -26,7 +26,7 @@ Spawner::Spawner(World &world, ModelRegistry &models, GaloisLFSR &rand)
 , timer(64)
 , despawn_range(128 * 128)
 , spawn_distance(16 * 16)
-, max_entities(16)
+, max_entities(32)
 , chunk_range(4)
 , model_offset(0)
 , model_length(models.size()) {

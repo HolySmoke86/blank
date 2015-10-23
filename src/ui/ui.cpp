@@ -52,9 +52,8 @@ void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 	Invalidate();
 }
 
-glm::vec3 PlayerController::ControlForce(const EntityState &s) const {
-	glm::vec3 target(rotateY(move_dir * player.GetEntity().MaxVelocity(), s.yaw) - s.velocity);
-	return target * player.GetEntity().MaxControlForce();
+glm::vec3 PlayerController::ControlForce(const Entity &e, const EntityState &s) const {
+	return TargetVelocity(rotateY(move_dir * e.MaxVelocity(), s.yaw), s, 5.0f);
 }
 
 void PlayerController::TurnHead(float dp, float dy) noexcept {

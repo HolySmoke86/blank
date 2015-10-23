@@ -22,7 +22,7 @@ public:
 
 	void Update(Entity &, float dt) override;
 
-	glm::vec3 ControlForce(const EntityState &) const override;
+	glm::vec3 ControlForce(const Entity &, const EntityState &) const override;
 
 	static glm::vec3 Heading(const EntityState &) noexcept;
 
@@ -36,7 +36,16 @@ public:
 	bool IsSeeking() const noexcept;
 	const Entity &GetSeekTarget() const noexcept;
 
-	void StartWandering() noexcept;
+	/// start wandering randomly at given speed
+	/// the trajectory is modified by targetting a blip on a sphere
+	/// in front of the entity which moves randomly
+	/// the displacement is given (roughly) in units per second
+	void StartWandering(
+		float speed,
+		float distance = 2.0f,
+		float radius = 1.0f,
+		float displacement = 1.0f
+	) noexcept;
 	void StopWandering() noexcept;
 
 private:
@@ -51,10 +60,10 @@ private:
 
 	bool wandering;
 	glm::vec3 wander_pos;
+	float wander_speed;
 	float wander_dist;
 	float wander_radius;
 	float wander_disp;
-	float wander_speed;
 
 };
 

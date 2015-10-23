@@ -2,6 +2,7 @@
 #define BLANK_MODEL_GEOMETRY_H_
 
 #include <algorithm>
+#include <limits>
 #include <glm/glm.hpp>
 
 
@@ -25,6 +26,12 @@ constexpr float deg2rad(float d) {
 
 constexpr float rad2deg(float r) {
 	return r * RAD_DEG_FACTOR;
+}
+
+
+template <class T>
+inline bool iszero(const T &v) {
+	return dot(v, v) < std::numeric_limits<typename T::value_type>::epsilon();
 }
 
 

@@ -80,7 +80,7 @@ void Entity::UnsetController() noexcept {
 
 glm::vec3 Entity::ControlForce(const EntityState &s) const noexcept {
 	if (HasController()) {
-		return GetController().ControlForce(s);
+		return GetController().ControlForce(*this, s);
 	} else {
 		return -s.velocity;
 	}
@@ -151,6 +151,29 @@ void Entity::Update(float dt) {
 
 EntityController::~EntityController() {
 
+}
+
+bool EntityController::MaxOutForce(
+	glm::vec3 &out,
+	const glm::vec3 &add,
+	float max
+) noexcept {
+	if (iszero(add) || any(isnan(add))) {
+		return false;
+	}
+	float current = iszero(out) ? 0.0f : length(out);
+	float remain = max - current;
+	if (remain <= 0.0f) {
+		return true;
+	}
+	float additional = length(add);
+	if (additional > remain) {
+		out += normalize(add) * remain;
+		return true;
+	} else {
+		out += add;
+		return false;
+	}
 }
 
 
