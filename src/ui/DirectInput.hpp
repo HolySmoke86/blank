@@ -18,7 +18,7 @@ class DirectInput
 public:
 	DirectInput(World &, Player &, WorldManipulator &);
 
-	void Update(int dt);
+	void Update(Entity &, float dt) override;
 
 	void StartPrimaryAction() override;
 	void StopPrimaryAction() override;
@@ -35,8 +35,8 @@ private:
 private:
 	WorldManipulator &manip;
 
-	IntervalTimer place_timer;
-	IntervalTimer remove_timer;
+	FineTimer place_timer;
+	FineTimer remove_timer;
 
 };
 

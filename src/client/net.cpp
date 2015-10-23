@@ -325,7 +325,7 @@ NetworkedInput::NetworkedInput(World &world, Player &player, Client &client)
 
 }
 
-void NetworkedInput::Update(int dt) {
+void NetworkedInput::Update(Entity &, float dt) {
 	Invalidate();
 	UpdatePlayer();
 }
@@ -342,11 +342,11 @@ void NetworkedInput::PushPlayerUpdate(int dt) {
 		InventorySlot()
 	);
 	if (player_hist.size() < 16) {
-		player_hist.emplace_back(state, GetPlayer().GetEntity().TargetVelocity(), dt * 0.001f, packet);
+		player_hist.emplace_back(state, GetMovement(), dt * 0.001f, packet);
 	} else {
 		auto entry = player_hist.begin();
 		entry->state = state;
-		entry->tgt_vel = GetPlayer().GetEntity().TargetVelocity();
+		entry->movement = GetMovement();
 		entry->delta_t = dt * 0.001f;
 		entry->packet = packet;
 		player_hist.splice(player_hist.end(), player_hist, entry);
@@ -376,6 +376,8 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 		}
 	}
 
+	glm::vec3 restore_movement(GetMovement());
+
 	EntityState player_state = GetPlayer().GetEntity().GetState();
 	Entity replay(GetPlayer().GetEntity());
 	replay.SetState(corrected_state);
@@ -389,7 +391,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	vector<WorldCollision> col;
 	while (entry != end) {
 		replay.Velocity(entry->state.velocity);
-		replay.TargetVelocity(entry->tgt_vel);
+		SetMovement(entry->movement);
 		GetWorld().Update(replay, entry->delta_t);
 		entry->state.chunk_pos = replay.GetState().chunk_pos;
 		entry->state.block_pos = replay.GetState().block_pos;
@@ -400,6 +402,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	const float disp_squared = dot(displacement, displacement);
 
 	if (disp_squared < 16.0f * numeric_limits<float>::epsilon()) {
+		SetMovement(restore_movement);
 		return;
 	}
 
@@ -419,6 +422,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 		player_state.block_pos += displacement;
 	}
 	GetPlayer().GetEntity().SetState(player_state);
+	SetMovement(restore_movement);
 }
 
 void NetworkedInput::StartPrimaryAction() {

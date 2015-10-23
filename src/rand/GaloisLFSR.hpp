@@ -48,6 +48,14 @@ public:
 		return (*this)(next);
 	}
 
+	float SNorm() noexcept {
+		return float(Next<std::uint32_t>()) * (1.0f / 2147483647.5f) - 1.0f;
+	}
+
+	float UNorm() noexcept {
+		return float(Next<std::uint32_t>()) * (1.0f / 4294967295.0f);
+	}
+
 	template<class Container>
 	typename Container::reference From(Container &c) {
 		return c[Next<typename Container::size_type>() % c.size()];

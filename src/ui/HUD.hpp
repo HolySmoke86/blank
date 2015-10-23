@@ -81,7 +81,7 @@ private:
 
 	// message box
 	MessageBox messages;
-	IntervalTimer msg_timer;
+	CoarseTimer msg_timer;
 	bool msg_keep;
 
 	// crosshair

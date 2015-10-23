@@ -135,20 +135,10 @@ void InteractiveState::Handle(const SDL_Event &event) {
 }
 
 void InteractiveState::Update(int dt) {
-	input.Update(dt);
-	if (input.BlockFocus()) {
-		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
-	} else if (input.EntityFocus()) {
-		hud.FocusEntity(*input.EntityFocus().entity);
-	} else {
-		hud.FocusNone();
-	}
-	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
 	loop_timer.Update(dt);
 	master.Update(dt);
 	chunk_receiver.Update(dt);
 
-	hud.Update(dt);
 	int world_dt = 0;
 	while (loop_timer.HitOnce()) {
 		world.Update(loop_timer.Interval());
@@ -157,9 +147,18 @@ void InteractiveState::Update(int dt) {
 	}
 	chunk_renderer.Update(dt);
 
+	if (input.BlockFocus()) {
+		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
+	} else if (input.EntityFocus()) {
+		hud.FocusEntity(*input.EntityFocus().entity);
+	} else {
+		hud.FocusNone();
+	}
 	if (world_dt > 0) {
 		input.PushPlayerUpdate(world_dt);
 	}
+	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
+	hud.Update(dt);
 
 	glm::mat4 trans = player.GetEntity().Transform(player.GetEntity().ChunkCoords());
 	glm::vec3 dir(trans * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f));

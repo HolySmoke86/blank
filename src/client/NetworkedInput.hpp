@@ -20,7 +20,7 @@ class NetworkedInput
 public:
 	explicit NetworkedInput(World &, Player &, Client &);
 
-	void Update(int dt);
+	void Update(Entity &, float dt) override;
 	void PushPlayerUpdate(int dt);
 	void MergePlayerCorrection(std::uint16_t, const EntityState &);
 
@@ -36,11 +36,11 @@ private:
 
 	struct PlayerHistory {
 		EntityState state;
-		glm::vec3 tgt_vel;
+		glm::vec3 movement;
 		float delta_t;
 		std::uint16_t packet;
-		PlayerHistory(EntityState s, const glm::vec3 &tv, float dt, std::uint16_t p)
-		: state(s), tgt_vel(tv), delta_t(dt), packet(p) { }
+		PlayerHistory(EntityState s, const glm::vec3 &mv, float dt, std::uint16_t p)
+		: state(s), movement(mv), delta_t(dt), packet(p) { }
 	};
 	std::list<PlayerHistory> player_hist;
 

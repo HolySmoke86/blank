@@ -247,7 +247,6 @@ void ClientConnection::Update(int dt) {
 		}
 		SendUpdates();
 
-		input->Update(dt);
 		CheckPlayerFix();
 		CheckChunkQueue();
 	}

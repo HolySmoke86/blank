@@ -46,8 +46,8 @@ private:
 private:
 	ConnectionHandler *handler;
 	IPaddress addr;
-	IntervalTimer send_timer;
-	IntervalTimer recv_timer;
+	CoarseTimer send_timer;
+	CoarseTimer recv_timer;
 
 	Packet::TControl ctrl_out;
 	Packet::TControl ctrl_in;

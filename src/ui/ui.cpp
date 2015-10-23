@@ -40,7 +40,7 @@ PlayerController::PlayerController(World &world, Player &player)
 , dirty(true)
 , aim_world()
 , aim_entity() {
-
+	player.GetEntity().SetController(*this);
 }
 
 void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
@@ -50,6 +50,11 @@ void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 		move_dir = m;
 	}
 	Invalidate();
+}
+
+glm::vec3 PlayerController::ControlForce(const EntityState &s) const {
+	glm::vec3 target(rotateY(move_dir * player.GetEntity().MaxVelocity(), s.yaw) - s.velocity);
+	return target * player.GetEntity().MaxControlForce();
 }
 
 void PlayerController::TurnHead(float dp, float dy) noexcept {
@@ -77,10 +82,7 @@ void PlayerController::Invalidate() noexcept {
 }
 
 void PlayerController::UpdatePlayer() noexcept {
-	constexpr float max_vel = 5.0f; // in m/s
 	if (dirty) {
-		player.GetEntity().TargetVelocity(glm::rotateY(move_dir * max_vel, player.GetEntity().Yaw()));
-
 		Ray aim = player.Aim();
 		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {
 			aim_world = WorldCollision();
@@ -104,12 +106,12 @@ void PlayerController::UpdatePlayer() noexcept {
 DirectInput::DirectInput(World &world, Player &player, WorldManipulator &manip)
 : PlayerController(world, player)
 , manip(manip)
-, place_timer(256)
-, remove_timer(256) {
+, place_timer(0.25f)
+, remove_timer(0.25f) {
 
 }
 
-void DirectInput::Update(int dt) {
+void DirectInput::Update(Entity &, float dt) {
 	Invalidate(); // world has changed in the meantime
 	UpdatePlayer();
 

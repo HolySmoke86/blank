@@ -1,46 +1,49 @@
 #ifndef BLANK_APP_INTERVALTIMER_HPP
 #define BLANK_APP_INTERVALTIMER_HPP
 
+#include <cmath>
+
 
 namespace blank {
 
-/// Timer that hits every n milliseconds. Resolution is that of the
-/// delta values passed to Update(), minimum 1ms.
-/// Also tracks the number of iterations as well as milliseconds
+/// Timer that hits every n Time units. Resolution is that of the
+/// delta values passed to Update().
+/// Also tracks the number of iterations as well as Time units
 /// passed.
+template<class Time = int>
 class IntervalTimer {
 
 public:
-	/// Create a timer that hits every interval_ms milliseconds.
+	/// Create a timer that hits every interval Time units.
 	/// Initial state is stopped.
-	explicit IntervalTimer(int interval_ms = 0) noexcept
+	explicit IntervalTimer(Time interval_ms = Time(0)) noexcept
 	: intv(interval_ms) { }
 
 	void Start() noexcept {
-		speed = 1;
+		speed = Time(1);
 	}
 	void Stop() noexcept {
-		value = 0;
-		speed = 0;
+		value = Time(0);
+		speed = Time(0);
 	}
 	void Reset() noexcept {
-		value = 0;
+		value = Time(0);
 	}
 
 	bool Running() const noexcept {
-		return speed != 0;
+		return speed != Time(0);
 	}
 	/// true if an interval boundary was passed by the last call to Update()
 	bool Hit() const noexcept {
-		return Running() && value % intv < last_dt;
+		return Running() && mod(value, intv) < last_dt;
 	}
 	bool HitOnce() const noexcept {
 		return Running() && value >= intv;
 	}
-	int Elapsed() const noexcept {
+	Time Elapsed() const noexcept {
 		return value;
 	}
-	int Interval() const noexcept {
+	Time Interval() const noexcept {
 		return intv;
 	}
 	int Iteration() const noexcept {
@@ -50,18 +53,35 @@ public:
 		value -= intv;
 	}
 
-	void Update(int dt) noexcept {
+	void Update(Time dt) noexcept {
 		value += dt * speed;
 		last_dt = dt;
 	}
 
+	static Time mod(Time val, Time m) noexcept {
+		return val % m;
+	}
+
 private:
-	int intv;
-	int value = 0;
-	int speed = 0;
-	int last_dt = 0;
+	Time intv;
+	Time value = Time(0);
+	Time speed = Time(0);
+	Time last_dt = Time(0);
 
 };
+
+using CoarseTimer = IntervalTimer<int>;
+using FineTimer = IntervalTimer<float>;
+
+template<>
+inline float IntervalTimer<float>::mod(float val, float m) noexcept {
+	return std::fmod(val, m);
+}
+
+template<>
+inline int IntervalTimer<float>::Iteration() const noexcept {
+	return std::floor(value / intv);
+}
 
 }
 

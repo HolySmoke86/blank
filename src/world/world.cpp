@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+#include "EntityController.hpp"
 #include "EntityDerivative.hpp"
 #include "EntityState.hpp"
 #include "Player.hpp"
@@ -23,16 +24,66 @@
 namespace blank {
 
 Entity::Entity() noexcept
-: model()
+: ctrl(nullptr)
+, model()
 , id(-1)
 , name("anonymous")
 , bounds()
 , state()
-, tgt_vel(0.0f)
+, max_vel(5.0f)
+, max_force(25.0f)
 , ref_count(0)
 , world_collision(false)
-, dead(false) {
+, dead(false)
+, owns_controller(false) {
 
+}
+
+Entity::~Entity() noexcept {
+	UnsetController();
+}
+
+Entity::Entity(const Entity &other) noexcept
+: ctrl(other.ctrl)
+, model(other.model)
+, id(-1)
+, name(other.name)
+, bounds(other.bounds)
+, state(other.state)
+, max_vel(other.max_vel)
+, max_force(other.max_force)
+, ref_count(0)
+, world_collision(other.world_collision)
+, dead(other.dead)
+, owns_controller(false) {
+
+}
+
+void Entity::SetController(EntityController *c) noexcept {
+	UnsetController();
+	ctrl = c;
+	owns_controller = true;
+}
+
+void Entity::SetController(EntityController &c) noexcept {
+	UnsetController();
+	ctrl = &c;
+	owns_controller = false;
+}
+
+void Entity::UnsetController() noexcept {
+	if (ctrl && owns_controller) {
+		delete ctrl;
+	}
+	ctrl = nullptr;
+}
+
+glm::vec3 Entity::ControlForce(const EntityState &s) const noexcept {
+	if (HasController()) {
+		return GetController().ControlForce(s);
+	} else {
+		return -s.velocity;
+	}
 }
 
 void Entity::Position(const glm::ivec3 &c, const glm::vec3 &b) noexcept {
@@ -89,6 +140,17 @@ void Entity::UpdateModel() noexcept {
 			eyes_state.orientation = glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f));
 		}
 	}
+}
+
+void Entity::Update(float dt) {
+	if (HasController()) {
+		GetController().Update(*this, dt);
+	}
+}
+
+
+EntityController::~EntityController() {
+
 }
 
 
@@ -397,6 +459,9 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 void World::Update(int dt) {
 	float fdt(dt * 0.001f);
 	for (Entity &entity : entities) {
+		entity.Update(fdt);
+	}
+	for (Entity &entity : entities) {
 		Update(entity, fdt);
 	}
 	for (Player &player : players) {
@@ -459,11 +524,7 @@ glm::vec3 World::ControlForce(
 	const Entity &entity,
 	const EntityState &state
 ) {
-	constexpr float k = 10.0f; // spring constant
-	constexpr float b = 10.0f; // damper constant
-	const glm::vec3 x(-entity.TargetVelocity()); // endpoint displacement from equilibrium, by 1s, in m
-	const glm::vec3 v(state.velocity); // relative velocity between endpoints in m/s
-	return ((-k) * x) - (b * v); // times 1kg/s, in kg*m/s²
+	return entity.ControlForce(state);
 }
 
 namespace {

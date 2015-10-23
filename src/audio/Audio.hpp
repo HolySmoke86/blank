@@ -42,7 +42,7 @@ private:
 private:
 	static constexpr std::size_t NUM_SRC = 16;
 	ALuint source[NUM_SRC];
-	IntervalTimer timer[NUM_SRC];
+	CoarseTimer timer[NUM_SRC];
 	int last_free;
 
 };

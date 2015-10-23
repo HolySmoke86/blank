@@ -44,7 +44,7 @@ private:
 	ChunkLoader chunk_loader;
 	Spawner spawner;
 	Server server;
-	IntervalTimer loop_timer;
+	CoarseTimer loop_timer;
 
 };
 

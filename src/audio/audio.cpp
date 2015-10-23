@@ -104,7 +104,7 @@ void Audio::Play(
 	}
 
 	ALuint src = source[i];
-	IntervalTimer &t = timer[i];
+	CoarseTimer &t = timer[i];
 
 	sound.Bind(src);
 	alSourcefv(src, AL_POSITION, glm::value_ptr(pos));
@@ -112,7 +112,7 @@ void Audio::Play(
 	alSourcefv(src, AL_DIRECTION, glm::value_ptr(dir));
 	alSourcePlay(src);
 
-	t = IntervalTimer(sound.Duration());
+	t = CoarseTimer(sound.Duration());
 	t.Start();
 }
 

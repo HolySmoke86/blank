@@ -43,7 +43,7 @@ private:
 	ChunkStore &store;
 	const WorldSave &save;
 	std::list<ChunkTransmission> transmissions;
-	IntervalTimer timer;
+	CoarseTimer timer;
 
 };
 

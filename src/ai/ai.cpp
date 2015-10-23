@@ -1,114 +1,67 @@
-#include "Chaser.hpp"
-#include "Controller.hpp"
-#include "RandomWalk.hpp"
+#include "AIController.hpp"
 
 #include "../model/geometry.hpp"
+#include "../rand/GaloisLFSR.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
 #include "../world/WorldCollision.hpp"
 
+#include <cmath>
+#include <limits>
 #include <glm/glm.hpp>
 
 
 namespace blank {
 
-Chaser::Chaser(World &world, Entity &ctrl, Entity &tgt) noexcept
-: Controller(ctrl)
-, world(world)
-, tgt(tgt)
+AIController::AIController(GaloisLFSR &rand)
+: random(rand)
 , chase_speed(2.0f)
 , flee_speed(-5.0f)
-, stop_dist(10)
-, flee_dist(5) {
-	tgt.Ref();
+, stop_dist(10.0f)
+, flee_dist(5.0f)
+, wander_pos(1.0f, 0.0f, 0.0f)
+, wander_dist(2.0f)
+, wander_radius(1.0f)
+, wander_disp(1.0f)
+, wander_speed(1.0f) {
+
 }
 
-Chaser::~Chaser() {
-	tgt.UnRef();
+AIController::~AIController() {
+
 }
 
-void Chaser::Update(int dt) {
-	if (Target().Dead()) {
-		Controlled().Kill();
-		return;
+void AIController::Update(Entity &e, float dt) {
+	// movement: for now, wander only
+	glm::vec3 displacement(
+		random.SNorm() * wander_disp,
+		random.SNorm() * wander_disp,
+		random.SNorm() * wander_disp
+	);
+	if (dot(displacement, displacement) > std::numeric_limits<float>::epsilon()) {
+		wander_pos = normalize(wander_pos + displacement * dt) * wander_radius;
 	}
 
-	glm::vec3 diff(Target().AbsoluteDifference(Controlled()));
-	float dist = length(diff);
-	if (dist < std::numeric_limits<float>::epsilon()) {
-		Controlled().TargetVelocity(glm::vec3(0.0f));
-		return;
+	if (e.Moving()) {
+		// orient head towards heading
+		glm::vec3 heading(Heading(e.GetState()));
+		float tgt_pitch = std::atan(heading.y / length(glm::vec2(heading.x, heading.z)));
+		float tgt_yaw = std::atan2(-heading.x, -heading.z);
+		e.SetHead(tgt_pitch, tgt_yaw);
 	}
-	glm::vec3 norm_diff(diff / dist);
+}
 
-	bool line_of_sight = true;
-	Ray aim{Target().Position() - diff, norm_diff};
-	WorldCollision coll;
-	if (world.Intersection(aim, glm::mat4(1.0f), Target().ChunkCoords(), coll)) {
-		line_of_sight = coll.depth > dist;
-	}
+glm::vec3 AIController::ControlForce(const EntityState &state) const {
+	return (Heading(state) * wander_dist + wander_pos) * wander_speed;
+}
 
-	if (!line_of_sight) {
-		Controlled().TargetVelocity(glm::vec3(0.0f));
-	} else if (dist > stop_dist) {
-		Controlled().TargetVelocity(norm_diff * chase_speed);
-	} else if (dist < flee_dist) {
-		Controlled().TargetVelocity(norm_diff * flee_speed);
+glm::vec3 AIController::Heading(const EntityState &state) noexcept {
+	if (dot(state.velocity, state.velocity) > std::numeric_limits<float>::epsilon()) {
+		return normalize(state.velocity);
 	} else {
-		Controlled().TargetVelocity(glm::vec3(0.0f));
+		float cp = std::cos(state.pitch);
+		return glm::vec3(std::cos(state.yaw) * cp, std::sin(state.yaw) * cp, std::sin(state.pitch));
 	}
-}
-
-
-Controller::Controller(Entity &e) noexcept
-: entity(e) {
-	entity.Ref();
-}
-
-Controller::~Controller() {
-	entity.UnRef();
-}
-
-
-RandomWalk::RandomWalk(Entity &e, std::uint64_t seed) noexcept
-: Controller(e)
-, random(seed)
-, start_vel(e.Velocity())
-, target_vel(start_vel)
-, switch_time(0)
-, lerp_max(1.0f)
-, lerp_time(0.0f) {
-
-}
-
-RandomWalk::~RandomWalk() {
-
-}
-
-void RandomWalk::Update(int dt) {
-	switch_time -= dt;
-	lerp_time -= dt;
-	if (switch_time < 0) {
-		switch_time += 2500 + (random.Next<unsigned short>() % 5000);
-		lerp_max = 1500 + (random.Next<unsigned short>() % 1000);
-		lerp_time = lerp_max;
-		Change();
-	} else if (lerp_time > 0) {
-		float a = std::min(lerp_time / lerp_max, 1.0f);
-		Controlled().TargetVelocity(mix(target_vel, start_vel, a));
-	} else {
-		Controlled().TargetVelocity(target_vel);
-	}
-}
-
-void RandomWalk::Change() noexcept {
-	start_vel = target_vel;
-
-	constexpr float base = 0.001f;
-
-	target_vel.x = base * (random.Next<short>() % 1024);
-	target_vel.y = base * (random.Next<short>() % 1024);
-	target_vel.z = base * (random.Next<short>() % 1024);
 }
 
 }

@@ -12,7 +12,8 @@ class TimerTest
 
 CPPUNIT_TEST_SUITE(TimerTest);
 
-CPPUNIT_TEST(testIntervalTimer);
+CPPUNIT_TEST(testCoarseTimer);
+CPPUNIT_TEST(testFineTimer);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -20,7 +21,8 @@ public:
 	void setUp();
 	void tearDown();
 
-	void testIntervalTimer();
+	void testCoarseTimer();
+	void testFineTimer();
 
 };
 

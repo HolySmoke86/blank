@@ -109,7 +109,7 @@ private:
 
 	EntityState player_update_state;
 	std::uint16_t player_update_pack;
-	IntervalTimer player_update_timer;
+	CoarseTimer player_update_timer;
 	std::uint8_t old_actions;
 
 	ChunkTransmitter transmitter;

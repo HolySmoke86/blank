@@ -88,7 +88,7 @@ private:
 	Interface interface;
 	ChunkReceiver chunk_receiver;
 	ChunkRenderer chunk_renderer;
-	IntervalTimer loop_timer;
+	CoarseTimer loop_timer;
 
 	SkyBox sky;
 

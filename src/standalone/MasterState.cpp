@@ -129,7 +129,8 @@ void MasterState::Handle(const SDL_Event &event) {
 }
 
 void MasterState::Update(int dt) {
-	input.Update(dt);
+	spawner.Update(dt);
+	world.Update(dt);
 	if (input.BlockFocus()) {
 		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
 	} else if (input.EntityFocus()) {
@@ -139,8 +140,6 @@ void MasterState::Update(int dt) {
 	}
 	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
 	hud.Update(dt);
-	spawner.Update(dt);
-	world.Update(dt);
 	chunk_loader.Update(dt);
 	chunk_renderer.Update(dt);
 

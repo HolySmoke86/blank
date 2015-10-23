@@ -9,7 +9,6 @@
 
 namespace blank {
 
-class Controller;
 class Entity;
 class GaloisLFSR;
 class Model;
@@ -36,11 +35,11 @@ private:
 private:
 	World &world;
 	ModelRegistry &models;
-	std::vector<Controller *> controllers;
+	std::vector<Entity *> entities;
 
 	GaloisLFSR &random;
 
-	IntervalTimer timer;
+	CoarseTimer timer;
 	float despawn_range;
 	float spawn_distance;
 	unsigned int max_entities;

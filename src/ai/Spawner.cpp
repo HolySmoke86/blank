@@ -1,7 +1,7 @@
 #include "Spawner.hpp"
 
-#include "Chaser.hpp"
-#include "RandomWalk.hpp"
+#include "AIController.hpp"
+
 #include "../model/Model.hpp"
 #include "../model/ModelRegistry.hpp"
 #include "../rand/GaloisLFSR.hpp"
@@ -21,7 +21,7 @@ namespace blank {
 Spawner::Spawner(World &world, ModelRegistry &models, GaloisLFSR &rand)
 : world(world)
 , models(models)
-, controllers()
+, entities()
 , random(rand)
 , timer(64)
 , despawn_range(128 * 128)
@@ -34,8 +34,8 @@ Spawner::Spawner(World &world, ModelRegistry &models, GaloisLFSR &rand)
 }
 
 Spawner::~Spawner() {
-	for (auto &ctrl : controllers) {
-		delete ctrl;
+	for (Entity *e : entities) {
+		e->UnRef();
 	}
 }
 
@@ -55,20 +55,17 @@ void Spawner::Update(int dt) {
 	if (timer.Hit()) {
 		TrySpawn();
 	}
-	for (auto &ctrl : controllers) {
-		ctrl->Update(dt);
-	}
 }
 
 
 void Spawner::CheckDespawn() noexcept {
 	const auto &refs = world.Players();
-	for (auto iter = controllers.begin(), end = controllers.end(); iter != end;) {
-		Entity &e = (*iter)->Controlled();
+	for (auto iter = entities.begin(), end = entities.end(); iter != end;) {
+		Entity &e = (**iter);
 		if (e.Dead()) {
-			delete *iter;
-			iter = controllers.erase(iter);
-			end = controllers.end();
+			e.UnRef();
+			iter = entities.erase(iter);
+			end = entities.end();
 			continue;
 		}
 		bool safe = false;
@@ -81,9 +78,9 @@ void Spawner::CheckDespawn() noexcept {
 		}
 		if (!safe) {
 			e.Kill();
-			delete *iter;
-			iter = controllers.erase(iter);
-			end = controllers.end();
+			e.UnRef();
+			iter = entities.erase(iter);
+			end = entities.end();
 		} else {
 			++iter;
 		}
@@ -91,7 +88,7 @@ void Spawner::CheckDespawn() noexcept {
 }
 
 void Spawner::TrySpawn() {
-	if (controllers.size() >= max_entities || model_length == 0) return;
+	if (entities.size() >= max_entities || model_length == 0) return;
 
 	// select random player to punish
 	auto &players = world.Players();
@@ -130,15 +127,10 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
 	RandomModel().Instantiate(e.GetModel());
-	Controller *ctrl;
-	if (random()) {
-		ctrl = new RandomWalk(e, random.Next<std::uint64_t>());
-		e.Name("walker");
-	} else {
-		ctrl = new Chaser(world, e, reference);
-		e.Name("chaser");
-	}
-	controllers.emplace_back(ctrl);
+	e.SetController(new AIController(random));
+	e.Name("spawned");
+	e.Ref();
+	entities.emplace_back(&e);
 }
 
 Model &Spawner::RandomModel() noexcept {

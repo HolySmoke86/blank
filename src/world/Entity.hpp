@@ -15,12 +15,29 @@
 namespace blank {
 
 class DirectionalLighting;
+class EntityController;
 class Shape;
 
 class Entity {
 
 public:
 	Entity() noexcept;
+	~Entity() noexcept;
+
+	// note that when copying an entity which owns its controller, the
+	// original must outlive the copy, otherwise the copy ends up with
+	// an invalid controller pointer
+	Entity(const Entity &) noexcept;
+	Entity &operator =(const Entity &) = delete;
+
+	bool HasController() const noexcept { return ctrl; }
+	// entity takes over ownership of controller
+	void SetController(EntityController *c) noexcept;
+	// entity uses shared controller
+	void SetController(EntityController &c) noexcept;
+	void UnsetController() noexcept;
+	EntityController &GetController() noexcept { return *ctrl; }
+	const EntityController &GetController() const noexcept { return *ctrl; }
 
 	Instance &GetModel() noexcept { return model; }
 	const Instance &GetModel() const noexcept { return model; }
@@ -37,12 +54,19 @@ public:
 	bool WorldCollidable() const noexcept { return world_collision; }
 	void WorldCollidable(bool b) noexcept { world_collision = b; }
 
-	/// desired velocity in local coordinate system
-	const glm::vec3 &TargetVelocity() const noexcept { return tgt_vel; }
-	void TargetVelocity(const glm::vec3 &v) noexcept { tgt_vel = v; }
+	float MaxVelocity() const noexcept { return max_vel; }
+	void MaxVelocity(float v) noexcept { max_vel = v; }
+	float MaxControlForce() const noexcept { return max_force; }
+	void MaxControlForce(float f) noexcept { max_force = f; }
+
+	glm::vec3 ControlForce(const EntityState &) const noexcept;
 
 	const glm::vec3 &Velocity() const noexcept { return state.velocity; }
 	void Velocity(const glm::vec3 &v) noexcept { state.velocity = v; }
+
+	bool Moving() const noexcept {
+		return dot(Velocity(), Velocity()) > std::numeric_limits<float>::epsilon();
+	}
 
 	const glm::vec3 &Position() const noexcept { return state.block_pos; }
 	void Position(const glm::ivec3 &, const glm::vec3 &) noexcept;
@@ -84,6 +108,8 @@ public:
 	bool Dead() const noexcept { return dead; }
 	bool CanRemove() const noexcept { return dead && ref_count <= 0; }
 
+	void Update(float dt);
+
 	void Render(const glm::mat4 &M, DirectionalLighting &prog) noexcept {
 		if (model) model.Render(M, prog);
 	}
@@ -92,6 +118,7 @@ private:
 	void UpdateModel() noexcept;
 
 private:
+	EntityController *ctrl;
 	Instance model;
 
 	std::uint32_t id;
@@ -99,12 +126,17 @@ private:
 
 	AABB bounds;
 	EntityState state;
-	glm::vec3 tgt_vel;
+
+	// TODO: I'd prefer a drag solution
+	float max_vel;
+	float max_force;
 
 	int ref_count;
 
 	bool world_collision;
 	bool dead;
+
+	bool owns_controller;
 
 };
 
