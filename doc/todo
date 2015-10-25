@@ -41,7 +41,7 @@ launcher ui
 
 entity ai
 
-	pathfinding, chase and roam states
+	pathfinding, obstacle avoidance, better turning behaviour
 
 (block) lighting
 
@@ -116,3 +116,7 @@ spawning
 sprite/particle system
 
 	these could help make the world seem more alive
+
+server
+
+	fix segfault at disconnect
