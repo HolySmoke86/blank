@@ -85,6 +85,7 @@ public:
 	/// returs an existing entity if ID is already taken
 	Entity &ForceAddEntity(std::uint32_t id);
 
+	std::list<Player> &Players() noexcept { return players; }
 	const std::list<Player> &Players() const noexcept { return players; }
 	std::list<Entity> &Entities() noexcept { return entities; }
 	const std::list<Entity> &Entities() const noexcept { return entities; }

@@ -10,13 +10,16 @@
 namespace blank {
 
 class AIState;
+class Entity;
 class GaloisLFSR;
+class Player;
+class World;
 
 class AIController
 : public EntityController {
 
 public:
-	explicit AIController(GaloisLFSR &);
+	AIController(World &, GaloisLFSR &);
 	~AIController();
 
 	void SetState(const AIState &);
@@ -26,6 +29,16 @@ public:
 	glm::vec3 ControlForce(const Entity &, const EntityState &) const override;
 
 	static glm::vec3 Heading(const EntityState &) noexcept;
+
+	/// get the closest player that given entity can see
+	/// returns nullptr if none are in sight
+	Player *ClosestVisiblePlayer(const Entity &) noexcept;
+	/// true if to entity is in visible range of from entity
+	bool LineOfSight(const Entity &from, const Entity &to) const noexcept;
+
+	/// true if the controller may do expensive calculations
+	bool MayThink() const noexcept;
+	void SetThinkInterval(float) noexcept;
 
 	/// schedule a decision in the next minimum ± variance seconds
 	void CueDecision(
@@ -37,47 +50,95 @@ public:
 	/// random choice of 0 to num_choices - 1
 	unsigned int Decide(unsigned int num_choices) noexcept;
 
-	void EnterHalt(float speed) noexcept;
+	void EnterHalt() noexcept;
 	void ExitHalt() noexcept;
 	bool IsHalted() const noexcept;
+	void SetHaltSpeed(float) noexcept;
+	glm::vec3 GetHaltForce(const EntityState &) const noexcept;
 
-	void StartFleeing(const Entity &, float speed) noexcept;
+	void StartFleeing() noexcept;
 	void StopFleeing() noexcept;
 	bool IsFleeing() const noexcept;
+	void SetFleeTarget(Entity &) noexcept;
+	void SetFleeSpeed(float) noexcept;
+	Entity &GetFleeTarget() noexcept;
 	const Entity &GetFleeTarget() const noexcept;
+	glm::vec3 GetFleeForce(const EntityState &) const noexcept;
 
-	void StartSeeking(const Entity &, float speed) noexcept;
+	void StartSeeking() noexcept;
 	void StopSeeking() noexcept;
 	bool IsSeeking() const noexcept;
+	void SetSeekTarget(Entity &) noexcept;
+	void SetSeekSpeed(float) noexcept;
+	Entity &GetSeekTarget() noexcept;
 	const Entity &GetSeekTarget() const noexcept;
+	glm::vec3 GetSeekForce(const EntityState &) const noexcept;
 
-	/// start wandering randomly at given speed
+	void StartEvading() noexcept;
+	void StopEvading() noexcept;
+	bool IsEvading() const noexcept;
+	void SetEvadeTarget(Entity &) noexcept;
+	void SetEvadeSpeed(float) noexcept;
+	Entity &GetEvadeTarget() noexcept;
+	const Entity &GetEvadeTarget() const noexcept;
+	glm::vec3 GetEvadeForce(const EntityState &) const noexcept;
+
+	void StartPursuing() noexcept;
+	void StopPursuing() noexcept;
+	bool IsPursuing() const noexcept;
+	void SetPursuitTarget(Entity &) noexcept;
+	void SetPursuitSpeed(float) noexcept;
+	Entity &GetPursuitTarget() noexcept;
+	const Entity &GetPursuitTarget() const noexcept;
+	glm::vec3 GetPursuitForce(const EntityState &) const noexcept;
+
+	/// start wandering randomly
+	void StartWandering() noexcept;
+	void StopWandering() noexcept;
+	bool IsWandering() const noexcept;
+	/// change how wandering is performed
 	/// the trajectory is modified by targetting a blip on a sphere
 	/// in front of the entity which moves randomly
 	/// the displacement is given (roughly) in units per second
-	void StartWandering(
+	void SetWanderParams(
 		float speed,
 		float distance = 2.0f,
 		float radius = 1.0f,
 		float displacement = 1.0f
 	) noexcept;
-	void StopWandering() noexcept;
-	bool IsWandering() const noexcept;
+	glm::vec3 GetWanderForce(const EntityState &) const noexcept;
 
 private:
+	World &world;
 	GaloisLFSR &random;
 	const AIState *state;
 
+	/// how far controlled entities can see
+	float sight_dist;
+	/// cosine of the half angle of FOV of controlled entities
+	float sight_angle;
+
+	FineTimer think_timer;
 	FineTimer decision_timer;
 
 	bool halted;
 	float halt_speed;
 
-	const Entity *flee_target;
+	bool fleeing;
+	Entity *flee_target;
 	float flee_speed;
 
-	const Entity *seek_target;
+	bool seeking;
+	Entity *seek_target;
 	float seek_speed;
+
+	bool evading;
+	Entity *evade_target;
+	float evade_speed;
+
+	bool pursuing;
+	Entity *pursuit_target;
+	float pursuit_speed;
 
 	bool wandering;
 	glm::vec3 wander_pos;

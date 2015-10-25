@@ -127,7 +127,7 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
 	RandomModel().Instantiate(e.GetModel());
-	e.SetController(new AIController(random));
+	e.SetController(new AIController(world, random));
 	e.Name("spawned");
 	e.Ref();
 	entities.emplace_back(&e);

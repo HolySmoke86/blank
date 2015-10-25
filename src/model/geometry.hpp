@@ -20,29 +20,38 @@ constexpr float PI_0p5_inv = 1.0f / PI_0p5;
 constexpr float DEG_RAD_FACTOR = PI / 180.0f;
 constexpr float RAD_DEG_FACTOR = 180.0f / PI;
 
-constexpr float deg2rad(float d) {
+constexpr float deg2rad(float d) noexcept {
 	return d * DEG_RAD_FACTOR;
 }
 
-constexpr float rad2deg(float r) {
+constexpr float rad2deg(float r) noexcept {
 	return r * RAD_DEG_FACTOR;
 }
 
 
+inline float length_squared(const glm::vec3 &v) noexcept {
+	return dot(v, v);
+}
+
+inline float distance_squared(const glm::vec3 &a, const glm::vec3 &b) noexcept {
+	return length_squared(a - b);
+}
+
+
 template <class T>
-inline bool iszero(const T &v) {
-	return dot(v, v) < std::numeric_limits<typename T::value_type>::epsilon();
+inline bool iszero(const T &v) noexcept {
+	return length_squared(v) < std::numeric_limits<typename T::value_type>::epsilon();
 }
 
 
 template<class T>
-T manhattan_distance(const glm::tvec3<T> &a, const glm::tvec3<T> &b) {
+T manhattan_distance(const glm::tvec3<T> &a, const glm::tvec3<T> &b) noexcept {
 	glm::tvec3<T> diff(abs(a - b));
 	return diff.x + diff.y + diff.z;
 }
 
 template<class T>
-T manhattan_radius(const glm::tvec3<T> &v) {
+T manhattan_radius(const glm::tvec3<T> &v) noexcept {
 	glm::tvec3<T> a(abs(v));
 	return std::max(a.x, std::max(a.y, a.z));
 }

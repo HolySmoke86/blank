@@ -26,8 +26,15 @@ struct EntityController {
 		const glm::vec3 &add,
 		float max
 	) noexcept;
-	/// give a force that makes state's velocity converge with given target velocity
-	/// over 1/n seconds
+	/// give a force that makes state come to a halt over 1/n seconds
+	static inline glm::vec3 Halt(
+		const EntityState &state,
+		float n
+	) noexcept {
+		return state.velocity * -n;
+	}
+	/// give a force that makes state's velocity converge with given
+	/// target velocity over 1/n seconds
 	static inline glm::vec3 TargetVelocity(
 		const glm::vec3 &target,
 		const EntityState &state,
@@ -35,12 +42,24 @@ struct EntityController {
 	) noexcept {
 		return (target - state.velocity) * n;
 	}
-	/// give a force that makes state come to a halt over 1/n seconds
-	static inline glm::vec3 Halt(
+	/// give a force that makes state go after target with an attempted
+	/// acceleration over 1/n seconds and a speed of s
+	static inline glm::vec3 Seek(
 		const EntityState &state,
+		const EntityState &target,
+		float s,
 		float n
 	) noexcept {
-		return state.velocity * -n;
+		return TargetVelocity(normalize(target.Diff(state)) * s, state, n);
+	}
+	/// opposite of seek
+	static inline glm::vec3 Flee(
+		const EntityState &state,
+		const EntityState &target,
+		float s,
+		float n
+	) noexcept {
+		return TargetVelocity(normalize(state.Diff(target)) * s, state, n);
 	}
 
 };
