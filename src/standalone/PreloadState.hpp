@@ -1,7 +1,7 @@
 #ifndef BLANK_STANDALONE_PRELOADSTATE_HPP_
 #define BLANK_STANDALONE_PRELOADSTATE_HPP_
 
-#include "../app/ProgressState.hpp"
+#include "../shared/ProgressState.hpp"
 
 #include <cstddef>
 

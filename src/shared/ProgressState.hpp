@@ -1,7 +1,7 @@
-#ifndef BLANK_APP_PROGRESSSTATE_HPP_
-#define BLANK_APP_PROGRESSSTATE_HPP_
+#ifndef BLANK_SHARED_PROGRESSSTATE_HPP_
+#define BLANK_SHARED_PROGRESSSTATE_HPP_
 
-#include "State.hpp"
+#include "../app/State.hpp"
 
 #include "../ui/Progress.hpp"
 

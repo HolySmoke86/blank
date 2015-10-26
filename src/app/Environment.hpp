@@ -3,11 +3,11 @@
 
 #include "Assets.hpp"
 #include "FrameCounter.hpp"
-#include "MessageState.hpp"
 #include "StateControl.hpp"
 #include "../audio/Audio.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../rand/GaloisLFSR.hpp"
+#include "../shared/MessageState.hpp"
 #include "../ui/Keymap.hpp"
 
 #include <string>

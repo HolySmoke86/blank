@@ -6,12 +6,12 @@
 
 #include "ChunkReceiver.hpp"
 #include "NetworkedInput.hpp"
-#include "../app/ChatState.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../audio/SoundBank.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../io/WorldSave.hpp"
 #include "../net/Packet.hpp"
+#include "../shared/ChatState.hpp"
 #include "../shared/WorldResources.hpp"
 #include "../ui/HUD.hpp"
 #include "../ui/InteractiveManipulator.hpp"

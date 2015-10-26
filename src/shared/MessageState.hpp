@@ -1,7 +1,7 @@
-#ifndef BLANK_APP_MESSAGESTATE_HPP_
-#define BLANK_APP_MESSAGESTATE_HPP_
+#ifndef BLANK_SHARED_MESSAGESTATE_HPP_
+#define BLANK_SHARED_MESSAGESTATE_HPP_
 
-#include "State.hpp"
+#include "../app/State.hpp"
 
 #include "../ui/FixedText.hpp"
 

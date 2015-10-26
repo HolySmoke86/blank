@@ -1,6 +1,8 @@
 #include "ChatState.hpp"
+#include "MessageState.hpp"
+#include "ProgressState.hpp"
 
-#include "Environment.hpp"
+#include "../app/Environment.hpp"
 #include "../io/event.hpp"
 
 #include <iostream>
@@ -102,6 +104,66 @@ void ChatState::Update(int dt) {
 void ChatState::Render(Viewport &viewport) {
 	parent.Render(viewport);
 	input.Render(viewport);
+}
+
+
+MessageState::MessageState(Environment &env)
+: env(env) {
+	message.Position(glm::vec3(0.0f), Gravity::CENTER);
+	message.Hide();
+	press_key.Position(glm::vec3(0.0f, env.assets.large_ui_font.LineSkip(), 0.0f), Gravity::CENTER);
+	press_key.Set(env.assets.small_ui_font, "press any key to continue");
+	press_key.Show();
+}
+
+void MessageState::SetMessage(const char *msg) {
+	message.Set(env.assets.large_ui_font, msg);
+	message.Show();
+}
+
+void MessageState::ClearMessage() {
+	message.Hide();
+}
+
+void MessageState::Handle(const SDL_Event &e) {
+	if (e.type == SDL_KEYDOWN) {
+		env.state.Pop();
+	}
+}
+
+void MessageState::Update(int dt) {
+
+}
+
+void MessageState::Render(Viewport &viewport) {
+	if (message.Visible()) {
+		message.Render(viewport);
+	}
+	if (press_key.Visible()) {
+		press_key.Render(viewport);
+	}
+}
+
+
+ProgressState::ProgressState(Environment &env, const char *tpl)
+: env(env)
+, progress(env.assets.large_ui_font) {
+	progress.Position(glm::vec3(0.0f), Gravity::CENTER);
+	progress.Template(tpl);
+}
+
+void ProgressState::SetProgress(int value, int total) {
+	progress.Update(value, total);
+}
+
+void ProgressState::Handle(const SDL_Event &e) {
+	if (e.type == SDL_QUIT) {
+		env.state.PopAll();
+	}
+}
+
+void ProgressState::Render(Viewport &viewport) {
+	progress.Render(viewport);
 }
 
 }
