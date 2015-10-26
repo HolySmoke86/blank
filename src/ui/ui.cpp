@@ -43,6 +43,12 @@ PlayerController::PlayerController(World &world, Player &player)
 	player.GetEntity().SetController(*this);
 }
 
+PlayerController::~PlayerController() {
+	if (&player.GetEntity().GetController() == this) {
+		player.GetEntity().UnsetController();
+	}
+}
+
 void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 	if (dot(m, m) > 1.0f) {
 		move_dir = normalize(m);

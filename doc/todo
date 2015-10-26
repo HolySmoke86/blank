@@ -116,7 +116,3 @@ spawning
 sprite/particle system
 
 	these could help make the world seem more alive
-
-server
-
-	fix segfault at disconnect

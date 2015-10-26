@@ -18,6 +18,7 @@ class PlayerController
 
 public:
 	PlayerController(World &, Player &);
+	~PlayerController();
 
 	World &GetWorld() noexcept { return world; }
 	const World &GetWorld() const noexcept { return world; }
