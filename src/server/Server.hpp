@@ -2,6 +2,7 @@
 #define BLANK_SERVER_SERVER_HPP
 
 #include "../app/Config.hpp"
+#include "../shared/CLI.hpp"
 #include "../world/World.hpp"
 #include "../world/WorldManipulator.hpp"
 
@@ -46,6 +47,9 @@ public:
 
 	void SetBlock(Chunk &, int, const Block &) override;
 
+	/// for use by client connections when they receive a line from the player
+	void DispatchMessage(Player &, const std::string &);
+
 	/// send message to all connected clients
 	void DistributeMessage(std::uint8_t type, std::uint32_t ref, const std::string &msg);
 
@@ -65,6 +69,8 @@ private:
 	ChunkIndex &spawn_index;
 	const WorldSave &save;
 	const Model *player_model;
+
+	CLI cli;
 
 };
 

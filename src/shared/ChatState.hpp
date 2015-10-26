@@ -23,6 +23,9 @@ public:
 public:
 	ChatState(Environment &env, State &parent, Responder &);
 
+	void Preset(const std::string &);
+	void Clear();
+
 	void OnResume() override;
 	void OnPause() override;
 
@@ -39,6 +42,7 @@ private:
 	State &parent;
 	Responder &responder;
 
+	std::string preset;
 	TextInput input;
 
 };

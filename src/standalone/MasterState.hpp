@@ -10,6 +10,7 @@
 #include "../audio/SoundBank.hpp"
 #include "../graphics/SkyBox.hpp"
 #include "../shared/ChatState.hpp"
+#include "../shared/CLI.hpp"
 #include "../shared/WorldResources.hpp"
 #include "../ui/DirectInput.hpp"
 #include "../ui/HUD.hpp"
@@ -86,6 +87,8 @@ private:
 	Spawner spawner;
 
 	SkyBox sky;
+
+	CLI cli;
 
 	PreloadState preload;
 	UnloadState unload;

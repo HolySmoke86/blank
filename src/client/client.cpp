@@ -105,6 +105,11 @@ void InteractiveState::Handle(const SDL_Event &event) {
 		case SDL_KEYDOWN:
 			// TODO: move to interface
 			if (event.key.keysym.sym == SDLK_RETURN) {
+				chat.Clear();
+				master.GetEnv().state.Push(&chat);
+				hud.KeepMessages(true);
+			} else if (event.key.keysym.sym == SDLK_SLASH) {
+				chat.Preset("/");
 				master.GetEnv().state.Push(&chat);
 				hud.KeepMessages(true);
 			} else {

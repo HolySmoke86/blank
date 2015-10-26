@@ -91,6 +91,8 @@ InitVideo::InitVideo() {
 	if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
 		throw SDLError("SDL_InitSubSystem(SDL_INIT_VIDEO)");
 	}
+	// SDL seems to start out in text input state
+	SDL_StopTextInput();
 }
 
 InitVideo::~InitVideo() {

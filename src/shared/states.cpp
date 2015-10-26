@@ -14,6 +14,7 @@ ChatState::ChatState(Environment &env, State &parent, Responder &responder)
 : env(env)
 , parent(parent)
 , responder(responder)
+, preset()
 , input(env.assets.small_ui_font) {
 	input.Position(glm::vec3(25.0f, -25.0f, -1.0f), Gravity::SOUTH_WEST, Gravity::SOUTH_WEST);
 	input.Width(env.viewport.Width() - 50.0f);
@@ -21,9 +22,20 @@ ChatState::ChatState(Environment &env, State &parent, Responder &responder)
 	input.Background(glm::vec4(0.5f));
 }
 
+void ChatState::Preset(const std::string &text) {
+	preset = text;
+}
+
+void ChatState::Clear() {
+	preset.clear();
+}
+
 void ChatState::OnResume() {
 	OnResize(env.viewport);
 	input.Clear();
+	if (!preset.empty()) {
+		input.Insert(preset.c_str());
+	}
 	input.Focus(env.viewport);
 }
 

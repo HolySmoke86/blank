@@ -593,7 +593,7 @@ void ClientConnection::On(const Packet::Message &pack) {
 	pack.ReadMessage(msg);
 
 	if (type == 1 && HasPlayer()) {
-		server.DistributeMessage(1, PlayerEntity().ID(), msg);
+		server.DispatchMessage(input->GetPlayer(), msg);
 	}
 }
 
@@ -609,7 +609,8 @@ Server::Server(
 , world(world)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , save(save)
-, player_model(nullptr) {
+, player_model(nullptr)
+, cli(world) {
 	serv_sock = SDLNet_UDP_Open(conf.port);
 	if (!serv_sock) {
 		throw NetError("SDLNet_UDP_Open");
@@ -721,6 +722,17 @@ void Server::SetBlock(Chunk &chunk, int index, const Block &block) {
 		if (client.ChunkInRange(chunk.Position())) {
 			client.Send();
 		}
+	}
+}
+
+void Server::DispatchMessage(Player &player, const string &msg) {
+	if (msg.empty()) {
+		return;
+	}
+	if (msg[0] == '/' && msg.size() > 1 && msg[1] != '/') {
+		cli.Execute(player, msg.substr(1));
+	} else {
+		DistributeMessage(1, player.GetEntity().ID(), msg);
 	}
 }
 

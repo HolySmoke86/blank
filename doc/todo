@@ -19,7 +19,8 @@ font rendering
 
 command line
 
-	useful for development and later on world administration
+	more commands pls
+	and show me their output
 
 persistence
 
@@ -30,10 +31,11 @@ persistence
 
 networking
 
-	write tests
-	do some manual testing
-	some more testing
-	a little optimization
+	definitely needs throttling for the internets
+
+	players stats (who's connected, their ping, and game-relevant
+	things) should be sent to clients
+
 
 launcher ui
 

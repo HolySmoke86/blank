@@ -36,6 +36,7 @@ MasterState::MasterState(
 , chunk_renderer(player.GetChunks())
 , spawner(world, res.models, env.rng)
 , sky(env.loader.LoadCubeMap("skybox"))
+, cli(world)
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save)
 , chat(env, *this, *this) {
@@ -99,6 +100,11 @@ void MasterState::Handle(const SDL_Event &event) {
 		case SDL_KEYDOWN:
 			// TODO: move to interface
 			if (event.key.keysym.sym == SDLK_RETURN) {
+				chat.Clear();
+				env.state.Push(&chat);
+				hud.KeepMessages(true);
+			} else if (event.key.keysym.sym == SDLK_SLASH) {
+				chat.Preset("/");
 				env.state.Push(&chat);
 				hud.KeepMessages(true);
 			} else {
@@ -206,7 +212,12 @@ void MasterState::Exit() {
 }
 
 void MasterState::OnLineSubmit(const std::string &line) {
-	if (!line.empty()) {
+	if (line.empty()) {
+		return;
+	}
+	if (line[0] == '/' && line.size() > 1 && line[1] != '/') {
+		cli.Execute(player, line.substr(1));
+	} else {
 		hud.PostMessage(line);
 	}
 }
