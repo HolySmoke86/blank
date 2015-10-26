@@ -84,6 +84,10 @@ uint16_t Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
 		throw NetError("SDLNet_UDP_Send");
 	}
 
+	if (HasHandler()) {
+		Handler().PacketSent(seq);
+	}
+
 	FlagSend();
 	return seq;
 }
@@ -151,20 +155,37 @@ uint16_t Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
 ConnectionHandler::ConnectionHandler()
 : packets_lost(0)
 , packets_received(0)
-, packet_loss(0.0f) {
+, packet_loss(0.0f)
+, stamp_cursor(15)
+, stamp_last(0)
+, rtt(64.0f) {
+	Uint32 now = SDL_GetTicks();
+	for (Uint32 &s : stamps) {
+		s = now;
+	}
+}
 
+void ConnectionHandler::PacketSent(uint16_t seq) {
+	if (!SamplePacket(seq)) {
+		return;
+	}
+	stamp_cursor = (stamp_cursor + 1) % 16;
+	stamps[stamp_cursor] = SDL_GetTicks();
+	stamp_last = seq;
 }
 
 void ConnectionHandler::PacketLost(uint16_t seq) {
 	OnPacketLost(seq);
 	++packets_lost;
 	UpdatePacketLoss();
+	UpdateRTT(seq);
 }
 
 void ConnectionHandler::PacketReceived(uint16_t seq) {
 	OnPacketReceived(seq);
 	++packets_received;
 	UpdatePacketLoss();
+	UpdateRTT(seq);
 }
 
 void ConnectionHandler::UpdatePacketLoss() noexcept {
@@ -174,6 +195,27 @@ void ConnectionHandler::UpdatePacketLoss() noexcept {
 		packets_lost = 0;
 		packets_received = 0;
 	}
+}
+
+void ConnectionHandler::UpdateRTT(std::uint16_t seq) noexcept {
+	if (!SamplePacket(seq)) return;
+	int diff = HeadDiff(seq);
+	if (diff > 0 || diff < -15) {
+		// packet outside observed time frame
+		return;
+	}
+	int cur_rtt = SDL_GetTicks() - stamps[(stamp_cursor + diff + 16) % 16];
+	rtt += (cur_rtt - rtt) * 0.1f;
+}
+
+bool ConnectionHandler::SamplePacket(std::uint16_t seq) const noexcept {
+	// only sample every eighth packet
+	return seq % 8 == 0;
+}
+
+int ConnectionHandler::HeadDiff(std::uint16_t seq) const noexcept {
+	int16_t diff = int16_t(seq) - int16_t(stamp_last);
+	return diff / 8;
 }
 
 

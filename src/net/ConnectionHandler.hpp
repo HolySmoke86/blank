@@ -13,8 +13,12 @@ class ConnectionHandler {
 public:
 	ConnectionHandler();
 
+	/// packet loss as factor
 	float PacketLoss() const noexcept { return packet_loss; }
+	/// smooth average round trip time in milliseconds
+	float RoundTripTime() const noexcept { return rtt; }
 
+	void PacketSent(std::uint16_t);
 	void PacketLost(std::uint16_t);
 	void PacketReceived(std::uint16_t);
 
@@ -24,6 +28,9 @@ public:
 
 private:
 	void UpdatePacketLoss() noexcept;
+	void UpdateRTT(std::uint16_t) noexcept;
+	bool SamplePacket(std::uint16_t) const noexcept;
+	int HeadDiff(std::uint16_t) const noexcept;
 
 	// called as soon as the remote end ack'd given packet
 	virtual void OnPacketReceived(std::uint16_t) { }
@@ -48,6 +55,11 @@ private:
 	unsigned int packets_lost;
 	unsigned int packets_received;
 	float packet_loss;
+
+	Uint32 stamps[16];
+	std::size_t stamp_cursor;
+	std::uint16_t stamp_last;
+	float rtt;
 
 };
 
