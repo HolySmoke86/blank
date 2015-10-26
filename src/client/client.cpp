@@ -196,8 +196,6 @@ void InteractiveState::Handle(const Packet::SpawnEntity &pack) {
 	if (model_id > 0 && model_id <= res.models.size()) {
 		res.models.Get(model_id).Instantiate(entity.GetModel());
 	}
-	cout << "spawned entity #" << entity_id << "  (" << entity.Name()
-		<< ") at " << entity.AbsolutePosition() << endl;
 }
 
 void InteractiveState::Handle(const Packet::DespawnEntity &pack) {
@@ -207,7 +205,6 @@ void InteractiveState::Handle(const Packet::DespawnEntity &pack) {
 	for (Entity &entity : world.Entities()) {
 		if (entity.ID() == entity_id) {
 			entity.Kill();
-			cout << "despawned entity #" << entity_id << " (" << entity.Name() << ") at " << entity.AbsolutePosition() << endl;
 			return;
 		}
 	}
