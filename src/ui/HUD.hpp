@@ -14,6 +14,7 @@ namespace blank {
 class Block;
 class BlockTypeRegistry;
 class Config;
+class ConnectionHandler;
 class Environment;
 class Font;
 class Player;
@@ -41,6 +42,9 @@ public:
 	void UpdateCounter();
 	void UpdatePosition();
 	void UpdateOrientation();
+
+	// net stats
+	void UpdateNetStats(const ConnectionHandler &);
 
 	// message box
 	void PostMessage(const char *);
@@ -78,6 +82,12 @@ private:
 	FixedText entity_text;
 	bool show_block;
 	bool show_entity;
+
+	// net stats
+	FixedText bandwidth_text;
+	FixedText rtt_text;
+	FixedText packet_loss_text;
+	bool show_net;
 
 	// message box
 	MessageBox messages;

@@ -17,6 +17,7 @@
 #include "../graphics/Viewport.hpp"
 #include "../io/TokenStreamReader.hpp"
 #include "../model/bounds.hpp"
+#include "../net/ConnectionHandler.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/World.hpp"
 #include "../world/WorldManipulator.hpp"
@@ -208,6 +209,11 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 , block_text()
 , show_block(false)
 , show_entity(false)
+// net stats
+, bandwidth_text()
+, rtt_text()
+, packet_loss_text()
+, show_net(false)
 // message box
 , messages(env.assets.small_ui_font)
 , msg_timer(5000)
@@ -247,6 +253,20 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 	entity_text.Foreground(glm::vec4(1.0f));
 	entity_text.Background(glm::vec4(0.5f));
 	entity_text.Set(env.assets.small_ui_font, "Entity: none");
+
+	// net stats
+	bandwidth_text.Position(glm::vec3(-25.0f, 25.0f + 6 * ls, 0.0f), Gravity::NORTH_EAST);
+	bandwidth_text.Foreground(glm::vec4(1.0f));
+	bandwidth_text.Background(glm::vec4(0.5f));
+	bandwidth_text.Set(env.assets.small_ui_font, "TX: 0.0KB/s RX: 0.0KB/s");
+	rtt_text.Position(glm::vec3(-25.0f, 25.0f + 7 * ls, 0.0f), Gravity::NORTH_EAST);
+	rtt_text.Foreground(glm::vec4(1.0f));
+	rtt_text.Background(glm::vec4(0.5f));
+	rtt_text.Set(env.assets.small_ui_font, "RTT: unavailable");
+	packet_loss_text.Position(glm::vec3(-25.0f, 25.0f + 8 * ls, 0.0f), Gravity::NORTH_EAST);
+	packet_loss_text.Foreground(glm::vec4(1.0f));
+	packet_loss_text.Background(glm::vec4(0.5f));
+	packet_loss_text.Set(env.assets.small_ui_font, "Packet loss: 0.0%");
 
 	// message box
 	messages.Position(glm::vec3(25.0f, -25.0f - 2 * ls, 0.0f), Gravity::SOUTH_WEST);
@@ -361,6 +381,25 @@ void HUD::PostMessage(const char *msg) {
 }
 
 
+void HUD::UpdateNetStats(const ConnectionHandler &conn) {
+	std::stringstream s;
+	s << std::fixed << std::setprecision(1)
+		<< "TX: " << conn.Upstream()
+		<< "KB/s, RX: " << conn.Downstream() << "KB/s";
+	bandwidth_text.Set(env.assets.small_ui_font, s.str());
+
+	s.str("");
+	s << "RTT: " << conn.RoundTripTime() << "ms";
+	rtt_text.Set(env.assets.small_ui_font, s.str());
+
+	s.str("");
+	s << "Packet loss: " << (conn.PacketLoss() * 100.0f) << "%";
+	packet_loss_text.Set(env.assets.small_ui_font, s.str());
+
+	show_net = true;
+}
+
+
 void HUD::Update(int dt) {
 	msg_timer.Update(dt);
 	if (msg_timer.HitOnce()) {
@@ -423,6 +462,11 @@ void HUD::Render(Viewport &viewport) noexcept {
 			block_text.Render(viewport);
 		} else if (show_entity) {
 			entity_text.Render(viewport);
+		}
+		if (show_net) {
+			bandwidth_text.Render(viewport);
+			rtt_text.Render(viewport);
+			packet_loss_text.Render(viewport);
 		}
 	}
 }

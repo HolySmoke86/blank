@@ -59,6 +59,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , chunk_receiver(world.Chunks(), save)
 , chunk_renderer(player.GetChunks())
 , loop_timer(16)
+, stat_timer(1000)
 , sky(master.GetEnv().loader.LoadCubeMap("skybox"))
 , update_status()
 , chat(master.GetEnv(), *this, *this) {
@@ -75,6 +76,7 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	chunk_renderer.LoadTextures(master.GetEnv().loader, res.tex_index);
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
 	loop_timer.Start();
+	stat_timer.Start();
 	if (save.Exists(player)) {
 		save.Read(player);
 	}
@@ -141,6 +143,7 @@ void InteractiveState::Handle(const SDL_Event &event) {
 
 void InteractiveState::Update(int dt) {
 	loop_timer.Update(dt);
+	stat_timer.Update(dt);
 	master.Update(dt);
 	chunk_receiver.Update(dt);
 
@@ -163,6 +166,9 @@ void InteractiveState::Update(int dt) {
 		input.PushPlayerUpdate(world_dt);
 	}
 	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
+	if (stat_timer.Hit()) {
+		hud.UpdateNetStats(master);
+	}
 	hud.Update(dt);
 
 	glm::mat4 trans = player.GetEntity().Transform(player.GetEntity().ChunkCoords());

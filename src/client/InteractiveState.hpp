@@ -89,6 +89,7 @@ private:
 	ChunkReceiver chunk_receiver;
 	ChunkRenderer chunk_renderer;
 	CoarseTimer loop_timer;
+	CoarseTimer stat_timer;
 
 	SkyBox sky;
 
