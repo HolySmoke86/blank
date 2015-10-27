@@ -347,10 +347,10 @@ void HUD::UpdatePosition() {
 }
 
 void HUD::UpdateOrientation() {
-	//std::stringstream s;
-	//s << std::setprecision(3) << "pitch: " << rad2deg(ctrl.Pitch())
-	//	<< ", yaw: " << rad2deg(ctrl.Yaw());
-	//orientation_text.Set(env.assets.small_ui_font, s.str());
+	std::stringstream s;
+	s << std::setprecision(3) << "pitch: " << rad2deg(player.GetEntity().Pitch())
+		<< ", yaw: " << rad2deg(player.GetEntity().Yaw());
+	orientation_text.Set(env.assets.small_ui_font, s.str());
 }
 
 void HUD::PostMessage(const char *msg) {
