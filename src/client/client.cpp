@@ -167,7 +167,7 @@ void InteractiveState::Update(int dt) {
 	}
 	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
 	if (stat_timer.Hit()) {
-		hud.UpdateNetStats(master);
+		hud.UpdateNetStats(master.NetStat());
 	}
 	hud.Update(dt);
 

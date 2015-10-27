@@ -17,7 +17,7 @@
 #include "../graphics/Viewport.hpp"
 #include "../io/TokenStreamReader.hpp"
 #include "../model/bounds.hpp"
-#include "../net/ConnectionHandler.hpp"
+#include "../net/CongestionControl.hpp"
 #include "../world/BlockLookup.hpp"
 #include "../world/World.hpp"
 #include "../world/WorldManipulator.hpp"
@@ -381,19 +381,21 @@ void HUD::PostMessage(const char *msg) {
 }
 
 
-void HUD::UpdateNetStats(const ConnectionHandler &conn) {
+void HUD::UpdateNetStats(const CongestionControl &stat) {
+	if (!config.video.debug) return;
+
 	std::stringstream s;
 	s << std::fixed << std::setprecision(1)
-		<< "TX: " << conn.Upstream()
-		<< "KB/s, RX: " << conn.Downstream() << "KB/s";
+		<< "TX: " << stat.Upstream()
+		<< "KB/s, RX: " << stat.Downstream() << "KB/s";
 	bandwidth_text.Set(env.assets.small_ui_font, s.str());
 
 	s.str("");
-	s << "RTT: " << conn.RoundTripTime() << "ms";
+	s << "RTT: " << stat.RoundTripTime() << "ms";
 	rtt_text.Set(env.assets.small_ui_font, s.str());
 
 	s.str("");
-	s << "Packet loss: " << (conn.PacketLoss() * 100.0f) << "%";
+	s << "Packet loss: " << (stat.PacketLoss() * 100.0f) << "%";
 	packet_loss_text.Set(env.assets.small_ui_font, s.str());
 
 	show_net = true;

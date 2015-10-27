@@ -14,7 +14,7 @@ namespace blank {
 class Block;
 class BlockTypeRegistry;
 class Config;
-class ConnectionHandler;
+class CongestionControl;
 class Environment;
 class Font;
 class Player;
@@ -44,7 +44,7 @@ public:
 	void UpdateOrientation();
 
 	// net stats
-	void UpdateNetStats(const ConnectionHandler &);
+	void UpdateNetStats(const CongestionControl &);
 
 	// message box
 	void PostMessage(const char *);

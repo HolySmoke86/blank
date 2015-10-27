@@ -1,3 +1,4 @@
+#include "CongestionControl.hpp"
 #include "Connection.hpp"
 #include "ConnectionHandler.hpp"
 #include "io.hpp"
@@ -29,6 +30,102 @@ constexpr size_t Packet::ChunkData::MAX_LEN;
 constexpr size_t Packet::BlockUpdate::MAX_LEN;
 constexpr size_t Packet::Message::MAX_LEN;
 constexpr size_t Packet::Message::MAX_MESSAGE_LEN;
+
+
+CongestionControl::CongestionControl()
+// I know, I know, it's an estimate (about 20 for IPv4, 48 for IPv6)
+: packet_overhead(20)
+// only sample every eighth packet for measuring RTT
+, sample_skip(8)
+, packets_lost(0)
+, packets_received(0)
+, packet_loss(0.0f)
+, stamp_cursor(15)
+, stamp_last(0)
+, rtt(64.0f)
+, next_sample(1000)
+, tx_bytes(0)
+, rx_bytes(0)
+, tx_kbps(0.0f)
+, rx_kbps(0.0f) {
+	Uint32 now = SDL_GetTicks();
+	for (Uint32 &s : stamps) {
+		s = now;
+	}
+	next_sample += now;
+}
+
+void CongestionControl::PacketSent(uint16_t seq) noexcept {
+	if (!SamplePacket(seq)) {
+		return;
+	}
+	stamp_cursor = (stamp_cursor + 1) % 16;
+	stamps[stamp_cursor] = SDL_GetTicks();
+	stamp_last = seq;
+}
+
+void CongestionControl::PacketLost(uint16_t seq) noexcept {
+	++packets_lost;
+	UpdatePacketLoss();
+	UpdateRTT(seq);
+}
+
+void CongestionControl::PacketReceived(uint16_t seq) noexcept {
+	++packets_received;
+	UpdatePacketLoss();
+	UpdateRTT(seq);
+}
+
+void CongestionControl::UpdatePacketLoss() noexcept {
+	unsigned int packets_total = packets_lost + packets_received;
+	if (packets_total >= 256) {
+		packet_loss = float(packets_lost) / float(packets_total);
+		packets_lost = 0;
+		packets_received = 0;
+	}
+}
+
+void CongestionControl::UpdateRTT(std::uint16_t seq) noexcept {
+	if (!SamplePacket(seq)) return;
+	int diff = HeadDiff(seq);
+	if (diff > 0 || diff < -15) {
+		// packet outside observed time frame
+		return;
+	}
+	int cur_rtt = SDL_GetTicks() - stamps[(stamp_cursor + diff + 16) % 16];
+	rtt += (cur_rtt - rtt) * 0.1f;
+}
+
+bool CongestionControl::SamplePacket(std::uint16_t seq) const noexcept {
+	return seq % sample_skip == 0;
+}
+
+int CongestionControl::HeadDiff(std::uint16_t seq) const noexcept {
+	int16_t diff = int16_t(seq) - int16_t(stamp_last);
+	return diff / sample_skip;
+}
+
+void CongestionControl::PacketIn(const UDPpacket &pack) noexcept {
+	rx_bytes += pack.len + packet_overhead;
+	UpdateStats();
+}
+
+void CongestionControl::PacketOut(const UDPpacket &pack) noexcept {
+	tx_bytes += pack.len + packet_overhead;
+	UpdateStats();
+}
+
+void CongestionControl::UpdateStats() noexcept {
+	Uint32 now = SDL_GetTicks();
+	if (now >= next_sample) {
+		tx_kbps = float(tx_bytes) * (1.0f / 1024.0f);
+		rx_kbps = float(rx_bytes) * (1.0f / 1024.0f);
+		tx_bytes = 0;
+		rx_bytes = 0;
+		next_sample += 1000;
+	}
+}
+
 
 Connection::Connection(const IPaddress &addr)
 : handler(nullptr)
@@ -155,96 +252,30 @@ uint16_t Connection::SendPing(UDPpacket &udp_pack, UDPsocket sock) {
 
 
 ConnectionHandler::ConnectionHandler()
-: packets_lost(0)
-, packets_received(0)
-, packet_loss(0.0f)
-, stamp_cursor(15)
-, stamp_last(0)
-, rtt(64.0f)
-, next_sample(1000)
-, tx_bytes(0)
-, rx_bytes(0)
-, tx_kbps(0.0f)
-, rx_kbps(0.0f) {
-	Uint32 now = SDL_GetTicks();
-	for (Uint32 &s : stamps) {
-		s = now;
-	}
-	next_sample += now;
+: cc() {
+
 }
 
 void ConnectionHandler::PacketSent(uint16_t seq) noexcept {
-	if (!SamplePacket(seq)) {
-		return;
-	}
-	stamp_cursor = (stamp_cursor + 1) % 16;
-	stamps[stamp_cursor] = SDL_GetTicks();
-	stamp_last = seq;
+	cc.PacketSent(seq);
 }
 
 void ConnectionHandler::PacketLost(uint16_t seq) {
 	OnPacketLost(seq);
-	++packets_lost;
-	UpdatePacketLoss();
-	UpdateRTT(seq);
+	cc.PacketLost(seq);
 }
 
 void ConnectionHandler::PacketReceived(uint16_t seq) {
 	OnPacketReceived(seq);
-	++packets_received;
-	UpdatePacketLoss();
-	UpdateRTT(seq);
-}
-
-void ConnectionHandler::UpdatePacketLoss() noexcept {
-	unsigned int packets_total = packets_lost + packets_received;
-	if (packets_total >= 256) {
-		packet_loss = float(packets_lost) / float(packets_total);
-		packets_lost = 0;
-		packets_received = 0;
-	}
-}
-
-void ConnectionHandler::UpdateRTT(std::uint16_t seq) noexcept {
-	if (!SamplePacket(seq)) return;
-	int diff = HeadDiff(seq);
-	if (diff > 0 || diff < -15) {
-		// packet outside observed time frame
-		return;
-	}
-	int cur_rtt = SDL_GetTicks() - stamps[(stamp_cursor + diff + 16) % 16];
-	rtt += (cur_rtt - rtt) * 0.1f;
-}
-
-bool ConnectionHandler::SamplePacket(std::uint16_t seq) const noexcept {
-	// only sample every eighth packet
-	return seq % 8 == 0;
-}
-
-int ConnectionHandler::HeadDiff(std::uint16_t seq) const noexcept {
-	int16_t diff = int16_t(seq) - int16_t(stamp_last);
-	return diff / 8;
+	cc.PacketReceived(seq);
 }
 
 void ConnectionHandler::PacketIn(const UDPpacket &pack) noexcept {
-	rx_bytes += pack.len + 20; // I know, I know, it's an estimate (about 48 for IPv6)
-	UpdateStats();
+	cc.PacketIn(pack);
 }
 
 void ConnectionHandler::PacketOut(const UDPpacket &pack) noexcept {
-	tx_bytes += pack.len + 20;
-	UpdateStats();
-}
-
-void ConnectionHandler::UpdateStats() noexcept {
-	Uint32 now = SDL_GetTicks();
-	if (now >= next_sample) {
-		tx_kbps = float(tx_bytes) * (1.0f / 1024.0f);
-		rx_kbps = float(rx_bytes) * (1.0f / 1024.0f);
-		tx_bytes = 0;
-		rx_bytes = 0;
-		next_sample += 1000;
-	}
+	cc.PacketOut(pack);
 }
 
 
