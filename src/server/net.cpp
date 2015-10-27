@@ -398,6 +398,11 @@ void ClientConnection::CheckChunkQueue() {
 		old_base = PlayerChunks().Base();
 		sort(chunk_queue.begin(), chunk_queue.end(), QueueCompare(old_base));
 	}
+	// if we have packet skip enabled and just pushed an entity
+	// update, don't also send chunk data
+	if (NetStat().SuggestedPacketSkip() > 0 && entity_updates_skipped == 0) {
+		return;
+	}
 	if (transmitter.Transmitting()) {
 		transmitter.Transmit();
 		return;
