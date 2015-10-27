@@ -47,12 +47,23 @@ CongestionControl::CongestionControl()
 , tx_bytes(0)
 , rx_bytes(0)
 , tx_kbps(0.0f)
-, rx_kbps(0.0f) {
+, rx_kbps(0.0f)
+, mode(GOOD)
+// rtt > 100ms or packet loss > 5% is BAD
+, bad_rtt(100.0f)
+, bad_loss(0.05f)
+// rtt > 250ms or packet loss > 15% is UGLY
+, ugly_rtt(250.0f)
+, ugly_loss(0.15f)
+, mode_keep_time(1000) {
 	Uint32 now = SDL_GetTicks();
 	for (Uint32 &s : stamps) {
 		s = now;
 	}
 	next_sample += now;
+	mode_entered = now;
+	mode_reset = now;
+	mode_step = now;
 }
 
 void CongestionControl::PacketSent(uint16_t seq) noexcept {
@@ -87,7 +98,8 @@ void CongestionControl::UpdatePacketLoss() noexcept {
 
 void CongestionControl::UpdateRTT(std::uint16_t seq) noexcept {
 	if (!SamplePacket(seq)) return;
-	int diff = HeadDiff(seq);
+	int16_t diff = int16_t(seq) - int16_t(stamp_last);
+	diff /= sample_skip;
 	if (diff > 0 || diff < -15) {
 		// packet outside observed time frame
 		return;
@@ -98,11 +110,6 @@ void CongestionControl::UpdateRTT(std::uint16_t seq) noexcept {
 
 bool CongestionControl::SamplePacket(std::uint16_t seq) const noexcept {
 	return seq % sample_skip == 0;
-}
-
-int CongestionControl::HeadDiff(std::uint16_t seq) const noexcept {
-	int16_t diff = int16_t(seq) - int16_t(stamp_last);
-	return diff / sample_skip;
 }
 
 void CongestionControl::PacketIn(const UDPpacket &pack) noexcept {
@@ -117,12 +124,71 @@ void CongestionControl::PacketOut(const UDPpacket &pack) noexcept {
 
 void CongestionControl::UpdateStats() noexcept {
 	Uint32 now = SDL_GetTicks();
-	if (now >= next_sample) {
-		tx_kbps = float(tx_bytes) * (1.0f / 1024.0f);
-		rx_kbps = float(rx_bytes) * (1.0f / 1024.0f);
-		tx_bytes = 0;
-		rx_bytes = 0;
-		next_sample += 1000;
+	if (now < next_sample) {
+		// not yet
+		return;
+	}
+	tx_kbps = float(tx_bytes) * (1.0f / 1024.0f);
+	rx_kbps = float(rx_bytes) * (1.0f / 1024.0f);
+	tx_bytes = 0;
+	rx_bytes = 0;
+	next_sample += 1000;
+	UpdateMode();
+}
+
+void CongestionControl::UpdateMode() noexcept {
+	Mode now_mode = Conditions();
+	if (now_mode > mode) {
+		ChangeMode(now_mode);
+	} else if (now_mode < mode) {
+		CheckUpgrade(now_mode);
+	} else {
+		KeepMode();
+	}
+}
+
+void CongestionControl::CheckUpgrade(Mode m) noexcept {
+	Uint32 now = SDL_GetTicks();
+	Uint32 time_in_mode = now - mode_entered;
+	if (time_in_mode < mode_keep_time) {
+		return;
+	}
+	ChangeMode(m);
+}
+
+void CongestionControl::ChangeMode(Mode m) noexcept {
+	Uint32 now = SDL_GetTicks();
+	if (m > mode) {
+		// changed to worse mode
+		// if we spent less than 10 seconds in better mode
+		// double keep time till up to 64 seconds
+		if (now - mode_entered < 10000) {
+			if (mode_keep_time < 64000) {
+				mode_keep_time *= 2;
+			}
+		}
+	}
+	mode = m;
+	mode_entered = now;
+	mode_reset = mode_entered;
+}
+
+void CongestionControl::KeepMode() noexcept {
+	mode_reset = SDL_GetTicks();
+	// if in good mode for 10 seconds, halve keep time till down to one second
+	if (mode == GOOD && mode_keep_time > 1000 && mode_step - mode_reset > 10000) {
+		mode_keep_time /= 2;
+		mode_step = mode_reset;
+	}
+}
+
+CongestionControl::Mode CongestionControl::Conditions() const noexcept {
+	if (rtt > ugly_rtt || packet_loss > ugly_loss) {
+		return UGLY;
+	} else if (rtt > bad_rtt || packet_loss > bad_loss) {
+		return BAD;
+	} else {
+		return GOOD;
 	}
 }
 

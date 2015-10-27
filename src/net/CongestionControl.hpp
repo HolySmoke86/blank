@@ -10,7 +10,17 @@ namespace blank {
 class CongestionControl {
 
 public:
+	enum Mode {
+		GOOD,
+		BAD,
+		UGLY,
+	};
+
+public:
 	CongestionControl();
+
+	/// get recommended mode of operation
+	Mode GetMode() const noexcept { return mode; }
 
 	/// packet loss as factor
 	float PacketLoss() const noexcept { return packet_loss; }
@@ -30,10 +40,18 @@ public:
 
 private:
 	void UpdatePacketLoss() noexcept;
+
 	void UpdateRTT(std::uint16_t) noexcept;
 	bool SamplePacket(std::uint16_t) const noexcept;
-	int HeadDiff(std::uint16_t) const noexcept;
+
 	void UpdateStats() noexcept;
+
+	void UpdateMode() noexcept;
+	void CheckUpgrade(Mode) noexcept;
+	void ChangeMode(Mode) noexcept;
+	void KeepMode() noexcept;
+
+	Mode Conditions() const noexcept;
 
 private:
 	const unsigned int packet_overhead;
@@ -53,6 +71,16 @@ private:
 	std::size_t rx_bytes;
 	float tx_kbps;
 	float rx_kbps;
+
+	Mode mode;
+	float bad_rtt;
+	float bad_loss;
+	float ugly_rtt;
+	float ugly_loss;
+	Uint32 mode_entered;
+	Uint32 mode_reset;
+	Uint32 mode_keep_time;
+	Uint32 mode_step;
 
 };
 
