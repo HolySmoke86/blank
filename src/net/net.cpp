@@ -85,6 +85,7 @@ uint16_t Connection::Send(UDPpacket &udp_pack, UDPsocket sock) {
 	}
 
 	if (HasHandler()) {
+		Handler().PacketOut(udp_pack);
 		Handler().PacketSent(seq);
 	}
 
@@ -115,6 +116,7 @@ void Connection::Received(const UDPpacket &udp_pack) {
 	}
 
 	Packet::TControl ctrl_new = pack.header.ctrl;
+	Handler().PacketIn(udp_pack);
 	Handler().Handle(udp_pack);
 
 	if (diff > 0) {
@@ -158,14 +160,20 @@ ConnectionHandler::ConnectionHandler()
 , packet_loss(0.0f)
 , stamp_cursor(15)
 , stamp_last(0)
-, rtt(64.0f) {
+, rtt(64.0f)
+, next_sample(1000)
+, tx_bytes(0)
+, rx_bytes(0)
+, tx_kbps(0.0f)
+, rx_kbps(0.0f) {
 	Uint32 now = SDL_GetTicks();
 	for (Uint32 &s : stamps) {
 		s = now;
 	}
+	next_sample += now;
 }
 
-void ConnectionHandler::PacketSent(uint16_t seq) {
+void ConnectionHandler::PacketSent(uint16_t seq) noexcept {
 	if (!SamplePacket(seq)) {
 		return;
 	}
@@ -216,6 +224,27 @@ bool ConnectionHandler::SamplePacket(std::uint16_t seq) const noexcept {
 int ConnectionHandler::HeadDiff(std::uint16_t seq) const noexcept {
 	int16_t diff = int16_t(seq) - int16_t(stamp_last);
 	return diff / 8;
+}
+
+void ConnectionHandler::PacketIn(const UDPpacket &pack) noexcept {
+	rx_bytes += pack.len + 20; // I know, I know, it's an estimate (about 48 for IPv6)
+	UpdateStats();
+}
+
+void ConnectionHandler::PacketOut(const UDPpacket &pack) noexcept {
+	tx_bytes += pack.len + 20;
+	UpdateStats();
+}
+
+void ConnectionHandler::UpdateStats() noexcept {
+	Uint32 now = SDL_GetTicks();
+	if (now >= next_sample) {
+		tx_kbps = float(tx_bytes) * (1.0f / 1024.0f);
+		rx_kbps = float(rx_bytes) * (1.0f / 1024.0f);
+		tx_bytes = 0;
+		rx_bytes = 0;
+		next_sample += 1000;
+	}
 }
 
 

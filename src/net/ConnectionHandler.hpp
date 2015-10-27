@@ -17,10 +17,17 @@ public:
 	float PacketLoss() const noexcept { return packet_loss; }
 	/// smooth average round trip time in milliseconds
 	float RoundTripTime() const noexcept { return rtt; }
+	/// estimated kilobytes transferred per second
+	float Upstream() const noexcept { return tx_kbps; }
+	/// estimated kilobytes received per second
+	float Downstream() const noexcept { return rx_kbps; }
 
-	void PacketSent(std::uint16_t);
+	void PacketSent(std::uint16_t) noexcept;
 	void PacketLost(std::uint16_t);
 	void PacketReceived(std::uint16_t);
+
+	void PacketIn(const UDPpacket &) noexcept;
+	void PacketOut(const UDPpacket &) noexcept;
 
 	void Handle(const UDPpacket &);
 
@@ -31,6 +38,7 @@ private:
 	void UpdateRTT(std::uint16_t) noexcept;
 	bool SamplePacket(std::uint16_t) const noexcept;
 	int HeadDiff(std::uint16_t) const noexcept;
+	void UpdateStats() noexcept;
 
 	// called as soon as the remote end ack'd given packet
 	virtual void OnPacketReceived(std::uint16_t) { }
@@ -60,6 +68,12 @@ private:
 	std::size_t stamp_cursor;
 	std::uint16_t stamp_last;
 	float rtt;
+
+	Uint32 next_sample;
+	std::size_t tx_bytes;
+	std::size_t rx_bytes;
+	float tx_kbps;
+	float rx_kbps;
 
 };
 
