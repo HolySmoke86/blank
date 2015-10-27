@@ -62,7 +62,9 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 , stat_timer(1000)
 , sky(master.GetEnv().loader.LoadCubeMap("skybox"))
 , update_status()
-, chat(master.GetEnv(), *this, *this) {
+, chat(master.GetEnv(), *this, *this)
+, time_skipped(0)
+, packets_skipped(0) {
 	if (!save.Exists()) {
 		save.Write(master.GetWorldConf());
 	}
@@ -163,7 +165,14 @@ void InteractiveState::Update(int dt) {
 		hud.FocusNone();
 	}
 	if (world_dt > 0) {
-		input.PushPlayerUpdate(world_dt);
+		if (input.UpdateImportant() || packets_skipped >= master.NetStat().SuggestedPacketSkip()) {
+			input.PushPlayerUpdate(time_skipped + world_dt);
+			time_skipped = 0;
+			packets_skipped = 0;
+		} else {
+			time_skipped += world_dt;
+			++packets_skipped;
+		}
 	}
 	hud.Display(res.block_types[player.GetInventorySlot() + 1]);
 	if (stat_timer.Hit()) {

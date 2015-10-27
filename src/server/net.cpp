@@ -180,6 +180,7 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 , spawns()
 , confirm_wait(0)
 , entity_updates()
+, entity_updates_skipped(0)
 , player_update_state()
 , player_update_pack(0)
 , player_update_timer(1500)
@@ -211,7 +212,7 @@ void ClientConnection::Update(int dt) {
 				// they're the same
 				if (CanDespawn(*global_iter)) {
 					SendDespawn(*local_iter);
-				} else {
+				} else if (SendingUpdates()) {
 					// update
 					QueueUpdate(*local_iter);
 				}
@@ -308,6 +309,10 @@ void ClientConnection::SendDespawn(SpawnStatus &status) {
 	++confirm_wait;
 }
 
+bool ClientConnection::SendingUpdates() const noexcept {
+	return entity_updates_skipped >= NetStat().SuggestedPacketSkip();
+}
+
 void ClientConnection::QueueUpdate(SpawnStatus &status) {
 	// don't send updates while spawn not ack'd or despawn sent
 	if (status.spawn_pack == -1 && status.despawn_pack == -1) {
@@ -316,6 +321,11 @@ void ClientConnection::QueueUpdate(SpawnStatus &status) {
 }
 
 void ClientConnection::SendUpdates() {
+	if (!SendingUpdates()) {
+		entity_updates.clear();
+		++entity_updates_skipped;
+		return;
+	}
 	auto base = PlayerChunks().Base();
 	auto pack = Prepare<Packet::EntityUpdate>();
 	pack.WriteChunkBase(base);
@@ -335,6 +345,7 @@ void ClientConnection::SendUpdates() {
 		Send(Packet::EntityUpdate::GetSize(entity_pos));
 	}
 	entity_updates.clear();
+	entity_updates_skipped = 0;
 }
 
 void ClientConnection::CheckPlayerFix() {

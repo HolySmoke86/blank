@@ -90,6 +90,8 @@ private:
 
 	void SendSpawn(SpawnStatus &);
 	void SendDespawn(SpawnStatus &);
+	/// true if updates are pushed to the client this frame
+	bool SendingUpdates() const noexcept;
 	void QueueUpdate(SpawnStatus &);
 	void SendUpdates();
 
@@ -106,6 +108,7 @@ private:
 	unsigned int confirm_wait;
 
 	std::vector<SpawnStatus *> entity_updates;
+	unsigned int entity_updates_skipped;
 
 	EntityState player_update_state;
 	std::uint16_t player_update_pack;

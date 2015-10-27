@@ -20,6 +20,7 @@ class NetworkedInput
 public:
 	explicit NetworkedInput(World &, Player &, Client &);
 
+	bool UpdateImportant() const noexcept;
 	void Update(Entity &, float dt) override;
 	void PushPlayerUpdate(int dt);
 	void MergePlayerCorrection(std::uint16_t, const EntityState &);
@@ -44,6 +45,9 @@ private:
 	};
 	std::list<PlayerHistory> player_hist;
 
+	glm::vec3 old_movement;
+
+	std::uint8_t old_actions;
 	std::uint8_t actions;
 
 };

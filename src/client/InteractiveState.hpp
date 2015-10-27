@@ -101,6 +101,9 @@ private:
 
 	ChatState chat;
 
+	int time_skipped;
+	unsigned int packets_skipped;
+
 };
 
 }

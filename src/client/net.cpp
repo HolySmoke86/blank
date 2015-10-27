@@ -321,8 +321,14 @@ NetworkedInput::NetworkedInput(World &world, Player &player, Client &client)
 : PlayerController(world, player)
 , client(client)
 , player_hist()
+, old_movement(0.0f)
+, old_actions(0)
 , actions(0) {
 
+}
+
+bool NetworkedInput::UpdateImportant() const noexcept {
+	return old_actions != actions || !iszero(old_movement - GetMovement());
 }
 
 void NetworkedInput::Update(Entity &, float dt) {
@@ -351,6 +357,8 @@ void NetworkedInput::PushPlayerUpdate(int dt) {
 		entry->packet = packet;
 		player_hist.splice(player_hist.end(), player_hist, entry);
 	}
+	old_movement = GetMovement();
+	old_actions = actions;
 }
 
 void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corrected_state) {

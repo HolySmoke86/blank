@@ -21,6 +21,8 @@ public:
 
 	/// get recommended mode of operation
 	Mode GetMode() const noexcept { return mode; }
+	/// according to current mode, drop this many unimportant packets
+	unsigned int SuggestedPacketSkip() const noexcept { return (1 << mode) - 1; }
 
 	/// packet loss as factor
 	float PacketLoss() const noexcept { return packet_loss; }
