@@ -62,7 +62,6 @@ public:
 	glm::vec3 ControlForce(const EntityState &) const noexcept;
 
 	const glm::vec3 &Velocity() const noexcept { return state.velocity; }
-	void Velocity(const glm::vec3 &v) noexcept { state.velocity = v; }
 
 	bool Moving() const noexcept {
 		return dot(Velocity(), Velocity()) > std::numeric_limits<float>::epsilon();
@@ -83,7 +82,6 @@ public:
 
 	/// orientation of local coordinate system
 	const glm::quat &Orientation() const noexcept { return state.orient; }
-	void Orientation(const glm::quat &o) noexcept { state.orient = o; }
 
 	/// orientation of head within local coordinate system, in radians
 	float Pitch() const noexcept { return state.pitch; }
@@ -97,6 +95,8 @@ public:
 	glm::mat4 ViewTransform(const glm::ivec3 &reference) const noexcept;
 	/// get a ray in entity's face direction originating from center of vision
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
+
+	const glm::vec3 &Heading() const noexcept { return heading; }
 
 	void SetState(const EntityState &s) noexcept { state = s; UpdateModel(); }
 	const EntityState &GetState() const noexcept { return state; }
@@ -116,6 +116,8 @@ public:
 
 private:
 	void UpdateModel() noexcept;
+	void UpdateView() noexcept;
+	void UpdateHeading() noexcept;
 
 private:
 	EntityController *ctrl;
@@ -126,6 +128,13 @@ private:
 
 	AABB bounds;
 	EntityState state;
+
+	/// local transform of eyes
+	/// if this entity has no model, the eyes are assumed to
+	/// be at local origin and oriented towards -Z
+	glm::mat4 view_local;
+	/// normalized velocity or heading if standing still
+	glm::vec3 heading;
 
 	// TODO: I'd prefer a drag solution
 	float max_vel;

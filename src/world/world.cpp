@@ -30,6 +30,7 @@ Entity::Entity() noexcept
 , name("anonymous")
 , bounds()
 , state()
+, heading(0.0f, 0.0f, -1.0f)
 , max_vel(5.0f)
 , max_force(25.0f)
 , ref_count(0)
@@ -112,20 +113,14 @@ glm::mat4 Entity::Transform(const glm::ivec3 &reference) const noexcept {
 }
 
 glm::mat4 Entity::ViewTransform(const glm::ivec3 &reference) const noexcept {
-	glm::mat4 transform = Transform(reference);
-	if (model) {
-		transform *= model.EyesTransform();
-	}
+	glm::mat4 transform = view_local;
+	transform[3] += glm::vec4(state.RelativePosition(reference), 0.0f);
 	return transform;
 }
 
 Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
 	glm::mat4 transform = ViewTransform(chunk_offset);
-	glm::vec4 from = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	from /= from.w;
-	glm::vec4 to = transform * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f);
-	to /= to.w;
-	return Ray{ glm::vec3(from), glm::normalize(glm::vec3(to - from)) };
+	return Ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
 }
 
 void Entity::UpdateModel() noexcept {
@@ -143,8 +138,30 @@ void Entity::UpdateModel() noexcept {
 }
 
 void Entity::Update(float dt) {
+	UpdateView();
+	UpdateHeading();
 	if (HasController()) {
 		GetController().Update(*this, dt);
+	}
+}
+
+void Entity::UpdateView() noexcept {
+	// create local transform
+	view_local = Transform(ChunkCoords());
+	// clear the translation part
+	view_local[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+	// add the model's eyes translation, if any
+	if (model) {
+		view_local *= model.EyesTransform();
+	}
+}
+
+void Entity::UpdateHeading() noexcept {
+	if (Moving()) {
+		heading = normalize(Velocity());
+	} else {
+		// use -Z (forward axis) of local view transform
+		heading = -glm::vec3(view_local[2]);
 	}
 }
 
@@ -215,26 +232,19 @@ void EntityState::AdjustPosition() noexcept {
 }
 
 void EntityState::AdjustHeading() noexcept {
-	while (pitch > PI / 2) {
-		pitch = PI / 2;
-	}
-	while (pitch < -PI / 2) {
-		pitch = -PI / 2;
-	}
+	glm::clamp(pitch, -PI_0p5, PI_0p5);
 	while (yaw > PI) {
-		yaw -= PI * 2;
+		yaw -= PI_2p0;
 	}
 	while (yaw < -PI) {
-		yaw += PI * 2;
+		yaw += PI_2p0;
 	}
 }
 
 glm::mat4 EntityState::Transform(const glm::ivec3 &reference) const noexcept {
 	const glm::vec3 translation = RelativePosition(reference);
 	glm::mat4 transform(toMat4(orient));
-	transform[3].x = translation.x;
-	transform[3].y = translation.y;
-	transform[3].z = translation.z;
+	transform[3] = glm::vec4(translation, 1.0f);
 	return transform;
 }
 

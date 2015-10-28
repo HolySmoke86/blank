@@ -86,7 +86,7 @@ void AIController::Update(Entity &e, float dt) {
 
 	if (e.Moving()) {
 		// orient head towards heading
-		glm::vec3 heading(Heading(e.GetState()));
+		glm::vec3 heading(e.Heading());
 		float tgt_pitch = std::atan(heading.y / length(glm::vec2(heading.x, heading.z)));
 		float tgt_yaw = std::atan2(-heading.x, -heading.z);
 		e.SetHead(tgt_pitch, tgt_yaw);
@@ -95,44 +95,35 @@ void AIController::Update(Entity &e, float dt) {
 
 glm::vec3 AIController::ControlForce(const Entity &entity, const EntityState &state) const {
 	if (IsHalted()) {
-		return GetHaltForce(state);
+		return GetHaltForce(entity, state);
 	}
 	glm::vec3 force(0.0f);
 	if (IsFleeing()) {
-		if (MaxOutForce(force, GetFleeForce(state), entity.MaxControlForce())) {
+		if (MaxOutForce(force, GetFleeForce(entity, state), entity.MaxControlForce())) {
 			return force;
 		}
 	}
 	if (IsSeeking()) {
-		if (MaxOutForce(force, GetSeekForce(state), entity.MaxControlForce())) {
+		if (MaxOutForce(force, GetSeekForce(entity, state), entity.MaxControlForce())) {
 			return force;
 		}
 	}
 	if (IsEvading()) {
-		if (MaxOutForce(force, GetEvadeForce(state), entity.MaxControlForce())) {
+		if (MaxOutForce(force, GetEvadeForce(entity, state), entity.MaxControlForce())) {
 			return force;
 		}
 	}
 	if (IsPursuing()) {
-		if (MaxOutForce(force, GetPursuitForce(state), entity.MaxControlForce())) {
+		if (MaxOutForce(force, GetPursuitForce(entity, state), entity.MaxControlForce())) {
 			return force;
 		}
 	}
 	if (IsWandering()) {
-		if (MaxOutForce(force, GetWanderForce(state), entity.MaxControlForce())) {
+		if (MaxOutForce(force, GetWanderForce(entity, state), entity.MaxControlForce())) {
 			return force;
 		}
 	}
 	return force;
-}
-
-glm::vec3 AIController::Heading(const EntityState &state) noexcept {
-	if (dot(state.velocity, state.velocity) > std::numeric_limits<float>::epsilon()) {
-		return normalize(state.velocity);
-	} else {
-		float cp = std::cos(state.pitch);
-		return glm::vec3(std::cos(state.yaw) * cp, std::sin(state.yaw) * cp, std::sin(state.pitch));
-	}
 }
 
 Player *AIController::ClosestVisiblePlayer(const Entity &e) noexcept {
@@ -145,17 +136,17 @@ Player *AIController::ClosestVisiblePlayer(const Entity &e) noexcept {
 
 		// distance test
 		const glm::vec3 diff(pe.AbsoluteDifference(e));
-		float dist = length_squared(diff);
+		float dist = length(diff);
 		if (dist > distance) continue;
 
 		// FOV test, 45° in each direction
-		if (dot(normalize(diff), aim.dir) < sight_angle) {
+		if (dot(diff / dist, aim.dir) < sight_angle) {
 			continue;
 		}
 
 		// LOS test, assumes all entities are see-through
 		WorldCollision col;
-		if (world.Intersection(aim, glm::mat4(1.0f), reference, col) && col.depth * col.depth < dist) {
+		if (world.Intersection(aim, glm::mat4(1.0f), reference, col) && col.depth < dist) {
 			continue;
 		}
 
@@ -228,7 +219,7 @@ void AIController::SetHaltSpeed(float speed) noexcept {
 	halt_speed = speed;
 }
 
-glm::vec3 AIController::GetHaltForce(const EntityState &state) const noexcept {
+glm::vec3 AIController::GetHaltForce(const Entity &, const EntityState &state) const noexcept {
 	return Halt(state, halt_speed);
 }
 
@@ -270,7 +261,7 @@ const Entity &AIController::GetFleeTarget() const noexcept {
 	return *flee_target;
 }
 
-glm::vec3 AIController::GetFleeForce(const EntityState &state) const noexcept {
+glm::vec3 AIController::GetFleeForce(const Entity &, const EntityState &state) const noexcept {
 	return Flee(state, GetFleeTarget().GetState(), flee_speed, 2.0f);
 }
 
@@ -312,7 +303,7 @@ const Entity &AIController::GetSeekTarget() const noexcept {
 	return *seek_target;
 }
 
-glm::vec3 AIController::GetSeekForce(const EntityState &state) const noexcept {
+glm::vec3 AIController::GetSeekForce(const Entity &, const EntityState &state) const noexcept {
 	return Seek(state, GetSeekTarget().GetState(), seek_speed, 2.0f);
 }
 
@@ -354,7 +345,7 @@ const Entity &AIController::GetEvadeTarget() const noexcept {
 	return *evade_target;
 }
 
-glm::vec3 AIController::GetEvadeForce(const EntityState &state) const noexcept{
+glm::vec3 AIController::GetEvadeForce(const Entity &, const EntityState &state) const noexcept{
 	glm::vec3 cur_diff(state.Diff(GetEvadeTarget().GetState()));
 	float time_estimate = length(cur_diff) / evade_speed;
 	EntityState pred_state(GetEvadeTarget().GetState());
@@ -400,7 +391,7 @@ const Entity &AIController::GetPursuitTarget() const noexcept {
 	return *pursuit_target;
 }
 
-glm::vec3 AIController::GetPursuitForce(const EntityState &state) const noexcept {
+glm::vec3 AIController::GetPursuitForce(const Entity &, const EntityState &state) const noexcept {
 	glm::vec3 cur_diff(state.Diff(GetPursuitTarget().GetState()));
 	float time_estimate = length(cur_diff) / pursuit_speed;
 	EntityState pred_state(GetPursuitTarget().GetState());
@@ -434,8 +425,8 @@ void AIController::SetWanderParams(
 	wander_disp = displacement;
 }
 
-glm::vec3 AIController::GetWanderForce(const EntityState &state) const noexcept {
-	glm::vec3 wander_target(normalize(Heading(state) * wander_dist + wander_pos) * wander_speed);
+glm::vec3 AIController::GetWanderForce(const Entity &e, const EntityState &state) const noexcept {
+	glm::vec3 wander_target(normalize(e.Heading() * wander_dist + wander_pos) * wander_speed);
 	return TargetVelocity(wander_target, state, 0.5f);
 }
 

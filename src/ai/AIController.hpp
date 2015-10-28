@@ -28,8 +28,6 @@ public:
 
 	glm::vec3 ControlForce(const Entity &, const EntityState &) const override;
 
-	static glm::vec3 Heading(const EntityState &) noexcept;
-
 	/// get the closest player that given entity can see
 	/// returns nullptr if none are in sight
 	Player *ClosestVisiblePlayer(const Entity &) noexcept;
@@ -54,7 +52,7 @@ public:
 	void ExitHalt() noexcept;
 	bool IsHalted() const noexcept;
 	void SetHaltSpeed(float) noexcept;
-	glm::vec3 GetHaltForce(const EntityState &) const noexcept;
+	glm::vec3 GetHaltForce(const Entity &, const EntityState &) const noexcept;
 
 	void StartFleeing() noexcept;
 	void StopFleeing() noexcept;
@@ -63,7 +61,7 @@ public:
 	void SetFleeSpeed(float) noexcept;
 	Entity &GetFleeTarget() noexcept;
 	const Entity &GetFleeTarget() const noexcept;
-	glm::vec3 GetFleeForce(const EntityState &) const noexcept;
+	glm::vec3 GetFleeForce(const Entity &, const EntityState &) const noexcept;
 
 	void StartSeeking() noexcept;
 	void StopSeeking() noexcept;
@@ -72,7 +70,7 @@ public:
 	void SetSeekSpeed(float) noexcept;
 	Entity &GetSeekTarget() noexcept;
 	const Entity &GetSeekTarget() const noexcept;
-	glm::vec3 GetSeekForce(const EntityState &) const noexcept;
+	glm::vec3 GetSeekForce(const Entity &, const EntityState &) const noexcept;
 
 	void StartEvading() noexcept;
 	void StopEvading() noexcept;
@@ -81,7 +79,7 @@ public:
 	void SetEvadeSpeed(float) noexcept;
 	Entity &GetEvadeTarget() noexcept;
 	const Entity &GetEvadeTarget() const noexcept;
-	glm::vec3 GetEvadeForce(const EntityState &) const noexcept;
+	glm::vec3 GetEvadeForce(const Entity &, const EntityState &) const noexcept;
 
 	void StartPursuing() noexcept;
 	void StopPursuing() noexcept;
@@ -90,7 +88,7 @@ public:
 	void SetPursuitSpeed(float) noexcept;
 	Entity &GetPursuitTarget() noexcept;
 	const Entity &GetPursuitTarget() const noexcept;
-	glm::vec3 GetPursuitForce(const EntityState &) const noexcept;
+	glm::vec3 GetPursuitForce(const Entity &, const EntityState &) const noexcept;
 
 	/// start wandering randomly
 	void StartWandering() noexcept;
@@ -106,7 +104,7 @@ public:
 		float radius = 1.0f,
 		float displacement = 1.0f
 	) noexcept;
-	glm::vec3 GetWanderForce(const EntityState &) const noexcept;
+	glm::vec3 GetWanderForce(const Entity &, const EntityState &) const noexcept;
 
 private:
 	World &world;
