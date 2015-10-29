@@ -666,7 +666,27 @@ void World::Render(Viewport &viewport) {
 	entity_prog.SetFogDensity(fog_density);
 
 	for (Entity &entity : entities) {
-		entity.Render(entity.Transform(players.front().GetEntity().ChunkCoords()), entity_prog);
+		glm::mat4 M(entity.Transform(players.front().GetEntity().ChunkCoords()));
+		if (!CullTest(entity.Bounds(), entity_prog.GetVP() * M)) {
+			entity.Render(M, entity_prog);
+		}
+	}
+}
+
+namespace {
+
+PrimitiveMesh::Buffer debug_buf;
+
+}
+
+void World::RenderDebug(Viewport &viewport) {
+	PrimitiveMesh debug_mesh;
+	PlainColor &prog = viewport.WorldColorProgram();
+	for (const Entity &entity : entities) {
+		debug_buf.OutlineBox(entity.Bounds(), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		debug_mesh.Update(debug_buf);
+		prog.SetM(entity.Transform(players.front().GetEntity().ChunkCoords()));
+		debug_mesh.DrawLines();
 	}
 }
 

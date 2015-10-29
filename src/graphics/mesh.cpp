@@ -4,6 +4,8 @@
 #include "SkyBoxMesh.hpp"
 #include "SpriteMesh.hpp"
 
+#include "../model/geometry.hpp"
+
 #include <algorithm>
 #include <iostream>
 
@@ -88,6 +90,28 @@ void PrimitiveMesh::Buffer::FillRect(
 	colors.resize(4, color);
 
 	indices.assign({ 0, 2, 1, 1, 2, 3 });
+}
+
+void PrimitiveMesh::Buffer::OutlineBox(const AABB &box, const glm::vec4 &color) {
+	Clear();
+	Reserve(8, 24);
+
+	vertices.emplace_back(box.min.x, box.min.y, box.min.z);
+	vertices.emplace_back(box.min.x, box.min.y, box.max.z);
+	vertices.emplace_back(box.min.x, box.max.y, box.min.z);
+	vertices.emplace_back(box.min.x, box.max.y, box.max.z);
+	vertices.emplace_back(box.max.x, box.min.y, box.min.z);
+	vertices.emplace_back(box.max.x, box.min.y, box.max.z);
+	vertices.emplace_back(box.max.x, box.max.y, box.min.z);
+	vertices.emplace_back(box.max.x, box.max.y, box.max.z);
+
+	colors.resize(8, color);
+
+	indices.assign({
+		0, 1, 1, 3, 3, 2, 2, 0, // left
+		4, 5, 5, 7, 7, 6, 6, 4, // right
+		0, 4, 1, 5, 3, 7, 2, 6, // others
+	});
 }
 
 

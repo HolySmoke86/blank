@@ -162,6 +162,9 @@ void MasterState::Render(Viewport &viewport) {
 	if (config.video.world) {
 		chunk_renderer.Render(viewport);
 		world.Render(viewport);
+		if (config.video.debug) {
+			world.RenderDebug(viewport);
+		}
 		sky.Render(viewport);
 	}
 	hud.Render(viewport);

@@ -10,6 +10,8 @@
 
 namespace blank {
 
+struct AABB;
+
 class PrimitiveMesh {
 
 public:
@@ -50,6 +52,11 @@ public:
 			float w, float h,
 			const glm::vec4 &color = glm::vec4(0.0f),
 			const glm::vec2 &pivot = glm::vec2(0.0f)
+		);
+
+		void OutlineBox(
+			const AABB &,
+			const glm::vec4 &color = glm::vec4(0.0f)
 		);
 
 	};

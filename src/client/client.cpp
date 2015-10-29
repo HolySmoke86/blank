@@ -193,6 +193,9 @@ void InteractiveState::Render(Viewport &viewport) {
 	if (master.GetConfig().video.world) {
 		chunk_renderer.Render(viewport);
 		world.Render(viewport);
+		if (master.GetConfig().video.debug) {
+			world.RenderDebug(viewport);
+		}
 		sky.Render(viewport);
 	}
 	hud.Render(viewport);

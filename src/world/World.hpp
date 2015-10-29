@@ -101,6 +101,7 @@ public:
 	void Update(Entity &, float dt);
 
 	void Render(Viewport &);
+	void RenderDebug(Viewport &);
 
 private:
 	using EntityHandle = std::list<Entity>::iterator;
