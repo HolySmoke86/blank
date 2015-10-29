@@ -128,15 +128,9 @@ Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
 
 void Entity::UpdateModel() noexcept {
 	state.AdjustHeading();
+	state.orient = glm::quat(glm::vec3(0.0f, state.yaw, 0.0f));
 	if (model) {
-		Part::State &body_state = model.BodyState();
-		Part::State &eyes_state = model.EyesState();
-		if (&body_state != &eyes_state) {
-			body_state.orientation = glm::quat(glm::vec3(0.0f, state.yaw, 0.0f));
-			eyes_state.orientation = glm::quat(glm::vec3(state.pitch, 0.0f, 0.0f));
-		} else {
-			eyes_state.orientation = glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f));
-		}
+		model.EyesState().orientation = glm::quat(glm::vec3(state.pitch, 0.0f, 0.0f));
 	}
 }
 
