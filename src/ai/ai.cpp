@@ -36,6 +36,9 @@ AIController::AIController(World &world, GaloisLFSR &rand)
 , decision_timer(1.0f)
 , halted(false)
 , halt_speed(1.0f)
+, avoid_obstacles(true)
+, obstacle_box{ glm::vec3(0.0f), glm::vec3(0.0f) }
+, obstacle_transform(1.0f)
 , fleeing(false)
 , flee_target(nullptr)
 , flee_speed(5.0f)
@@ -73,6 +76,16 @@ void AIController::Update(Entity &e, float dt) {
 	decision_timer.Update(dt);
 	state->Update(*this, e, dt);
 
+	if (avoid_obstacles && e.Moving()) {
+		obstacle_box = e.Bounds();
+		obstacle_box.min.z = -e.Speed();
+		obstacle_box.max.x = 0.0f;
+		// our box is oriented for -Z velocity
+		obstacle_transform = glm::mat4(find_rotation(glm::vec3(0.0f, 0.0f, -1.0f), e.Heading()));
+		// and positioned relative to the entity's chunk
+		obstacle_transform[3] = glm::vec4(e.GetState().block_pos, 1.0f);
+	}
+
 	if (wandering) {
 		glm::vec3 displacement(
 			random.SNorm() * wander_disp,
@@ -98,6 +111,11 @@ glm::vec3 AIController::ControlForce(const Entity &entity, const EntityState &st
 		return GetHaltForce(entity, state);
 	}
 	glm::vec3 force(0.0f);
+	if (IsAvoidingObstacles() && entity.Moving()) {
+		if (MaxOutForce(force, GetObstacleAvoidanceForce(entity, state), entity.MaxControlForce())) {
+			return force;
+		}
+	}
 	if (IsFleeing()) {
 		if (MaxOutForce(force, GetFleeForce(entity, state), entity.MaxControlForce())) {
 			return force;
@@ -221,6 +239,63 @@ void AIController::SetHaltSpeed(float speed) noexcept {
 
 glm::vec3 AIController::GetHaltForce(const Entity &, const EntityState &state) const noexcept {
 	return Halt(state, halt_speed);
+}
+
+// obstacle avoidance
+
+void AIController::StartAvoidingObstacles() noexcept {
+	avoid_obstacles = true;
+}
+
+void AIController::StopAvoidingObstacles() noexcept {
+	avoid_obstacles = false;
+}
+
+bool AIController::IsAvoidingObstacles() const noexcept {
+	return avoid_obstacles;
+}
+
+namespace {
+
+std::vector<WorldCollision> col;
+
+}
+
+glm::vec3 AIController::GetObstacleAvoidanceForce(const Entity &e, const EntityState &state) const noexcept {
+	if (!e.Moving()) {
+		return glm::vec3(0.0f);
+	}
+	col.clear();
+	if (!world.Intersection(obstacle_box, obstacle_transform, e.ChunkCoords(), col)) {
+		return glm::vec3(0.0f);
+	}
+	// find the nearest block
+	WorldCollision *nearest = nullptr;
+	glm::vec3 difference(0.0f);
+	float distance = std::numeric_limits<float>::infinity();
+	for (WorldCollision &c : col) {
+		// diff points from block to state
+		glm::vec3 diff = state.RelativePosition(c.ChunkPos()) - c.BlockCoords();
+		float dist = length_squared(diff);
+		if (dist < distance) {
+			nearest = &c;
+			difference = diff;
+			distance = dist;
+		}
+	}
+	if (!nearest) {
+		// intersection test lied to us
+		return glm::vec3(0.0f);
+	}
+	// and steer away from it
+	// to_go is the distance between our position and the
+	// point on the "velocity ray" closest to obstacle
+	float to_go = dot(difference, e.Heading());
+	// point is our future position if we keep going our way
+	glm::vec3 point(e.GetState().block_pos + e.Heading() * to_go);
+	// now steer away in the direction of (point - block)
+	// with a magniture proportional to speed/distance
+	return normalize(point - nearest->BlockCoords()) * (e.Speed() / std::sqrt(distance));
 }
 
 // flee

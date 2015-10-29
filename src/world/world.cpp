@@ -157,9 +157,11 @@ void Entity::UpdateView() noexcept {
 }
 
 void Entity::UpdateHeading() noexcept {
-	if (Moving()) {
-		heading = normalize(Velocity());
+	speed = length(Velocity());
+	if (speed > std::numeric_limits<float>::epsilon()) {
+		heading = Velocity() / speed;
 	} else {
+		speed = 0.0f;
 		// use -Z (forward axis) of local view transform
 		heading = -glm::vec3(view_local[2]);
 	}
@@ -474,6 +476,15 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 	AABB box = e.Bounds();
 	Chunk::Pos reference = s.chunk_pos;
 	glm::mat4 M = s.Transform(reference);
+	return Intersection(box, M, reference, col);
+}
+
+bool World::Intersection(
+	const AABB &box,
+	const glm::mat4 &M,
+	const glm::ivec3 &reference,
+	std::vector<WorldCollision> &col
+) {
 	bool any = false;
 	for (Chunk &cur_chunk : chunks) {
 		if (manhattan_radius(cur_chunk.Position() - reference) > 1) {
@@ -487,7 +498,6 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 	}
 	return any;
 }
-
 
 void World::Update(int dt) {
 	float fdt(dt * 0.001f);

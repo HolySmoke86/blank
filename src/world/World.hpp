@@ -62,10 +62,15 @@ public:
 		EntityCollision &);
 
 	/// check if given entity intersects with the world
-//	bool Intersection(const Entity &e, std::vector<WorldCollision> &col) {
-//		return Intersection(e, e.GetState(), col);
-//	}
 	bool Intersection(const Entity &e, const EntityState &, std::vector<WorldCollision> &);
+
+	/// check if given box (M * AABB) intersects with the world
+	/// M is assumed to be calculated in reference to given chunk coords
+	bool Intersection(
+		const AABB &box,
+		const glm::mat4 &M,
+		const glm::ivec3 &reference,
+		std::vector<WorldCollision> &);
 
 	const BlockTypeRegistry &BlockTypes() noexcept { return block_type; }
 	ChunkStore &Chunks() noexcept { return chunks; }

@@ -1,9 +1,40 @@
 #include "geometry.hpp"
 
 #include <limits>
+#include <glm/gtx/matrix_cross_product.hpp>
+#include <glm/gtx/optimum_pow.hpp>
+#include <glm/gtx/transform.hpp>
 
 
 namespace blank {
+
+glm::mat3 find_rotation(const glm::vec3 &a, const glm::vec3 &b) noexcept {
+	glm::vec3 v(cross(a, b));
+	if (iszero(v)) {
+		// a and b are parallel
+		if (iszero(a - b)) {
+			// a and b are identical
+			return glm::mat3(1.0f);
+		} else {
+			// a and b are opposite
+			// create arbitrary unit vector perpendicular to a and
+			// rotate 180° around it
+			glm::vec3 arb(a);
+			if (std::abs(a.x - 1.0f) > std::numeric_limits<float>::epsilon()) {
+				arb.x += 1.0f;
+			} else {
+				arb.y += 1.0f;
+			}
+			glm::vec3 axis(normalize(cross(a, arb)));
+			return glm::mat3(glm::rotate(PI, axis));
+		}
+	}
+	float mv = length_squared(v);
+	float c = dot(a, b);
+	float f = (1 - c) / mv;
+	glm::mat3 vx(matrixCross3(v));
+	return glm::mat3(1.0f) + vx + (pow2(vx) * f);
+}
 
 bool Intersection(
 	const Ray &ray,

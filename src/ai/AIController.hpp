@@ -2,6 +2,7 @@
 #define BLANK_AI_AICONTROLLER_HPP_
 
 #include "../app/IntervalTimer.hpp"
+#include "../model/geometry.hpp"
 #include "../world/EntityController.hpp"
 
 #include <glm/glm.hpp>
@@ -53,6 +54,11 @@ public:
 	bool IsHalted() const noexcept;
 	void SetHaltSpeed(float) noexcept;
 	glm::vec3 GetHaltForce(const Entity &, const EntityState &) const noexcept;
+
+	void StartAvoidingObstacles() noexcept;
+	void StopAvoidingObstacles() noexcept;
+	bool IsAvoidingObstacles() const noexcept;
+	glm::vec3 GetObstacleAvoidanceForce(const Entity &, const EntityState &) const noexcept;
 
 	void StartFleeing() noexcept;
 	void StopFleeing() noexcept;
@@ -121,6 +127,10 @@ private:
 
 	bool halted;
 	float halt_speed;
+
+	bool avoid_obstacles;
+	AABB obstacle_box;
+	glm::mat4 obstacle_transform;
 
 	bool fleeing;
 	Entity *flee_target;

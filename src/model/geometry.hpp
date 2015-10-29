@@ -57,6 +57,9 @@ T manhattan_radius(const glm::tvec3<T> &v) noexcept {
 }
 
 
+glm::mat3 find_rotation(const glm::vec3 &a, const glm::vec3 &b) noexcept;
+
+
 struct AABB {
 	glm::vec3 min;
 	glm::vec3 max;

@@ -63,10 +63,6 @@ public:
 
 	const glm::vec3 &Velocity() const noexcept { return state.velocity; }
 
-	bool Moving() const noexcept {
-		return dot(Velocity(), Velocity()) > std::numeric_limits<float>::epsilon();
-	}
-
 	const glm::vec3 &Position() const noexcept { return state.block_pos; }
 	void Position(const glm::ivec3 &, const glm::vec3 &) noexcept;
 	void Position(const glm::vec3 &) noexcept;
@@ -96,6 +92,11 @@ public:
 	/// get a ray in entity's face direction originating from center of vision
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
 
+	/// true if this entity's position will change (significantly) the next update
+	bool Moving() const noexcept { return speed > 0.0f; }
+	/// magnitude of velocity
+	float Speed() const noexcept { return speed; }
+	/// normalized velocity or heading if standing still
 	const glm::vec3 &Heading() const noexcept { return heading; }
 
 	void SetState(const EntityState &s) noexcept { state = s; UpdateModel(); }
@@ -133,7 +134,7 @@ private:
 	/// if this entity has no model, the eyes are assumed to
 	/// be at local origin and oriented towards -Z
 	glm::mat4 view_local;
-	/// normalized velocity or heading if standing still
+	float speed;
 	glm::vec3 heading;
 
 	// TODO: I'd prefer a drag solution
