@@ -158,9 +158,7 @@ void MasterState::Update(int dt) {
 }
 
 void MasterState::Render(Viewport &viewport) {
-	viewport.WorldPosition(
-		player.GetEntity().Transform(player.GetEntity().ChunkCoords())
-		* player.GetEntity().GetModel().EyesTransform());
+	viewport.WorldPosition(player.GetEntity().ViewTransform(player.GetEntity().ChunkCoords()));
 	if (config.video.world) {
 		chunk_renderer.Render(viewport);
 		world.Render(viewport);

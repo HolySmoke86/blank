@@ -189,9 +189,7 @@ void InteractiveState::Update(int dt) {
 }
 
 void InteractiveState::Render(Viewport &viewport) {
-	viewport.WorldPosition(
-		player.GetEntity().Transform(player.GetEntity().ChunkCoords())
-		* player.GetEntity().GetModel().EyesTransform());
+	viewport.WorldPosition(player.GetEntity().ViewTransform(player.GetEntity().ChunkCoords()));
 	if (master.GetConfig().video.world) {
 		chunk_renderer.Render(viewport);
 		world.Render(viewport);

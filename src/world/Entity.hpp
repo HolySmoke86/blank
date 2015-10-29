@@ -117,7 +117,7 @@ public:
 
 private:
 	void UpdateModel() noexcept;
-	void UpdateView() noexcept;
+	void UpdateTransforms() noexcept;
 	void UpdateHeading() noexcept;
 
 private:
@@ -130,10 +130,12 @@ private:
 	AABB bounds;
 	EntityState state;
 
-	/// local transform of eyes
+	/// chunk to model space
+	glm::mat4 model_transform;
+	/// model to view space
 	/// if this entity has no model, the eyes are assumed to
-	/// be at local origin and oriented towards -Z
-	glm::mat4 view_local;
+	/// be at origin and oriented towards pitch of model space
+	glm::mat4 view_transform;
 	float speed;
 	glm::vec3 heading;
 

@@ -16,6 +16,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/transform.hpp>
@@ -51,6 +52,10 @@ Entity::Entity(const Entity &other) noexcept
 , name(other.name)
 , bounds(other.bounds)
 , state(other.state)
+, model_transform(1.0f)
+, view_transform(1.0f)
+, speed(0.0f)
+, heading(0.0f, 0.0f, -1.0f)
 , max_vel(other.max_vel)
 , max_force(other.max_force)
 , ref_count(0)
@@ -109,13 +114,11 @@ void Entity::SetHead(float p, float y) noexcept {
 }
 
 glm::mat4 Entity::Transform(const glm::ivec3 &reference) const noexcept {
-	return state.Transform(reference);
+	return glm::translate(glm::vec3((state.chunk_pos - reference) * Chunk::Extent())) * model_transform;
 }
 
 glm::mat4 Entity::ViewTransform(const glm::ivec3 &reference) const noexcept {
-	glm::mat4 transform = view_local;
-	transform[3] += glm::vec4(state.RelativePosition(reference), 0.0f);
-	return transform;
+	return Transform(reference) * view_transform;
 }
 
 Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
@@ -138,21 +141,23 @@ void Entity::UpdateModel() noexcept {
 }
 
 void Entity::Update(float dt) {
-	UpdateView();
+	UpdateTransforms();
 	UpdateHeading();
 	if (HasController()) {
 		GetController().Update(*this, dt);
 	}
 }
 
-void Entity::UpdateView() noexcept {
-	// create local transform
-	view_local = Transform(ChunkCoords());
-	// clear the translation part
-	view_local[3] = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-	// add the model's eyes translation, if any
+void Entity::UpdateTransforms() noexcept {
+	// model transform is the one given by current state
+	model_transform = state.Transform(state.chunk_pos);
+	// view transform is either the model's eyes transform or,
+	// should the entity have no model, the pitch (yaw already is
+	// in model transform)
 	if (model) {
-		view_local *= model.EyesTransform();
+		view_transform = model.EyesTransform();
+	} else {
+		view_transform = glm::eulerAngleX(state.pitch);
 	}
 }
 
@@ -163,7 +168,7 @@ void Entity::UpdateHeading() noexcept {
 	} else {
 		speed = 0.0f;
 		// use -Z (forward axis) of local view transform
-		heading = -glm::vec3(view_local[2]);
+		heading = -glm::vec3(view_transform[2]);
 	}
 }
 
@@ -502,10 +507,10 @@ bool World::Intersection(
 void World::Update(int dt) {
 	float fdt(dt * 0.001f);
 	for (Entity &entity : entities) {
-		entity.Update(fdt);
+		Update(entity, fdt);
 	}
 	for (Entity &entity : entities) {
-		Update(entity, fdt);
+		entity.Update(fdt);
 	}
 	for (Player &player : players) {
 		player.Update(dt);
