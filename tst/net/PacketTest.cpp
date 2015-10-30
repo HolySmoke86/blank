@@ -215,7 +215,6 @@ void PacketTest::testSpawnEntity() {
 	write_state.chunk_pos = { 7, 2, -3 };
 	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
-	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
 	write_entity.SetState(write_state);
@@ -307,7 +306,6 @@ void PacketTest::testEntityUpdate() {
 	write_state.chunk_pos = { 7, 2, -3 };
 	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
-	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
 	write_entity.SetState(write_state);
@@ -347,7 +345,6 @@ void PacketTest::testPlayerCorrection() {
 	write_state.chunk_pos = { 7, 2, -3 };
 	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
-	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
 	write_entity.SetState(write_state);
@@ -682,19 +679,19 @@ void PacketTest::AssertEqual(
 ) {
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (W component)",
-		expected.w, actual.w, numeric_limits<float>::epsilon()
+		expected.w, actual.w, (1.0f / 32767.0f)
 	);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (X component)",
-		expected.x, actual.x, numeric_limits<float>::epsilon()
+		expected.x, actual.x, (1.0f / 32767.0f)
 	);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (Y component)",
-		expected.y, actual.y, numeric_limits<float>::epsilon()
+		expected.y, actual.y, (1.0f / 32767.0f)
 	);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		message + " (Z component)",
-		expected.z, actual.z, numeric_limits<float>::epsilon()
+		expected.z, actual.z, (1.0f / 32767.0f)
 	);
 }
 
