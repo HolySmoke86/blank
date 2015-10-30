@@ -233,7 +233,7 @@ void EntityState::AdjustPosition() noexcept {
 }
 
 void EntityState::AdjustHeading() noexcept {
-	glm::clamp(pitch, -PI_0p5, PI_0p5);
+	pitch = glm::clamp(pitch, -PI_0p5, PI_0p5);
 	while (yaw > PI) {
 		yaw -= PI_2p0;
 	}
