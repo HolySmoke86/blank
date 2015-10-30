@@ -511,7 +511,6 @@ Interface::Interface(
 , client_ctrl(cc)
 , fwd(0)
 , rev(0)
-, slot(0)
 , num_slots(10)
 , locked(false) {
 
@@ -711,7 +710,7 @@ void Interface::UpdateMovement() {
 }
 
 void Interface::InvAbs(int s) {
-	slot = s % num_slots;
+	int slot = s % num_slots;
 	while (slot < 0) {
 		slot += num_slots;
 	}
@@ -719,7 +718,7 @@ void Interface::InvAbs(int s) {
 }
 
 void Interface::InvRel(int delta) {
-	InvAbs(slot + delta);
+	InvAbs(player_ctrl.GetPlayer().GetInventorySlot() + delta);
 }
 
 

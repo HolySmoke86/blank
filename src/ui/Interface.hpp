@@ -42,7 +42,6 @@ private:
 	ClientController &client_ctrl;
 
 	glm::ivec3 fwd, rev;
-	int slot;
 	int num_slots;
 
 	bool locked;
