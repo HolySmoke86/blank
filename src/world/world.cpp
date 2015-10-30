@@ -161,8 +161,8 @@ void Entity::UpdateHeading() noexcept {
 		heading = Velocity() / speed;
 	} else {
 		speed = 0.0f;
-		// use -Z (forward axis) of local view transform
-		heading = -glm::vec3(view_transform[2]);
+		// use -Z (forward axis) of model transform (our "chest")
+		heading = -glm::vec3(model_transform[2]);
 	}
 }
 
