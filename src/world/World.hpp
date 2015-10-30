@@ -130,6 +130,14 @@ private:
 		const EntityState &
 	);
 
+	/// calculate light direction and intensity at entity's location
+	void GetLight(
+		const Entity &entity,
+		glm::vec3 &direction,
+		glm::vec3 &color,
+		glm::vec3 &ambient
+	);
+
 private:
 	Config config;
 

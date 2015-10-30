@@ -20,6 +20,7 @@ public:
 
 	void SetLightDirection(const glm::vec3 &) noexcept;
 	void SetLightColor(const glm::vec3 &) noexcept;
+	void SetAmbientColor(const glm::vec3 &) noexcept;
 
 	void SetTexture(ArrayTexture &) noexcept;
 	void SetFogDensity(float) noexcept;
@@ -47,6 +48,7 @@ private:
 	GLuint sampler_handle;
 	GLuint light_direction_handle;
 	GLuint light_color_handle;
+	GLuint ambient_color_handle;
 	GLuint fog_density_handle;
 
 };

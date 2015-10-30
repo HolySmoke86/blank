@@ -180,6 +180,7 @@ DirectionalLighting::DirectionalLighting()
 , mvp_handle(0)
 , light_direction_handle(0)
 , light_color_handle(0)
+, ambient_color_handle(0)
 , fog_density_handle(0) {
 	program.LoadShader(
 		GL_VERTEX_SHADER,
@@ -217,6 +218,7 @@ DirectionalLighting::DirectionalLighting()
 		"uniform sampler2DArray tex_sampler;\n"
 		"uniform vec3 light_direction;\n"
 		"uniform vec3 light_color;\n"
+		"uniform vec3 ambient_color;\n"
 		"uniform float fog_density;\n"
 		"out vec3 color;\n"
 		"vec3 rgb2hsl(vec3 c) {\n"
@@ -239,7 +241,7 @@ DirectionalLighting::DirectionalLighting()
 			"hsl_color.y *= frag_hsl_mod.y;\n"
 			"hsl_color.z *= frag_hsl_mod.z;\n"
 			"vec3 base_color = hsl2rgb(hsl_color) * frag_rgb_mod;\n"
-			"vec3 ambient = vec3(0.1, 0.1, 0.1) * base_color;\n"
+			"vec3 ambient = ambient_color * base_color;\n"
 			// this should be the same as the clear color, otherwise looks really weird
 			"vec3 fog_color = vec3(0, 0, 0);\n"
 			"float e = 2.718281828;\n"
@@ -263,11 +265,13 @@ DirectionalLighting::DirectionalLighting()
 	sampler_handle = program.UniformLocation("tex_sampler");
 	light_direction_handle = program.UniformLocation("light_direction");
 	light_color_handle = program.UniformLocation("light_color");
+	ambient_color_handle = program.UniformLocation("ambient_color");
 	fog_density_handle = program.UniformLocation("fog_density");
 
 	Activate();
 	program.Uniform(light_direction_handle, glm::vec3(1.0f, 3.0f, 2.0f));
 	program.Uniform(light_color_handle, glm::vec3(1.0f));
+	program.Uniform(ambient_color_handle, glm::vec3(0.1f));
 	program.Uniform(fog_density_handle, 0.0f);
 }
 
@@ -288,6 +292,10 @@ void DirectionalLighting::SetLightDirection(const glm::vec3 &dir) noexcept {
 
 void DirectionalLighting::SetLightColor(const glm::vec3 &col) noexcept {
 	program.Uniform(light_color_handle, col);
+}
+
+void DirectionalLighting::SetAmbientColor(const glm::vec3 &col) noexcept {
+	program.Uniform(ambient_color_handle, col);
 }
 
 void DirectionalLighting::SetTexture(ArrayTexture &tex) noexcept {

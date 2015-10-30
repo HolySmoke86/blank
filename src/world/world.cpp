@@ -656,15 +656,61 @@ World::EntityHandle World::RemoveEntity(EntityHandle &eh) {
 
 void World::Render(Viewport &viewport) {
 	DirectionalLighting &entity_prog = viewport.EntityProgram();
-	entity_prog.SetLightDirection(light_direction);
 	entity_prog.SetFogDensity(fog_density);
 
+	glm::vec3 light_dir;
+	glm::vec3 light_col;
+	glm::vec3 ambient_col;
 	for (Entity &entity : entities) {
 		glm::mat4 M(entity.Transform(players.front().GetEntity().ChunkCoords()));
 		if (!CullTest(entity.Bounds(), entity_prog.GetVP() * M)) {
+			GetLight(entity, light_dir, light_col, ambient_col);
+			entity_prog.SetLightDirection(light_dir);
+			entity_prog.SetLightColor(light_col);
+			entity_prog.SetAmbientColor(ambient_col);
 			entity.Render(M, entity_prog);
 		}
 	}
+}
+
+// this should interpolate based on the fractional part of entity's block position
+void World::GetLight(
+	const Entity &e,
+	glm::vec3 &dir,
+	glm::vec3 &col,
+	glm::vec3 &amb
+) {
+	Chunk *chunk = chunks.Get(e.ChunkCoords());
+	if (!chunk) {
+		// chunk unavailable, so make it really dark and from
+		// some arbitrary direction
+		dir = glm::vec3(1.0f, 2.0f, 3.0f);
+		col = glm::vec3(0.025f); // ~0.8^15
+		return;
+	}
+	glm::ivec3 base(e.Position());
+	int base_light = chunk->GetLight(base);
+	int max_light = 0;
+	int min_light = 15;
+	glm::ivec3 acc(0, 0, 0);
+	for (glm::ivec3 offset(-1, -1, -1); offset.z < 2; ++offset.z) {
+		for (offset.y = -1; offset.y < 2; ++offset.y) {
+			for (offset.x = -1; offset.x < 2; ++offset.x) {
+				BlockLookup block(chunk, base + offset);
+				if (!block) {
+					// missing, just ignore it
+					continue;
+				}
+				// otherwise, accumulate the difference times direction
+				acc += offset * (base_light - block.GetLight());
+				max_light = std::max(max_light, block.GetLight());
+				min_light = std::min(min_light, block.GetLight());
+			}
+		}
+	}
+	dir = acc;
+	col = glm::vec3(std::pow(0.8f, 15 - max_light));
+	amb = glm::vec3(std::pow(0.8f, 15 - min_light));
 }
 
 namespace {

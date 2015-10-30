@@ -45,16 +45,11 @@ entity ai
 
 	pathfinding, obstacle avoidance, better turning behaviour
 
-(block) lighting
+lighting
 
 	occlusion/neighbor light mixing is implemented, but still linear
 	this could be solved by using a pre-interpolated light texture and
 	mapping light levels to coordinates on that
-
-	also: how could block light affect entity lighting?
-	maybe get the interpolated light level at the entity's center and use
-	that as the light power for the directional lighting shader and use a
-	direction that's fixed relative to the camera?
 
 	there's a bug where a chunk's model is not updated if its neighbor
 	changes border light levels
@@ -64,6 +59,10 @@ entity ai
 	propagation through semi-filled blocks is wonky. I worked around it by
 	having the light propagate into solid blocks, but feels like this
 	could cause some weird behaviours
+
+	entity lighting is now derived from block light levels
+	it's not interpolated and the calculation is very basic, so it
+	has some unexpected effects
 
 gravity
 

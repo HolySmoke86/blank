@@ -433,6 +433,8 @@ void HUD::Render(Viewport &viewport) noexcept {
 		if (block_visible) {
 			DirectionalLighting &world_prog = viewport.HUDProgram();
 			world_prog.SetLightDirection({ 1.0f, 3.0f, 5.0f });
+			world_prog.SetLightColor({ 1.0f, 1.0f, 1.0f });
+			world_prog.SetAmbientColor({ 0.1f, 0.1f, 0.1f });
 			// disable distance fog
 			world_prog.SetFogDensity(0.0f);
 
