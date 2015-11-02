@@ -19,6 +19,7 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
 
 
@@ -109,8 +110,6 @@ void Entity::TurnHead(float dp, float dy) noexcept {
 void Entity::SetHead(float p, float y) noexcept {
 	state.pitch = p;
 	state.yaw = y;
-	// TODO: I feel like this could be delayed
-	UpdateModel();
 }
 
 glm::mat4 Entity::Transform(const glm::ivec3 &reference) const noexcept {
@@ -126,20 +125,13 @@ Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
 	return Ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
 }
 
-void Entity::UpdateModel() noexcept {
-	state.AdjustHeading();
-	state.orient = glm::quat(glm::vec3(0.0f, state.yaw, 0.0f));
-	if (model) {
-		model.EyesState().orientation = glm::quat(glm::vec3(state.pitch, 0.0f, 0.0f));
-	}
-}
-
 void Entity::Update(float dt) {
 	UpdateTransforms();
 	UpdateHeading();
 	if (HasController()) {
 		GetController().Update(*this, dt);
 	}
+	UpdateModel(dt);
 }
 
 void Entity::UpdateTransforms() noexcept {
@@ -151,7 +143,7 @@ void Entity::UpdateTransforms() noexcept {
 	if (model) {
 		view_transform = model.EyesTransform();
 	} else {
-		view_transform = glm::eulerAngleX(state.pitch);
+		view_transform = toMat4(glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f)));
 	}
 }
 
@@ -163,6 +155,84 @@ void Entity::UpdateHeading() noexcept {
 		speed = 0.0f;
 		// use -Z (forward axis) of model transform (our "chest")
 		heading = -glm::vec3(model_transform[2]);
+	}
+}
+
+void Entity::UpdateModel(float dt) noexcept {
+	// first, sanitize the pitch and yaw fields of state (our input)
+	// those indicate the head orientation in the entity's local cosystem
+	state.AdjustHeading();
+	// TODO: this flickers horrible and also shouldn't be based on velocity, but on control force
+	//OrientBody(dt);
+	OrientHead(dt);
+}
+
+void Entity::OrientBody(float dt) noexcept {
+	// maximum body rotation per second (due to velocity orientation) (90°)
+	constexpr float max_body_turn_per_second = PI_0p5;
+	const float max_body_turn = max_body_turn_per_second * dt;
+	// minimum speed to apply body correction
+	constexpr float min_speed = 0.0625f;
+	// use local Y as up
+	const glm::vec3 up(model_transform[1]);
+	if (speed > min_speed) {
+		// check if our orientation and velocity are aligned
+		const glm::vec3 forward(-model_transform[2]);
+		// facing is local -Z rotated about local Y by yaw and transformed into world space
+		const glm::vec3 facing(normalize(glm::vec3(glm::vec4(rotateY(glm::vec3(0.0f, 0.0f, -1.0f), state.yaw), 0.0f) * transpose(model_transform))));
+		// only adjust if velocity isn't almost parallel to up
+		float vel_dot_up = dot(Velocity(), up);
+		if (std::abs(1.0f - std::abs(vel_dot_up)) > std::numeric_limits<float>::epsilon()) {
+			// get direction of velocity projected onto model plane
+			glm::vec3 direction(normalize(Velocity() - (Velocity() * vel_dot_up)));
+			// if velocity points away from our facing (with a little bias), flip it around
+			// (the entity is "walking backwards")
+			if (dot(facing, direction) < -0.1f) {
+				direction = -direction;
+			}
+			// calculate the difference between forward and direction
+			const float absolute_difference = std::acos(dot(forward, direction));
+			// if direction is clockwise with respect to up vector, invert the angle
+			const float relative_difference = dot(cross(forward, direction), up) < 0.0f
+				? -absolute_difference
+				: absolute_difference;
+			// only correct by half the difference max
+			const float correction = glm::clamp(relative_difference * 0.5f, -max_body_turn, max_body_turn);
+			if (ID() == 1) {
+				std::cout << "orientation before: " << state.orient << std::endl;
+				std::cout << "up:        " << up << std::endl;
+				std::cout << "forward:   " << forward << std::endl;
+				std::cout << "facing:    " << facing << std::endl;
+				std::cout << "direction: " << direction << std::endl;
+				std::cout << "difference: " << rad2deg(relative_difference) << "°" << std::endl;
+				std::cout << "correction: " << rad2deg(correction) << "°" << std::endl;
+				std::cout  << std::endl;
+			}
+			// now rotate body by correction and head by -correction
+			state.orient = rotate(state.orient, correction, up);
+			state.yaw -= correction;
+		}
+	}
+}
+
+void Entity::OrientHead(float dt) noexcept {
+	// maximum yaw of head (90°)
+	constexpr float max_head_yaw = PI_0p5;
+	// use local Y as up
+	const glm::vec3 up(model_transform[1]);
+	// if yaw is bigger than max, rotate the body to accomodate
+	if (std::abs(state.yaw) > max_head_yaw) {
+		float deviation = state.yaw < 0.0f ? state.yaw + max_head_yaw : state.yaw - max_head_yaw;
+		// rotate the entity by deviation about local Y
+		state.orient = rotate(state.orient, deviation, up);
+		// and remove from head yaw
+		state.yaw -= deviation;
+		// shouldn't be necessary if max_head_yaw is < PI, but just to be sure :p
+		state.AdjustHeading();
+	}
+	// update model if any
+	if (model) {
+		model.EyesState().orientation = glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f));
 	}
 }
 

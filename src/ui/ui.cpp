@@ -60,7 +60,13 @@ void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 }
 
 glm::vec3 PlayerController::ControlForce(const Entity &e, const EntityState &s) const {
-	return TargetVelocity(rotateY(move_dir * e.MaxVelocity(), s.yaw), s, 5.0f);
+	if (!iszero(move_dir)) {
+		// scale input by max velocity, apply yaw, and transform to world space
+		return TargetVelocity(glm::vec3(glm::vec4(rotateY(move_dir * e.MaxVelocity(), s.yaw), 0.0f) * transpose(e.Transform())), s, 5.0f);
+	} else {
+		// target velocity of 0 is the same as halt
+		return Halt(s, 5.0f);
+	}
 }
 
 void PlayerController::TurnHead(float dp, float dy) noexcept {

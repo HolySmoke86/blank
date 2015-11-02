@@ -86,8 +86,10 @@ public:
 	void SetHead(float pitch, float yaw) noexcept;
 
 	/// get a transform for this entity's coordinate space
+	const glm::mat4 Transform() const noexcept { return model_transform; }
+	/// get a transform for this entity's coordinate space relative to reference chunk
 	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept;
-	/// get a transform for this entity's view space
+	/// get a transform for this entity's view space relative to reference chunk
 	glm::mat4 ViewTransform(const glm::ivec3 &reference) const noexcept;
 	/// get a ray in entity's face direction originating from center of vision
 	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
@@ -99,7 +101,7 @@ public:
 	/// normalized velocity or heading if standing still
 	const glm::vec3 &Heading() const noexcept { return heading; }
 
-	void SetState(const EntityState &s) noexcept { state = s; UpdateModel(); }
+	void SetState(const EntityState &s) noexcept { state = s; }
 	const EntityState &GetState() const noexcept { return state; }
 
 	void Ref() noexcept { ++ref_count; }
@@ -116,9 +118,14 @@ public:
 	}
 
 private:
-	void UpdateModel() noexcept;
 	void UpdateTransforms() noexcept;
 	void UpdateHeading() noexcept;
+	void UpdateModel(float dt) noexcept;
+public:
+	// temporarily made public so AI can use it until it's smoothed out to be suitable for players, too
+	void OrientBody(float dt) noexcept;
+private:
+	void OrientHead(float dt) noexcept;
 
 private:
 	EntityController *ctrl;

@@ -100,9 +100,13 @@ void AIController::Update(Entity &e, float dt) {
 	if (e.Moving()) {
 		// orient head towards heading
 		glm::vec3 heading(e.Heading());
-		float tgt_pitch = std::atan(heading.y / length(glm::vec2(heading.x, heading.z)));
-		float tgt_yaw = std::atan2(-heading.x, -heading.z);
+		// only half pitch, so we don't crane our neck
+		float tgt_pitch = std::atan(heading.y / length(glm::vec2(heading.x, heading.z))) * 0.5f;
+		// always look straight ahead
+		// maybe look at the pursuit target if there is one
+		float tgt_yaw = 0.0f;
 		e.SetHead(tgt_pitch, tgt_yaw);
+		e.OrientBody(dt);
 	}
 }
 
