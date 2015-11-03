@@ -5,6 +5,7 @@
 #include "Packet.hpp"
 
 #include "../app/init.hpp"
+#include "../geometry/const.hpp"
 #include "../model/Model.hpp"
 #include "../world/Entity.hpp"
 #include "../world/EntityState.hpp"

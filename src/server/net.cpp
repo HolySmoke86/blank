@@ -3,6 +3,7 @@
 #include "Server.hpp"
 
 #include "../app/init.hpp"
+#include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Model.hpp"
 #include "../world/ChunkIndex.hpp"

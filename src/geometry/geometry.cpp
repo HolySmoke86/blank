@@ -1,4 +1,7 @@
-#include "geometry.hpp"
+#include "const.hpp"
+#include "distance.hpp"
+#include "primitive.hpp"
+#include "rotation.hpp"
 
 #include <limits>
 #include <glm/gtx/matrix_cross_product.hpp>

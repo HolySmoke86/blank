@@ -4,7 +4,8 @@
 #include "IdleState.hpp"
 #include "RoamState.hpp"
 
-#include "../model/geometry.hpp"
+#include "../geometry/distance.hpp"
+#include "../geometry/rotation.hpp"
 #include "../rand/GaloisLFSR.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"

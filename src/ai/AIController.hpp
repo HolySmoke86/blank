@@ -2,7 +2,7 @@
 #define BLANK_AI_AICONTROLLER_HPP_
 
 #include "../app/IntervalTimer.hpp"
-#include "../model/geometry.hpp"
+#include "../geometry/primitive.hpp"
 #include "../world/EntityController.hpp"
 
 #include <glm/glm.hpp>

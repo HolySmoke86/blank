@@ -4,7 +4,7 @@
 #include "SkyBoxMesh.hpp"
 #include "SpriteMesh.hpp"
 
-#include "../model/geometry.hpp"
+#include "../geometry/primitive.hpp"
 
 #include <algorithm>
 #include <iostream>

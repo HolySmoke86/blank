@@ -2,7 +2,7 @@
 #define BLANK_MODEL_SHAPE_HPP_
 
 #include "CollisionBounds.hpp"
-#include "geometry.hpp"
+#include "../geometry/primitive.hpp"
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
 #include "../world/Block.hpp"

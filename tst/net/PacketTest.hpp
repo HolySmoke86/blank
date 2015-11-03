@@ -1,7 +1,7 @@
 #ifndef BLANK_TEST_NET_PACKETTEST_HPP_
 #define BLANK_TEST_NET_PACKETTEST_HPP_
 
-#include "model/geometry.hpp"
+#include "geometry/primitive.hpp"
 #include "net/Packet.hpp"
 #include "world/EntityState.hpp"
 

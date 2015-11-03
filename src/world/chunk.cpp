@@ -8,6 +8,7 @@
 #include "Generator.hpp"
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
+#include "../geometry/distance.hpp"
 #include "../graphics/BlockLighting.hpp"
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/Viewport.hpp"

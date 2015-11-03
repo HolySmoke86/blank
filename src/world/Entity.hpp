@@ -3,8 +3,8 @@
 
 #include "Chunk.hpp"
 #include "EntityState.hpp"
+#include "../geometry/primitive.hpp"
 #include "../model/Instance.hpp"
-#include "../model/geometry.hpp"
 
 #include <cstdint>
 #include <string>

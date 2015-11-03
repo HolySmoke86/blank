@@ -1,5 +1,5 @@
-#ifndef BLANK_TEST_MODEL_GEOMETRYTEST_H_
-#define BLANK_TEST_MODEL_GEOMETRYTEST_H_
+#ifndef BLANK_TEST_GEOMETRY_INTERSECTIONTEST_H_
+#define BLANK_TEST_GEOMETRY_INTERSECTIONTEST_H_
 
 #include <cppunit/extensions/HelperMacros.h>
 
@@ -7,10 +7,10 @@
 namespace blank {
 namespace test {
 
-class GeometryTest
+class IntersectionTest
 : public CppUnit::TestFixture {
 
-CPPUNIT_TEST_SUITE(GeometryTest);
+CPPUNIT_TEST_SUITE(IntersectionTest);
 
 CPPUNIT_TEST(testRayBoxIntersection);
 CPPUNIT_TEST(testBoxBoxIntersection);

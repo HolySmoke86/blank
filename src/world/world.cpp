@@ -9,6 +9,8 @@
 #include "EntityCollision.hpp"
 #include "WorldCollision.hpp"
 #include "../app/Assets.hpp"
+#include "../geometry/const.hpp"
+#include "../geometry/distance.hpp"
 #include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
@@ -204,8 +206,8 @@ void Entity::OrientBody(float dt) noexcept {
 				std::cout << "forward:   " << forward << std::endl;
 				std::cout << "facing:    " << facing << std::endl;
 				std::cout << "direction: " << direction << std::endl;
-				std::cout << "difference: " << rad2deg(relative_difference) << "°" << std::endl;
-				std::cout << "correction: " << rad2deg(correction) << "°" << std::endl;
+				std::cout << "difference: " << glm::degrees(relative_difference) << "°" << std::endl;
+				std::cout << "correction: " << glm::degrees(correction) << "°" << std::endl;
 				std::cout  << std::endl;
 			}
 			// now rotate body by correction and head by -correction

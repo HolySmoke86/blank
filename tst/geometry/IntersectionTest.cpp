@@ -1,25 +1,26 @@
-#include "GeometryTest.hpp"
+#include "IntersectionTest.hpp"
 
-#include "model/geometry.hpp"
+#include "geometry/const.hpp"
+#include "geometry/primitive.hpp"
 
 #include <limits>
 #include <glm/gtx/io.hpp>
 #include <glm/gtx/transform.hpp>
 
-CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::GeometryTest);
+CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::IntersectionTest);
 
 
 namespace blank {
 namespace test {
 
-void GeometryTest::setUp() {
+void IntersectionTest::setUp() {
 }
 
-void GeometryTest::tearDown() {
+void IntersectionTest::tearDown() {
 }
 
 
-void GeometryTest::testRayBoxIntersection() {
+void IntersectionTest::testRayBoxIntersection() {
 	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 } }; // at origin, pointing right
 	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
 	glm::mat4 M(1); // no transformation
@@ -63,7 +64,7 @@ void GeometryTest::testRayBoxIntersection() {
 	);
 }
 
-void GeometryTest::testBoxBoxIntersection() {
+void IntersectionTest::testBoxBoxIntersection() {
 	const float delta = std::numeric_limits<float>::epsilon();
 	float depth = 0;
 	glm::vec3 normal(0);

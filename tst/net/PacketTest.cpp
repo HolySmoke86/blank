@@ -1,5 +1,6 @@
 #include "PacketTest.hpp"
 
+#include "geometry/const.hpp"
 #include "model/Model.hpp"
 #include "world/Entity.hpp"
 

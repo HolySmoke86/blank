@@ -4,6 +4,7 @@
 #include "NetworkedInput.hpp"
 
 #include "../app/init.hpp"
+#include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
 #include "../net/Packet.hpp"
 #include "../world/Chunk.hpp"

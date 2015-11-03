@@ -3,7 +3,7 @@
 
 #include "Block.hpp"
 #include "BlockTypeRegistry.hpp"
-#include "../model/geometry.hpp"
+#include "../geometry/primitive.hpp"
 
 #include <vector>
 #include <glm/glm.hpp>

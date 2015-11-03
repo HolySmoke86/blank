@@ -2,8 +2,6 @@
 #include "BlockType.hpp"
 #include "BlockTypeRegistry.hpp"
 
-#include "../model/geometry.hpp"
-
 #include <ostream>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/transform.hpp>

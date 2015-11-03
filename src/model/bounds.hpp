@@ -2,7 +2,7 @@
 #define BLANK_MODEL_BOUNDS_HPP_
 
 #include "CollisionBounds.hpp"
-#include "geometry.hpp"
+#include "../geometry/primitive.hpp"
 
 #include <vector>
 #include <glm/glm.hpp>

@@ -1,8 +1,6 @@
 #ifndef BLAMK_MODEL_PART_HPP_
 #define BLAMK_MODEL_PART_HPP_
 
-#include "geometry.hpp"
-
 #include <cstdint>
 #include <list>
 #include <memory>

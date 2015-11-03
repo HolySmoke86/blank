@@ -4,7 +4,7 @@
 #include "Viewport.hpp"
 
 #include "../app/init.hpp"
-#include "../model/geometry.hpp"
+#include "../geometry/const.hpp"
 
 #include <GL/glew.h>
 #include <glm/gtc/matrix_transform.hpp>

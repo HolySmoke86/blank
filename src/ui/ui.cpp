@@ -13,6 +13,7 @@
 #include "../app/init.hpp"
 #include "../audio/Audio.hpp"
 #include "../audio/SoundBank.hpp"
+#include "../geometry/distance.hpp"
 #include "../graphics/Font.hpp"
 #include "../graphics/Viewport.hpp"
 #include "../io/TokenStreamReader.hpp"
@@ -374,8 +375,8 @@ void HUD::UpdatePosition() {
 
 void HUD::UpdateOrientation() {
 	std::stringstream s;
-	s << std::setprecision(3) << "pitch: " << rad2deg(player.GetEntity().Pitch())
-		<< ", yaw: " << rad2deg(player.GetEntity().Yaw());
+	s << std::setprecision(3) << "pitch: " << glm::degrees(player.GetEntity().Pitch())
+		<< ", yaw: " << glm::degrees(player.GetEntity().Yaw());
 	orientation_text.Set(env.assets.small_ui_font, s.str());
 }
 
