@@ -15,26 +15,26 @@ class ChunkStore;
 class ChunkIndex {
 
 public:
-	ChunkIndex(ChunkStore &, const Chunk::Pos &base, int extent);
+	ChunkIndex(ChunkStore &, const ExactLocation::Coarse &base, int extent);
 	~ChunkIndex();
 
 	ChunkIndex(const ChunkIndex &) = delete;
 	ChunkIndex &operator =(const ChunkIndex &) = delete;
 
 public:
-	bool InRange(const Chunk::Pos &) const noexcept;
-	bool IsBorder(const Chunk::Pos &) const noexcept;
-	int Distance(const Chunk::Pos &) const noexcept;
+	bool InRange(const ExactLocation::Coarse &) const noexcept;
+	bool IsBorder(const ExactLocation::Coarse &) const noexcept;
+	int Distance(const ExactLocation::Coarse &) const noexcept;
 
-	bool HasAllSurrounding(const Chunk::Pos &) const noexcept;
+	bool HasAllSurrounding(const ExactLocation::Coarse &) const noexcept;
 
-	int IndexOf(const Chunk::Pos &) const noexcept;
-	Chunk::Pos PositionOf(int) const noexcept;
+	int IndexOf(const ExactLocation::Coarse &) const noexcept;
+	ExactLocation::Coarse PositionOf(int) const noexcept;
 
 	/// returns nullptr if given position is out of range or the chunk
 	/// is not loaded, so also works as a "has" function
-	Chunk *Get(const Chunk::Pos &) noexcept;
-	const Chunk *Get(const Chunk::Pos &) const noexcept;
+	Chunk *Get(const ExactLocation::Coarse &) noexcept;
+	const Chunk *Get(const ExactLocation::Coarse &) const noexcept;
 	Chunk *operator [](int i) noexcept { return chunks[i]; }
 	const Chunk *operator [](int i) const noexcept { return chunks[i]; }
 
@@ -47,8 +47,8 @@ public:
 
 	int Extent() const noexcept { return extent; }
 
-	Chunk::Pos CoordsBegin() const noexcept { return base - Chunk::Pos(extent); }
-	Chunk::Pos CoordsEnd() const noexcept { return base + Chunk::Pos(extent + 1); }
+	ExactLocation::Coarse CoordsBegin() const noexcept { return base - ExactLocation::Coarse(extent); }
+	ExactLocation::Coarse CoordsEnd() const noexcept { return base + ExactLocation::Coarse(extent + 1); }
 
 	void Register(Chunk &) noexcept;
 
@@ -56,10 +56,10 @@ public:
 	int IndexedChunks() const noexcept { return total_indexed; }
 	int MissingChunks() const noexcept { return total_length - total_indexed; }
 
-	Chunk::Pos NextMissing() noexcept;
+	ExactLocation::Coarse NextMissing() noexcept;
 
-	const Chunk::Pos &Base() const noexcept { return base; }
-	void Rebase(const Chunk::Pos &);
+	const ExactLocation::Coarse &Base() const noexcept { return base; }
+	void Rebase(const ExactLocation::Coarse &);
 
 private:
 	int GetCol(int) const noexcept;
@@ -74,7 +74,7 @@ private:
 
 private:
 	ChunkStore &store;
-	Chunk::Pos base;
+	ExactLocation::Coarse base;
 	int extent;
 	int side_length;
 	int total_length;

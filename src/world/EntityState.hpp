@@ -1,7 +1,7 @@
 #ifndef BLANK_WORLD_ENTITYSTATE_HPP_
 #define BLANK_WORLD_ENTITYSTATE_HPP_
 
-#include "Chunk.hpp"
+#include "../geometry/Location.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -11,8 +11,7 @@ namespace blank {
 
 struct EntityState {
 
-	glm::ivec3 chunk_pos;
-	glm::vec3 block_pos;
+	ExactLocation pos;
 	glm::vec3 velocity;
 
 	glm::quat orient;
@@ -21,23 +20,23 @@ struct EntityState {
 
 	EntityState();
 
-	/// make sure block_pos is within chunk bounds
+	/// make sure pos.block is within chunk bounds
 	void AdjustPosition() noexcept;
 	/// make sure pitch and yaw are normalized
 	void AdjustHeading() noexcept;
 
 	/// get a position vector relative to the (0,0,0) chunk
 	glm::vec3 AbsolutePosition() const noexcept {
-		return glm::vec3(chunk_pos * Chunk::Extent()) + block_pos;
+		return pos.Absolute();
 	}
 	/// get a position vector relative to given reference chunk
 	glm::vec3 RelativePosition(const glm::ivec3 &reference) const noexcept {
-		return glm::vec3((chunk_pos - reference) * Chunk::Extent()) + block_pos;
+		return pos.Relative(reference).Absolute();
 	}
 
 	/// get the difference between this and the given position
 	glm::vec3 Diff(const EntityState &other) const noexcept {
-		return RelativePosition(other.chunk_pos) - other.block_pos;
+		return pos.Difference(other.pos).Absolute();
 	}
 
 	/// get entity state as a matrix tranform relative to given reference chunk

@@ -446,8 +446,8 @@ void Packet::Payload::Read(glm::quat &val, size_t off) const noexcept {
 }
 
 void Packet::Payload::Write(const EntityState &state, size_t off) noexcept {
-	Write(state.chunk_pos, off);
-	WritePackU(state.block_pos * (1.0f / 16.0f), off + 12);
+	Write(state.pos.chunk, off);
+	WritePackU(state.pos.block * (1.0f / ExactLocation::fscale), off + 12);
 	Write(state.velocity, off + 18);
 	Write(state.orient, off + 30);
 	WritePackN(state.pitch * PI_0p5_inv, off + 38);
@@ -455,20 +455,20 @@ void Packet::Payload::Write(const EntityState &state, size_t off) noexcept {
 }
 
 void Packet::Payload::Read(EntityState &state, size_t off) const noexcept {
-	Read(state.chunk_pos, off);
-	ReadPackU(state.block_pos, off + 12);
+	Read(state.pos.chunk, off);
+	ReadPackU(state.pos.block, off + 12);
 	Read(state.velocity, off + 18);
 	Read(state.orient, off + 30);
 	ReadPackN(state.pitch, off + 38);
 	ReadPackN(state.yaw, off + 40);
-	state.block_pos *= 16.0f;
+	state.pos.block *= ExactLocation::fscale;
 	state.pitch *= PI_0p5;
 	state.yaw *= PI;
 }
 
 void Packet::Payload::Write(const EntityState &state, const glm::ivec3 &base, size_t off) noexcept {
-	WritePackB(state.chunk_pos - base, off);
-	WritePackU(state.block_pos * (1.0f / 16.0f), off + 3);
+	WritePackB(state.pos.chunk - base, off);
+	WritePackU(state.pos.block * (1.0f / ExactLocation::fscale), off + 3);
 	Write(state.velocity, off + 9);
 	Write(state.orient, off + 21);
 	WritePackN(state.pitch * PI_0p5_inv, off + 29);
@@ -476,14 +476,14 @@ void Packet::Payload::Write(const EntityState &state, const glm::ivec3 &base, si
 }
 
 void Packet::Payload::Read(EntityState &state, const glm::ivec3 &base, size_t off) const noexcept {
-	ReadPackB(state.chunk_pos, off);
-	ReadPackU(state.block_pos, off + 3);
+	ReadPackB(state.pos.chunk, off);
+	ReadPackU(state.pos.block, off + 3);
 	Read(state.velocity, off + 9);
 	Read(state.orient, off + 21);
 	ReadPackN(state.pitch, off + 29);
 	ReadPackN(state.yaw, off + 31);
-	state.chunk_pos += base;
-	state.block_pos *= 16.0f;
+	state.pos.chunk += base;
+	state.pos.block *= ExactLocation::fscale;
 	state.pitch *= PI_0p5;
 	state.yaw *= PI;
 }

@@ -96,12 +96,12 @@ glm::vec3 Entity::ControlForce(const EntityState &s) const noexcept {
 }
 
 void Entity::Position(const glm::ivec3 &c, const glm::vec3 &b) noexcept {
-	state.chunk_pos = c;
-	state.block_pos = b;
+	state.pos.chunk = c;
+	state.pos.block = b;
 }
 
 void Entity::Position(const glm::vec3 &pos) noexcept {
-	state.block_pos = pos;
+	state.pos.block = pos;
 	state.AdjustPosition();
 }
 
@@ -115,14 +115,14 @@ void Entity::SetHead(float p, float y) noexcept {
 }
 
 glm::mat4 Entity::Transform(const glm::ivec3 &reference) const noexcept {
-	return glm::translate(glm::vec3((state.chunk_pos - reference) * Chunk::Extent())) * model_transform;
+	return glm::translate(glm::vec3((state.pos.chunk - reference) * ExactLocation::Extent())) * model_transform;
 }
 
 glm::mat4 Entity::ViewTransform(const glm::ivec3 &reference) const noexcept {
 	return Transform(reference) * view_transform;
 }
 
-Ray Entity::Aim(const Chunk::Pos &chunk_offset) const noexcept {
+Ray Entity::Aim(const ExactLocation::Coarse &chunk_offset) const noexcept {
 	glm::mat4 transform = ViewTransform(chunk_offset);
 	return Ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
 }
@@ -138,7 +138,7 @@ void Entity::Update(float dt) {
 
 void Entity::UpdateTransforms() noexcept {
 	// model transform is the one given by current state
-	model_transform = state.Transform(state.chunk_pos);
+	model_transform = state.Transform(state.pos.chunk);
 	// view transform is either the model's eyes transform or,
 	// should the entity have no model, the pitch (yaw already is
 	// in model transform)
@@ -268,8 +268,7 @@ bool EntityController::MaxOutForce(
 
 
 EntityState::EntityState()
-: chunk_pos(0)
-, block_pos(0.0f)
+: pos()
 , velocity(0.0f)
 , orient(1.0f, 0.0f, 0.0f, 0.0f)
 , pitch(0.0f)
@@ -278,30 +277,7 @@ EntityState::EntityState()
 }
 
 void EntityState::AdjustPosition() noexcept {
-	while (block_pos.x >= Chunk::width) {
-		block_pos.x -= Chunk::width;
-		++chunk_pos.x;
-	}
-	while (block_pos.x < 0) {
-		block_pos.x += Chunk::width;
-		--chunk_pos.x;
-	}
-	while (block_pos.y >= Chunk::height) {
-		block_pos.y -= Chunk::height;
-		++chunk_pos.y;
-	}
-	while (block_pos.y < 0) {
-		block_pos.y += Chunk::height;
-		--chunk_pos.y;
-	}
-	while (block_pos.z >= Chunk::depth) {
-		block_pos.z -= Chunk::depth;
-		++chunk_pos.z;
-	}
-	while (block_pos.z < 0) {
-		block_pos.z += Chunk::depth;
-		--chunk_pos.z;
-	}
+	pos.Correct();
 }
 
 void EntityState::AdjustHeading() noexcept {
@@ -483,7 +459,7 @@ std::vector<Candidate> candidates;
 bool World::Intersection(
 	const Ray &ray,
 	const glm::mat4 &M,
-	const Chunk::Pos &reference,
+	const ExactLocation::Coarse &reference,
 	WorldCollision &coll
 ) {
 	candidates.clear();
@@ -545,7 +521,7 @@ bool World::Intersection(
 
 bool World::Intersection(const Entity &e, const EntityState &s, std::vector<WorldCollision> &col) {
 	AABB box = e.Bounds();
-	Chunk::Pos reference = s.chunk_pos;
+	glm::ivec3 reference = s.pos.chunk;
 	glm::mat4 M = s.Transform(reference);
 	return Intersection(box, M, reference, col);
 }
@@ -603,7 +579,7 @@ void World::Update(Entity &entity, float dt) {
 	f.position = sixth * ((a.position + 2.0f * (b.position + c.position)) + d.position);
 	f.velocity = sixth * ((a.velocity + 2.0f * (b.velocity + c.velocity)) + d.velocity);
 
-	state.block_pos += f.position * dt;
+	state.pos.block += f.position * dt;
 	state.velocity += f.velocity * dt;
 	state.AdjustPosition();
 
@@ -617,7 +593,7 @@ EntityDerivative World::CalculateStep(
 	const EntityDerivative &delta
 ) {
 	EntityState next(cur);
-	next.block_pos += delta.position * dt;
+	next.pos.block += delta.position * dt;
 	next.velocity += delta.velocity * dt;
 	next.AdjustPosition();
 

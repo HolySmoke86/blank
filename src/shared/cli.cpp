@@ -72,12 +72,8 @@ CLI::Command::~Command() {
 
 void TeleportCommand::Execute(CLI &cli, Player &player, TokenStreamReader &args) {
 	glm::vec3 pos(args.GetFloat(), args.GetFloat(), args.GetFloat());
-	glm::ivec3 chunk(pos);
-	chunk /= Chunk::Extent();
-	pos -= chunk;
 	EntityState state = player.GetEntity().GetState();
-	state.chunk_pos = chunk;
-	state.block_pos = pos;
+	state.pos = ExactLocation(pos).Sanitize();
 	player.GetEntity().SetState(state);
 }
 

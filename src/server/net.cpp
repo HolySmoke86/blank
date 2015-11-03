@@ -385,9 +385,9 @@ struct QueueCompare {
 
 void ClientConnection::CheckChunkQueue() {
 	if (PlayerChunks().Base() != old_base) {
-		Chunk::Pos begin = PlayerChunks().CoordsBegin();
-		Chunk::Pos end = PlayerChunks().CoordsEnd();
-		for (Chunk::Pos pos = begin; pos.z < end.z; ++pos.z) {
+		ExactLocation::Coarse begin = PlayerChunks().CoordsBegin();
+		ExactLocation::Coarse end = PlayerChunks().CoordsEnd();
+		for (ExactLocation::Coarse pos = begin; pos.z < end.z; ++pos.z) {
 			for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
 				for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
 					if (manhattan_radius(pos - old_base) > PlayerChunks().Extent()) {
@@ -412,7 +412,7 @@ void ClientConnection::CheckChunkQueue() {
 		int count = 0;
 		constexpr int max = 64;
 		while (count < max && !chunk_queue.empty()) {
-			Chunk::Pos pos = chunk_queue.front();
+			ExactLocation::Coarse pos = chunk_queue.front();
 			chunk_queue.pop_front();
 			if (PlayerChunks().InRange(pos)) {
 				Chunk *chunk = PlayerChunks().Get(pos);
@@ -434,9 +434,9 @@ void ClientConnection::AttachPlayer(Player &player) {
 	PlayerEntity().Ref();
 
 	old_base = PlayerChunks().Base();
-	Chunk::Pos begin = PlayerChunks().CoordsBegin();
-	Chunk::Pos end = PlayerChunks().CoordsEnd();
-	for (Chunk::Pos pos = begin; pos.z < end.z; ++pos.z) {
+	ExactLocation::Coarse begin = PlayerChunks().CoordsBegin();
+	ExactLocation::Coarse end = PlayerChunks().CoordsEnd();
+	for (ExactLocation::Coarse pos = begin; pos.z < end.z; ++pos.z) {
 		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
 			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
 				chunk_queue.push_back(pos);

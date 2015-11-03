@@ -11,7 +11,6 @@ namespace blank {
 struct Block {
 
 	using Type = unsigned short;
-	using Pos = glm::vec3;
 
 	enum Face {
 		FACE_UP,

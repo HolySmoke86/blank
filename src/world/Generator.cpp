@@ -50,13 +50,13 @@ void Generator::LoadTypes(const BlockTypeRegistry &reg) {
 }
 
 void Generator::operator ()(Chunk &chunk) const noexcept {
-	Chunk::Pos pos(chunk.Position());
-	glm::vec3 coords(pos * Chunk::Extent());
-	for (int z = 0; z < Chunk::depth; ++z) {
-		for (int y = 0; y < Chunk::height; ++y) {
-			for (int x = 0; x < Chunk::width; ++x) {
-				Block::Pos block_pos(x, y, z);
-				chunk.SetBlock(block_pos, Generate(coords + block_pos));
+	ExactLocation::Coarse pos(chunk.Position());
+	ExactLocation::Fine coords(pos * ExactLocation::Extent());
+	for (int z = 0; z < Chunk::side; ++z) {
+		for (int y = 0; y < Chunk::side; ++y) {
+			for (int x = 0; x < Chunk::side; ++x) {
+				ExactLocation::Fine block_pos(x, y, z);
+				chunk.SetBlock(RoughLocation::Fine(x, y, z), Generate(coords + ExactLocation::Fine(x, y, z)));
 			}
 		}
 	}

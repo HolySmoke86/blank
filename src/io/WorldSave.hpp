@@ -33,10 +33,10 @@ public:
 	std::string PlayerPath(const Player &) const;
 
 	// single chunk
-	bool Exists(const Chunk::Pos &) const noexcept;
+	bool Exists(const ExactLocation::Coarse &) const noexcept;
 	void Read(Chunk &) const;
 	void Write(Chunk &) const;
-	const char *ChunkPath(const Chunk::Pos &) const;
+	const char *ChunkPath(const ExactLocation::Coarse &) const;
 
 private:
 	std::string root_path;

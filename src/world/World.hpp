@@ -49,7 +49,7 @@ public:
 	bool Intersection(
 		const Ray &,
 		const glm::mat4 &M,
-		const Chunk::Pos &reference,
+		const ExactLocation::Coarse &reference,
 		WorldCollision &);
 
 	/// check if this ray hits an entity

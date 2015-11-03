@@ -84,7 +84,7 @@ void AIController::Update(Entity &e, float dt) {
 		// our box is oriented for -Z velocity
 		obstacle_transform = glm::mat4(find_rotation(glm::vec3(0.0f, 0.0f, -1.0f), e.Heading()));
 		// and positioned relative to the entity's chunk
-		obstacle_transform[3] = glm::vec4(e.GetState().block_pos, 1.0f);
+		obstacle_transform[3] = glm::vec4(e.GetState().pos.block, 1.0f);
 	}
 
 	if (wandering) {
@@ -297,7 +297,7 @@ glm::vec3 AIController::GetObstacleAvoidanceForce(const Entity &e, const EntityS
 	// point on the "velocity ray" closest to obstacle
 	float to_go = dot(difference, e.Heading());
 	// point is our future position if we keep going our way
-	glm::vec3 point(e.GetState().block_pos + e.Heading() * to_go);
+	glm::vec3 point(e.GetState().pos.block + e.Heading() * to_go);
 	// now steer away in the direction of (point - block)
 	// with a magniture proportional to speed/distance
 	return normalize(point - nearest->BlockCoords()) * (e.Speed() / std::sqrt(distance));
@@ -429,7 +429,7 @@ glm::vec3 AIController::GetEvadeForce(const Entity &, const EntityState &state) 
 	glm::vec3 cur_diff(state.Diff(GetEvadeTarget().GetState()));
 	float time_estimate = length(cur_diff) / evade_speed;
 	EntityState pred_state(GetEvadeTarget().GetState());
-	pred_state.block_pos += pred_state.velocity * time_estimate;
+	pred_state.pos.block += pred_state.velocity * time_estimate;
 	return Flee(state, pred_state, evade_speed, 2.0f);
 }
 
@@ -475,7 +475,7 @@ glm::vec3 AIController::GetPursuitForce(const Entity &, const EntityState &state
 	glm::vec3 cur_diff(state.Diff(GetPursuitTarget().GetState()));
 	float time_estimate = length(cur_diff) / pursuit_speed;
 	EntityState pred_state(GetPursuitTarget().GetState());
-	pred_state.block_pos += pred_state.velocity * time_estimate;
+	pred_state.pos.block += pred_state.velocity * time_estimate;
 	return Seek(state, pred_state, pursuit_speed, 2.0f);
 }
 

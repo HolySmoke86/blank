@@ -125,9 +125,9 @@ void WorldSave::Read(Player &player) const {
 		in.ReadIdentifier(name);
 		in.Skip(Token::EQUALS);
 		if (name == "chunk") {
-			in.ReadVec(state.chunk_pos);
+			in.ReadVec(state.pos.chunk);
 		} else if (name == "position") {
-			in.ReadVec(state.block_pos);
+			in.ReadVec(state.pos.block);
 		} else if (name == "orientation") {
 			in.ReadQuat(state.orient);
 		} else if (name == "pitch") {
@@ -152,8 +152,8 @@ void WorldSave::Write(const Player &player) const {
 	}
 	const EntityState &state = player.GetEntity().GetState();
 	ofstream out(PlayerPath(player));
-	out << "chunk = " << state.chunk_pos << ';' << endl;
-	out << "position = " << state.block_pos << ';' << endl;
+	out << "chunk = " << state.pos.chunk << ';' << endl;
+	out << "position = " << state.pos.block << ';' << endl;
 	out << "orientation = " << state.orient << ';' << endl;
 	out << "pitch = " << state.pitch << ';' << endl;
 	out << "yaw = " << state.yaw << ';' << endl;
@@ -167,7 +167,7 @@ string WorldSave::PlayerPath(const Player &player) const {
 }
 
 
-bool WorldSave::Exists(const Chunk::Pos &pos) const noexcept {
+bool WorldSave::Exists(const ExactLocation::Coarse &pos) const noexcept {
 	return is_file(ChunkPath(pos));
 }
 
@@ -217,7 +217,7 @@ void WorldSave::Write(Chunk &chunk) const {
 }
 
 
-const char *WorldSave::ChunkPath(const Chunk::Pos &pos) const {
+const char *WorldSave::ChunkPath(const ExactLocation::Coarse &pos) const {
 	snprintf(chunk_buf.get(), chunk_bufsiz, chunk_path.c_str(), pos.x, pos.y, pos.z);
 	return chunk_buf.get();
 }

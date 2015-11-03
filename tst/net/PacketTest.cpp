@@ -114,8 +114,7 @@ void PacketTest::testJoin() {
 	Entity write_entity;
 	write_entity.ID(534574);
 	EntityState write_state;
-	write_state.chunk_pos = { 7, 2, -3 };
-	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	write_state.pitch = 0.3f;
@@ -164,8 +163,7 @@ void PacketTest::testPlayerUpdate() {
 	AssertPacket("PlayerUpdate", 4, 50, pack);
 
 	EntityState write_state;
-	write_state.chunk_pos = { 7, 2, -3 };
-	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
 	glm::vec3 write_movement(0.5f, -1.0f, 1.0f);
@@ -213,8 +211,7 @@ void PacketTest::testSpawnEntity() {
 	model.Enumerate();
 	model.Instantiate(write_entity.GetModel());
 	EntityState write_state;
-	write_state.chunk_pos = { 7, 2, -3 };
-	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
@@ -304,8 +301,7 @@ void PacketTest::testEntityUpdate() {
 	Entity write_entity;
 	write_entity.ID(8567234);
 	EntityState write_state;
-	write_state.chunk_pos = { 7, 2, -3 };
-	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
@@ -343,8 +339,7 @@ void PacketTest::testPlayerCorrection() {
 
 	Entity write_entity;
 	EntityState write_state;
-	write_state.chunk_pos = { 7, 2, -3 };
-	write_state.block_pos = { 1.5f, 0.9f, 12.0f };
+	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
@@ -595,11 +590,11 @@ void PacketTest::AssertEqual(
 ) {
 	AssertEqual(
 		message + ": bad chunk position",
-		expected.chunk_pos, actual.chunk_pos
+		expected.pos.chunk, actual.pos.chunk
 	);
 	AssertEqual(
 		message + ": bad block position",
-		expected.block_pos, actual.block_pos, 16.0f/65535.0f // that's about the max accuracy that packing's going to give us
+		expected.pos.block, actual.pos.block, 16.0f/65535.0f // that's about the max accuracy that packing's going to give us
 	);
 	AssertEqual(
 		message + ": bad velocity",

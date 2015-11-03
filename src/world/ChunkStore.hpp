@@ -20,15 +20,15 @@ public:
 	ChunkStore &operator =(const ChunkStore &) = delete;
 
 public:
-	ChunkIndex &MakeIndex(const Chunk::Pos &base, int extent);
+	ChunkIndex &MakeIndex(const ExactLocation::Coarse &base, int extent);
 	void UnregisterIndex(ChunkIndex &);
 
-	ChunkIndex *ClosestIndex(const Chunk::Pos &pos);
+	ChunkIndex *ClosestIndex(const ExactLocation::Coarse &pos);
 
 	/// returns nullptr if given position is not loaded
-	Chunk *Get(const Chunk::Pos &);
+	Chunk *Get(const ExactLocation::Coarse &);
 	/// returns nullptr if given position is not indexed
-	Chunk *Allocate(const Chunk::Pos &);
+	Chunk *Allocate(const ExactLocation::Coarse &);
 
 	std::list<Chunk>::iterator begin() noexcept { return loaded.begin(); }
 	std::list<Chunk>::iterator end() noexcept { return loaded.end(); }
@@ -44,7 +44,7 @@ public:
 
 	/// get coordinates of a missing chunk
 	/// this will return garbage if none are actually missing
-	Chunk::Pos NextMissing() noexcept;
+	ExactLocation::Coarse NextMissing() noexcept;
 
 	void Clean();
 

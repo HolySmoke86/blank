@@ -62,7 +62,7 @@ int ChunkReceiver::ToLoad() const noexcept {
 void ChunkReceiver::LoadOne() {
 	if (!store.HasMissing()) return;
 
-	Chunk::Pos pos = store.NextMissing();
+	ExactLocation::Coarse pos = store.NextMissing();
 	Chunk *chunk = store.Allocate(pos);
 	if (!chunk) {
 		// chunk store corrupted?
@@ -392,8 +392,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	replay.SetState(corrected_state);
 
 	if (entry != end) {
-		entry->state.chunk_pos = replay.GetState().chunk_pos;
-		entry->state.block_pos = replay.GetState().block_pos;
+		entry->state.pos = replay.GetState().pos;
 		++entry;
 	}
 
@@ -401,8 +400,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	while (entry != end) {
 		SetMovement(entry->movement);
 		GetWorld().Update(replay, entry->delta_t);
-		entry->state.chunk_pos = replay.GetState().chunk_pos;
-		entry->state.block_pos = replay.GetState().block_pos;
+		entry->state.pos = replay.GetState().pos;
 		++entry;
 	}
 
@@ -421,13 +419,12 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	constexpr float max_disp = 0.0001f; // (1/100)^2
 
 	if (disp_squared > warp_thresh) {
-		player_state.chunk_pos = replay.GetState().chunk_pos;
-		player_state.block_pos = replay.GetState().block_pos;
+		player_state.pos = replay.GetState().pos;
 	} else if (disp_squared < max_disp) {
-		player_state.block_pos += displacement;
+		player_state.pos.block += displacement;
 	} else {
 		displacement *= 0.01f / sqrt(disp_squared);
-		player_state.block_pos += displacement;
+		player_state.pos.block += displacement;
 	}
 	GetPlayer().GetEntity().SetState(player_state);
 	SetMovement(restore_movement);

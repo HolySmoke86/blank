@@ -22,9 +22,7 @@
 
 namespace blank {
 
-constexpr int Chunk::width;
-constexpr int Chunk::height;
-constexpr int Chunk::depth;
+constexpr int Chunk::side;
 constexpr int Chunk::size;
 
 
@@ -76,9 +74,9 @@ namespace {
 struct SetNode {
 
 	Chunk *chunk;
-	Chunk::Pos pos;
+	RoughLocation::Fine pos;
 
-	SetNode(Chunk *chunk, Chunk::Pos pos)
+	SetNode(Chunk *chunk, RoughLocation::Fine pos)
 	: chunk(chunk), pos(pos) { }
 
 	int Get() const noexcept { return chunk->GetLight(pos); }
@@ -104,7 +102,7 @@ struct UnsetNode
 
 	int level;
 
-	UnsetNode(Chunk *chunk, Chunk::Pos pos)
+	UnsetNode(Chunk *chunk, RoughLocation::Fine pos)
 	: SetNode(chunk, pos), level(Get()) { }
 
 	UnsetNode(const SetNode &set)
@@ -195,7 +193,7 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	} else if (!new_type.block_light && old_type.block_light) {
 		// obstacle removed
 		int level = 0;
-		Pos pos(ToPos(index));
+		RoughLocation::Fine pos(ToPos(index));
 		for (int face = 0; face < Block::FACE_COUNT; ++face) {
 			BlockLookup next_block(this, pos, Block::Face(face));
 			if (next_block) {
@@ -212,10 +210,10 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 
 void Chunk::ScanLights() {
 	int idx = 0;
-	Pos pos(0, 0, 0);
-	for (; pos.z < depth; ++pos.z) {
-		for (pos.y = 0; pos.y < height; ++pos.y) {
-			for (pos.x = 0; pos.x < width; ++pos.x, ++idx) {
+	RoughLocation::Fine pos(0, 0, 0);
+	for (; pos.z < side; ++pos.z) {
+		for (pos.y = 0; pos.y < side; ++pos.y) {
+			for (pos.x = 0; pos.x < side; ++pos.x, ++idx) {
 				const BlockType &type = Type(blocks[idx]);
 				if (type.luminosity) {
 					SetLight(idx, type.luminosity);
@@ -254,7 +252,7 @@ int Chunk::GetLight(int index) const noexcept {
 	return light[index];
 }
 
-float Chunk::GetVertexLight(const Pos &pos, const BlockMesh::Position &vtx, const EntityMesh::Normal &norm) const noexcept {
+float Chunk::GetVertexLight(const RoughLocation::Fine &pos, const BlockMesh::Position &vtx, const EntityMesh::Normal &norm) const noexcept {
 	int index = ToIndex(pos);
 	float light = GetLight(index);
 
@@ -344,7 +342,7 @@ float Chunk::GetVertexLight(const Pos &pos, const BlockMesh::Position &vtx, cons
 }
 
 
-bool Chunk::IsSurface(const Pos &pos) const noexcept {
+bool Chunk::IsSurface(const RoughLocation::Fine &pos) const noexcept {
 	const Block &block = BlockAt(pos);
 	if (!Type(block).visible) {
 		return false;
@@ -368,16 +366,16 @@ bool Chunk::Intersection(
 	coll.chunk = this;
 	coll.block = -1;
 	coll.depth = std::numeric_limits<float>::infinity();
-	for (int z = 0; z < depth; ++z) {
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x, ++idx) {
+	for (int z = 0; z < side; ++z) {
+		for (int y = 0; y < side; ++y) {
+			for (int x = 0; x < side; ++x, ++idx) {
 				const BlockType &type = Type(idx);
 				if (!type.collision || !type.shape) {
 					continue;
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
-				if (type.shape->Intersects(ray, M * ToTransform(Pos(x, y, z), idx), cur_dist, cur_norm)) {
+				if (type.shape->Intersects(ray, M * ToTransform(RoughLocation::Fine(x, y, z), idx), cur_dist, cur_norm)) {
 					if (cur_dist < coll.depth) {
 						coll.block = idx;
 						coll.depth = cur_dist;
@@ -409,14 +407,14 @@ bool Chunk::Intersection(
 	if (!blank::Intersection(box, Mbox, Bounds(), Mchunk, penetration, normal)) {
 		return false;
 	}
-	for (int idx = 0, z = 0; z < depth; ++z) {
-		for (int y = 0; y < height; ++y) {
-			for (int x = 0; x < width; ++x, ++idx) {
+	for (int idx = 0, z = 0; z < side; ++z) {
+		for (int y = 0; y < side; ++y) {
+			for (int x = 0; x < side; ++x, ++idx) {
 				const BlockType &type = Type(idx);
 				if (!type.collision || !type.shape) {
 					continue;
 				}
-				if (type.shape->Intersects(Mchunk * ToTransform(Pos(x, y, z), idx), box, Mbox, penetration, normal)) {
+				if (type.shape->Intersects(Mchunk * ToTransform(RoughLocation::Fine(x, y, z), idx), box, Mbox, penetration, normal)) {
 					col.emplace_back(this, idx, penetration, normal);
 					any = true;
 				}
@@ -448,11 +446,11 @@ void Chunk::Update(BlockMesh &model) noexcept {
 	if (idx_count > 0) {
 		int idx = 0;
 		BlockMesh::Index vtx_counter = 0;
-		for (size_t z = 0; z < depth; ++z) {
-			for (size_t y = 0; y < height; ++y) {
-				for (size_t x = 0; x < width; ++x, ++idx) {
+		for (size_t z = 0; z < side; ++z) {
+			for (size_t y = 0; y < side; ++y) {
+				for (size_t x = 0; x < side; ++x, ++idx) {
 					const BlockType &type = Type(BlockAt(idx));
-					const Pos pos(x, y, z);
+					const RoughLocation::Fine pos(x, y, z);
 
 					if (!type.visible || !type.shape || Obstructed(pos).All()) continue;
 
@@ -476,7 +474,7 @@ void Chunk::Update(BlockMesh &model) noexcept {
 	ClearMesh();
 }
 
-Block::FaceSet Chunk::Obstructed(const Pos &pos) const noexcept {
+Block::FaceSet Chunk::Obstructed(const RoughLocation::Fine &pos) const noexcept {
 	Block::FaceSet result;
 
 	for (int f = 0; f < Block::FACE_COUNT; ++f) {
@@ -490,17 +488,17 @@ Block::FaceSet Chunk::Obstructed(const Pos &pos) const noexcept {
 	return result;
 }
 
-glm::mat4 Chunk::ToTransform(const Pos &pos, int idx) const noexcept {
+glm::mat4 Chunk::ToTransform(const RoughLocation::Fine &pos, int idx) const noexcept {
 	return glm::translate(ToCoords(pos)) * BlockAt(idx).Transform();
 }
 
 
-BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
+BlockLookup::BlockLookup(Chunk *c, const RoughLocation::Fine &p) noexcept
 : chunk(c), pos(p) {
-	while (pos.x >= Chunk::width) {
+	while (pos.x >= Chunk::side) {
 		if (chunk->HasNeighbor(Block::FACE_RIGHT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_RIGHT);
-			pos.x -= Chunk::width;
+			pos.x -= Chunk::side;
 		} else {
 			chunk = nullptr;
 			return;
@@ -509,16 +507,16 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	while (pos.x < 0) {
 		if (chunk->HasNeighbor(Block::FACE_LEFT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_LEFT);
-			pos.x += Chunk::width;
+			pos.x += Chunk::side;
 		} else {
 			chunk = nullptr;
 			return;
 		}
 	}
-	while (pos.y >= Chunk::height) {
+	while (pos.y >= Chunk::side) {
 		if (chunk->HasNeighbor(Block::FACE_UP)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_UP);
-			pos.y -= Chunk::height;
+			pos.y -= Chunk::side;
 		} else {
 			chunk = nullptr;
 			return;
@@ -527,16 +525,16 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	while (pos.y < 0) {
 		if (chunk->HasNeighbor(Block::FACE_DOWN)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_DOWN);
-			pos.y += Chunk::height;
+			pos.y += Chunk::side;
 		} else {
 			chunk = nullptr;
 			return;
 		}
 	}
-	while (pos.z >= Chunk::depth) {
+	while (pos.z >= Chunk::side) {
 		if (chunk->HasNeighbor(Block::FACE_FRONT)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_FRONT);
-			pos.z -= Chunk::depth;
+			pos.z -= Chunk::side;
 		} else {
 			chunk = nullptr;
 			return;
@@ -545,7 +543,7 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	while (pos.z < 0) {
 		if (chunk->HasNeighbor(Block::FACE_BACK)) {
 			chunk = &chunk->GetNeighbor(Block::FACE_BACK);
-			pos.z += Chunk::depth;
+			pos.z += Chunk::side;
 		} else {
 			chunk = nullptr;
 			return;
@@ -553,11 +551,11 @@ BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p) noexcept
 	}
 }
 
-BlockLookup::BlockLookup(Chunk *c, const Chunk::Pos &p, Block::Face face) noexcept
+BlockLookup::BlockLookup(Chunk *c, const RoughLocation::Fine &p, Block::Face face) noexcept
 : chunk(c), pos(p) {
 	pos += Block::FaceNormal(face);
 	if (!Chunk::InBounds(pos)) {
-		pos -= Block::FaceNormal(face) * Chunk::Extent();
+		pos -= Block::FaceNormal(face) * ExactLocation::Extent();
 		chunk = &chunk->GetNeighbor(face);
 	}
 }
@@ -610,7 +608,7 @@ int ChunkLoader::ToLoad() const noexcept {
 bool ChunkLoader::LoadOne() {
 	if (!store.HasMissing()) return false;
 
-	Chunk::Pos pos = store.NextMissing();
+	ExactLocation::Coarse pos = store.NextMissing();
 	Chunk *chunk = store.Allocate(pos);
 	if (!chunk) {
 		// chunk store corrupted?
@@ -630,9 +628,9 @@ bool ChunkLoader::LoadOne() {
 		return generated;
 	}
 
-	Chunk::Pos begin(pos - Chunk::Pos(1));
-	Chunk::Pos end(pos + Chunk::Pos(2));
-	for (Chunk::Pos iter(begin); iter.z < end.z; ++iter.z) {
+	ExactLocation::Coarse begin(pos - ExactLocation::Coarse(1));
+	ExactLocation::Coarse end(pos + ExactLocation::Coarse(2));
+	for (ExactLocation::Coarse iter(begin); iter.z < end.z; ++iter.z) {
 		for (iter.y = begin.y; iter.y < end.y; ++iter.y) {
 			for (iter.x = begin.x; iter.x < end.x; ++iter.x) {
 				if (index->IsBorder(iter)) continue;
@@ -715,7 +713,7 @@ void ChunkRenderer::Render(Viewport &viewport) {
 }
 
 
-ChunkIndex::ChunkIndex(ChunkStore &store, const Chunk::Pos &base, int extent)
+ChunkIndex::ChunkIndex(ChunkStore &store, const ExactLocation::Coarse &base, int extent)
 : store(store)
 , base(base)
 , extent(extent)
@@ -732,22 +730,22 @@ ChunkIndex::~ChunkIndex() {
 	Clear();
 }
 
-bool ChunkIndex::InRange(const Chunk::Pos &pos) const noexcept {
+bool ChunkIndex::InRange(const ExactLocation::Coarse &pos) const noexcept {
 	return Distance(pos) <= extent;
 }
 
-bool ChunkIndex::IsBorder(const Chunk::Pos &pos) const noexcept {
+bool ChunkIndex::IsBorder(const ExactLocation::Coarse &pos) const noexcept {
 	return Distance(pos) == extent;
 }
 
-int ChunkIndex::Distance(const Chunk::Pos &pos) const noexcept {
+int ChunkIndex::Distance(const ExactLocation::Coarse &pos) const noexcept {
 	return manhattan_radius(pos - base);
 }
 
-bool ChunkIndex::HasAllSurrounding(const Chunk::Pos &pos) const noexcept {
-	Chunk::Pos begin(pos - Chunk::Pos(1));
-	Chunk::Pos end(pos + Chunk::Pos(2));
-	for (Chunk::Pos iter(begin); iter.z < end.z; ++iter.z) {
+bool ChunkIndex::HasAllSurrounding(const ExactLocation::Coarse &pos) const noexcept {
+	ExactLocation::Coarse begin(pos - ExactLocation::Coarse(1));
+	ExactLocation::Coarse end(pos + ExactLocation::Coarse(2));
+	for (ExactLocation::Coarse iter(begin); iter.z < end.z; ++iter.z) {
 		for (iter.y = begin.y; iter.y < end.y; ++iter.y) {
 			for (iter.x = begin.x; iter.x < end.x; ++iter.x) {
 				if (!Get(iter)) return false;
@@ -757,8 +755,8 @@ bool ChunkIndex::HasAllSurrounding(const Chunk::Pos &pos) const noexcept {
 	return true;
 }
 
-int ChunkIndex::IndexOf(const Chunk::Pos &pos) const noexcept {
-	Chunk::Pos mod_pos(
+int ChunkIndex::IndexOf(const ExactLocation::Coarse &pos) const noexcept {
+	ExactLocation::Coarse mod_pos(
 		GetCol(pos.x),
 		GetCol(pos.y),
 		GetCol(pos.z)
@@ -768,18 +766,18 @@ int ChunkIndex::IndexOf(const Chunk::Pos &pos) const noexcept {
 		+  mod_pos.z * stride.z;
 }
 
-Chunk::Pos ChunkIndex::PositionOf(int i) const noexcept {
-	Chunk::Pos zero_pos(
+ExactLocation::Coarse ChunkIndex::PositionOf(int i) const noexcept {
+	ExactLocation::Coarse zero_pos(
 		(i / stride.x) % side_length,
 		(i / stride.y) % side_length,
 		(i / stride.z) % side_length
 	);
-	Chunk::Pos zero_base(
+	ExactLocation::Coarse zero_base(
 		GetCol(base.x),
 		GetCol(base.y),
 		GetCol(base.z)
 	);
-	Chunk::Pos base_relative(zero_pos - zero_base);
+	ExactLocation::Coarse base_relative(zero_pos - zero_base);
 	if (base_relative.x > extent) base_relative.x -= side_length;
 	else if (base_relative.x < -extent) base_relative.x += side_length;
 	if (base_relative.y > extent) base_relative.y -= side_length;
@@ -789,7 +787,7 @@ Chunk::Pos ChunkIndex::PositionOf(int i) const noexcept {
 	return base + base_relative;
 }
 
-Chunk *ChunkIndex::Get(const Chunk::Pos &pos) noexcept {
+Chunk *ChunkIndex::Get(const ExactLocation::Coarse &pos) noexcept {
 	if (InRange(pos)) {
 		return chunks[IndexOf(pos)];
 	} else {
@@ -797,7 +795,7 @@ Chunk *ChunkIndex::Get(const Chunk::Pos &pos) noexcept {
 	}
 }
 
-const Chunk *ChunkIndex::Get(const Chunk::Pos &pos) const noexcept {
+const Chunk *ChunkIndex::Get(const ExactLocation::Coarse &pos) const noexcept {
 	if (InRange(pos)) {
 		return chunks[IndexOf(pos)];
 	} else {
@@ -805,10 +803,10 @@ const Chunk *ChunkIndex::Get(const Chunk::Pos &pos) const noexcept {
 	}
 }
 
-void ChunkIndex::Rebase(const Chunk::Pos &new_base) {
+void ChunkIndex::Rebase(const ExactLocation::Coarse &new_base) {
 	if (new_base == base) return;
 
-	Chunk::Pos diff(new_base - base);
+	ExactLocation::Coarse diff(new_base - base);
 
 	if (manhattan_radius(diff) > extent) {
 		// that's more than half, so probably not worth shifting
@@ -907,7 +905,7 @@ void ChunkIndex::Unset(int index) noexcept {
 	}
 }
 
-Chunk::Pos ChunkIndex::NextMissing() noexcept {
+ExactLocation::Coarse ChunkIndex::NextMissing() noexcept {
 	if (MissingChunks() > 0) {
 		int roundtrip = last_missing;
 		last_missing = (last_missing + 1) % total_length;
@@ -934,7 +932,7 @@ ChunkStore::~ChunkStore() {
 
 }
 
-ChunkIndex &ChunkStore::MakeIndex(const Chunk::Pos &pos, int extent) {
+ChunkIndex &ChunkStore::MakeIndex(const ExactLocation::Coarse &pos, int extent) {
 	indices.emplace_back(*this, pos, extent);
 	return indices.back();
 }
@@ -950,7 +948,7 @@ void ChunkStore::UnregisterIndex(ChunkIndex &index) {
 	}
 }
 
-ChunkIndex *ChunkStore::ClosestIndex(const Chunk::Pos &pos) {
+ChunkIndex *ChunkStore::ClosestIndex(const ExactLocation::Coarse &pos) {
 	ChunkIndex *closest_index = nullptr;
 	int closest_distance = std::numeric_limits<int>::max();
 
@@ -965,7 +963,7 @@ ChunkIndex *ChunkStore::ClosestIndex(const Chunk::Pos &pos) {
 	return closest_index;
 }
 
-Chunk *ChunkStore::Get(const Chunk::Pos &pos) {
+Chunk *ChunkStore::Get(const ExactLocation::Coarse &pos) {
 	for (ChunkIndex &index : indices) {
 		Chunk *chunk = index.Get(pos);
 		if (chunk) {
@@ -975,7 +973,7 @@ Chunk *ChunkStore::Get(const Chunk::Pos &pos) {
 	return nullptr;
 }
 
-Chunk *ChunkStore::Allocate(const Chunk::Pos &pos) {
+Chunk *ChunkStore::Allocate(const ExactLocation::Coarse &pos) {
 	Chunk *chunk = Get(pos);
 	if (chunk) {
 		return chunk;
@@ -995,7 +993,7 @@ Chunk *ChunkStore::Allocate(const Chunk::Pos &pos) {
 	}
 	for (int i = 0; i < Block::FACE_COUNT; ++i) {
 		Block::Face face = Block::Face(i);
-		Chunk::Pos neighbor_pos(pos + Block::FaceNormal(face));
+		ExactLocation::Coarse neighbor_pos(pos + Block::FaceNormal(face));
 		Chunk *neighbor = Get(neighbor_pos);
 		if (neighbor) {
 			chunk->SetNeighbor(face, *neighbor);
@@ -1021,13 +1019,13 @@ int ChunkStore::EstimateMissing() const noexcept {
 	return missing;
 }
 
-Chunk::Pos ChunkStore::NextMissing() noexcept {
+ExactLocation::Coarse ChunkStore::NextMissing() noexcept {
 	for (ChunkIndex &index : indices) {
 		if (index.MissingChunks()) {
 			return index.NextMissing();
 		}
 	}
-	return Chunk::Pos(0, 0, 0);
+	return ExactLocation::Coarse(0, 0, 0);
 }
 
 void ChunkStore::Clean() {

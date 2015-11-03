@@ -63,11 +63,11 @@ public:
 
 	const glm::vec3 &Velocity() const noexcept { return state.velocity; }
 
-	const glm::vec3 &Position() const noexcept { return state.block_pos; }
-	void Position(const glm::ivec3 &, const glm::vec3 &) noexcept;
-	void Position(const glm::vec3 &) noexcept;
+	const ExactLocation::Fine &Position() const noexcept { return state.pos.block; }
+	void Position(const ExactLocation::Coarse &, const ExactLocation::Fine &) noexcept;
+	void Position(const ExactLocation::Fine &) noexcept;
 
-	const glm::ivec3 ChunkCoords() const noexcept { return state.chunk_pos; }
+	const glm::ivec3 ChunkCoords() const noexcept { return state.pos.chunk; }
 
 	glm::vec3 AbsolutePosition() const noexcept {
 		return state.AbsolutePosition();
@@ -92,7 +92,7 @@ public:
 	/// get a transform for this entity's view space relative to reference chunk
 	glm::mat4 ViewTransform(const glm::ivec3 &reference) const noexcept;
 	/// get a ray in entity's face direction originating from center of vision
-	Ray Aim(const Chunk::Pos &chunk_offset) const noexcept;
+	Ray Aim(const ExactLocation::Coarse &chunk_offset) const noexcept;
 
 	/// true if this entity's position will change (significantly) the next update
 	bool Moving() const noexcept { return speed > 0.0f; }

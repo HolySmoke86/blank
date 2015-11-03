@@ -35,259 +35,259 @@ void ChunkTest::tearDown() {
 void ChunkTest::testBounds() {
 	CPPUNIT_ASSERT_MESSAGE(
 		"valid position out of bounds",
-		Chunk::InBounds(Chunk::Pos(0, 0, 0))
+		Chunk::InBounds(RoughLocation::Fine(0, 0, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"valid position out of bounds",
-		Chunk::InBounds(Chunk::Pos(15, 0, 0))
+		Chunk::InBounds(RoughLocation::Fine(15, 0, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"valid position out of bounds",
-		Chunk::InBounds(Chunk::Pos(0, 15, 0))
+		Chunk::InBounds(RoughLocation::Fine(0, 15, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"valid position out of bounds",
-		Chunk::InBounds(Chunk::Pos(0, 0, 15))
+		Chunk::InBounds(RoughLocation::Fine(0, 0, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"valid position out of bounds",
-		Chunk::InBounds(Chunk::Pos(15, 15, 15))
+		Chunk::InBounds(RoughLocation::Fine(15, 15, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"invalid position in bounds",
-		!Chunk::InBounds(Chunk::Pos(-1, -1, -1))
+		!Chunk::InBounds(RoughLocation::Fine(-1, -1, -1))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"invalid position in bounds",
-		!Chunk::InBounds(Chunk::Pos(-1, 1, 0))
+		!Chunk::InBounds(RoughLocation::Fine(-1, 1, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"invalid position in bounds",
-		!Chunk::InBounds(Chunk::Pos(16, -16, 0))
+		!Chunk::InBounds(RoughLocation::Fine(16, -16, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"invalid position in bounds",
-		!Chunk::InBounds(Chunk::Pos(16, 16, 16))
+		!Chunk::InBounds(RoughLocation::Fine(16, 16, 16))
 	);
 }
 
 void ChunkTest::testBorder() {
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 0, 0))
+		Chunk::IsBorder(RoughLocation::Fine(0, 0, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 0, 8))
+		Chunk::IsBorder(RoughLocation::Fine(0, 0, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 0, 15))
+		Chunk::IsBorder(RoughLocation::Fine(0, 0, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 8, 0))
+		Chunk::IsBorder(RoughLocation::Fine(0, 8, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 8, 8))
+		Chunk::IsBorder(RoughLocation::Fine(0, 8, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 8, 15))
+		Chunk::IsBorder(RoughLocation::Fine(0, 8, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 15, 0))
+		Chunk::IsBorder(RoughLocation::Fine(0, 15, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 15, 8))
+		Chunk::IsBorder(RoughLocation::Fine(0, 15, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(0, 15, 15))
+		Chunk::IsBorder(RoughLocation::Fine(0, 15, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 0, 0))
+		Chunk::IsBorder(RoughLocation::Fine(8, 0, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 0, 8))
+		Chunk::IsBorder(RoughLocation::Fine(8, 0, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 0, 15))
+		Chunk::IsBorder(RoughLocation::Fine(8, 0, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 8, 0))
+		Chunk::IsBorder(RoughLocation::Fine(8, 8, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position is border",
-		!Chunk::IsBorder(Chunk::Pos(8, 8, 8))
+		!Chunk::IsBorder(RoughLocation::Fine(8, 8, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 8, 15))
+		Chunk::IsBorder(RoughLocation::Fine(8, 8, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 15, 0))
+		Chunk::IsBorder(RoughLocation::Fine(8, 15, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 15, 8))
+		Chunk::IsBorder(RoughLocation::Fine(8, 15, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(8, 15, 15))
+		Chunk::IsBorder(RoughLocation::Fine(8, 15, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 0, 0))
+		Chunk::IsBorder(RoughLocation::Fine(15, 0, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 0, 8))
+		Chunk::IsBorder(RoughLocation::Fine(15, 0, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 0, 15))
+		Chunk::IsBorder(RoughLocation::Fine(15, 0, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 8, 0))
+		Chunk::IsBorder(RoughLocation::Fine(15, 8, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 8, 8))
+		Chunk::IsBorder(RoughLocation::Fine(15, 8, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 8, 15))
+		Chunk::IsBorder(RoughLocation::Fine(15, 8, 15))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 15, 0))
+		Chunk::IsBorder(RoughLocation::Fine(15, 15, 0))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 15, 8))
+		Chunk::IsBorder(RoughLocation::Fine(15, 15, 8))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::Pos(15, 15, 15))
+		Chunk::IsBorder(RoughLocation::Fine(15, 15, 15))
 	);
 
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 0, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 0, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 0, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 0, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 0, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 0, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 8, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 8, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 8, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 8, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 8, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 8, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 15, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 15, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 15, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 15, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(0, 15, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(0, 15, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 0, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 0, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 0, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 0, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 0, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 0, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 8, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 8, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position is border",
-		!Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 8, 8)))
+		!Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 8, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 8, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 8, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 15, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 15, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 15, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 15, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(8, 15, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(8, 15, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 0, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 0, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 0, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 0, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 0, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 0, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 8, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 8, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 8, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 8, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 8, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 8, 15)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 15, 0)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 15, 0)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 15, 8)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 15, 8)))
 	);
 	CPPUNIT_ASSERT_MESSAGE(
 		"position not border",
-		Chunk::IsBorder(Chunk::ToIndex(Chunk::Pos(15, 15, 15)))
+		Chunk::IsBorder(Chunk::ToIndex(RoughLocation::Fine(15, 15, 15)))
 	);
 }
 
@@ -384,139 +384,139 @@ void ChunkTest::testLightPropagation() {
 	chunk->ScanLights();
 
 	// 0 air, 1 solid, 2 solid and emits light level of 5
-	chunk->SetBlock(Chunk::Pos(7, 7, 7), Block(2));
+	chunk->SetBlock(RoughLocation::Fine(7, 7, 7), Block(2));
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding luminant block did not set correct light level",
-		5, chunk->GetLight(Chunk::Pos(7, 7, 7))
+		5, chunk->GetLight(RoughLocation::Fine(7, 7, 7))
 	);
 
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in +X",
-		4, chunk->GetLight(Chunk::Pos(8, 7, 7))
+		4, chunk->GetLight(RoughLocation::Fine(8, 7, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in -X",
-		4, chunk->GetLight(Chunk::Pos(6, 7, 7))
+		4, chunk->GetLight(RoughLocation::Fine(6, 7, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in +Y",
-		4, chunk->GetLight(Chunk::Pos(7, 8, 7))
+		4, chunk->GetLight(RoughLocation::Fine(7, 8, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in -Y",
-		4, chunk->GetLight(Chunk::Pos(7, 6, 7))
+		4, chunk->GetLight(RoughLocation::Fine(7, 6, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in +Z",
-		4, chunk->GetLight(Chunk::Pos(7, 7, 8))
+		4, chunk->GetLight(RoughLocation::Fine(7, 7, 8))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in -Z",
-		4, chunk->GetLight(Chunk::Pos(7, 7, 6))
+		4, chunk->GetLight(RoughLocation::Fine(7, 7, 6))
 	);
 
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in 2D diagonal",
-		3, chunk->GetLight(Chunk::Pos(8, 8, 7))
+		3, chunk->GetLight(RoughLocation::Fine(8, 8, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in 2D diagonal",
-		3, chunk->GetLight(Chunk::Pos(7, 6, 8))
+		3, chunk->GetLight(RoughLocation::Fine(7, 6, 8))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in 2D diagonal",
-		3, chunk->GetLight(Chunk::Pos(6, 7, 8))
+		3, chunk->GetLight(RoughLocation::Fine(6, 7, 8))
 	);
 
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in 3D diagonal",
-		2, chunk->GetLight(Chunk::Pos(8, 6, 6))
+		2, chunk->GetLight(RoughLocation::Fine(8, 6, 6))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in 3D diagonal",
-		2, chunk->GetLight(Chunk::Pos(6, 6, 8))
+		2, chunk->GetLight(RoughLocation::Fine(6, 6, 8))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"light did not propagate correctly in 3D diagonal",
-		2, chunk->GetLight(Chunk::Pos(6, 8, 8))
+		2, chunk->GetLight(RoughLocation::Fine(6, 8, 8))
 	);
 
 	// now block the light to the left
-	chunk->SetBlock(Chunk::Pos(6, 7, 7), Block(1));
+	chunk->SetBlock(RoughLocation::Fine(6, 7, 7), Block(1));
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		5, chunk->GetLight(Chunk::Pos(7, 7, 7))
+		5, chunk->GetLight(RoughLocation::Fine(7, 7, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		4, chunk->GetLight(Chunk::Pos(8, 7, 7))
+		4, chunk->GetLight(RoughLocation::Fine(8, 7, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		4, chunk->GetLight(Chunk::Pos(7, 8, 7))
+		4, chunk->GetLight(RoughLocation::Fine(7, 8, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		4, chunk->GetLight(Chunk::Pos(7, 6, 7))
+		4, chunk->GetLight(RoughLocation::Fine(7, 6, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		4, chunk->GetLight(Chunk::Pos(7, 7, 8))
+		4, chunk->GetLight(RoughLocation::Fine(7, 7, 8))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		4, chunk->GetLight(Chunk::Pos(7, 7, 6))
+		4, chunk->GetLight(RoughLocation::Fine(7, 7, 6))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		3, chunk->GetLight(Chunk::Pos(6, 6, 7))
+		3, chunk->GetLight(RoughLocation::Fine(6, 6, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		3, chunk->GetLight(Chunk::Pos(6, 8, 7))
+		3, chunk->GetLight(RoughLocation::Fine(6, 8, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		3, chunk->GetLight(Chunk::Pos(6, 7, 6))
+		3, chunk->GetLight(RoughLocation::Fine(6, 7, 6))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		3, chunk->GetLight(Chunk::Pos(6, 7, 6))
+		3, chunk->GetLight(RoughLocation::Fine(6, 7, 6))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		2, chunk->GetLight(Chunk::Pos(5, 6, 7))
+		2, chunk->GetLight(RoughLocation::Fine(5, 6, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		2, chunk->GetLight(Chunk::Pos(5, 8, 7))
+		2, chunk->GetLight(RoughLocation::Fine(5, 8, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		2, chunk->GetLight(Chunk::Pos(5, 7, 6))
+		2, chunk->GetLight(RoughLocation::Fine(5, 7, 6))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle affected unrelated index",
-		2, chunk->GetLight(Chunk::Pos(5, 7, 6))
+		2, chunk->GetLight(RoughLocation::Fine(5, 7, 6))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"adding obstacle resulted in unexpected light level behind it",
-		1, chunk->GetLight(Chunk::Pos(5, 7, 7))
+		1, chunk->GetLight(RoughLocation::Fine(5, 7, 7))
 	);
 
 	// and remove it again
-	chunk->SetBlock(Chunk::Pos(6, 7, 7), Block(0));
+	chunk->SetBlock(RoughLocation::Fine(6, 7, 7), Block(0));
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"removing obstacle did not refill light correctly",
-		4, chunk->GetLight(Chunk::Pos(6, 7, 7))
+		4, chunk->GetLight(RoughLocation::Fine(6, 7, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"removing obstacle did not refill light correctly",
-		3, chunk->GetLight(Chunk::Pos(5, 7, 7))
+		3, chunk->GetLight(RoughLocation::Fine(5, 7, 7))
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"removing obstacle did not refill light correctly",
-		2, chunk->GetLight(Chunk::Pos(4, 7, 7))
+		2, chunk->GetLight(RoughLocation::Fine(4, 7, 7))
 	);
 }
 
