@@ -68,7 +68,7 @@ server: $(ASSET_DEP) blank
 	./blank --server --save-path saves/
 
 client: $(ASSET_DEP) blank
-	./blank --client --save-path client-saves/
+	./blank --client --save-path saves/
 
 gdb: $(ASSET_DEP) blank.debug
 	gdb ./blank.debug
