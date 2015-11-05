@@ -35,7 +35,7 @@ public:
 	}
 	/// true if an interval boundary was passed by the last call to Update()
 	bool Hit() const noexcept {
-		return Running() && mod(value, intv) < last_dt;
+		return Running() && IntervalElapsed() < last_dt;
 	}
 	bool HitOnce() const noexcept {
 		return Running() && value >= intv;
@@ -45,6 +45,12 @@ public:
 	}
 	Time Interval() const noexcept {
 		return intv;
+	}
+	Time IntervalElapsed() const noexcept {
+		return mod(value, intv);
+	}
+	Time IntervalRemain() const noexcept {
+		return intv - IntervalElapsed();
 	}
 	int Iteration() const noexcept {
 		return value / intv;

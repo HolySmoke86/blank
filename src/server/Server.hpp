@@ -29,6 +29,10 @@ public:
 	Server(const Config::Network &, World &, const World::Config &, const WorldSave &);
 	~Server();
 
+	// wait for data to arrive for at most dt milliseconds
+	void Wait(int dt) noexcept;
+	// true if there's data waiting to be handled
+	bool Ready() noexcept;
 	void Handle();
 
 	void Update(int dt);
@@ -63,6 +67,7 @@ private:
 private:
 	UDPsocket serv_sock;
 	UDPpacket serv_pack;
+	SDLNet_SocketSet serv_set;
 	std::list<ClientConnection> clients;
 
 	World &world;

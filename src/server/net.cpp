@@ -633,15 +633,27 @@ Server::Server(
 	const WorldSave &save)
 : serv_sock(nullptr)
 , serv_pack{ -1, nullptr, 0 }
+, serv_set(SDLNet_AllocSocketSet(1))
 , clients()
 , world(world)
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , save(save)
 , player_model(nullptr)
 , cli(world) {
+	if (!serv_set) {
+		throw NetError("SDLNet_AllocSocketSet");
+	}
+
 	serv_sock = SDLNet_UDP_Open(conf.port);
 	if (!serv_sock) {
+		SDLNet_FreeSocketSet(serv_set);
 		throw NetError("SDLNet_UDP_Open");
+	}
+
+	if (SDLNet_UDP_AddSocket(serv_set, serv_sock) == -1) {
+		SDLNet_UDP_Close(serv_sock);
+		SDLNet_FreeSocketSet(serv_set);
+		throw NetError("SDLNet_UDP_AddSocket");
 	}
 
 	serv_pack.data = new Uint8[sizeof(Packet)];
@@ -649,11 +661,25 @@ Server::Server(
 }
 
 Server::~Server() {
+	for (ClientConnection &client : clients) {
+		client.Disconnected();
+	}
+	clients.clear();
 	world.Chunks().UnregisterIndex(spawn_index);
 	delete[] serv_pack.data;
+	SDLNet_UDP_DelSocket(serv_set, serv_sock);
 	SDLNet_UDP_Close(serv_sock);
+	SDLNet_FreeSocketSet(serv_set);
 }
 
+
+void Server::Wait(int dt) noexcept {
+	SDLNet_CheckSockets(serv_set, dt);
+}
+
+bool Server::Ready() noexcept {
+	return SDLNet_CheckSockets(serv_set, 0) > 0;
+}
 
 void Server::Handle() {
 	int result = SDLNet_UDP_Recv(serv_sock, &serv_pack);

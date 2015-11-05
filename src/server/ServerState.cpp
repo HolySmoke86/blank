@@ -58,6 +58,15 @@ void ServerState::Handle(const SDL_Event &event) {
 
 void ServerState::Update(int dt) {
 	loop_timer.Update(dt);
+	if (!loop_timer.HitOnce() && loop_timer.IntervalRemain() > 1) {
+		server.Wait(loop_timer.IntervalRemain() - 1);
+		return;
+	}
+	if (dt == 0 && !server.Ready()) {
+		// effectively wait in a spin loop
+		return;
+	}
+
 	server.Handle();
 	int world_dt = 0;
 	while (loop_timer.HitOnce()) {
