@@ -77,6 +77,7 @@ public:
 	}
 
 	/// orientation of local coordinate system
+	void Orientation(const glm::quat &o) noexcept { state.orient = o; }
 	const glm::quat &Orientation() const noexcept { return state.orient; }
 
 	/// orientation of head within local coordinate system, in radians

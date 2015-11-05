@@ -575,10 +575,16 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 	pack.ReadActions(new_actions);
 	pack.ReadSlot(slot);
 
+	// accept client's orientation as is
+	input->GetPlayer().GetEntity().Orientation(player_update_state.orient);
+	// simulate movement
 	input->SetMovement(movement);
+	// rotate head to match client's "prediction"
 	input->TurnHead(player_update_state.pitch - input->GetPitch(), player_update_state.yaw - input->GetYaw());
+	// select the given inventory slot
 	input->SelectInventory(slot);
 
+	// check if any actions have been started or stopped
 	if ((new_actions & 0x01) && !(old_actions & 0x01)) {
 		input->StartPrimaryAction();
 	} else if (!(new_actions & 0x01) && (old_actions & 0x01)) {
