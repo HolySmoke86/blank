@@ -16,6 +16,10 @@ inline float distance_squared(const glm::vec3 &a, const glm::vec3 &b) noexcept {
 	return length_squared(a - b);
 }
 
+inline float distance(const glm::vec3 &a, const glm::vec3 &b) noexcept {
+	return length(a - b);
+}
+
 template <class T>
 inline bool iszero(const T &v) noexcept {
 	return length_squared(v) < std::numeric_limits<typename T::value_type>::epsilon();

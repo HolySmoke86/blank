@@ -49,7 +49,9 @@ public:
 	void Name(const std::string &n) { name = n; }
 
 	const AABB &Bounds() const noexcept { return bounds; }
-	void Bounds(const AABB &b) noexcept { bounds = b; }
+	// get distance between local origin and farthest vertex
+	float Radius() const noexcept { return radius; }
+	void Bounds(const AABB &b) noexcept { bounds = b; radius = b.OriginRadius(); }
 
 	bool WorldCollidable() const noexcept { return world_collision; }
 	void WorldCollidable(bool b) noexcept { world_collision = b; }
@@ -136,6 +138,7 @@ private:
 	std::string name;
 
 	AABB bounds;
+	float radius;
 	EntityState state;
 
 	/// chunk to model space

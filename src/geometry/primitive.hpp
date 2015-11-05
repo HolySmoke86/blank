@@ -20,6 +20,12 @@ struct AABB {
 	glm::vec3 Center() const noexcept {
 		return min + (max - min) * 0.5f;
 	}
+
+	/// return distance between origin and farthest vertex
+	float OriginRadius() const noexcept {
+		glm::vec3 high(glm::max(abs(min), abs(max)));
+		return length(high);
+	}
 };
 
 struct Ray {

@@ -30,6 +30,8 @@ public:
 	static constexpr int size = side * side * side;
 
 	static AABB Bounds() noexcept { return AABB{ { 0.0f, 0.0f, 0.0f }, ExactLocation::FExtent() }; }
+	static glm::vec3 Center() noexcept { return glm::vec3(8.0f); }
+	static float Radius() noexcept { return 27.71281292110203669632f; /* 16 * √3 */ }
 
 	static constexpr bool InBounds(const ExactLocation::Fine &pos) noexcept {
 		return

@@ -400,13 +400,20 @@ bool Chunk::Intersection(
 	const glm::mat4 &Mchunk,
 	std::vector<WorldCollision> &col
 ) noexcept {
+	// box's origin relative to the chunk
+	const glm::vec3 box_coords(Mbox[3] - Mchunk[3]);
+	const float box_rad = box.OriginRadius();
+
+	if (distance_squared(box_coords, Center()) > (box_rad + Radius()) * (box_rad + Radius())) {
+		return false;
+	}
+
 	bool any = false;
 	float penetration;
 	glm::vec3 normal;
 
-	if (!blank::Intersection(box, Mbox, Bounds(), Mchunk, penetration, normal)) {
-		return false;
-	}
+	// assume a bounding radius of 2 for blocks
+	constexpr float block_rad = 2.0f;
 	for (int idx = 0, z = 0; z < side; ++z) {
 		for (int y = 0; y < side; ++y) {
 			for (int x = 0; x < side; ++x, ++idx) {
@@ -414,7 +421,11 @@ bool Chunk::Intersection(
 				if (!type.collision || !type.shape) {
 					continue;
 				}
-				if (type.shape->Intersects(Mchunk * ToTransform(RoughLocation::Fine(x, y, z), idx), box, Mbox, penetration, normal)) {
+				const RoughLocation::Fine block_pos(x, y, z);
+				const ExactLocation::Fine block_coords(ToCoords(block_pos));
+				if (distance_squared(box_coords, block_coords) <= (box_rad + block_rad) * (box_rad + block_rad)
+					&& type.shape->Intersects(Mchunk * ToTransform(block_pos, idx), box, Mbox, penetration, normal)
+				) {
 					col.emplace_back(this, idx, penetration, normal);
 					any = true;
 				}
