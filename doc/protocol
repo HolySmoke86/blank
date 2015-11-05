@@ -30,7 +30,8 @@ packu          2    16bit unsigned  int representing a float value normalized to
                     	it can be unpacked by dividing by 65535
 vec3n          6    3x packn
 vec3u          6    3x packu
-quat           8    4x packn float
+quat           8    2bit index of largest component, a 2bit padding, then 3x 20bit small components in xyzw
+                    	order mapped from [-0.7072,0.7072] to [0,1048574] (with largest omitted)
 entity state  42    [ 0] vec3i chunk pos (there's a variation where this is a vec3b)
                     [12] vec3u block pos by 16,
                     [18] vec3 velocity,

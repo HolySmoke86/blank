@@ -431,18 +431,67 @@ void Packet::Payload::ReadString(string &dst, size_t off, size_t maxlen) const n
 }
 
 void Packet::Payload::Write(const glm::quat &val, size_t off) noexcept {
-	WritePackN(val.w, off);
-	WritePackN(val.x, off + 2);
-	WritePackN(val.y, off + 4);
-	WritePackN(val.z, off + 6);
+	// find the largest component
+	float largest = 0.0f;
+	int largest_index = -1;
+	for (int i = 0; i < 4; ++i) {
+		float iabs = abs(val[i]);
+		if (iabs > largest) {
+			largest = iabs;
+			largest_index = i;
+		}
+	}
+	// make sure it's positive
+	const glm::quat q(val[largest_index] < 0.0f ? -val : val);
+	// move index to the two most significant bits
+	uint64_t packed = uint64_t(largest_index) << 62;
+	// we have to map from [-0.7072,0.7072] to [-524287,524287] and move into positive range
+	constexpr float conv = 524287.0f / 0.7072f;
+	// if largest is 1, the other three are 0
+	// precision of comparison is the interval of our mapping
+	if (abs(1.0 - largest) < (1.0f / conv)) {
+		packed |= 0x7FFFF7FFFF7FFFF;
+	} else {
+		// pack the three smaller components into 20bit ints each
+		int shift = 40;
+		for (int i = 0; i < 4; ++i) {
+			if (i != largest_index) {
+				packed |= uint64_t(int(q[i] * conv) + 524287) << shift;
+				shift -= 20;
+			}
+		}
+	}
+	// and write it out
+	Write(packed, off);
 }
 
 void Packet::Payload::Read(glm::quat &val, size_t off) const noexcept {
-	ReadPackN(val.w, off);
-	ReadPackN(val.x, off + 2);
-	ReadPackN(val.y, off + 4);
-	ReadPackN(val.z, off + 6);
-	val = normalize(val);
+	// extract the 8 byte packed value
+	uint64_t packed = 0;
+	Read(packed, off);
+	// two most significant bits are the index of the largest (omitted) component
+	int largest_index = packed >> 62;
+	// if all other three are 0, largest is 1 and we can omit the conversion
+	if ((packed & 0xFFFFFFFFFFFFFFF) == 0x7FFFF7FFFF7FFFF) {
+		val = { 0.0f, 0.0f, 0.0f, 0.0f };
+		val[largest_index] = 1.0f;
+		return;
+	}
+	// we have to map from [-524287,524287] to [-0.7072,0.7072]
+	constexpr float conv = 0.7072f / 524287.0f;
+	int shift = 40;
+	for (int i = 0; i < 4; ++i) {
+		if (i != largest_index) {
+			val[i] = float(int((packed >> shift) & 0xFFFFF) - 524287) * conv;
+			shift -= 20;
+		} else {
+			// set to zero so the length of the other three can be determined
+			val[i] = 0.0f;
+		}
+	}
+	// omitted component squared is 1 - length squared of others
+	val[largest_index] = sqrt(1.0f - dot(val, val));
+	// and already normalized
 }
 
 void Packet::Payload::Write(const EntityState &state, size_t off) noexcept {

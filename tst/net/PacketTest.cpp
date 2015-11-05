@@ -116,7 +116,7 @@ void PacketTest::testJoin() {
 	EntityState write_state;
 	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
-	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.orient = normalize(glm::quat(0.863f, 0.0f, 0.505f, 0.0f));
 	write_state.pitch = 0.3f;
 	write_state.yaw = -2.3f;
 	write_entity.SetState(write_state);
@@ -165,7 +165,7 @@ void PacketTest::testPlayerUpdate() {
 	EntityState write_state;
 	write_state.pos = { { 7, 2, -3 }, { 1.5f, 0.9f, 12.0f } };
 	write_state.velocity = { 0.025f, 0.001f, 0.0f };
-	write_state.orient = { 1.0f, 0.0f, 0.0f, 0.0f };
+	write_state.orient = { 0.0f, 0.0f, 1.0f, 0.0f };
 	glm::vec3 write_movement(0.5f, -1.0f, 1.0f);
 	uint8_t write_actions = 0x05;
 	uint8_t write_slot = 3;
