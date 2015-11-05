@@ -162,7 +162,7 @@ void ChunkTransmitter::SendData(size_t i) {
 	if (data_packets[i] == -1) {
 		++confirm_wait;
 	}
-	data_packets[i] = conn.Send();
+	data_packets[i] = conn.Send(Packet::ChunkData::GetSize(len));
 }
 
 void ChunkTransmitter::Release() {
@@ -188,7 +188,8 @@ ClientConnection::ClientConnection(Server &server, const IPaddress &addr)
 , old_actions(0)
 , transmitter(*this)
 , chunk_queue()
-, old_base() {
+, old_base()
+, chunk_blocks_skipped(0) {
 	conn.SetHandler(this);
 }
 
@@ -202,58 +203,60 @@ void ClientConnection::Update(int dt) {
 		return;
 	}
 	if (HasPlayer()) {
-		// sync entities
-		auto global_iter = server.GetWorld().Entities().begin();
-		auto global_end = server.GetWorld().Entities().end();
-		auto local_iter = spawns.begin();
-		auto local_end = spawns.end();
-
-		while (global_iter != global_end && local_iter != local_end) {
-			if (global_iter->ID() == local_iter->entity->ID()) {
-				// they're the same
-				if (CanDespawn(*global_iter)) {
-					SendDespawn(*local_iter);
-				} else if (SendingUpdates()) {
-					// update
-					QueueUpdate(*local_iter);
-				}
-				++global_iter;
-				++local_iter;
-			} else if (global_iter->ID() < local_iter->entity->ID()) {
-				// global entity was inserted
-				if (CanSpawn(*global_iter)) {
-					auto spawned = spawns.emplace(local_iter, *global_iter);
-					SendSpawn(*spawned);
-				}
-				++global_iter;
-			} else {
-				// global entity was removed
-				SendDespawn(*local_iter);
-				++local_iter;
-			}
-		}
-
-		// leftover spawns
-		while (global_iter != global_end) {
-			if (CanSpawn(*global_iter)) {
-				spawns.emplace_back(*global_iter);
-				SendSpawn(spawns.back());
-			}
-			++global_iter;
-		}
-
-		// leftover despawns
-		while (local_iter != local_end) {
-			SendDespawn(*local_iter);
-			++local_iter;
-		}
-		SendUpdates();
-
 		CheckPlayerFix();
 		CheckChunkQueue();
+		CheckEntities();
+		SendUpdates();
 	}
 	if (conn.ShouldPing()) {
 		conn.SendPing(server.GetPacket(), server.GetSocket());
+	}
+}
+
+void ClientConnection::CheckEntities() {
+	auto global_iter = server.GetWorld().Entities().begin();
+	auto global_end = server.GetWorld().Entities().end();
+	auto local_iter = spawns.begin();
+	auto local_end = spawns.end();
+
+	while (global_iter != global_end && local_iter != local_end) {
+		if (global_iter->ID() == local_iter->entity->ID()) {
+			// they're the same
+			if (CanDespawn(*global_iter)) {
+				SendDespawn(*local_iter);
+			} else if (SendingUpdates()) {
+				// update
+				QueueUpdate(*local_iter);
+			}
+			++global_iter;
+			++local_iter;
+		} else if (global_iter->ID() < local_iter->entity->ID()) {
+			// global entity was inserted
+			if (CanSpawn(*global_iter)) {
+				auto spawned = spawns.emplace(local_iter, *global_iter);
+				SendSpawn(*spawned);
+			}
+			++global_iter;
+		} else {
+			// global entity was removed
+			SendDespawn(*local_iter);
+			++local_iter;
+		}
+	}
+
+	// leftover spawns
+	while (global_iter != global_end) {
+		if (CanSpawn(*global_iter)) {
+			spawns.emplace_back(*global_iter);
+			SendSpawn(spawns.back());
+		}
+		++global_iter;
+	}
+
+	// leftover despawns
+	while (local_iter != local_end) {
+		SendDespawn(*local_iter);
+		++local_iter;
 	}
 }
 
@@ -311,7 +314,7 @@ void ClientConnection::SendDespawn(SpawnStatus &status) {
 }
 
 bool ClientConnection::SendingUpdates() const noexcept {
-	return entity_updates_skipped >= NetStat().SuggestedPacketSkip();
+	return entity_updates_skipped >= NetStat().SuggestedPacketHold();
 }
 
 void ClientConnection::QueueUpdate(SpawnStatus &status) {
@@ -399,13 +402,14 @@ void ClientConnection::CheckChunkQueue() {
 		old_base = PlayerChunks().Base();
 		sort(chunk_queue.begin(), chunk_queue.end(), QueueCompare(old_base));
 	}
-	// if we have packet skip enabled and just pushed an entity
-	// update, don't also send chunk data
-	if (NetStat().SuggestedPacketSkip() > 0 && entity_updates_skipped == 0) {
+	// don't push entity updates and chunk data in the same tick
+	if (chunk_blocks_skipped >= NetStat().SuggestedPacketHold() && !SendingUpdates()) {
+		++chunk_blocks_skipped;
 		return;
 	}
 	if (transmitter.Transmitting()) {
 		transmitter.Transmit();
+		chunk_blocks_skipped = 0;
 		return;
 	}
 	if (transmitter.Idle()) {
@@ -418,6 +422,7 @@ void ClientConnection::CheckChunkQueue() {
 				Chunk *chunk = PlayerChunks().Get(pos);
 				if (chunk) {
 					transmitter.Send(*chunk);
+					chunk_blocks_skipped = 0;
 					return;
 				} else {
 					chunk_queue.push_back(pos);

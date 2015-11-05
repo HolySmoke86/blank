@@ -23,6 +23,8 @@ public:
 	Mode GetMode() const noexcept { return mode; }
 	/// according to current mode, drop this many unimportant packets
 	unsigned int SuggestedPacketSkip() const noexcept { return (1 << mode) - 1; }
+	/// according to current mode, pause between large uncritical packets for this many ticks
+	unsigned int SuggestedPacketHold() const noexcept { return (1 << (mode + 1)) - 1; }
 
 	/// packet loss as factor
 	float PacketLoss() const noexcept { return packet_loss; }
@@ -45,6 +47,7 @@ private:
 
 	void UpdateRTT(std::uint16_t) noexcept;
 	bool SamplePacket(std::uint16_t) const noexcept;
+	std::size_t SampleIndex(std::uint16_t) const noexcept;
 
 	void UpdateStats() noexcept;
 
@@ -64,7 +67,6 @@ private:
 	float packet_loss;
 
 	Uint32 stamps[16];
-	std::size_t stamp_cursor;
 	std::uint16_t stamp_last;
 	float rtt;
 

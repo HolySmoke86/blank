@@ -206,6 +206,10 @@ struct Packet {
 		static constexpr std::size_t MAX_LEN = MAX_PAYLOAD_LEN;
 		static constexpr std::size_t MAX_DATA_LEN = MAX_LEN - 12;
 
+		static constexpr std::size_t GetSize(std::size_t data_len) noexcept {
+			return data_len + 12;
+		}
+
 		void WriteTransmissionId(std::uint32_t) noexcept;
 		void ReadTransmissionId(std::uint32_t &) const noexcept;
 		void WriteDataOffset(std::uint32_t) noexcept;

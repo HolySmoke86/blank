@@ -41,7 +41,6 @@ CongestionControl::CongestionControl()
 , packets_lost(0)
 , packets_received(0)
 , packet_loss(0.0f)
-, stamp_cursor(15)
 , stamp_last(0)
 , rtt(64.0f)
 , next_sample(1000)
@@ -50,11 +49,11 @@ CongestionControl::CongestionControl()
 , tx_kbps(0.0f)
 , rx_kbps(0.0f)
 , mode(GOOD)
-// rtt > 100ms or packet loss > 5% is BAD
-, bad_rtt(100.0f)
+// rtt > 75ms or packet loss > 5% is BAD
+, bad_rtt(75.0f)
 , bad_loss(0.05f)
-// rtt > 250ms or packet loss > 15% is UGLY
-, ugly_rtt(250.0f)
+// rtt > 150ms or packet loss > 15% is UGLY
+, ugly_rtt(150.0f)
 , ugly_loss(0.15f)
 , mode_keep_time(1000) {
 	Uint32 now = SDL_GetTicks();
@@ -71,8 +70,7 @@ void CongestionControl::PacketSent(uint16_t seq) noexcept {
 	if (!SamplePacket(seq)) {
 		return;
 	}
-	stamp_cursor = (stamp_cursor + 1) % 16;
-	stamps[stamp_cursor] = SDL_GetTicks();
+	stamps[SampleIndex(seq)] = SDL_GetTicks();
 	stamp_last = seq;
 }
 
@@ -97,20 +95,23 @@ void CongestionControl::UpdatePacketLoss() noexcept {
 	}
 }
 
-void CongestionControl::UpdateRTT(std::uint16_t seq) noexcept {
+void CongestionControl::UpdateRTT(uint16_t seq) noexcept {
 	if (!SamplePacket(seq)) return;
-	int16_t diff = int16_t(seq) - int16_t(stamp_last);
-	diff /= sample_skip;
-	if (diff > 0 || diff < -15) {
-		// packet outside observed time frame
+	int16_t diff = int16_t(stamp_last) - int16_t(seq);
+	if (diff < 0 || diff > int(15 * sample_skip)) {
+		// packet outside observed frame
 		return;
 	}
-	int cur_rtt = SDL_GetTicks() - stamps[(stamp_cursor + diff + 16) % 16];
+	int cur_rtt = SDL_GetTicks() - stamps[SampleIndex(seq)];
 	rtt += (cur_rtt - rtt) * 0.1f;
 }
 
-bool CongestionControl::SamplePacket(std::uint16_t seq) const noexcept {
+bool CongestionControl::SamplePacket(uint16_t seq) const noexcept {
 	return seq % sample_skip == 0;
+}
+
+size_t CongestionControl::SampleIndex(uint16_t seq) const noexcept {
+	return (seq / sample_skip) % 16;
 }
 
 void CongestionControl::PacketIn(const UDPpacket &pack) noexcept {
@@ -197,7 +198,9 @@ CongestionControl::Mode CongestionControl::Conditions() const noexcept {
 Connection::Connection(const IPaddress &addr)
 : handler(nullptr)
 , addr(addr)
-, send_timer(500)
+// make sure a packet is sent at least every 50ms since packets contains
+// acks that the remote end will use to measure RTT
+, send_timer(50)
 , recv_timer(10000)
 , ctrl_out{ 0, 0xFFFF, 0xFFFFFFFF }
 , ctrl_in{ 0, 0xFFFF, 0xFFFFFFFF }

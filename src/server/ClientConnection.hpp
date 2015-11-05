@@ -46,7 +46,7 @@ public:
 	}
 	/// send the previously prepared packet
 	std::uint16_t Send();
-	/// send the previously prepared packet of non-default length
+	/// send the previously prepared packet of given payload length
 	std::uint16_t Send(std::size_t len);
 
 	void AttachPlayer(Player &);
@@ -85,12 +85,13 @@ private:
 	void On(const Packet::PlayerUpdate &) override;
 	void On(const Packet::Message &) override;
 
+	void CheckEntities();
 	bool CanSpawn(const Entity &) const noexcept;
 	bool CanDespawn(const Entity &) const noexcept;
 
 	void SendSpawn(SpawnStatus &);
 	void SendDespawn(SpawnStatus &);
-	/// true if updates are pushed to the client this frame
+	/// true if entity updates are pushed to the client this frame
 	bool SendingUpdates() const noexcept;
 	void QueueUpdate(SpawnStatus &);
 	void SendUpdates();
@@ -118,6 +119,7 @@ private:
 	ChunkTransmitter transmitter;
 	std::deque<glm::ivec3> chunk_queue;
 	glm::ivec3 old_base;
+	unsigned int chunk_blocks_skipped;
 
 };
 
