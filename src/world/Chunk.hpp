@@ -14,6 +14,7 @@
 namespace blank {
 
 class BlockType;
+class Entity;
 class WorldCollision;
 
 /// cube of size 16 (256 tiles, 4096 blocks)
@@ -143,6 +144,12 @@ public:
 	bool Intersection(
 		const AABB &box,
 		const glm::mat4 &Mbox,
+		const glm::mat4 &Mchunk,
+		std::vector<WorldCollision> &) noexcept;
+
+	bool Intersection(
+		const Entity &entity,
+		const glm::mat4 &Mentity,
 		const glm::mat4 &Mchunk,
 		std::vector<WorldCollision> &) noexcept;
 

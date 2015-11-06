@@ -19,6 +19,9 @@
 #include <ostream>
 #include <queue>
 
+#include <iostream>
+#include <glm/gtx/io.hpp>
+
 
 namespace blank {
 
@@ -400,12 +403,67 @@ bool Chunk::Intersection(
 	const glm::mat4 &Mchunk,
 	std::vector<WorldCollision> &col
 ) noexcept {
+	bool any = false;
+	float penetration;
+	glm::vec3 normal;
+
+	if (!blank::Intersection(box, Mbox, Bounds(), Mchunk, penetration, normal)) {
+		return false;
+	}
+
 	// box's origin relative to the chunk
 	const glm::vec3 box_coords(Mbox[3] - Mchunk[3]);
 	const float box_rad = box.OriginRadius();
 
-	if (distance_squared(box_coords, Center()) > (box_rad + Radius()) * (box_rad + Radius())) {
+	// assume a bounding radius of 2 for blocks
+	constexpr float block_rad = 2.0f;
+	const float bb_radius = box_rad + block_rad;
+
+	const RoughLocation::Fine begin(max(
+		RoughLocation::Fine(0),
+		RoughLocation::Fine(floor(box_coords - bb_radius))
+	));
+	const RoughLocation::Fine end(min(
+		RoughLocation::Fine(side - 1),
+		RoughLocation::Fine(ceil(box_coords + bb_radius))
+	) - 1);
+
+	for (RoughLocation::Fine pos(begin); pos.z < end.y; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				int idx = ToIndex(pos);
+				const BlockType &type = Type(idx);
+				if (!type.collision || !type.shape) {
+					continue;
+				}
+				if (type.shape->Intersects(Mchunk * ToTransform(pos, idx), box, Mbox, penetration, normal)) {
+					col.emplace_back(this, idx, penetration, normal);
+					any = true;
+				}
+			}
+		}
+	}
+	return any;
+}
+
+bool Chunk::Intersection(
+	const Entity &entity,
+	const glm::mat4 &Mentity,
+	const glm::mat4 &Mchunk,
+	std::vector<WorldCollision> &col
+) noexcept {
+	// entity's origin relative to the chunk
+	const glm::vec3 entity_coords(Mentity[3] - Mchunk[3]);
+	const float ec_radius = entity.Radius() + Radius();
+
+	if (distance_squared(entity_coords, Center()) > ec_radius * ec_radius) {
 		return false;
+	}
+
+	if (entity.ID() == 1) {
+		std::cout << "chunk: " << (Position() * 16) << ", entity: " << entity.AbsolutePosition() << std::endl;
+		std::cout << "\tMentity[3]: " << Mentity[3] << std::endl;
+		std::cout << "\tMchunk[3]: " << Mentity[3] << std::endl;
 	}
 
 	bool any = false;
@@ -414,18 +472,26 @@ bool Chunk::Intersection(
 
 	// assume a bounding radius of 2 for blocks
 	constexpr float block_rad = 2.0f;
-	for (int idx = 0, z = 0; z < side; ++z) {
-		for (int y = 0; y < side; ++y) {
-			for (int x = 0; x < side; ++x, ++idx) {
+	const float eb_radius = entity.Radius() + block_rad;
+
+	const RoughLocation::Fine begin(max(
+		RoughLocation::Fine(0),
+		RoughLocation::Fine(floor(entity_coords - eb_radius))
+	));
+	const RoughLocation::Fine end(min(
+		RoughLocation::Fine(side - 1),
+		RoughLocation::Fine(ceil(entity_coords + eb_radius))
+	) - 1);
+
+	for (RoughLocation::Fine pos(begin); pos.z < end.y; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				int idx = ToIndex(pos);
 				const BlockType &type = Type(idx);
 				if (!type.collision || !type.shape) {
 					continue;
 				}
-				const RoughLocation::Fine block_pos(x, y, z);
-				const ExactLocation::Fine block_coords(ToCoords(block_pos));
-				if (distance_squared(box_coords, block_coords) <= (box_rad + block_rad) * (box_rad + block_rad)
-					&& type.shape->Intersects(Mchunk * ToTransform(block_pos, idx), box, Mbox, penetration, normal)
-				) {
+				if (type.shape->Intersects(Mchunk * ToTransform(pos, idx), entity.Bounds(), Mentity, penetration, normal)) {
 					col.emplace_back(this, idx, penetration, normal);
 					any = true;
 				}

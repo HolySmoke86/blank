@@ -79,6 +79,9 @@ void ServerState::Update(int dt) {
 	if (world_dt > 0) {
 		server.Update(world_dt);
 	}
+	if (world_dt > 32) {
+		std::cout << "world dt at " << world_dt << "ms!" << std::endl;
+	}
 }
 
 

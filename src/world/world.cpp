@@ -523,7 +523,6 @@ bool World::Intersection(
 bool World::Intersection(const Entity &e, const EntityState &s, std::vector<WorldCollision> &col) {
 	// TODO: make special case for entities here and in Chunk::Intersection so entity's bounding radius
 	//       doesn't have to be calculated over and over again (sqrt)
-	AABB box = e.Bounds();
 	glm::ivec3 reference = s.pos.chunk;
 	glm::mat4 M = s.Transform(reference);
 
@@ -534,7 +533,7 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 			// since there's no entity which can extent over 16 blocks, they can be skipped
 			continue;
 		}
-		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(reference), col)) {
+		if (cur_chunk.Intersection(e, M, cur_chunk.Transform(reference), col)) {
 			any = true;
 		}
 	}
