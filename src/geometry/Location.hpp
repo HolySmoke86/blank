@@ -60,6 +60,9 @@ struct Location {
 
 };
 
+template<class T> constexpr typename Location<T>::CoarseScalar Location<T>::scale;
+template<class T> constexpr typename Location<T>::FineScalar Location<T>::fscale;
+
 template<class T>
 inline Location<T> &Location<T>::Correct() noexcept {
 	while (block.x >= fscale) {
