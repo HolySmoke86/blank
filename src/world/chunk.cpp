@@ -19,9 +19,6 @@
 #include <ostream>
 #include <queue>
 
-#include <iostream>
-#include <glm/gtx/io.hpp>
-
 
 namespace blank {
 
@@ -460,12 +457,6 @@ bool Chunk::Intersection(
 		return false;
 	}
 
-	if (entity.ID() == 1) {
-		std::cout << "chunk: " << (Position() * 16) << ", entity: " << entity.AbsolutePosition() << std::endl;
-		std::cout << "\tMentity[3]: " << Mentity[3] << std::endl;
-		std::cout << "\tMchunk[3]: " << Mentity[3] << std::endl;
-	}
-
 	bool any = false;
 	float penetration;
 	glm::vec3 normal;
@@ -479,11 +470,11 @@ bool Chunk::Intersection(
 		RoughLocation::Fine(floor(entity_coords - eb_radius))
 	));
 	const RoughLocation::Fine end(min(
-		RoughLocation::Fine(side - 1),
+		RoughLocation::Fine(side),
 		RoughLocation::Fine(ceil(entity_coords + eb_radius))
-	) - 1);
+	));
 
-	for (RoughLocation::Fine pos(begin); pos.z < end.y; ++pos.z) {
+	for (RoughLocation::Fine pos(begin); pos.z < end.z; ++pos.z) {
 		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
 			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
 				int idx = ToIndex(pos);
