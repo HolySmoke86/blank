@@ -36,6 +36,9 @@ networking
 	players stats (who's connected, their ping, and game-relevant
 	things) should be sent to clients
 
+threading
+
+	(clientside) networking and disk IO are prime candidates for threading
 
 launcher ui
 
@@ -43,7 +46,7 @@ launcher ui
 
 entity ai
 
-	pathfinding, obstacle avoidance, better turning behaviour
+	pathfinding, better turning behaviour
 
 lighting
 
@@ -95,8 +98,8 @@ world generator that is not boring
 
 entity/world collision
 
-	first draft of entity/world collision is implemented
-	it jitters and has some surprising behaviour
+	I don't like the force/spring based collision response, maybe revert
+	back to impulses
 
 spawning
 
@@ -117,3 +120,15 @@ spawning
 sprite/particle system
 
 	these could help make the world seem more alive
+
+items
+
+	items representing both blocks and non-blocks (such as tools, weapons,
+	armor), with a simpler physics simulation than entities, much like the
+	one for particles
+	they can be picked up by entities, so those should have one or more parts
+	in their skeleton to render them when they're "held"
+	players' inventories have to be changed so they select an item rather
+	than a block
+	item IDs could be the block ID for blocks, and anything from 2^16 up for
+	non-blocks
