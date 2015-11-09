@@ -524,15 +524,18 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 	glm::ivec3 reference = s.pos.chunk;
 	glm::mat4 M = s.Transform(reference);
 
+	ExactLocation::Coarse begin(reference - 1);
+	ExactLocation::Coarse end(reference + 2);
+
 	bool any = false;
-	for (Chunk &cur_chunk : chunks) {
-		if (manhattan_radius(cur_chunk.Position() - reference) > 1) {
-			// chunk is not one of the 3x3x3 surrounding the entity
-			// since there's no entity which can extent over 16 blocks, they can be skipped
-			continue;
-		}
-		if (cur_chunk.Intersection(e, M, cur_chunk.Transform(reference), col)) {
-			any = true;
+	for (ExactLocation::Coarse pos(begin); pos.z < end.y; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				Chunk *chunk = chunks.Get(pos);
+				if (chunk && chunk->Intersection(e, M, chunk->Transform(reference), col)) {
+					any = true;
+				}
+			}
 		}
 	}
 	return any;
