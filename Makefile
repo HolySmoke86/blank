@@ -78,10 +78,11 @@ cachegrind: $(ASSET_DEP) blank.profile
 
 callgrind: $(ASSET_DEP) blank.profile
 	valgrind --tool=callgrind \
+		--collect-atstart=no --toggle-collect="blank::Runtime::RunStandalone()" \
 		--branch-sim=yes --cacheuse=yes --cache-sim=yes \
 		--collect-bus=yes --collect-systime=yes --collect-jumps=yes \
 		--dump-instr=yes --simulate-hwpref=yes --simulate-wb=yes \
-		./blank.profile -n 128 -t 16 --no-keyboard --no-mouse -d --no-vsync --save-path saves/
+		./blank.profile -n 256 -t 16 --no-keyboard --no-mouse -d --no-vsync --save-path saves/
 
 test: blank.test
 	./blank.test
