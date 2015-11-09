@@ -69,7 +69,11 @@ public:
 			(idx / (side * side))
 		);
 	}
-	glm::mat4 ToTransform(const RoughLocation::Fine &pos, int idx) const noexcept;
+	/// get a chunk-local transform for block at given position and index
+	/// (position and index are redundant)
+	glm::mat4 ToTransform(const RoughLocation::Fine &position, int index) const noexcept;
+	/// same as above, but also apply offset to given reference
+	glm::mat4 ToTransform(const ExactLocation::Coarse &ref, const RoughLocation::Fine &pos, int idx) const noexcept;
 
 	ExactLocation::Fine ToSceneCoords(const ExactLocation::Coarse &base, const ExactLocation::Fine &pos) const noexcept {
 		return ExactLocation::Fine((position - base) * ExactLocation::Extent()) + pos;
@@ -130,15 +134,17 @@ public:
 
 	bool Intersection(
 		const Ray &ray,
-		const glm::mat4 &M,
+		const ExactLocation::Coarse &reference,
 		float &dist
 	) const noexcept {
-		return blank::Intersection(ray, Bounds(), M, &dist);
+		return blank::Intersection(ray, Bounds(), Transform(reference), &dist);
 	}
 
+	/// check if given ray intersects any block of this chunk
+	/// given reference indicated the chunk offset of the ray in world space
 	bool Intersection(
 		const Ray &,
-		const glm::mat4 &M,
+		const ExactLocation::Coarse &reference,
 		WorldCollision &) noexcept;
 
 	bool Intersection(
@@ -155,6 +161,7 @@ public:
 
 	void Position(const ExactLocation::Coarse &pos) noexcept { position = pos; }
 	const ExactLocation::Coarse &Position() const noexcept { return position; }
+
 	glm::mat4 Transform(const ExactLocation::Coarse &offset) const noexcept {
 		return glm::translate((position - offset) * ExactLocation::Extent());
 	}

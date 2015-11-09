@@ -359,7 +359,7 @@ bool Chunk::IsSurface(const RoughLocation::Fine &pos) const noexcept {
 
 bool Chunk::Intersection(
 	const Ray &ray,
-	const glm::mat4 &M,
+	const ExactLocation::Coarse &reference,
 	WorldCollision &coll
 ) noexcept {
 	int idx = 0;
@@ -375,7 +375,7 @@ bool Chunk::Intersection(
 				}
 				float cur_dist;
 				glm::vec3 cur_norm;
-				if (type.shape->Intersects(ray, M * ToTransform(RoughLocation::Fine(x, y, z), idx), cur_dist, cur_norm)) {
+				if (type.shape->Intersects(ray, ToTransform(reference, RoughLocation::Fine(x, y, z), idx), cur_dist, cur_norm)) {
 					if (cur_dist < coll.depth) {
 						coll.block = idx;
 						coll.depth = cur_dist;
@@ -558,6 +558,10 @@ Block::FaceSet Chunk::Obstructed(const RoughLocation::Fine &pos) const noexcept 
 
 glm::mat4 Chunk::ToTransform(const RoughLocation::Fine &pos, int idx) const noexcept {
 	return glm::translate(ToCoords(pos)) * BlockAt(idx).Transform();
+}
+
+glm::mat4 Chunk::ToTransform(const ExactLocation::Coarse &ref, const RoughLocation::Fine &pos, int idx) const noexcept {
+	return glm::translate(ExactLocation::Fine((position - ref) * ExactLocation::Extent()) + ToCoords(pos)) * BlockAt(idx).Transform();
 }
 
 

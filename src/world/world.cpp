@@ -459,7 +459,6 @@ std::vector<Candidate> candidates;
 
 bool World::Intersection(
 	const Ray &ray,
-	const glm::mat4 &M,
 	const ExactLocation::Coarse &reference,
 	WorldCollision &coll
 ) {
@@ -467,7 +466,7 @@ bool World::Intersection(
 
 	for (Chunk &cur_chunk : chunks) {
 		float cur_dist;
-		if (cur_chunk.Intersection(ray, M * cur_chunk.Transform(reference), cur_dist)) {
+		if (cur_chunk.Intersection(ray, reference, cur_dist)) {
 			candidates.push_back({ &cur_chunk, cur_dist });
 		}
 	}
@@ -483,7 +482,7 @@ bool World::Intersection(
 	for (Candidate &cand : candidates) {
 		if (cand.dist > coll.depth) continue;
 		WorldCollision cur_coll;
-		if (cand.chunk->Intersection(ray, M * cand.chunk->Transform(reference), cur_coll)) {
+		if (cand.chunk->Intersection(ray, reference, cur_coll)) {
 			if (cur_coll.depth < coll.depth) {
 				coll = cur_coll;
 			}
@@ -495,7 +494,6 @@ bool World::Intersection(
 
 bool World::Intersection(
 	const Ray &ray,
-	const glm::mat4 &M,
 	const Entity &reference,
 	EntityCollision &coll
 ) {
@@ -507,7 +505,7 @@ bool World::Intersection(
 		}
 		float cur_dist;
 		glm::vec3 cur_normal;
-		if (blank::Intersection(ray, cur_entity.Bounds(), M * cur_entity.Transform(reference.ChunkCoords()), &cur_dist, &cur_normal)) {
+		if (blank::Intersection(ray, cur_entity.Bounds(), cur_entity.Transform(reference.ChunkCoords()), &cur_dist, &cur_normal)) {
 			// TODO: fine grained check goes here? maybe?
 			if (cur_dist < coll.depth) {
 				coll.entity = &cur_entity;

@@ -29,12 +29,20 @@ persistence
 
 	store some kind of byte order mark?
 
+	world and player names should be normalized so they can safely
+	be used in path names
+
 networking
 
 	definitely needs throttling for the internets
 
 	players stats (who's connected, their ping, and game-relevant
 	things) should be sent to clients
+
+	some method for authenticating a player might be nice
+
+	maybe stale and inexistent chunks should be visualized (e.g. by
+	drawing a semi-transparent box around them)
 
 threading
 

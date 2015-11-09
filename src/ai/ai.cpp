@@ -169,7 +169,7 @@ Player *AIController::ClosestVisiblePlayer(const Entity &e) noexcept {
 
 		// LOS test, assumes all entities are see-through
 		WorldCollision col;
-		if (world.Intersection(aim, glm::mat4(1.0f), reference, col) && col.depth < dist) {
+		if (world.Intersection(aim, reference, col) && col.depth < dist) {
 			continue;
 		}
 
@@ -189,7 +189,7 @@ bool AIController::LineOfSight(const Entity &from, const Entity &to) const noexc
 		return false;
 	}
 	WorldCollision col;
-	if (world.Intersection(aim, glm::mat4(1.0f), reference, col) && col.depth < dist) {
+	if (world.Intersection(aim, reference, col) && col.depth < dist) {
 		return false;
 	}
 	return true;

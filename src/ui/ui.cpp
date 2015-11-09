@@ -97,10 +97,10 @@ void PlayerController::Invalidate() noexcept {
 void PlayerController::UpdatePlayer() noexcept {
 	if (dirty) {
 		Ray aim = player.Aim();
-		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity().ChunkCoords(), aim_world)) {
+		if (!world.Intersection(aim, player.GetEntity().ChunkCoords(), aim_world)) {
 			aim_world = WorldCollision();
 		}
-		if (!world.Intersection(aim, glm::mat4(1.0f), player.GetEntity(), aim_entity)) {
+		if (!world.Intersection(aim, player.GetEntity(), aim_entity)) {
 			aim_entity = EntityCollision();
 		}
 		if (aim_world && aim_entity) {

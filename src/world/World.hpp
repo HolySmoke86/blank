@@ -45,19 +45,17 @@ public:
 	/// check if this ray hits a block
 	/// depth in the collision is the distance between the ray's
 	/// origin and the intersection point
-	/// M is the global transform for given reference chunk
+	/// reference is the chunk offset of the ray in world space
 	bool Intersection(
 		const Ray &,
-		const glm::mat4 &M,
 		const ExactLocation::Coarse &reference,
 		WorldCollision &);
 
 	/// check if this ray hits an entity
 	/// intersections with the reference are not tested
-	/// M is the global transform for the chunk of given reference entity
+	/// the ray is assumed to be in world space offset by entity's chunk coords
 	bool Intersection(
 		const Ray &,
-		const glm::mat4 &M,
 		const Entity &reference,
 		EntityCollision &);
 
