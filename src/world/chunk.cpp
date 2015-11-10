@@ -84,6 +84,9 @@ struct SetNode {
 
 	const BlockType &GetType() const noexcept { return chunk->Type(Chunk::ToIndex(pos)); }
 
+	int EmitLevel() const noexcept { return GetType().luminosity; }
+	bool EmitsLight() const noexcept { return EmitLevel() > 0; }
+
 	bool HasNext(Block::Face face) noexcept {
 		const BlockType &type = GetType();
 		if (type.block_light && !type.luminosity) return false;
@@ -146,9 +149,13 @@ void work_dark() noexcept {
 		for (int face = 0; face < Block::FACE_COUNT; ++face) {
 			if (node.HasNext(Block::Face(face))) {
 				UnsetNode other = node.GetNext(Block::Face(face));
-				// TODO: if there a light source here with the same level this will err
 				if (other.Get() != 0 && other.Get() < node.level) {
-					other.Set(0);
+					if (other.EmitsLight()) {
+						other.Set(other.EmitLevel());
+						light_queue.emplace(other);
+					} else {
+						other.Set(0);
+					}
 					dark_queue.emplace(other);
 				} else {
 					light_queue.emplace(other);
