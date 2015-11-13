@@ -460,7 +460,7 @@ bool Chunk::Intersection(
 	const glm::vec3 entity_coords(Mentity[3] - Mchunk[3]);
 	const float ec_radius = entity.Radius() + Radius();
 
-	if (distance_squared(entity_coords, Center()) > ec_radius * ec_radius) {
+	if (distance2(entity_coords, Center()) > ec_radius * ec_radius) {
 		return false;
 	}
 

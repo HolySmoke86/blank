@@ -32,7 +32,7 @@ glm::mat3 find_rotation(const glm::vec3 &a, const glm::vec3 &b) noexcept {
 			return glm::mat3(glm::rotate(PI, axis));
 		}
 	}
-	float mv = length_squared(v);
+	float mv = length2(v);
 	float c = dot(a, b);
 	float f = (1 - c) / mv;
 	glm::mat3 vx(matrixCross3(v));
@@ -127,13 +127,22 @@ bool Intersection(
 		glm::vec3(b_m * glm::vec4(b_box.max.x, b_box.max.y, b_box.max.z, 1)),
 	};
 
-	glm::vec3 axes[6] = {
-		glm::vec3(a_m * glm::vec4(1, 0, 0, 0)),
-		glm::vec3(a_m * glm::vec4(0, 1, 0, 0)),
-		glm::vec3(a_m * glm::vec4(0, 0, 1, 0)),
-		glm::vec3(b_m * glm::vec4(1, 0, 0, 0)),
-		glm::vec3(b_m * glm::vec4(0, 1, 0, 0)),
-		glm::vec3(b_m * glm::vec4(0, 0, 1, 0)),
+	glm::vec3 axes[15] = {
+		glm::vec3(a_m[0]),
+		glm::vec3(a_m[1]),
+		glm::vec3(a_m[2]),
+		glm::vec3(b_m[0]),
+		glm::vec3(b_m[1]),
+		glm::vec3(b_m[2]),
+		cross(glm::vec3(a_m[0]), glm::vec3(b_m[0])),
+		cross(glm::vec3(a_m[0]), glm::vec3(b_m[1])),
+		cross(glm::vec3(a_m[0]), glm::vec3(b_m[2])),
+		cross(glm::vec3(a_m[1]), glm::vec3(b_m[0])),
+		cross(glm::vec3(a_m[1]), glm::vec3(b_m[1])),
+		cross(glm::vec3(a_m[1]), glm::vec3(b_m[2])),
+		cross(glm::vec3(a_m[2]), glm::vec3(b_m[0])),
+		cross(glm::vec3(a_m[2]), glm::vec3(b_m[1])),
+		cross(glm::vec3(a_m[2]), glm::vec3(b_m[2])),
 	};
 
 	depth = std::numeric_limits<float>::infinity();
@@ -141,6 +150,10 @@ bool Intersection(
 
 	int cur_axis = 0;
 	for (const glm::vec3 &axis : axes) {
+		if (iszero(axis)) {
+			// can result from the cross products if A and B have parallel axes
+			continue;
+		}
 		float a_min = std::numeric_limits<float>::infinity();
 		float a_max = -std::numeric_limits<float>::infinity();
 		for (const glm::vec3 &corner : a_corners) {

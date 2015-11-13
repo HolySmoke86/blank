@@ -281,7 +281,7 @@ glm::vec3 AIController::GetObstacleAvoidanceForce(const Entity &e, const EntityS
 	for (WorldCollision &c : col) {
 		// diff points from block to state
 		glm::vec3 diff = state.RelativePosition(c.ChunkPos()) - c.BlockCoords();
-		float dist = length_squared(diff);
+		float dist = length2(diff);
 		if (dist < distance) {
 			nearest = &c;
 			difference = diff;
@@ -530,7 +530,7 @@ void ChaseState::Update(AIController &ctrl, Entity &e, float dt) const {
 		return;
 	}
 	// halt if we're close enough, flee if we're too close
-	float dist_sq = length_squared(e.AbsoluteDifference(ctrl.GetPursuitTarget()));
+	float dist_sq = length2(e.AbsoluteDifference(ctrl.GetPursuitTarget()));
 	if (dist_sq < 8.0f) {
 		ctrl.SetFleeTarget(ctrl.GetPursuitTarget());
 		ctrl.SetState(flee);

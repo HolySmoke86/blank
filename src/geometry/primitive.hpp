@@ -40,6 +40,8 @@ bool Intersection(
 	float *dist = nullptr,
 	glm::vec3 *normal = nullptr) noexcept;
 
+/// matrices may translate and rotate, but must not scale/shear/etc
+/// (basically the first three columns must have unit length)
 bool Intersection(
 	const AABB &a_box,
 	const glm::mat4 &a_m,

@@ -4,37 +4,25 @@
 #include <algorithm>
 #include <limits>
 #include <glm/glm.hpp>
+#include <glm/gtx/component_wise.hpp>
+#include <glm/gtx/norm.hpp>
 
 
 namespace blank {
 
-inline float length_squared(const glm::vec3 &v) noexcept {
-	return dot(v, v);
-}
-
-inline float distance_squared(const glm::vec3 &a, const glm::vec3 &b) noexcept {
-	return length_squared(a - b);
-}
-
-inline float distance(const glm::vec3 &a, const glm::vec3 &b) noexcept {
-	return length(a - b);
-}
-
 template <class T>
 inline bool iszero(const T &v) noexcept {
-	return length_squared(v) < std::numeric_limits<typename T::value_type>::epsilon();
+	return length2(v) < std::numeric_limits<typename T::value_type>::epsilon();
 }
 
 template<class T>
 T manhattan_distance(const glm::tvec3<T> &a, const glm::tvec3<T> &b) noexcept {
-	glm::tvec3<T> diff(abs(a - b));
-	return diff.x + diff.y + diff.z;
+	return compAdd(abs(a - b));
 }
 
 template<class T>
 T manhattan_radius(const glm::tvec3<T> &v) noexcept {
-	glm::tvec3<T> a(abs(v));
-	return std::max(a.x, std::max(a.y, a.z));
+	return compMax(abs(v));
 }
 
 }
