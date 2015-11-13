@@ -37,6 +37,8 @@ public:
 		float yaw,
 		std::uint8_t actions,
 		std::uint8_t slot);
+	std::uint16_t SendChunkRequest(
+		const glm::ivec3 &);
 	std::uint16_t SendMessage(
 		std::uint8_t type,
 		std::uint32_t ref,

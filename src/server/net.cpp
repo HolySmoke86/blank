@@ -401,6 +401,7 @@ void ClientConnection::CheckChunkQueue() {
 		}
 		old_base = PlayerChunks().Base();
 		sort(chunk_queue.begin(), chunk_queue.end(), QueueCompare(old_base));
+		chunk_queue.erase(unique(chunk_queue.begin(), chunk_queue.end()), chunk_queue.end());
 	}
 	// don't push entity updates and chunk data in the same tick
 	if (chunk_blocks_skipped >= NetStat().SuggestedPacketHold() && !SendingUpdates()) {
@@ -610,6 +611,14 @@ void ClientConnection::On(const Packet::PlayerUpdate &pack) {
 
 bool ClientConnection::ChunkInRange(const glm::ivec3 &pos) const noexcept {
 	return HasPlayer() && PlayerChunks().InRange(pos);
+}
+
+void ClientConnection::On(const Packet::ChunkBegin &pack) {
+	glm::ivec3 pos;
+	pack.ReadChunkCoords(pos);
+	if (ChunkInRange(pos)) {
+		chunk_queue.push_front(pos);
+	}
 }
 
 void ClientConnection::On(const Packet::Message &pack) {

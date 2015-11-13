@@ -16,11 +16,12 @@ class WorldSave;
 namespace client {
 
 class ChunkTransmission;
+class Client;
 
 class ChunkReceiver {
 
 public:
-	ChunkReceiver(ChunkStore &, const WorldSave &);
+	ChunkReceiver(Client &, ChunkStore &, const WorldSave &);
 	~ChunkReceiver();
 
 	void Update(int dt);
@@ -39,7 +40,10 @@ private:
 	ChunkTransmission &GetTransmission(std::uint32_t id);
 	void Commit(ChunkTransmission &);
 
+	void ReRequest(ChunkTransmission &);
+
 private:
+	Client &client;
 	ChunkStore &store;
 	const WorldSave &save;
 	std::list<ChunkTransmission> transmissions;

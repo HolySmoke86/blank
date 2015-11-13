@@ -170,6 +170,10 @@ Chunk Begin
 -----------
 
 Sent by the server to inform the client of an upcoming chunk transmission.
+The client may send this packet to the server to re-request a chunk
+transmission.  In that case fields other than the chunk coordinates are
+ignored. Also, the server may choose not to resend the chunk (e.g. if the
+player is too far away from it).
 
 Code: 9
 Payload:

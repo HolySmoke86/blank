@@ -28,6 +28,7 @@ struct ChunkTransmission {
 
 	ChunkTransmission();
 
+	void Reset() noexcept;
 	void Clear() noexcept;
 
 	bool Complete() const noexcept;

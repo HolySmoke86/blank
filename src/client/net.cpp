@@ -23,8 +23,9 @@ namespace blank {
 namespace client {
 
 
-ChunkReceiver::ChunkReceiver(ChunkStore &store, const WorldSave &save)
-: store(store)
+ChunkReceiver::ChunkReceiver(Client &client, ChunkStore &store, const WorldSave &save)
+: client(client)
+, store(store)
 , save(save)
 , transmissions()
 , timer(5000) {
@@ -40,7 +41,14 @@ void ChunkReceiver::Update(int dt) {
 	for (ChunkTransmission &trans : transmissions) {
 		if (trans.active && (timer.Elapsed() - trans.last_update) > timer.Interval()) {
 			cout << "timeout for transmission of chunk " << trans.coords << endl;
-			trans.Clear();
+			if (trans.header_received) {
+				client.SendChunkRequest(trans.coords);
+				trans.Reset();
+				trans.last_update = timer.Elapsed();
+			} else {
+				// well shit
+				trans.Clear();
+			}
 		}
 	}
 	if (transmissions.size() > 3) {
@@ -152,7 +160,7 @@ void ChunkReceiver::Commit(ChunkTransmission &trans) {
 
 	Chunk *chunk = store.Allocate(trans.coords);
 	if (!chunk) {
-		// chunk no longer of interes, just drop the data
+		// chunk no longer of interest, just drop the data
 		// it should probably be cached to disk, but not now :P
 		trans.Clear();
 		return;
@@ -167,6 +175,12 @@ void ChunkReceiver::Commit(ChunkTransmission &trans) {
 		if (uncompress(dst, &dst_len, src, src_len) != Z_OK) {
 			// omg, now what?
 			cout << "got corruped chunk data for " << trans.coords << endl;
+			client.SendChunkRequest(trans.coords);
+			trans.Reset();
+			// chunk data can, and probably will, contain invalid block IDs, so
+			// zero it to be safe
+			memset(dst, 0, dst_len);
+			return;
 		}
 	} else {
 		memcpy(dst, src, min(src_len, dst_len));
@@ -188,11 +202,15 @@ ChunkTransmission::ChunkTransmission()
 
 }
 
-void ChunkTransmission::Clear() noexcept {
+void ChunkTransmission::Reset() noexcept {
 	data_size = 0;
 	data_received = 0;
 	last_update = 0;
 	header_received = false;
+}
+
+void ChunkTransmission::Clear() noexcept {
+	Reset();
 	active = false;
 }
 
@@ -302,6 +320,14 @@ uint16_t Client::SendPlayerUpdate(
 
 uint16_t Client::SendPart() {
 	Packet::Make<Packet::Part>(client_pack);
+	return conn.Send(client_pack, client_sock);
+}
+
+uint16_t Client::SendChunkRequest(
+	const glm::ivec3 &coords
+) {
+	auto pack = Packet::Make<Packet::ChunkBegin>(client_pack);
+	pack.WriteChunkCoords(coords);
 	return conn.Send(client_pack, client_sock);
 }
 
