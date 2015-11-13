@@ -340,7 +340,20 @@ World::World(const BlockTypeRegistry &types, const Config &config)
 }
 
 World::~World() {
-
+	for (Entity &e : entities) {
+		e.Kill();
+	}
+	std::size_t removed = 0;
+	do {
+		removed = 0;
+		for (auto e = entities.begin(), end = entities.end(); e != end; ++e) {
+			if (e->CanRemove()) {
+				e = RemoveEntity(e);
+				end = entities.end();
+				++removed;
+			}
+		}
+	} while (removed > 0 && !entities.empty());
 }
 
 
