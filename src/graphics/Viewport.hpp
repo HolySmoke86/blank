@@ -51,6 +51,9 @@ public:
 	void MoveCursor(const glm::vec3 &) noexcept;
 	const glm::mat4 &Cursor() const noexcept { return cursor; }
 
+	void OffsetCamera(const glm::vec3 &o) noexcept { cam_offset = o; }
+	const glm::vec3 &CameraOffset() const noexcept { return cam_offset; }
+
 	BlockLighting &ChunkProgram() noexcept;
 	DirectionalLighting &EntityProgram() noexcept;
 	DirectionalLighting &HUDProgram() noexcept;
@@ -69,6 +72,8 @@ private:
 	Canvas canv;
 
 	glm::mat4 cursor;
+
+	glm::vec3 cam_offset;
 
 	BlockLighting chunk_prog;
 	DirectionalLighting entity_prog;

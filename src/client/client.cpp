@@ -4,6 +4,7 @@
 
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
+#include "../geometry/distance.hpp"
 #include "../model/Model.hpp"
 #include "../io/WorldSave.hpp"
 #include "../world/ChunkIndex.hpp"
@@ -347,6 +348,14 @@ void InteractiveState::SetDebug(bool b) {
 		hud.PostMessage("Debug rendering enabled");
 	} else {
 		hud.PostMessage("Debug rendering disabled");
+	}
+}
+
+void InteractiveState::NextCamera() {
+	if (iszero(master.GetEnv().viewport.CameraOffset())) {
+		master.GetEnv().viewport.OffsetCamera(glm::vec3(0.0f, 0.0f, -5.0f));
+	} else {
+		master.GetEnv().viewport.OffsetCamera(glm::vec3(0.0f, 0.0f, 0.0f));
 	}
 }
 

@@ -597,20 +597,19 @@ void Interface::HandlePress(const SDL_KeyboardEvent &event) {
 			break;
 
 		case Keymap::TOGGLE_AUDIO:
-			config.audio.enabled = !config.audio.enabled;
-			client_ctrl.SetAudio(config.audio.enabled);
+			client_ctrl.SetAudio(!config.audio.enabled);
 			break;
 		case Keymap::TOGGLE_VIDEO:
-			config.video.world = !config.video.world;
-			client_ctrl.SetVideo(config.video.world);
+			client_ctrl.SetVideo(!config.video.world);
 			break;
 		case Keymap::TOGGLE_HUD:
-			config.video.hud = !config.video.hud;
-			client_ctrl.SetHUD(config.video.hud);
+			client_ctrl.SetHUD(!config.video.hud);
 			break;
 		case Keymap::TOGGLE_DEBUG:
-			config.video.debug = !config.video.debug;
-			client_ctrl.SetDebug(config.video.debug);
+			client_ctrl.SetDebug(!config.video.debug);
+			break;
+		case Keymap::CAMERA_NEXT:
+			client_ctrl.NextCamera();
 			break;
 
 		default:
@@ -789,6 +788,7 @@ void Keymap::LoadDefault() {
 	Map(SDL_SCANCODE_F2, TOGGLE_VIDEO);
 	Map(SDL_SCANCODE_F3, TOGGLE_DEBUG);
 	Map(SDL_SCANCODE_F4, TOGGLE_AUDIO);
+	Map(SDL_SCANCODE_F5, CAMERA_NEXT);
 
 	Map(SDL_SCANCODE_ESCAPE, EXIT);
 }
@@ -874,6 +874,7 @@ std::map<std::string, Keymap::Action> action_map = {
 	{ "toggle_video", Keymap::TOGGLE_VIDEO },
 	{ "toggle_hud", Keymap::TOGGLE_HUD },
 	{ "toggle_debug", Keymap::TOGGLE_DEBUG },
+	{ "camera_next", Keymap::CAMERA_NEXT },
 
 	{ "exit", Keymap::EXIT },
 };

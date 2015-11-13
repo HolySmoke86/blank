@@ -42,6 +42,7 @@ public:
 		TOGGLE_VIDEO,
 		TOGGLE_HUD,
 		TOGGLE_DEBUG,
+		CAMERA_NEXT,
 
 		EXIT,
 	};

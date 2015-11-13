@@ -64,6 +64,7 @@ public:
 	void SetVideo(bool) override;
 	void SetHUD(bool) override;
 	void SetDebug(bool) override;
+	void NextCamera() override;
 	void Exit() override;
 
 	void OnLineSubmit(const std::string &) override;

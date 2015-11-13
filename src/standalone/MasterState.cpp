@@ -3,6 +3,7 @@
 #include "../app/Config.hpp"
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
+#include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
 
 #include <SDL.h>
@@ -202,6 +203,14 @@ void MasterState::SetDebug(bool b) {
 		hud.PostMessage("Debug rendering enabled");
 	} else {
 		hud.PostMessage("Debug rendering disabled");
+	}
+}
+
+void MasterState::NextCamera() {
+	if (iszero(env.viewport.CameraOffset())) {
+		env.viewport.OffsetCamera(glm::vec3(0.0f, 0.0f, -5.0f));
+	} else {
+		env.viewport.OffsetCamera(glm::vec3(0.0f, 0.0f, 0.0f));
 	}
 }
 

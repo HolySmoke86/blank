@@ -94,6 +94,7 @@ Viewport::Viewport()
 : cam()
 , canv()
 , cursor(1.0f)
+, cam_offset(0.0f)
 , chunk_prog()
 , entity_prog()
 , sky_prog()
@@ -263,9 +264,7 @@ BlendedSprite &Viewport::SpriteProgram() noexcept {
 
 
 void Viewport::WorldPosition(const glm::mat4 &t) noexcept {
-	const glm::vec3 offset(0.0f, 0.0f, 0.0f);
-	//const glm::vec3 offset(0.0f, 0.0f, -5.0f);
-	cam.View(glm::translate(glm::inverse(t), glm::vec3(t * glm::vec4(offset, 0.0f))));
+	cam.View(glm::translate(glm::inverse(t), glm::vec3(t * glm::vec4(cam_offset, 0.0f))));
 	ChunkProgram().SetView(cam.View());
 	sky_prog.Activate();
 	SkyBoxProgram().SetView(cam.View());

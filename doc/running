@@ -103,6 +103,7 @@ F1 toggles UI rendering.
 F2 toggles world rendering.
 F3 toggles the debug overlay.
 F4 toggles audio.
+F5 toggles camera mode.
 
 Controls are interpreted by scancode, meaning you don't have to break your
 fingers when you're on an AZERTY. WSAD will be ZSQD there and the above
