@@ -20,6 +20,7 @@
 #include <limits>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/io.hpp>
+#include <glm/gtx/projection.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/transform.hpp>
@@ -666,38 +667,19 @@ glm::vec3 World::CollisionForce(
 ) {
 	col.clear();
 	if (entity.WorldCollidable() && Intersection(entity, state, col)) {
-		// determine displacement for each cardinal axis and move entity accordingly
-		glm::vec3 min_pen(0.0f);
-		glm::vec3 max_pen(0.0f);
-		for (const WorldCollision &c : col) {
-			if (!c.Blocks()) continue;
-			glm::vec3 local_pen(c.normal * c.depth);
-			// swap if neccessary (normal may point away from the entity)
-			if (dot(c.normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) > 0) {
-				local_pen *= -1;
-			}
-			min_pen = min(min_pen, local_pen);
-			max_pen = max(max_pen, local_pen);
-		}
-		glm::vec3 correction(0.0f);
-		// only apply correction for axes where penetration is only in one direction
-		for (std::size_t i = 0; i < 3; ++i) {
-			if (min_pen[i] < -std::numeric_limits<float>::epsilon()) {
-				if (max_pen[i] < std::numeric_limits<float>::epsilon()) {
-					correction[i] = -min_pen[i];
-				}
-			} else {
-				correction[i] = -max_pen[i];
-			}
-		}
+		glm::vec3 correction = -CombinedInterpenetration(state, col);
 		// correction may be zero in which case normalize() returns NaNs
-		if (dot(correction, correction) < std::numeric_limits<float>::epsilon()) {
+		if (iszero(correction)) {
 			return glm::vec3(0.0f);
 		}
-		glm::vec3 normal(normalize(correction));
-		glm::vec3 normal_velocity(normal * dot(state.velocity, normal));
+		// if entity is already going in the direction of correction,
+		// let the problem resolve itself
+		if (dot(state.velocity, correction) >= 0.0f) {
+			return glm::vec3(0.0f);
+		}
+		glm::vec3 normal_velocity(proj(state.velocity, correction));
 		// apply force proportional to penetration
-		// use velocity projected onto normal as damper
+		// use velocity projected onto correction as damper
 		constexpr float k = 1000.0f; // spring constant
 		constexpr float b = 10.0f; // damper constant
 		const glm::vec3 x(-correction); // endpoint displacement from equilibrium in m
@@ -706,6 +688,37 @@ glm::vec3 World::CollisionForce(
 	} else {
 		return glm::vec3(0.0f);
 	}
+}
+
+glm::vec3 World::CombinedInterpenetration(
+	const EntityState &state,
+	const std::vector<WorldCollision> &col
+) noexcept {
+	// determine displacement for each cardinal axis and move entity accordingly
+	glm::vec3 min_pen(0.0f);
+	glm::vec3 max_pen(0.0f);
+	for (const WorldCollision &c : col) {
+		if (!c.Blocks()) continue;
+		glm::vec3 local_pen(c.normal * c.depth);
+		// swap if neccessary (normal may point away from the entity)
+		if (dot(c.normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) > 0) {
+			local_pen *= -1;
+		}
+		min_pen = min(min_pen, local_pen);
+		max_pen = max(max_pen, local_pen);
+	}
+	glm::vec3 pen(0.0f);
+	// only apply correction for axes where penetration is only in one direction
+	for (std::size_t i = 0; i < 3; ++i) {
+		if (min_pen[i] < -std::numeric_limits<float>::epsilon()) {
+			if (max_pen[i] < std::numeric_limits<float>::epsilon()) {
+				pen[i] = min_pen[i];
+			}
+		} else {
+			pen[i] = max_pen[i];
+		}
+	}
+	return pen;
 }
 
 glm::vec3 World::Gravity(

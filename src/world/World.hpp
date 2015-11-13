@@ -61,6 +61,11 @@ public:
 
 	/// check if given entity intersects with the world
 	bool Intersection(const Entity &e, const EntityState &, std::vector<WorldCollision> &);
+	/// combine contacts into a single penetration vector
+	/// depth is given to point towards position of given state
+	static glm::vec3 CombinedInterpenetration(
+		const EntityState &,
+		const std::vector<WorldCollision> &) noexcept;
 
 	/// check if given box (M * AABB) intersects with the world
 	/// M is assumed to be calculated in reference to given chunk coords
