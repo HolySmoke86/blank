@@ -220,8 +220,8 @@ void Entity::OrientBody(float dt) noexcept {
 }
 
 void Entity::OrientHead(float dt) noexcept {
-	// maximum yaw of head (90°)
-	constexpr float max_head_yaw = PI_0p5;
+	// maximum yaw of head (60°)
+	constexpr float max_head_yaw = PI / 3.0f;
 	// use local Y as up
 	const glm::vec3 up(model_transform[1]);
 	// if yaw is bigger than max, rotate the body to accomodate
