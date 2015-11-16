@@ -1,4 +1,5 @@
 #include "Block.hpp"
+#include "BlockGravity.hpp"
 #include "BlockType.hpp"
 #include "BlockTypeRegistry.hpp"
 
@@ -8,6 +9,7 @@
 
 #include <iostream>
 #include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/norm.hpp>
 #include <glm/gtx/transform.hpp>
 
 
@@ -74,6 +76,7 @@ BlockType::BlockType() noexcept
 , hsl_mod(0.0f, 1.0f, 1.0f)
 , rgb_mod(1.0f, 1.0f, 1.0f)
 , outline_color(-1, -1, -1)
+, gravity()
 , label("some block")
 , place_sound(-1)
 , remove_sound(-1)
@@ -132,6 +135,8 @@ void BlockType::Read(
 			in.ReadVec(hsl_mod);
 		} else if (name == "outline") {
 			in.ReadVec(outline_color);
+		} else if (name == "gravity") {
+			gravity = BlockGravity::Read(in);
 		} else if (name == "label") {
 			in.ReadString(label);
 		} else if (name == "place_sound") {
@@ -224,14 +229,100 @@ BlockTypeRegistry::BlockTypeRegistry() {
 	air.block_light = false;
 	air.collision = false;
 	air.collide_block = false;
-	Add(air);
+	Add(std::move(air));
 }
 
-Block::Type BlockTypeRegistry::Add(const BlockType &t) {
+Block::Type BlockTypeRegistry::Add(BlockType &&t) {
 	int id = types.size();
-	types.push_back(t);
+	types.push_back(std::move(t));
 	types.back().id = id;
 	return id;
+}
+
+
+namespace {
+
+/// the "usual" type of gravity
+/// direction is towards the block's center, strength is inverse
+/// proportional to distance squared
+/// note that the effect can get clipped at distances > 16 units
+struct RadialGravity
+: public BlockGravity {
+
+	explicit RadialGravity(float strength)
+	: strength(strength) { }
+
+	glm::vec3 GetGravity(const glm::vec3 &diff, const glm::mat4 &) const noexcept override {
+		float dist2 = length2(diff);
+		glm::vec3 dir = -normalize(diff);
+		return dir * (strength / dist2);
+	}
+
+	float strength;
+
+};
+
+/// a "force field" variant of artificial gravity
+/// strength and direction is constant throughout the cuboid
+/// extent shouldn't exceed 16 units as gravity is only calculated for
+/// chunks surrounding and entity (and sometimes not even those if they're
+/// unavailable, but they will be for players)
+struct CuboidFieldGravity
+: public BlockGravity {
+
+	explicit CuboidFieldGravity(const glm::vec3 &strength, const AABB &extent)
+	: strength(strength), extent(extent) { }
+
+	glm::vec3 GetGravity(const glm::vec3 &diff, const glm::mat4 &M) const noexcept override {
+		/// rotate AABB endpoints accordingly, ignore translation
+		glm::vec3 min(M * glm::vec4(extent.min, 0.0f));
+		glm::vec3 max(M * glm::vec4(extent.max, 0.0f));
+		if (diff.x < min.x || diff.y < min.y || diff.z < min.z ||
+				diff.x > max.x || diff.y > max.y || diff.z > max.z) {
+			/// if point is outside, force is zero
+			return glm::vec3(0.0f);
+		} else {
+			/// otherwise it's out constant strength in block orientation
+			return glm::vec3(M * glm::vec4(strength, 0.0f));
+		}
+	}
+
+	glm::vec3 strength;
+	AABB extent;
+
+};
+
+
+}
+
+BlockGravity::~BlockGravity() {
+
+}
+
+std::unique_ptr<BlockGravity> BlockGravity::Read(TokenStreamReader &in) {
+	std::string type;
+	in.ReadIdentifier(type);
+	if (type == "Radial") {
+		float strength;
+		in.Skip(Token::PARENTHESIS_OPEN);
+		in.ReadNumber(strength);
+		in.Skip(Token::PARENTHESIS_CLOSE);
+		return std::unique_ptr<BlockGravity>(new RadialGravity(strength));
+	} else if (type == "CuboidField") {
+		glm::vec3 strength;
+		AABB extent;
+		in.Skip(Token::PARENTHESIS_OPEN);
+		in.ReadVec(strength);
+		in.Skip(Token::COMMA);
+		in.ReadVec(extent.min);
+		in.Skip(Token::COMMA);
+		in.ReadVec(extent.max);
+		in.Skip(Token::PARENTHESIS_CLOSE);
+		extent.Adjust();
+		return std::unique_ptr<BlockGravity>(new CuboidFieldGravity(strength, extent));
+	} else {
+		throw std::runtime_error("unknown gravity type: " + type);
+	}
 }
 
 

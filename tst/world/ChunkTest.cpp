@@ -19,13 +19,13 @@ void ChunkTest::setUp() {
 	BlockType obstacle;
 	obstacle.visible = true;
 	obstacle.block_light = true;
-	types.Add(obstacle);
+	types.Add(std::move(obstacle));
 
 	BlockType source;
 	source.visible = true;
 	source.luminosity = 5;
 	source.block_light = true;
-	types.Add(source);
+	types.Add(std::move(source));
 }
 
 void ChunkTest::tearDown() {

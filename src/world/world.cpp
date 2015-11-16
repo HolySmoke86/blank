@@ -725,7 +725,22 @@ glm::vec3 World::Gravity(
 	const Entity &entity,
 	const EntityState &state
 ) {
-	return glm::vec3(0.0f);
+	glm::vec3 force(0.0f);
+	ExactLocation::Coarse begin(state.pos.chunk - 1);
+	ExactLocation::Coarse end(state.pos.chunk + 2);
+
+	for (ExactLocation::Coarse pos(begin); pos.z < end.z; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				Chunk *chunk = chunks.Get(pos);
+				if (chunk) {
+					force += chunk->GravityAt(state.pos);
+				}
+			}
+		}
+	}
+
+	return force;
 }
 
 World::EntityHandle World::RemoveEntity(EntityHandle &eh) {

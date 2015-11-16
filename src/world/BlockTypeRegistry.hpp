@@ -20,7 +20,7 @@ public:
 public:
 	BlockTypeRegistry();
 
-	Block::Type Add(const BlockType &);
+	Block::Type Add(BlockType &&);
 
 	size_t size() const noexcept { return types.size(); }
 

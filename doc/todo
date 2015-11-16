@@ -77,11 +77,8 @@ lighting
 
 gravity
 
-	maybe like light levels? should also store a direction with it in
-	that case. also, global gravity may be a world option.
-	no, per-block gravity vector is most probably too expensive.
-	better have the chunks store a few point masses (maybe blocks that
-	emit gravitation?) and calculate from that
+	now implemented as optional gravity emitter per block type
+	let's see how that pans out
 
 block attributes
 

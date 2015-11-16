@@ -328,7 +328,7 @@ void AssetLoader::LoadBlockTypes(
 		BlockType type;
 		type.Read(in, snd_index, tex_index, shapes);
 		in.Skip(Token::SEMICOLON);
-		reg.Add(type);
+		reg.Add(std::move(type));
 	}
 }
 

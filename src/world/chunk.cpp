@@ -29,6 +29,7 @@ constexpr int Chunk::size;
 Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 : types(&types)
 , neighbor{0}
+, gravity()
 , blocks{}
 , light{0}
 , generated(false)
@@ -42,6 +43,7 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 
 Chunk::Chunk(Chunk &&other) noexcept
 : types(other.types)
+, gravity(std::move(other.gravity))
 , generated(other.generated)
 , lighted(other.lighted)
 , position(other.position)
@@ -57,6 +59,7 @@ Chunk::Chunk(Chunk &&other) noexcept
 Chunk &Chunk::operator =(Chunk &&other) noexcept {
 	types = other.types;
 	std::copy(other.neighbor, other.neighbor + sizeof(neighbor), neighbor);
+	gravity = std::move(other.gravity);
 	std::copy(other.blocks, other.blocks + sizeof(blocks), blocks);
 	std::copy(other.light, other.light + sizeof(light), light);
 	generated = other.generated;
@@ -174,6 +177,12 @@ void Chunk::SetBlock(int index, const Block &block) noexcept {
 	blocks[index] = block;
 	Invalidate();
 
+	if (old_type.gravity && !new_type.gravity) {
+		gravity.erase(index);
+	} else if (new_type.gravity && !old_type.gravity) {
+		gravity.insert(index);
+	}
+
 	if (!lighted || &old_type == &new_type) return;
 
 	if (new_type.luminosity > old_type.luminosity) {
@@ -231,6 +240,15 @@ void Chunk::ScanLights() {
 	}
 	work_light();
 	lighted = true;
+}
+
+void Chunk::ScanActive() {
+	gravity.clear();
+	for (int index = 0; index < size; ++index) {
+		if (Type(index).gravity) {
+			gravity.insert(gravity.end(), index);
+		}
+	}
 }
 
 void Chunk::SetNeighbor(Block::Face face, Chunk &other) noexcept {
@@ -346,6 +364,20 @@ float Chunk::GetVertexLight(const RoughLocation::Fine &pos, const BlockMesh::Pos
 	}
 
 	return (light / num) - (occlusion * 0.8f);
+}
+
+
+glm::vec3 Chunk::GravityAt(const ExactLocation &coords) const noexcept {
+	glm::vec3 grav;
+	for (int index : gravity) {
+		RoughLocation::Fine block_pos(ToPos(index));
+		ExactLocation block_coords(position, ToCoords(block_pos));
+		// trust that block type hasn't changed
+		grav += Type(index).gravity->GetGravity(
+			coords.Difference(block_coords).Absolute(),
+			ToTransform(block_pos, index));
+	}
+	return grav;
 }
 
 

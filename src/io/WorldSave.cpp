@@ -183,6 +183,7 @@ void WorldSave::Read(Chunk &chunk) const {
 	if (gzclose(file) != Z_OK) {
 		throw runtime_error("failed to read chunk file");
 	}
+	chunk.ScanActive();
 	chunk.InvalidateMesh();
 	chunk.ClearSave();
 }

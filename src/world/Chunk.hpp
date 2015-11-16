@@ -6,6 +6,7 @@
 #include "../geometry/Location.hpp"
 #include "../geometry/primitive.hpp"
 
+#include <set>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -132,6 +133,9 @@ public:
 
 	float GetVertexLight(const RoughLocation::Fine &, const BlockMesh::Position &, const EntityMesh::Normal &) const noexcept;
 
+	/// get gravity for one unit mass at given point
+	glm::vec3 GravityAt(const ExactLocation &) const noexcept;
+
 	bool Intersection(
 		const Ray &ray,
 		const ExactLocation::Coarse &reference,
@@ -175,6 +179,10 @@ public:
 	bool Lighted() const noexcept { return lighted; }
 	void ScanLights();
 
+	/// check for active blocks, should be called after
+	/// block data was modified by means other than SetBlock()
+	void ScanActive();
+
 	void Ref() noexcept { ++ref_count; }
 	void UnRef() noexcept { --ref_count; }
 	bool Referenced() const noexcept { return ref_count > 0; }
@@ -191,6 +199,8 @@ public:
 private:
 	const BlockTypeRegistry *types;
 	Chunk *neighbor[Block::FACE_COUNT];
+
+	std::set<int> gravity;
 
 	Block blocks[size];
 	unsigned char light[size];

@@ -2,6 +2,7 @@
 #define BLANK_WORLD_BLOCKTYPE_HPP_
 
 #include "Block.hpp"
+#include "BlockGravity.hpp"
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
 #include "../graphics/PrimitiveMesh.hpp"
@@ -26,6 +27,9 @@ struct BlockType {
 	glm::vec3 hsl_mod;
 	glm::vec3 rgb_mod;
 	glm::vec3 outline_color;
+
+	/// gravity configuration or null if not emitting gravity
+	std::unique_ptr<BlockGravity> gravity;
 
 	/// a string to display to the user
 	std::string label;
