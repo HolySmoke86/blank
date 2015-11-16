@@ -779,6 +779,7 @@ void ChunkRenderer::Render(Viewport &viewport) {
 
 	for (int i = 0; i < index.TotalChunks(); ++i) {
 		if (!index[i]) continue;
+		// TODO: optimize chunk culling, shoudn't be that hard
 		glm::mat4 m(index[i]->Transform(index.Base()));
 		glm::mat4 mvp(chunk_prog.GetVP() * m);
 		if (!CullTest(Chunk::Bounds(), mvp)) {

@@ -308,14 +308,6 @@ Assets::Assets(const AssetLoader &loader)
 
 }
 
-namespace {
-
-CuboidBounds block_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }});
-StairBounds stair_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f }}, { 0.0f, 0.0f });
-CuboidBounds slab_shape({{ -0.5f, -0.5f, -0.5f }, { 0.5f, 0.0f, 0.5f }});
-
-}
-
 void AssetLoader::LoadBlockTypes(
 	const string &set_name,
 	BlockTypeRegistry &reg,
@@ -329,99 +321,13 @@ void AssetLoader::LoadBlockTypes(
 		throw std::runtime_error("failed to open block type file " + full);
 	}
 	TokenStreamReader in(file);
-	string type_name;
 	string name;
-	string tex_name;
-	string shape_name;
 	while (in.HasMore()) {
-		in.ReadIdentifier(type_name);
+		in.ReadIdentifier(name);
 		in.Skip(Token::EQUALS);
 		BlockType type;
-
-		// read block type
-		in.Skip(Token::ANGLE_BRACKET_OPEN);
-		while (in.Peek().type != Token::ANGLE_BRACKET_CLOSE) {
-			in.ReadIdentifier(name);
-			in.Skip(Token::EQUALS);
-			if (name == "visible") {
-				type.visible = in.GetBool();
-			} else if (name == "texture") {
-				in.ReadString(tex_name);
-				type.textures.push_back(tex_index.GetID(tex_name));
-			} else if (name == "textures") {
-				in.Skip(Token::BRACKET_OPEN);
-				while (in.Peek().type != Token::BRACKET_CLOSE) {
-					in.ReadString(tex_name);
-					type.textures.push_back(tex_index.GetID(tex_name));
-					if (in.Peek().type == Token::COMMA) {
-						in.Skip(Token::COMMA);
-					}
-				}
-				in.Skip(Token::BRACKET_CLOSE);
-			} else if (name == "rgb_mod") {
-				in.ReadVec(type.rgb_mod);
-			} else if (name == "hsl_mod") {
-				in.ReadVec(type.hsl_mod);
-			} else if (name == "outline") {
-				in.ReadVec(type.outline_color);
-			} else if (name == "label") {
-				in.ReadString(type.label);
-			} else if (name == "place_sound") {
-				in.ReadString(tex_name);
-				type.place_sound = snd_index.GetID(tex_name);
-			} else if (name == "remove_sound") {
-				in.ReadString(tex_name);
-				type.remove_sound = snd_index.GetID(tex_name);
-			} else if (name == "luminosity") {
-				type.luminosity = in.GetInt();
-			} else if (name == "block_light") {
-				type.block_light = in.GetBool();
-			} else if (name == "collision") {
-				type.collision = in.GetBool();
-			} else if (name == "collide_block") {
-				type.collide_block = in.GetBool();
-			} else if (name == "generate") {
-				type.generate = in.GetBool();
-			} else if (name == "min_solidity") {
-				type.min_solidity = in.GetFloat();
-			} else if (name == "mid_solidity") {
-				type.mid_solidity = in.GetFloat();
-			} else if (name == "max_solidity") {
-				type.max_solidity = in.GetFloat();
-			} else if (name == "min_humidity") {
-				type.min_humidity = in.GetFloat();
-			} else if (name == "mid_humidity") {
-				type.mid_humidity = in.GetFloat();
-			} else if (name == "max_humidity") {
-				type.max_humidity = in.GetFloat();
-			} else if (name == "min_temperature") {
-				type.min_temperature = in.GetFloat();
-			} else if (name == "mid_temperature") {
-				type.mid_temperature = in.GetFloat();
-			} else if (name == "max_temperature") {
-				type.max_temperature = in.GetFloat();
-			} else if (name == "min_richness") {
-				type.min_richness = in.GetFloat();
-			} else if (name == "mid_richness") {
-				type.mid_richness = in.GetFloat();
-			} else if (name == "max_richness") {
-				type.max_richness = in.GetFloat();
-			} else if (name == "commonness") {
-				type.commonness = in.GetFloat();
-			} else if (name == "shape") {
-				in.ReadIdentifier(shape_name);
-				type.shape = &shapes.Get(shape_name);
-			} else {
-				std::cerr << "warning: unknown block type property " << name << std::endl;
-				while (in.Peek().type != Token::SEMICOLON) {
-					in.Next();
-				}
-			}
-			in.Skip(Token::SEMICOLON);
-		}
-		in.Skip(Token::ANGLE_BRACKET_CLOSE);
+		type.Read(in, snd_index, tex_index, shapes);
 		in.Skip(Token::SEMICOLON);
-
 		reg.Add(type);
 	}
 }

@@ -13,6 +13,10 @@
 
 namespace blank {
 
+class ResourceIndex;
+class ShapeRegistry;
+class TokenStreamReader;
+
 /// single 1x1x1 cube
 /// attributes of a type of block
 struct BlockType {
@@ -65,6 +69,12 @@ struct BlockType {
 	float commonness;
 
 	BlockType() noexcept;
+
+	void Read(
+		TokenStreamReader &in,
+		ResourceIndex &snd_index,
+		ResourceIndex &tex_index,
+		const ShapeRegistry &shapes);
 
 	bool FaceFilled(const Block &block, Block::Face face) const noexcept {
 		return shape && shape->FaceFilled(block.OrientedFace(face));
