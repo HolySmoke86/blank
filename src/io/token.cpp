@@ -1,8 +1,11 @@
+#include "Token.hpp"
 #include "Tokenizer.hpp"
 #include "TokenStreamReader.hpp"
 
 #include <cctype>
 #include <istream>
+#include <ostream>
+#include <sstream>
 #include <stdexcept>
 #include <glm/gtc/quaternion.hpp>
 
@@ -10,6 +13,59 @@ using namespace std;
 
 
 namespace blank {
+
+ostream &operator <<(ostream &out, Token::Type t) {
+	switch (t) {
+		case Token::ANGLE_BRACKET_OPEN:
+			return out << "ANGLE_BRACKET_OPEN";
+		case Token::ANGLE_BRACKET_CLOSE:
+			return out << "ANGLE_BRACKET_CLOSE";
+		case Token::CHEVRON_OPEN:
+			return out << "CHEVRON_OPEN";
+		case Token::CHEVRON_CLOSE:
+			return out << "CHEVRON_CLOSE";
+		case Token::BRACKET_OPEN:
+			return out << "BRACKET_OPEN";
+		case Token::BRACKET_CLOSE:
+			return out << "BRACKET_CLOSE";
+		case Token::PARENTHESIS_OPEN:
+			return out << "PARENTHESIS_OPEN";
+		case Token::PARENTHESIS_CLOSE:
+			return out << "PARENTHESIS_CLOSE";
+		case Token::COLON:
+			return out << "COLON";
+		case Token::SEMICOLON:
+			return out << "SEMICOLON";
+		case Token::COMMA:
+			return out << "COMMA";
+		case Token::EQUALS:
+			return out << "EQUALS";
+		case Token::NUMBER:
+			return out << "NUMBER";
+		case Token::STRING:
+			return out << "STRING";
+		case Token::IDENTIFIER:
+			return out << "IDENTIFIER";
+		case Token::COMMENT:
+			return out << "COMMENT";
+		default:
+			return out << "UNKNOWN";
+	}
+}
+
+ostream &operator <<(ostream &out, const Token &t) {
+	out << t.type;
+	switch (t.type) {
+		case Token::UNKNOWN:
+		case Token::NUMBER:
+		case Token::STRING:
+		case Token::IDENTIFIER:
+		case Token::COMMENT:
+			return out << '(' << t.value << ')';
+		default:
+			return out;
+	}
+}
 
 Tokenizer::Tokenizer(istream &in)
 : in(in)
@@ -195,27 +251,35 @@ bool TokenStreamReader::HasMore() {
 	if (cached) {
 		return true;
 	}
-	while (in.HasMore()) {
-		if (in.Next().type != Token::COMMENT) {
-			cached = true;
-			return true;
-		}
-	}
-	return false;
+	SkipComments();
+	return cached;
 }
 
 const Token &TokenStreamReader::Next() {
+	SkipComments();
+	cached = false;
+	return in.Current();
+}
+
+void TokenStreamReader::SkipComments() {
 	if (cached) {
-		cached = false;
-		return in.Current();
-	} else {
-		return in.Next();
+		if (in.Current().type == Token::COMMENT) {
+			cached = false;
+		} else {
+			return;
+		}
+	}
+	while (in.HasMore()) {
+		if (in.Next().type != Token::COMMENT) {
+			cached = true;
+			return;
+		}
 	}
 }
 
 const Token &TokenStreamReader::Peek() {
 	if (!cached) {
-		in.Next();
+		Next();
 		cached = true;
 	}
 	return in.Current();
@@ -224,7 +288,9 @@ const Token &TokenStreamReader::Peek() {
 
 void TokenStreamReader::Assert(Token::Type t) {
 	if (GetType() != t) {
-		throw runtime_error("unexpected token in input stream");
+		stringstream s;
+		s << "unexpected token in input stream: expected " << t << ", but got " << in.Current();
+		throw runtime_error(s.str());
 	}
 }
 
@@ -356,10 +422,14 @@ bool TokenStreamReader::GetBool() {
 			} else if (GetValue() == "false" || GetValue() == "no" || GetValue() == "off") {
 				return false;
 			} else {
-				throw runtime_error("unexpected value in input stream");
+				throw runtime_error("unexpected value in input stream: cannot cast " + GetValue() + " to bool");
 			}
 		default:
-			throw runtime_error("unexpected token in input stream");
+			{
+				stringstream s;
+				s << "unexpected token in input stream: cannot cast " << in.Current() << " to bool";
+				throw runtime_error(s.str());
+			}
 	}
 }
 

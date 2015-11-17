@@ -45,6 +45,8 @@ public:
 	unsigned long GetULong();
 
 private:
+	void SkipComments();
+
 	void Assert(Token::Type);
 	Token::Type GetType() const noexcept;
 	const std::string &GetValue() const noexcept;

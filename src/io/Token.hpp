@@ -1,6 +1,7 @@
 #ifndef BLANK_IO_TOKEN_HPP_
 #define BLANK_IO_TOKEN_HPP_
 
+#include <iosfwd>
 #include <string>
 
 
@@ -28,6 +29,9 @@ struct Token {
 	} type = UNKNOWN;
 	std::string value;
 };
+
+std::ostream &operator <<(std::ostream &, Token::Type);
+std::ostream &operator <<(std::ostream &, const Token &);
 
 }
 
