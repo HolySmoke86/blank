@@ -124,9 +124,9 @@ private:
 		const Entity &,
 		const EntityState &
 	);
-	glm::vec3 CollisionForce(
+	void CollisionFix(
 		const Entity &,
-		const EntityState &
+		EntityState &
 	);
 	glm::vec3 Gravity(
 		const Entity &,

@@ -105,12 +105,6 @@ world generator that is not boring
 	biomes seem too small, maybe that will become easier to tune when
 	there's a little more diversity between them
 
-entity/world collision
-
-	I don't like the force/spring based collision response, maybe revert
-	back to impulses
-	also, it fails in some cases
-
 spawning
 
 	need a way to find a suitable location to spawn new players in

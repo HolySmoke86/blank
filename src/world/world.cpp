@@ -210,7 +210,7 @@ void Entity::OrientBody(float dt) noexcept {
 				std::cout << "direction: " << direction << std::endl;
 				std::cout << "difference: " << glm::degrees(relative_difference) << "°" << std::endl;
 				std::cout << "correction: " << glm::degrees(correction) << "°" << std::endl;
-				std::cout  << std::endl;
+				std::cout << std::endl;
 			}
 			// now rotate body by correction and head by -correction
 			state.orient = rotate(state.orient, correction, up);
@@ -610,6 +610,7 @@ void World::Update(Entity &entity, float dt) {
 
 	state.pos.block += f.position * dt;
 	state.velocity += f.velocity * dt;
+	CollisionFix(entity, state);
 	state.AdjustPosition();
 
 	entity.SetState(state);
@@ -624,6 +625,7 @@ EntityDerivative World::CalculateStep(
 	EntityState next(cur);
 	next.pos.block += delta.position * dt;
 	next.velocity += delta.velocity * dt;
+	CollisionFix(entity, next);
 	next.AdjustPosition();
 
 	if (dot(next.velocity, next.velocity) > entity.MaxVelocity() * entity.MaxVelocity()) {
@@ -640,12 +642,11 @@ glm::vec3 World::CalculateForce(
 	const Entity &entity,
 	const EntityState &state
 ) {
-	glm::vec3 force(ControlForce(entity, state) + CollisionForce(entity, state) + Gravity(entity, state));
+	glm::vec3 force(ControlForce(entity, state));
 	if (dot(force, force) > entity.MaxControlForce() * entity.MaxControlForce()) {
-		return normalize(force) * entity.MaxControlForce();
-	} else {
-		return force;
+		force = normalize(force) * entity.MaxControlForce();
 	}
+	return force + Gravity(entity, state);
 }
 
 glm::vec3 World::ControlForce(
@@ -661,33 +662,37 @@ std::vector<WorldCollision> col;
 
 }
 
-glm::vec3 World::CollisionForce(
+void World::CollisionFix(
 	const Entity &entity,
-	const EntityState &state
+	EntityState &state
 ) {
 	col.clear();
-	if (entity.WorldCollidable() && Intersection(entity, state, col)) {
-		glm::vec3 correction = -CombinedInterpenetration(state, col);
-		// correction may be zero in which case normalize() returns NaNs
-		if (iszero(correction)) {
-			return glm::vec3(0.0f);
-		}
-		// if entity is already going in the direction of correction,
-		// let the problem resolve itself
-		if (dot(state.velocity, correction) >= 0.0f) {
-			return glm::vec3(0.0f);
-		}
-		glm::vec3 normal_velocity(proj(state.velocity, correction));
-		// apply force proportional to penetration
-		// use velocity projected onto correction as damper
-		constexpr float k = 1000.0f; // spring constant
-		constexpr float b = 10.0f; // damper constant
-		const glm::vec3 x(-correction); // endpoint displacement from equilibrium in m
-		const glm::vec3 v(normal_velocity); // relative velocity between endpoints in m/s
-		return (((-k) * x) - (b * v)); // times 1kg/s, in kg*m/s²
-	} else {
-		return glm::vec3(0.0f);
+	if (!entity.WorldCollidable() || !Intersection(entity, state, col)) {
+		// no collision, no fix
+		return;
 	}
+	glm::vec3 correction = CombinedInterpenetration(state, col);
+	// correction may be zero in which case normalize() returns NaNs
+	if (iszero(correction)) {
+		return;
+	}
+	// if entity is already going in the direction of correction,
+	// let the problem resolve itself
+	if (dot(state.velocity, correction) >= 0.0f) {
+		return;
+	}
+	// apply correction, maybe could use some damping, gotta test
+	state.pos.block += correction;
+	// kill velocity?
+	glm::vec3 normal_velocity(proj(state.velocity, correction));
+	state.velocity -= normal_velocity;
+	// apply force proportional to penetration
+	// use velocity projected onto correction as damper
+	//constexpr float k = 1000.0f; // spring constant
+	//constexpr float b = 10.0f; // damper constant
+	//const glm::vec3 x(-correction); // endpoint displacement from equilibrium in m
+	//const glm::vec3 v(normal_velocity); // relative velocity between endpoints in m/s
+	//return (((-k) * x) - (b * v)); // times 1kg/s, in kg*m/s²
 }
 
 glm::vec3 World::CombinedInterpenetration(
