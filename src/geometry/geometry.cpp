@@ -134,15 +134,15 @@ bool Intersection(
 		glm::vec3(b_m[0]),
 		glm::vec3(b_m[1]),
 		glm::vec3(b_m[2]),
-		cross(glm::vec3(a_m[0]), glm::vec3(b_m[0])),
-		cross(glm::vec3(a_m[0]), glm::vec3(b_m[1])),
-		cross(glm::vec3(a_m[0]), glm::vec3(b_m[2])),
-		cross(glm::vec3(a_m[1]), glm::vec3(b_m[0])),
-		cross(glm::vec3(a_m[1]), glm::vec3(b_m[1])),
-		cross(glm::vec3(a_m[1]), glm::vec3(b_m[2])),
-		cross(glm::vec3(a_m[2]), glm::vec3(b_m[0])),
-		cross(glm::vec3(a_m[2]), glm::vec3(b_m[1])),
-		cross(glm::vec3(a_m[2]), glm::vec3(b_m[2])),
+		normalize(cross(glm::vec3(a_m[0]), glm::vec3(b_m[0]))),
+		normalize(cross(glm::vec3(a_m[0]), glm::vec3(b_m[1]))),
+		normalize(cross(glm::vec3(a_m[0]), glm::vec3(b_m[2]))),
+		normalize(cross(glm::vec3(a_m[1]), glm::vec3(b_m[0]))),
+		normalize(cross(glm::vec3(a_m[1]), glm::vec3(b_m[1]))),
+		normalize(cross(glm::vec3(a_m[1]), glm::vec3(b_m[2]))),
+		normalize(cross(glm::vec3(a_m[2]), glm::vec3(b_m[0]))),
+		normalize(cross(glm::vec3(a_m[2]), glm::vec3(b_m[1]))),
+		normalize(cross(glm::vec3(a_m[2]), glm::vec3(b_m[2]))),
 	};
 
 	depth = std::numeric_limits<float>::infinity();
@@ -150,7 +150,7 @@ bool Intersection(
 
 	int cur_axis = 0;
 	for (const glm::vec3 &axis : axes) {
-		if (iszero(axis)) {
+		if (any(isnan(axis))) {
 			// can result from the cross products if A and B have parallel axes
 			continue;
 		}
