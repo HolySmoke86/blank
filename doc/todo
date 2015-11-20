@@ -44,6 +44,8 @@ networking
 	maybe stale and inexistent chunks should be visualized (e.g. by
 	drawing a semi-transparent box around them)
 
+	make a chunk data counting a little safer
+
 threading
 
 	(clientside) networking and disk IO are prime candidates for threading
@@ -79,6 +81,8 @@ gravity
 
 	now implemented as optional gravity emitter per block type
 	let's see how that pans out
+	maybe players should be given the option to switch between
+	walk and fly mode
 
 block attributes
 
@@ -105,6 +109,7 @@ entity/world collision
 
 	I don't like the force/spring based collision response, maybe revert
 	back to impulses
+	also, it fails in some cases
 
 spawning
 

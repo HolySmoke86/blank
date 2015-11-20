@@ -152,6 +152,9 @@ private:
 
 	// TODO: I'd prefer a drag solution
 	float max_vel;
+	// TODO: split max_force into (local) axes?
+	//       e.g. players may want to disable vertical thrust under certain
+	//       conditions (e.g. "walking" ^^)
 	float max_force;
 
 	int ref_count;

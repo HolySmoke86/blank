@@ -605,8 +605,8 @@ void World::Update(Entity &entity, float dt) {
 
 	EntityDerivative f;
 	constexpr float sixth = 1.0f / 6.0f;
-	f.position = sixth * ((a.position + 2.0f * (b.position + c.position)) + d.position);
-	f.velocity = sixth * ((a.velocity + 2.0f * (b.velocity + c.velocity)) + d.velocity);
+	f.position = sixth * (a.position + 2.0f * (b.position + c.position) + d.position);
+	f.velocity = sixth * (a.velocity + 2.0f * (b.velocity + c.velocity) + d.velocity);
 
 	state.pos.block += f.position * dt;
 	state.velocity += f.velocity * dt;
