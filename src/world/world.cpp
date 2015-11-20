@@ -699,11 +699,19 @@ glm::vec3 World::CombinedInterpenetration(
 	glm::vec3 max_pen(0.0f);
 	for (const WorldCollision &c : col) {
 		if (!c.Blocks()) continue;
-		glm::vec3 local_pen(c.normal * c.depth);
+		glm::vec3 normal(c.normal);
 		// swap if neccessary (normal may point away from the entity)
-		if (dot(c.normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) > 0) {
-			local_pen *= -1;
+		if (dot(normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) < 0) {
+			normal = -normal;
 		}
+		// check if block surface is "inside"
+		Block::Face coll_face = Block::NormalFace(normal);
+		BlockLookup neighbor(c.chunk, c.BlockPos(), coll_face);
+		if (neighbor && neighbor.FaceFilled(Block::Opposite(coll_face))) {
+			// yep, so ignore this contact
+			continue;
+		}
+		glm::vec3 local_pen(normal * c.depth);
 		min_pen = min(min_pen, local_pen);
 		max_pen = max(max_pen, local_pen);
 	}

@@ -2,6 +2,7 @@
 #define BLANK_WORLD_BLOCKLOOKUP_HPP_
 
 #include "Block.hpp"
+#include "BlockType.hpp"
 #include "Chunk.hpp"
 
 
@@ -27,6 +28,8 @@ public:
 	const Block &GetBlock() const noexcept { return GetChunk().BlockAt(GetBlockPos()); }
 	const BlockType &GetType() const noexcept { return GetChunk().Type(GetBlock()); }
 	int GetLight() const noexcept { return GetChunk().GetLight(GetBlockPos()); }
+
+	bool FaceFilled(Block::Face f) const noexcept { return GetType().FaceFilled(GetBlock(), f); }
 
 	void SetBlock(const Block &b) noexcept { GetChunk().SetBlock(GetBlockPos(), b); }
 
