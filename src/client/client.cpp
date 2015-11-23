@@ -80,9 +80,6 @@ InteractiveState::InteractiveState(MasterState &master, uint32_t player_id)
 	chunk_renderer.FogDensity(master.GetWorldConf().fog_density);
 	loop_timer.Start();
 	stat_timer.Start();
-	if (save.Exists(player)) {
-		save.Read(player);
-	}
 }
 
 void InteractiveState::OnResume() {
