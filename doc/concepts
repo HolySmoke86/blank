@@ -1,0 +1,128 @@
+General
+=======
+
+The World is made from 1m³ locks, divided into chunks of 16x16x16 for
+convenience. Players can place and remove block at will (currently).
+
+There's no global light source. All lighting comes from light emitting blocks.
+
+Equally, there's no global gravity, though some blocks can emit force fields.
+
+The void is able transport sound for some reason.
+
+It's also inhabited by yet unnamed entities which, for the moment, stand or
+float around. If they see a player, they start chasing it until they're near
+enough and run away again if they get too close.
+
+World Generation
+----------------
+
+As of now, the world has at generation time the following properties
+distributed to make up "biomes": solidity, humidity, temperature, richness.
+Solidity determines how dense the material is at any given point. Below a
+certian solidity, there's no matter at all (or rather "air"). The exact point
+is given by the loaded block type definitions.
+Humidity, temperature and richness are intended to create some variety.
+There's also a random factor that decides which of the qualified block types
+is actually placed.
+
+
+Initialization
+==============
+
+Runtime::Initialize
+ - arguments are interpreted
+ - if asset or save paths are empty, they're set to defaults, which are
+   SDL base path + assets/ and SDL pref path, repsectively (except when
+   NDEBUG is undefined, in which case default save path is SDL base path
+   + saves/)
+ - if save path/prefs.conf exists, its values are read, otherwise it is
+   created and populated with baked defaults
+ - arguments are interpreted again so they can override pref values
+
+Runtime::Execute
+ - if mode is error, exit with failure
+ - init headless part (basic SDL and net)
+ - remaining steps depend on runtime mode
+
+Standalone
+----------
+
+Runtime::RunStandalone
+ - init the remaining components (video, image, TTF, GL)
+ - create environment (loader, counter, controller, RNG, assets, audio, viewport, keymap)
+ - load or create world save
+ - create application and load up master state
+
+standalone::MasterState
+ - load world resources (shapes, block types, models, sounds, textures)
+ - load player from world save if available
+ - push preloader
+
+standalone::PreloadState
+ - load or generate a bunch of chunks every frame until all are in memory
+ - generate VAOs for chunks in visible range (independent of view angle)
+
+Server
+------
+
+Runtime::RunServer
+ - create headless environment (loader, counter, controller, RNG)
+ - load or create world save
+ - create headless application and load up server state
+
+server::ServerState
+ - bind server socket
+ - load world resources (shapes, block types, models)
+
+Client
+------
+
+Runtime::RunClient
+ - init the remaining components (video, image, TTF, GL)
+ - create environment (loader, counter, controller, RNG, assets, audio, viewport, keymap)
+ - create application and load up master state
+
+client::MasterState
+ - send login to server, wait for response
+ - if anything other than a join comes back (or nothing at all), display message and exit
+ - create interactive state and pass control
+
+client::InteractiveState
+ - create cache (which is just a stripped world save) if is doesn't exist already
+ - load resources (shapes, block types, models, sounds, textures)
+
+
+Game Loop
+=========
+
+This is roughly divided in server and client responsibilities both of which,
+except for network transmission, are also handled by the standalone state.
+
+The general structure is like this:
+ - handle input
+ - update simulation (see World Update below)
+ - load or generate chunks if any (servers only)
+ - generate and push output
+
+For interactive runtimes, input can come from devices like mouse, keyboards, etc.
+Networked runtimes can receive input from packets.
+
+The simulation is updated based on the time that passed since the last update.
+Networked runtimes divide the physics part of the simulation in fixed steps of
+16ms so client prediction has a chance to make good estimates.
+
+Output for interactive runtimes is usually audio+video. Networked runtimes also
+output packets to synchronize with connected remotes.
+
+World update
+------------
+
+ - spawner (servers only)
+ - physics simulation
+ - for each entity update:
+  - transform caches
+  - controller (input for players and AI for others)
+  - model (animation state)
+ - rebase player chunk indices
+ - remove dead entities
