@@ -533,8 +533,6 @@ bool World::Intersection(
 }
 
 bool World::Intersection(const Entity &e, const EntityState &s, std::vector<WorldCollision> &col) {
-	// TODO: make special case for entities here and in Chunk::Intersection so entity's bounding radius
-	//       doesn't have to be calculated over and over again (sqrt)
 	glm::ivec3 reference = s.pos.chunk;
 	glm::mat4 M = s.Transform(reference);
 
@@ -686,13 +684,6 @@ void World::CollisionFix(
 	// kill velocity?
 	glm::vec3 normal_velocity(proj(state.velocity, correction));
 	state.velocity -= normal_velocity;
-	// apply force proportional to penetration
-	// use velocity projected onto correction as damper
-	//constexpr float k = 1000.0f; // spring constant
-	//constexpr float b = 10.0f; // damper constant
-	//const glm::vec3 x(-correction); // endpoint displacement from equilibrium in m
-	//const glm::vec3 v(normal_velocity); // relative velocity between endpoints in m/s
-	//return (((-k) * x) - (b * v)); // times 1kg/s, in kg*m/s²
 }
 
 glm::vec3 World::CombinedInterpenetration(
