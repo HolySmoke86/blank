@@ -4,6 +4,7 @@
 #include "../app/State.hpp"
 #include "../ui/ClientController.hpp"
 
+#include "DirectCLIFeedback.hpp"
 #include "PreloadState.hpp"
 #include "UnloadState.hpp"
 #include "../ai/Spawner.hpp"
@@ -90,6 +91,7 @@ private:
 	SkyBox sky;
 
 	CLI cli;
+	DirectCLIFeedback cli_ctx;
 
 	PreloadState preload;
 	UnloadState unload;

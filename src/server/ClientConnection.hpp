@@ -2,6 +2,7 @@
 #define BLANK_SERVER_CLIENTCONNECTION_HPP_
 
 #include "ChunkTransmitter.hpp"
+#include "NetworkCLIFeedback.hpp"
 #include "Server.hpp"
 #include "../app/IntervalTimer.hpp"
 #include "../ui/DirectInput.hpp"
@@ -10,6 +11,7 @@
 #include "../world/EntityState.hpp"
 #include "../world/Player.hpp"
 
+#include <cstdint>
 #include <deque>
 #include <list>
 #include <memory>
@@ -39,6 +41,8 @@ public:
 	Connection &GetConnection() noexcept { return conn; }
 	bool Disconnected() const noexcept { return conn.Closed(); }
 
+	Server &GetServer() noexcept { return server; }
+
 	/// prepare a packet of given type
 	template<class Type>
 	Type Prepare() const noexcept {
@@ -62,6 +66,8 @@ public:
 	const Model &GetPlayerModel() const noexcept;
 
 	bool ChunkInRange(const glm::ivec3 &) const noexcept;
+
+	std::uint16_t SendMessage(std::uint8_t type, std::uint32_t from, const std::string &msg);
 
 private:
 	struct SpawnStatus {
@@ -105,6 +111,7 @@ private:
 	Server &server;
 	Connection conn;
 	std::unique_ptr<DirectInput> input;
+	std::unique_ptr<NetworkCLIFeedback> cli_ctx;
 	const Model *player_model;
 	std::list<SpawnStatus> spawns;
 	unsigned int confirm_wait;

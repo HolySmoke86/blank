@@ -14,6 +14,7 @@
 namespace blank {
 
 class ChunkIndex;
+class CLIContext;
 class Model;
 class Player;
 class WorldSave;
@@ -52,7 +53,7 @@ public:
 	void SetBlock(Chunk &, int, const Block &) override;
 
 	/// for use by client connections when they receive a line from the player
-	void DispatchMessage(Player &, const std::string &);
+	void DispatchMessage(CLIContext &, const std::string &);
 
 	/// send message to all connected clients
 	void DistributeMessage(std::uint8_t type, std::uint32_t ref, const std::string &msg);

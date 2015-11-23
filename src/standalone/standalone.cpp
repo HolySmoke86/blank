@@ -1,16 +1,40 @@
+#include "DirectCLIFeedback.hpp"
 #include "MasterState.hpp"
+#include "PreloadState.hpp"
+#include "UnloadState.hpp"
 
 #include "../app/Config.hpp"
 #include "../app/Environment.hpp"
 #include "../app/init.hpp"
 #include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
+#include "../world/ChunkLoader.hpp"
+#include "../world/ChunkRenderer.hpp"
 
 #include <SDL.h>
 
 
 namespace blank {
 namespace standalone {
+
+DirectCLIFeedback::DirectCLIFeedback(Player &p, HUD &h)
+: CLIContext(p)
+, hud(h) {
+
+}
+
+void DirectCLIFeedback::Error(const std::string &msg) {
+	hud.PostMessage(msg);
+}
+
+void DirectCLIFeedback::Message(const std::string &msg) {
+	hud.PostMessage(msg);
+}
+
+void DirectCLIFeedback::Broadcast(const std::string &msg) {
+	hud.PostMessage(msg);
+}
+
 
 MasterState::MasterState(
 	Environment &env,
@@ -38,6 +62,7 @@ MasterState::MasterState(
 , spawner(world, res.models, env.rng)
 , sky(env.loader.LoadCubeMap("skybox"))
 , cli(world)
+, cli_ctx(player, hud)
 , preload(env, chunk_loader, chunk_renderer)
 , unload(env, world.Chunks(), save)
 , chat(env, *this, *this) {
@@ -224,9 +249,73 @@ void MasterState::OnLineSubmit(const std::string &line) {
 		return;
 	}
 	if (line[0] == '/' && line.size() > 1 && line[1] != '/') {
-		cli.Execute(player, line.substr(1));
+		cli.Execute(cli_ctx, line.substr(1));
 	} else {
 		hud.PostMessage(line);
+	}
+}
+
+
+PreloadState::PreloadState(Environment &env, ChunkLoader &loader, ChunkRenderer &render)
+: ProgressState(env, "Preloading chunks: %d/%d (%d%%)")
+, env(env)
+, loader(loader)
+, render(render)
+, total(loader.ToLoad())
+, per_update(64) {
+
+}
+
+void PreloadState::Update(int dt) {
+	loader.LoadN(per_update);
+	if (loader.ToLoad() <= 0) {
+		env.state.Pop();
+		render.Update(render.MissingChunks());
+	} else {
+		SetProgress(total - loader.ToLoad(), total);
+	}
+}
+
+
+UnloadState::UnloadState(
+	Environment &env,
+	ChunkStore &chunks,
+	const WorldSave &save)
+: ProgressState(env, "Unloading chunks: %d/%d (%d%%)")
+, env(env)
+, chunks(chunks)
+, save(save)
+, cur(chunks.begin())
+, end(chunks.end())
+, done(0)
+, total(chunks.NumLoaded())
+, per_update(64) {
+
+}
+
+
+void UnloadState::OnResume() {
+	cur = chunks.begin();
+	end = chunks.end();
+	done = 0;
+	total = chunks.NumLoaded();
+}
+
+
+void UnloadState::Handle(const SDL_Event &) {
+	// ignore everything
+}
+
+void UnloadState::Update(int dt) {
+	for (std::size_t i = 0; i < per_update && cur != end; ++i, ++cur, ++done) {
+		if (cur->ShouldUpdateSave()) {
+			save.Write(*cur);
+		}
+	}
+	if (cur == end) {
+		env.state.Pop();
+	} else {
+		SetProgress(done, total);
 	}
 }
 

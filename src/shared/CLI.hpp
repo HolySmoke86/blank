@@ -7,7 +7,7 @@
 
 namespace blank {
 
-class Player;
+class CLIContext;
 class TokenStreamReader;
 class World;
 
@@ -16,7 +16,7 @@ class CLI {
 public:
 	struct Command {
 		virtual ~Command();
-		virtual void Execute(CLI &, Player &, TokenStreamReader &) = 0;
+		virtual void Execute(CLI &, CLIContext &, TokenStreamReader &) = 0;
 	};
 
 public:
@@ -25,10 +25,7 @@ public:
 
 	void AddCommand(const std::string &name, Command *);
 
-	void Execute(Player &, const std::string &);
-
-	void Message(const std::string &msg);
-	void Error(const std::string &msg);
+	void Execute(CLIContext &, const std::string &);
 
 private:
 	World &world;

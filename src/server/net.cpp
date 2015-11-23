@@ -439,6 +439,8 @@ void ClientConnection::AttachPlayer(Player &player) {
 	input.reset(new DirectInput(server.GetWorld(), player, server));
 	PlayerEntity().Ref();
 
+	cli_ctx.reset(new NetworkCLIFeedback(player, *this));
+
 	old_base = PlayerChunks().Base();
 	ExactLocation::Coarse begin = PlayerChunks().CoordsBegin();
 	ExactLocation::Coarse end = PlayerChunks().CoordsEnd();
@@ -469,6 +471,7 @@ void ClientConnection::DetachPlayer() {
 	server.GetWorldSave().Write(input->GetPlayer());
 	PlayerEntity().Kill();
 	PlayerEntity().UnRef();
+	cli_ctx.reset();
 	input.reset();
 	transmitter.Abort();
 	chunk_queue.clear();
@@ -629,9 +632,36 @@ void ClientConnection::On(const Packet::Message &pack) {
 	pack.ReadReferral(ref);
 	pack.ReadMessage(msg);
 
-	if (type == 1 && HasPlayer()) {
-		server.DispatchMessage(input->GetPlayer(), msg);
+	if (type == 1 && cli_ctx) {
+		server.DispatchMessage(*cli_ctx, msg);
 	}
+}
+
+uint16_t ClientConnection::SendMessage(uint8_t type, uint32_t from, const string &msg) {
+	auto pack = Prepare<Packet::Message>();
+	pack.WriteType(type);
+	pack.WriteReferral(from);
+	pack.WriteMessage(msg);
+	return Send(Packet::Message::GetSize(msg));
+}
+
+
+NetworkCLIFeedback::NetworkCLIFeedback(Player &p, ClientConnection &c)
+: CLIContext(p)
+, conn(c) {
+
+}
+
+void NetworkCLIFeedback::Error(const string &msg) {
+	conn.SendMessage(0, 0, msg);
+}
+
+void NetworkCLIFeedback::Message(const string &msg) {
+	conn.SendMessage(0, 0, msg);
+}
+
+void NetworkCLIFeedback::Broadcast(const string &msg) {
+	conn.GetServer().DistributeMessage(0, GetPlayer().GetEntity().ID(), msg);
 }
 
 
@@ -788,14 +818,14 @@ void Server::SetBlock(Chunk &chunk, int index, const Block &block) {
 	}
 }
 
-void Server::DispatchMessage(Player &player, const string &msg) {
+void Server::DispatchMessage(CLIContext &ctx, const string &msg) {
 	if (msg.empty()) {
 		return;
 	}
 	if (msg[0] == '/' && msg.size() > 1 && msg[1] != '/') {
-		cli.Execute(player, msg.substr(1));
+		cli.Execute(ctx, msg.substr(1));
 	} else {
-		DistributeMessage(1, player.GetEntity().ID(), msg);
+		DistributeMessage(1, ctx.GetPlayer().GetEntity().ID(), msg);
 	}
 }
 

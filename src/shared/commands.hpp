@@ -9,7 +9,7 @@ namespace blank {
 class TeleportCommand
 : public CLI::Command {
 
-	void Execute(CLI &, Player &, TokenStreamReader &) override;
+	void Execute(CLI &, CLIContext &, TokenStreamReader &) override;
 
 };
 
