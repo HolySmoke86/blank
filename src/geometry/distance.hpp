@@ -15,6 +15,15 @@ inline bool iszero(const T &v) noexcept {
 	return length2(v) < std::numeric_limits<typename T::value_type>::epsilon();
 }
 
+template<class Vec>
+inline void limit(Vec &v, float max) noexcept {
+	float len2 = length2(v);
+	float max2 = max * max;
+	if (len2 > max2) {
+		v = normalize(v) * max;
+	}
+}
+
 template<class T>
 T manhattan_distance(const glm::tvec3<T> &a, const glm::tvec3<T> &b) noexcept {
 	return compAdd(abs(a - b));

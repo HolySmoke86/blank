@@ -2,6 +2,7 @@
 #define BLANK_WORLD_ENTITY_HPP_
 
 #include "Chunk.hpp"
+#include "EntityDerivative.hpp"
 #include "EntityState.hpp"
 #include "../geometry/primitive.hpp"
 #include "../model/Instance.hpp"
@@ -17,6 +18,7 @@ namespace blank {
 class DirectionalLighting;
 class EntityController;
 class Shape;
+class World;
 
 class Entity {
 
@@ -114,13 +116,14 @@ public:
 	bool Dead() const noexcept { return dead; }
 	bool CanRemove() const noexcept { return dead && ref_count <= 0; }
 
-	void Update(float dt);
+	void Update(World &, float dt);
 
 	void Render(const glm::mat4 &M, DirectionalLighting &prog) noexcept {
 		if (model) model.Render(M, prog);
 	}
 
 private:
+	void UpdatePhysics(World &, float dt);
 	void UpdateTransforms() noexcept;
 	void UpdateHeading() noexcept;
 	void UpdateModel(float dt) noexcept;
@@ -129,6 +132,14 @@ public:
 	void OrientBody(float dt) noexcept;
 private:
 	void OrientHead(float dt) noexcept;
+
+	EntityDerivative CalculateStep(
+		World &,
+		const EntityState &cur,
+		float dt,
+		const EntityDerivative &prev
+	) const;
+
 
 private:
 	EntityController *ctrl;

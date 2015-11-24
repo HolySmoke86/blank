@@ -26,7 +26,8 @@ public:
 	ChunkIndex *ClosestIndex(const ExactLocation::Coarse &pos);
 
 	/// returns nullptr if given position is not loaded
-	Chunk *Get(const ExactLocation::Coarse &);
+	Chunk *Get(const ExactLocation::Coarse &) noexcept;
+	const Chunk *Get(const ExactLocation::Coarse &) const noexcept;
 	/// returns nullptr if given position is not indexed
 	Chunk *Allocate(const ExactLocation::Coarse &);
 

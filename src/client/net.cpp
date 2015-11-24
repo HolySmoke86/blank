@@ -426,7 +426,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	vector<WorldCollision> col;
 	while (entry != end) {
 		SetMovement(entry->movement);
-		GetWorld().Update(replay, entry->delta_t);
+		replay.Update(GetWorld(), entry->delta_t);
 		entry->state.pos = replay.GetState().pos;
 		++entry;
 	}

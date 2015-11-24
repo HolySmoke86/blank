@@ -17,7 +17,6 @@ namespace blank {
 
 class BlockTypeRegistry;
 class EntityCollision;
-struct EntityDerivative;
 class Viewport;
 class WorldCollision;
 
@@ -100,8 +99,11 @@ public:
 
 	// dt in ms
 	void Update(int dt);
-	// dt in s
-	void Update(Entity &, float dt);
+
+	/// fix state so entity doesn't intersect with the solid world
+	void ResolveWorldCollision(const Entity &, EntityState &);
+	/// get force due to gravity at given location
+	glm::vec3 GravityAt(const ExactLocation &) const noexcept;
 
 	void Render(Viewport &);
 	void RenderDebug(Viewport &);
@@ -109,29 +111,6 @@ public:
 private:
 	using EntityHandle = std::list<Entity>::iterator;
 	EntityHandle RemoveEntity(EntityHandle &);
-
-	EntityDerivative CalculateStep(
-		const Entity &,
-		const EntityState &cur,
-		float dt,
-		const EntityDerivative &prev
-	);
-	glm::vec3 CalculateForce(
-		const Entity &,
-		const EntityState &cur
-	);
-	glm::vec3 ControlForce(
-		const Entity &,
-		const EntityState &
-	);
-	void CollisionFix(
-		const Entity &,
-		EntityState &
-	);
-	glm::vec3 Gravity(
-		const Entity &,
-		const EntityState &
-	);
 
 	/// calculate light direction and intensity at entity's location
 	void GetLight(

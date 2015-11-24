@@ -90,11 +90,14 @@ void Entity::UnsetController() noexcept {
 }
 
 glm::vec3 Entity::ControlForce(const EntityState &s) const noexcept {
+	glm::vec3 force;
 	if (HasController()) {
-		return GetController().ControlForce(*this, s);
+		force = GetController().ControlForce(*this, s);
 	} else {
-		return -s.velocity;
+		force = -s.velocity;
 	}
+	limit(force, max_force);
+	return force;
 }
 
 void Entity::Position(const glm::ivec3 &c, const glm::vec3 &b) noexcept {
@@ -129,14 +132,57 @@ Ray Entity::Aim(const ExactLocation::Coarse &chunk_offset) const noexcept {
 	return Ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
 }
 
-void Entity::Update(float dt) {
-	UpdateTransforms();
-	UpdateHeading();
+void Entity::Update(World &world, float dt) {
 	if (HasController()) {
 		GetController().Update(*this, dt);
 	}
+	UpdatePhysics(world, dt);
+	UpdateTransforms();
+	UpdateHeading();
 	UpdateModel(dt);
 }
+
+void Entity::UpdatePhysics(World &world, float dt) {
+	EntityState s(state);
+
+	EntityDerivative a(CalculateStep(world, s, 0.0f, EntityDerivative()));
+	EntityDerivative b(CalculateStep(world, s, dt * 0.5f, a));
+	EntityDerivative c(CalculateStep(world, s, dt * 0.5f, b));
+	EntityDerivative d(CalculateStep(world, s, dt, c));
+
+	EntityDerivative f;
+	constexpr float sixth = 1.0f / 6.0f;
+	f.position = sixth * (a.position + 2.0f * (b.position + c.position) + d.position);
+	f.velocity = sixth * (a.velocity + 2.0f * (b.velocity + c.velocity) + d.velocity);
+
+	s.pos.block += f.position * dt;
+	s.velocity += f.velocity * dt;
+	limit(s.velocity, max_vel);
+	world.ResolveWorldCollision(*this, s);
+	s.AdjustPosition();
+
+	SetState(s);
+}
+
+EntityDerivative Entity::CalculateStep(
+	World &world,
+	const EntityState &cur,
+	float dt,
+	const EntityDerivative &delta
+) const {
+	EntityState next(cur);
+	next.pos.block += delta.position * dt;
+	next.velocity += delta.velocity * dt;
+	limit(next.velocity, max_vel);
+	world.ResolveWorldCollision(*this, next);
+	next.AdjustPosition();
+
+	EntityDerivative out;
+	out.position = next.velocity;
+	out.velocity = ControlForce(next) + world.GravityAt(next.pos); // by mass = 1kg
+	return out;
+}
+
 
 void Entity::UpdateTransforms() noexcept {
 	// model transform is the one given by current state
@@ -564,6 +610,7 @@ bool World::Intersection(
 		if (manhattan_radius(cur_chunk.Position() - reference) > 1) {
 			// chunk is not one of the 3x3x3 surrounding the entity
 			// since there's no entity which can extent over 16 blocks, they can be skipped
+			// TODO: change to indexed (like with entity)
 			continue;
 		}
 		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(reference), col)) {
@@ -576,10 +623,7 @@ bool World::Intersection(
 void World::Update(int dt) {
 	float fdt(dt * 0.001f);
 	for (Entity &entity : entities) {
-		Update(entity, fdt);
-	}
-	for (Entity &entity : entities) {
-		entity.Update(fdt);
+		entity.Update(*this, fdt);
 	}
 	for (Player &player : players) {
 		player.Update(dt);
@@ -593,74 +637,13 @@ void World::Update(int dt) {
 	}
 }
 
-void World::Update(Entity &entity, float dt) {
-	EntityState state(entity.GetState());
-
-	EntityDerivative a(CalculateStep(entity, state, 0.0f, EntityDerivative()));
-	EntityDerivative b(CalculateStep(entity, state, dt * 0.5f, a));
-	EntityDerivative c(CalculateStep(entity, state, dt * 0.5f, b));
-	EntityDerivative d(CalculateStep(entity, state, dt, c));
-
-	EntityDerivative f;
-	constexpr float sixth = 1.0f / 6.0f;
-	f.position = sixth * (a.position + 2.0f * (b.position + c.position) + d.position);
-	f.velocity = sixth * (a.velocity + 2.0f * (b.velocity + c.velocity) + d.velocity);
-
-	state.pos.block += f.position * dt;
-	state.velocity += f.velocity * dt;
-	CollisionFix(entity, state);
-	state.AdjustPosition();
-
-	entity.SetState(state);
-}
-
-EntityDerivative World::CalculateStep(
-	const Entity &entity,
-	const EntityState &cur,
-	float dt,
-	const EntityDerivative &delta
-) {
-	EntityState next(cur);
-	next.pos.block += delta.position * dt;
-	next.velocity += delta.velocity * dt;
-	CollisionFix(entity, next);
-	next.AdjustPosition();
-
-	if (dot(next.velocity, next.velocity) > entity.MaxVelocity() * entity.MaxVelocity()) {
-		next.velocity = normalize(next.velocity) * entity.MaxVelocity();
-	}
-
-	EntityDerivative out;
-	out.position = next.velocity;
-	out.velocity = CalculateForce(entity, next); // by mass = 1kg
-	return out;
-}
-
-glm::vec3 World::CalculateForce(
-	const Entity &entity,
-	const EntityState &state
-) {
-	glm::vec3 force(ControlForce(entity, state));
-	if (dot(force, force) > entity.MaxControlForce() * entity.MaxControlForce()) {
-		force = normalize(force) * entity.MaxControlForce();
-	}
-	return force + Gravity(entity, state);
-}
-
-glm::vec3 World::ControlForce(
-	const Entity &entity,
-	const EntityState &state
-) {
-	return entity.ControlForce(state);
-}
-
 namespace {
 
 std::vector<WorldCollision> col;
 
 }
 
-void World::CollisionFix(
+void World::ResolveWorldCollision(
 	const Entity &entity,
 	EntityState &state
 ) {
@@ -725,20 +708,17 @@ glm::vec3 World::CombinedInterpenetration(
 	return pen;
 }
 
-glm::vec3 World::Gravity(
-	const Entity &entity,
-	const EntityState &state
-) {
+glm::vec3 World::GravityAt(const ExactLocation &loc) const noexcept {
 	glm::vec3 force(0.0f);
-	ExactLocation::Coarse begin(state.pos.chunk - 1);
-	ExactLocation::Coarse end(state.pos.chunk + 2);
+	ExactLocation::Coarse begin(loc.chunk - 1);
+	ExactLocation::Coarse end(loc.chunk + 2);
 
 	for (ExactLocation::Coarse pos(begin); pos.z < end.z; ++pos.z) {
 		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
 			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
-				Chunk *chunk = chunks.Get(pos);
+				const Chunk *chunk = chunks.Get(pos);
 				if (chunk) {
-					force += chunk->GravityAt(state.pos);
+					force += chunk->GravityAt(loc);
 				}
 			}
 		}

@@ -119,10 +119,13 @@ World update
 ------------
 
  - spawner (servers only)
- - physics simulation
  - for each entity update:
-  - transform caches
   - controller (input for players and AI for others)
+  - physics simulation
+  - transform caches
   - model (animation state)
  - rebase player chunk indices
  - remove dead entities
+
+Note that AI actually depends on transform caches, but t's okay if it
+lags one frame behind until that's sorted.

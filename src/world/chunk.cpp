@@ -1075,9 +1075,19 @@ ChunkIndex *ChunkStore::ClosestIndex(const ExactLocation::Coarse &pos) {
 	return closest_index;
 }
 
-Chunk *ChunkStore::Get(const ExactLocation::Coarse &pos) {
+Chunk *ChunkStore::Get(const ExactLocation::Coarse &pos) noexcept {
 	for (ChunkIndex &index : indices) {
 		Chunk *chunk = index.Get(pos);
+		if (chunk) {
+			return chunk;
+		}
+	}
+	return nullptr;
+}
+
+const Chunk *ChunkStore::Get(const ExactLocation::Coarse &pos) const noexcept {
+	for (const ChunkIndex &index : indices) {
+		const Chunk *chunk = index.Get(pos);
 		if (chunk) {
 			return chunk;
 		}
