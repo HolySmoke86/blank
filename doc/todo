@@ -103,6 +103,8 @@ world generator that is not boring
 	exploration
 	biomes seem too small, maybe that will become easier to tune when
 	there's a little more diversity between them
+	chunk generation takes too long, it's incredibly annoying
+	should look into speeding it up and executing on a different thread
 
 spawning
 

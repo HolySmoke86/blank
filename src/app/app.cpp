@@ -321,11 +321,16 @@ void AssetLoader::LoadBlockTypes(
 		throw std::runtime_error("failed to open block type file " + full);
 	}
 	TokenStreamReader in(file);
-	string name;
+	string proto;
 	while (in.HasMore()) {
-		in.ReadIdentifier(name);
-		in.Skip(Token::EQUALS);
 		BlockType type;
+		in.ReadIdentifier(type.name);
+		in.Skip(Token::EQUALS);
+		if (in.Peek().type == Token::IDENTIFIER) {
+			// prototype
+			in.ReadIdentifier(proto);
+			type.Copy(reg.Get(proto));
+		}
 		type.Read(in, snd_index, tex_index, shapes);
 		in.Skip(Token::SEMICOLON);
 		reg.Add(std::move(type));

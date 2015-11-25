@@ -3,6 +3,8 @@
 
 #include "BlockType.hpp"
 
+#include <map>
+#include <string>
 #include <vector>
 
 
@@ -20,6 +22,8 @@ public:
 public:
 	BlockTypeRegistry();
 
+	/// register a new block type
+	/// this may throw if the name is already taken (names must be unique)
 	Block::Type Add(BlockType &&);
 
 	size_t size() const noexcept { return types.size(); }
@@ -29,14 +33,20 @@ public:
 	iterator end() noexcept { return types.end(); }
 	const_iterator end() const noexcept { return types.end(); }
 
-	BlockType &operator [](Block::Type id) { return types[id]; }
-	const BlockType &operator [](Block::Type id) const { return types[id]; }
+	/// lookup by ID
+	BlockType &operator [](Block::Type id) noexcept { return types[id]; }
+	const BlockType &operator [](Block::Type id) const noexcept { return types[id]; }
 
-	BlockType &Get(Block::Type id) { return types[id]; }
-	const BlockType &Get(Block::Type id) const { return types[id]; }
+	BlockType &Get(Block::Type id) noexcept { return types[id]; }
+	const BlockType &Get(Block::Type id) const noexcept { return types[id]; }
+
+	/// lookup by name
+	BlockType &Get(const std::string &name);
+	const BlockType &Get(const std::string &name) const;
 
 private:
 	std::vector<BlockType> types;
+	std::map<std::string, Block::Type> names;
 
 };
 

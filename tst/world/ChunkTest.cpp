@@ -17,11 +17,13 @@ void ChunkTest::setUp() {
 	types = BlockTypeRegistry();
 
 	BlockType obstacle;
+	obstacle.name = "obstacle";
 	obstacle.visible = true;
 	obstacle.block_light = true;
 	types.Add(std::move(obstacle));
 
 	BlockType source;
+	source.name = "source";
 	source.visible = true;
 	source.luminosity = 5;
 	source.block_light = true;

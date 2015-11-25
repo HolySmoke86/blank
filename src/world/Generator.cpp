@@ -91,6 +91,8 @@ Block Generator::Generate(const glm::vec3 &pos) const noexcept {
 		return Block(0);
 	}
 	float random = GetValue(random_noise, pos, config.randomness);
+	// as weird as it sounds, but this is faster tham glm::fract and generates a
+	// better distribution than (transformed variants of) erf, erfc, atan, and smoothstep
 	if (random < 0.0f) random += 1.0f;
 	float value = random * total;
 	// TODO: change to binary search

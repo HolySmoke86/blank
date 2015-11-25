@@ -8,6 +8,7 @@
 #include "../shared/ResourceIndex.hpp"
 
 #include <iostream>
+#include <stdexcept>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/norm.hpp>
 #include <glm/gtx/transform.hpp>
@@ -77,6 +78,7 @@ BlockType::BlockType() noexcept
 , rgb_mod(1.0f, 1.0f, 1.0f)
 , outline_color(-1, -1, -1)
 , gravity()
+, name("anonymous")
 , label("some block")
 , place_sound(-1)
 , remove_sound(-1)
@@ -101,6 +103,35 @@ BlockType::BlockType() noexcept
 , max_richness(1.0f)
 , commonness(1.0f) {
 
+}
+
+void BlockType::Copy(const BlockType &other) noexcept {
+	shape = other.shape;
+	textures = other.textures;
+	hsl_mod = other.hsl_mod;
+	rgb_mod = other.rgb_mod;
+	outline_color = other.outline_color;
+	place_sound = other.place_sound;
+	remove_sound = other.remove_sound;
+	luminosity = other.luminosity;
+	visible = other.visible;
+	block_light = other.block_light;
+	collision = other.collision;
+	collide_block = collide_block;
+	generate = other.generate;
+	min_solidity = other.min_solidity;
+	mid_solidity = other.mid_solidity;
+	max_solidity = other.max_solidity;
+	min_humidity = other.min_humidity;
+	mid_humidity = other.mid_humidity;
+	max_humidity = other.max_humidity;
+	min_temperature = other.min_temperature;
+	mid_temperature = other.mid_temperature;
+	max_temperature = other.max_temperature;
+	min_richness = other.min_richness;
+	mid_richness = other.mid_richness;
+	max_richness = other.max_richness;
+	commonness = other.commonness;
 }
 
 void BlockType::Read(
@@ -225,6 +256,8 @@ void BlockType::OutlinePrimitiveMesh(PrimitiveMesh::Buffer &buf) const noexcept 
 
 BlockTypeRegistry::BlockTypeRegistry() {
 	BlockType air;
+	air.name = "air";
+	air.label = "Air";
 	air.visible = false;
 	air.block_light = false;
 	air.collision = false;
@@ -234,9 +267,30 @@ BlockTypeRegistry::BlockTypeRegistry() {
 
 Block::Type BlockTypeRegistry::Add(BlockType &&t) {
 	int id = types.size();
+	if (!names.emplace(t.name, id).second) {
+		throw std::runtime_error("duplicate block type name " + t.name);
+	}
 	types.push_back(std::move(t));
 	types.back().id = id;
 	return id;
+}
+
+BlockType &BlockTypeRegistry::Get(const std::string &name) {
+	auto entry = names.find(name);
+	if (entry != names.end()) {
+		return Get(entry->second);
+	} else {
+		throw std::runtime_error("unknown block type " + name);
+	}
+}
+
+const BlockType &BlockTypeRegistry::Get(const std::string &name) const {
+	auto entry = names.find(name);
+	if (entry != names.end()) {
+		return Get(entry->second);
+	} else {
+		throw std::runtime_error("unknown block type " + name);
+	}
 }
 
 

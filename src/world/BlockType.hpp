@@ -31,6 +31,9 @@ struct BlockType {
 	/// gravity configuration or null if not emitting gravity
 	std::unique_ptr<BlockGravity> gravity;
 
+	/// a string identifying in contexts where numbers just won't do
+	/// must be unique within any given set
+	std::string name;
 	/// a string to display to the user
 	std::string label;
 
@@ -73,6 +76,10 @@ struct BlockType {
 	float commonness;
 
 	BlockType() noexcept;
+
+	/// clone values of given type
+	/// this copies everything except for ID, name, label, and gravity
+	void Copy(const BlockType &) noexcept;
 
 	void Read(
 		TokenStreamReader &in,
