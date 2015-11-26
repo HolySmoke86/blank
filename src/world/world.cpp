@@ -768,23 +768,23 @@ void World::GetLight(
 	glm::vec3 &col,
 	glm::vec3 &amb
 ) {
-	Chunk *chunk = chunks.Get(e.ChunkCoords());
-	if (!chunk) {
+	BlockLookup center(chunks.Get(e.ChunkCoords()), e.Position());
+	if (!center) {
 		// chunk unavailable, so make it really dark and from
 		// some arbitrary direction
 		dir = glm::vec3(1.0f, 2.0f, 3.0f);
 		col = glm::vec3(0.025f); // ~0.8^15
 		return;
 	}
-	glm::ivec3 base(e.Position());
-	int base_light = chunk->GetLight(base);
+	glm::ivec3 base(center.GetBlockPos());
+	int base_light = center.GetLight();
 	int max_light = 0;
 	int min_light = 15;
 	glm::ivec3 acc(0, 0, 0);
 	for (glm::ivec3 offset(-1, -1, -1); offset.z < 2; ++offset.z) {
 		for (offset.y = -1; offset.y < 2; ++offset.y) {
 			for (offset.x = -1; offset.x < 2; ++offset.x) {
-				BlockLookup block(chunk, base + offset);
+				BlockLookup block(&center.GetChunk(), center.GetBlockPos() + offset);
 				if (!block) {
 					// missing, just ignore it
 					continue;
