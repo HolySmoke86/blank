@@ -1,4 +1,5 @@
 #include "Entity.hpp"
+#include "EntityCollision.hpp"
 #include "EntityController.hpp"
 #include "EntityDerivative.hpp"
 #include "EntityState.hpp"
@@ -287,6 +288,44 @@ void Entity::OrientHead(float dt) noexcept {
 }
 
 
+EntityCollision::EntityCollision(Entity *e, float d, const glm::vec3 &n)
+: depth(d)
+, normal(n)
+, entity(e) {
+	if (entity) {
+		entity->Ref();
+	}
+}
+
+EntityCollision::~EntityCollision() {
+	if (entity) {
+		entity->UnRef();
+	}
+}
+
+EntityCollision::EntityCollision(const EntityCollision &other)
+: depth(other.depth)
+, normal(other.normal)
+, entity(other.entity) {
+	if (entity) {
+		entity->Ref();
+	}
+}
+
+EntityCollision &EntityCollision::operator =(const EntityCollision &other) {
+	if (entity) {
+		entity->UnRef();
+	}
+	depth = other.depth;
+	normal = other.normal;
+	entity = other.entity;
+	if (entity) {
+		entity->Ref();
+	}
+	return *this;
+}
+
+
 EntityController::~EntityController() {
 
 }
@@ -557,8 +596,7 @@ bool World::Intersection(
 	const Entity &reference,
 	EntityCollision &coll
 ) {
-	coll.entity = nullptr;
-	coll.depth = std::numeric_limits<float>::infinity();
+	coll = EntityCollision(nullptr, std::numeric_limits<float>::infinity(), glm::vec3(0.0f));
 	for (Entity &cur_entity : entities) {
 		if (&cur_entity == &reference) {
 			continue;
@@ -568,14 +606,12 @@ bool World::Intersection(
 		if (blank::Intersection(ray, cur_entity.Bounds(), cur_entity.Transform(reference.ChunkCoords()), &cur_dist, &cur_normal)) {
 			// TODO: fine grained check goes here? maybe?
 			if (cur_dist < coll.depth) {
-				coll.entity = &cur_entity;
-				coll.depth = cur_dist;
-				coll.normal = cur_normal;
+				coll = EntityCollision(&cur_entity, cur_dist, cur_normal);
 			}
 		}
 	}
 
-	return coll.entity;
+	return coll;
 }
 
 bool World::Intersection(const Entity &e, const EntityState &s, std::vector<WorldCollision> &col) {

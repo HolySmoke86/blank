@@ -164,7 +164,7 @@ void MasterState::Update(int dt) {
 	if (input.BlockFocus()) {
 		hud.FocusBlock(input.BlockFocus().GetChunk(), input.BlockFocus().block);
 	} else if (input.EntityFocus()) {
-		hud.FocusEntity(*input.EntityFocus().entity);
+		hud.FocusEntity(input.EntityFocus().GetEntity());
 	} else {
 		hud.FocusNone();
 	}

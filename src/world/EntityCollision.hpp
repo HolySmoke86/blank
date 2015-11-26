@@ -8,18 +8,25 @@ class Entity;
 
 struct EntityCollision {
 
-	Entity *entity;
-
 	float depth;
 	glm::vec3 normal;
 
 	EntityCollision()
-	: entity(nullptr), depth(0.0f), normal(0.0f) { }
-	EntityCollision(Entity *e, float d, const glm::vec3 &n)
-	: entity(e), depth(d), normal(n) { }
+	: depth(0.0f), normal(0.0f), entity(nullptr) { }
+	EntityCollision(Entity *e, float d, const glm::vec3 &n);
+	~EntityCollision();
+
+	EntityCollision(const EntityCollision &);
+	EntityCollision &operator =(const EntityCollision &);
 
 	/// check if an actual collision
 	operator bool() const noexcept { return entity; }
+
+	Entity &GetEntity() noexcept { return *entity; }
+	const Entity &GetEntity() const noexcept { return *entity; }
+
+private:
+	Entity *entity;
 
 };
 
