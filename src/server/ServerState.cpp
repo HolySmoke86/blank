@@ -22,7 +22,7 @@ ServerState::ServerState(
 , world(res.block_types, wc)
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, ws)
-, spawner(world, res.models, env.rng)
+, spawner(world, res.models)
 , server(config.net, world, wc, ws)
 , loop_timer(16) {
 	res.Load(env.loader, "default");

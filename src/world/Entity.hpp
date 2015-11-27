@@ -4,6 +4,7 @@
 #include "Chunk.hpp"
 #include "EntityDerivative.hpp"
 #include "EntityState.hpp"
+#include "Steering.hpp"
 #include "../geometry/primitive.hpp"
 #include "../model/Instance.hpp"
 
@@ -31,6 +32,9 @@ public:
 	// an invalid controller pointer
 	Entity(const Entity &) noexcept;
 	Entity &operator =(const Entity &) = delete;
+
+	Steering &GetSteering() noexcept { return steering; }
+	const Steering &GetSteering() const noexcept { return steering; }
 
 	bool HasController() const noexcept { return ctrl; }
 	// entity takes over ownership of controller
@@ -142,6 +146,7 @@ private:
 
 
 private:
+	Steering steering;
 	EntityController *ctrl;
 	Instance model;
 

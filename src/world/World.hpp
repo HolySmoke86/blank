@@ -5,6 +5,7 @@
 #include "Entity.hpp"
 #include "Generator.hpp"
 #include "Player.hpp"
+#include "../rand/GaloisLFSR.hpp"
 
 #include <cstdint>
 #include <list>
@@ -40,6 +41,9 @@ public:
 	~World();
 
 	const std::string &Name() const noexcept { return config.name; }
+
+	/// get the shared random source for this world
+	GaloisLFSR &Random() noexcept { return rng; }
 
 	/// check if this ray hits a block
 	/// depth in the collision is the distance between the ray's
@@ -129,6 +133,8 @@ private:
 
 	std::list<Player> players;
 	std::list<Entity> entities;
+
+	GaloisLFSR rng;
 
 	glm::vec3 light_direction;
 	float fog_density;

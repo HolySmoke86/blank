@@ -35,8 +35,6 @@ public:
 	void SetMovement(const glm::vec3 &) noexcept;
 	const glm::vec3 &GetMovement() const noexcept { return move_dir; }
 
-	glm::vec3 ControlForce(const Entity &, const EntityState &) const override;
-
 	/// turn the controlled entity's head by given pitch and yaw deltas
 	void TurnHead(float pitch, float yaw) noexcept;
 

@@ -43,6 +43,7 @@ PlayerController::PlayerController(World &world, Player &player)
 , aim_world()
 , aim_entity() {
 	player.GetEntity().SetController(*this);
+	player.GetEntity().GetSteering().SetAcceleration(5.0f);
 }
 
 PlayerController::~PlayerController() {
@@ -58,16 +59,6 @@ void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
 		move_dir = m;
 	}
 	Invalidate();
-}
-
-glm::vec3 PlayerController::ControlForce(const Entity &e, const EntityState &s) const {
-	if (!iszero(move_dir)) {
-		// scale input by max velocity, apply yaw, and transform to world space
-		return TargetVelocity(glm::vec3(glm::vec4(rotateY(move_dir * e.MaxVelocity(), s.yaw), 0.0f) * transpose(e.Transform())), s, 5.0f);
-	} else {
-		// target velocity of 0 is the same as halt
-		return Halt(s, 5.0f);
-	}
 }
 
 void PlayerController::TurnHead(float dp, float dy) noexcept {
@@ -97,19 +88,35 @@ void PlayerController::Invalidate() noexcept {
 void PlayerController::UpdatePlayer() noexcept {
 	if (dirty) {
 		Ray aim = player.Aim();
-		if (!world.Intersection(aim, player.GetEntity().ChunkCoords(), aim_world)) {
+		Entity &entity = player.GetEntity();
+		if (!world.Intersection(aim, entity.ChunkCoords(), aim_world)) {
 			aim_world = WorldCollision();
 		}
-		if (!world.Intersection(aim, player.GetEntity(), aim_entity)) {
+		if (!world.Intersection(aim, entity, aim_entity)) {
 			aim_entity = EntityCollision();
 		}
 		if (aim_world && aim_entity) {
 			// got both, pick the closest one
 			if (aim_world.depth < aim_entity.depth) {
+				// FIXME: somehow this can get stuck on an entity?
 				aim_entity = EntityCollision();
 			} else {
 				aim_world = WorldCollision();
 			}
+		}
+		Steering &steering = entity.GetSteering();
+		if (!iszero(move_dir)) {
+			// scale input by max velocity, apply yaw, and transform to world space
+			steering.SetTargetVelocity(glm::vec3(
+				glm::vec4(rotateY(move_dir * entity.MaxVelocity(), entity.Yaw()), 0.0f)
+				* transpose(entity.Transform())
+			));
+			steering.Enable(Steering::TARGET_VELOCITY);
+			steering.Disable(Steering::HALT);
+		} else {
+			// target velocity of 0 is the same as halt
+			steering.Enable(Steering::HALT);
+			steering.Disable(Steering::TARGET_VELOCITY);
 		}
 		dirty = false;
 	}

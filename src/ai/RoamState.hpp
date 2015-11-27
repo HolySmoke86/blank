@@ -13,9 +13,9 @@ namespace blank {
 class RoamState
 : public AIState {
 
-	void Enter(AIController &) const override;
+	void Enter(AIController &, Entity &) const override;
 	void Update(AIController &, Entity &, float dt) const override;
-	void Exit(AIController &) const override;
+	void Exit(AIController &, Entity &) const override;
 
 };
 

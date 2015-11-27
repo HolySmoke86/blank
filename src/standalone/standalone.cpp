@@ -59,7 +59,7 @@ MasterState::MasterState(
 , generator(gc)
 , chunk_loader(world.Chunks(), generator, save)
 , chunk_renderer(player.GetChunks())
-, spawner(world, res.models, env.rng)
+, spawner(world, res.models)
 , sky(env.loader.LoadCubeMap("skybox"))
 , cli(world)
 , cli_ctx(player, hud)

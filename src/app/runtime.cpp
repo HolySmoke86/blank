@@ -118,17 +118,8 @@ HeadlessEnvironment::HeadlessEnvironment(const Config &config)
 : config(config)
 , loader(config.asset_path)
 , counter()
-, state()
-, rng(
-#ifdef BLANK_PROFILING
-0
-#else
-std::time(nullptr)
-#endif
-){
-	for (int i = 0; i < 4; ++i) {
-		rng.Next<int>();
-	}
+, state() {
+
 }
 
 string HeadlessEnvironment::Config::GetWorldPath(const string &world_name) const {

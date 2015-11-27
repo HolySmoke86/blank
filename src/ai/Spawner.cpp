@@ -18,11 +18,10 @@ using namespace std;
 
 namespace blank {
 
-Spawner::Spawner(World &world, ModelRegistry &models, GaloisLFSR &rand)
+Spawner::Spawner(World &world, ModelRegistry &models)
 : world(world)
 , models(models)
 , entities()
-, random(rand)
 , timer(64)
 , despawn_range(128 * 128)
 , spawn_distance(16 * 16)
@@ -93,13 +92,13 @@ void Spawner::TrySpawn() {
 	// select random player to punish
 	auto &players = world.Players();
 	if (players.size() == 0) return;
-	size_t player_num = random.Next<unsigned short>() % players.size();
+	size_t player_num = world.Random().Next<unsigned short>() % players.size();
 	auto i = players.begin(), end = players.end();
 	for (; player_num > 0 && i != end; ++i, --player_num) {
 	}
 	const Player &player = *i;
 
-	BlockLookup spawn_block(player.GetChunks().RandomBlock(random));
+	BlockLookup spawn_block(player.GetChunks().RandomBlock(world.Random()));
 
 	// distance check
 	//glm::vec3 diff(glm::vec3(chunk * Chunk::Extent() - pos) + player.entity->Position());
@@ -127,14 +126,14 @@ void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });
 	e.WorldCollidable(true);
 	RandomModel().Instantiate(e.GetModel());
-	e.SetController(new AIController(world, random));
+	e.SetController(new AIController(world, e));
 	e.Name("spawned");
 	e.Ref();
 	entities.emplace_back(&e);
 }
 
 Model &Spawner::RandomModel() noexcept {
-	std::size_t offset = (random.Next<std::size_t>() % model_length) + model_offset;
+	std::size_t offset = (world.Random().Next<std::size_t>() % model_length) + model_offset;
 	return models[offset];
 }
 

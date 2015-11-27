@@ -10,7 +10,6 @@
 namespace blank {
 
 class Entity;
-class GaloisLFSR;
 class Model;
 class ModelRegistry;
 class World;
@@ -18,7 +17,7 @@ class World;
 class Spawner {
 
 public:
-	Spawner(World &, ModelRegistry &, GaloisLFSR &);
+	Spawner(World &, ModelRegistry &);
 	~Spawner();
 
 	void LimitModels(std::size_t begin, std::size_t end);
@@ -36,8 +35,6 @@ private:
 	World &world;
 	ModelRegistry &models;
 	std::vector<Entity *> entities;
-
-	GaloisLFSR &random;
 
 	CoarseTimer timer;
 	float despawn_range;

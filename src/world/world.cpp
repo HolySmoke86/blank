@@ -12,6 +12,7 @@
 #include "../app/Assets.hpp"
 #include "../geometry/const.hpp"
 #include "../geometry/distance.hpp"
+#include "../geometry/rotation.hpp"
 #include "../graphics/Format.hpp"
 #include "../graphics/Viewport.hpp"
 
@@ -29,8 +30,16 @@
 
 namespace blank {
 
+namespace {
+
+/// used as a buffer for merging collisions
+std::vector<WorldCollision> col;
+
+}
+
 Entity::Entity() noexcept
-: ctrl(nullptr)
+: steering(*this)
+, ctrl(nullptr)
 , model()
 , id(-1)
 , name("anonymous")
@@ -52,7 +61,8 @@ Entity::~Entity() noexcept {
 }
 
 Entity::Entity(const Entity &other) noexcept
-: ctrl(other.ctrl)
+: steering(*this)
+, ctrl(other.ctrl)
 , model(other.model)
 , id(-1)
 , name(other.name)
@@ -91,14 +101,7 @@ void Entity::UnsetController() noexcept {
 }
 
 glm::vec3 Entity::ControlForce(const EntityState &s) const noexcept {
-	glm::vec3 force;
-	if (HasController()) {
-		force = GetController().ControlForce(*this, s);
-	} else {
-		force = -s.velocity;
-	}
-	limit(force, max_force);
-	return force;
+	return steering.Force(s);
 }
 
 void Entity::Position(const glm::ivec3 &c, const glm::vec3 &b) noexcept {
@@ -137,6 +140,7 @@ void Entity::Update(World &world, float dt) {
 	if (HasController()) {
 		GetController().Update(*this, dt);
 	}
+	steering.Update(world, dt);
 	UpdatePhysics(world, dt);
 	UpdateTransforms();
 	UpdateHeading();
@@ -330,29 +334,6 @@ EntityController::~EntityController() {
 
 }
 
-bool EntityController::MaxOutForce(
-	glm::vec3 &out,
-	const glm::vec3 &add,
-	float max
-) noexcept {
-	if (iszero(add) || any(isnan(add))) {
-		return false;
-	}
-	float current = iszero(out) ? 0.0f : length(out);
-	float remain = max - current;
-	if (remain <= 0.0f) {
-		return true;
-	}
-	float additional = length(add);
-	if (additional > remain) {
-		out += normalize(add) * remain;
-		return true;
-	} else {
-		out += add;
-		return false;
-	}
-}
-
 
 EntityState::EntityState()
 : pos()
@@ -414,15 +395,253 @@ void Player::Update(int dt) {
 }
 
 
+Steering::Steering(const Entity &e)
+: entity(e)
+, target_entity(nullptr)
+, target_velocity(0.0f)
+, accel(1.0f)
+, speed(entity.MaxVelocity())
+, wander_radius(1.0f)
+, wander_dist(2.0f)
+, wander_disp(1.0f)
+, wander_pos(1.0f, 0.0f, 0.0f)
+, obstacle_dir(0.0f)
+, enabled(0) {
+
+}
+
+Steering::~Steering() {
+	ClearTargetEntity();
+}
+
+Steering &Steering::SetTargetEntity(Entity &e) noexcept {
+	ClearTargetEntity();
+	target_entity = &e;
+	e.Ref();
+	return *this;
+}
+
+Steering &Steering::ClearTargetEntity() noexcept {
+	if (target_entity) {
+		target_entity->UnRef();
+		target_entity = nullptr;
+	}
+	return *this;
+}
+
+void Steering::Update(World &world, float dt) {
+	if (AnyEnabled(WANDER)) {
+		UpdateWander(world, dt);
+	}
+	if (AnyEnabled(OBSTACLE_AVOIDANCE)) {
+		UpdateObstacle(world);
+	}
+}
+
+void Steering::UpdateWander(World &world, float dt) {
+	glm::vec3 displacement(
+		world.Random().SNorm() * wander_disp,
+		world.Random().SNorm() * wander_disp,
+		world.Random().SNorm() * wander_disp
+	);
+	if (!iszero(displacement)) {
+		wander_pos = normalize(wander_pos + displacement * dt) * wander_radius;
+	}
+}
+
+void Steering::UpdateObstacle(World &world) {
+	if (!entity.Moving()) {
+		obstacle_dir = glm::vec3(0.0f);
+		return;
+	}
+	AABB box(entity.Bounds());
+	box.min.z = -entity.Speed();
+	box.max.z = 0.0f;
+	glm::mat4 transform(find_rotation(glm::vec3(0.0f, 0.0f, -1.0f), entity.Heading()));
+	transform[3] = glm::vec4(entity.Position(), 1.0f);
+	// check if that box intersects with any blocks
+	col.clear();
+	if (!world.Intersection(box, transform, entity.ChunkCoords(), col)) {
+		obstacle_dir = glm::vec3(0.0f);
+		return;
+	}
+	// if so, pick the nearest collision
+	const WorldCollision *nearest = nullptr;
+	glm::vec3 difference(0.0f);
+	float distance = std::numeric_limits<float>::infinity();
+	for (const WorldCollision &c : col) {
+		// diff points from block to state
+		glm::vec3 diff = entity.GetState().RelativePosition(c.ChunkPos()) - c.BlockCoords();
+		float dist = length2(diff);
+		if (dist < distance) {
+			nearest = &c;
+			difference = diff;
+			distance = dist;
+		}
+	}
+	if (!nearest) {
+		// intersection test lied to us
+		obstacle_dir = glm::vec3(0.0f);
+		return;
+	}
+	// and try to avoid it
+	float to_go = dot(difference, entity.Heading());
+	glm::vec3 point(entity.Position() + entity.Heading() * to_go);
+	obstacle_dir = normalize(point - nearest->BlockCoords()) * (entity.Speed() / std::sqrt(distance));
+}
+
+glm::vec3 Steering::Force(const EntityState &state) const noexcept {
+	glm::vec3 force(0.0f);
+	if (!enabled) {
+		return force;
+	}
+	const float max = entity.MaxControlForce();
+	if (AnyEnabled(HALT)) {
+		if (SumForce(force, Halt(state), max)) {
+			return force;
+		}
+	}
+	if (AnyEnabled(TARGET_VELOCITY)) {
+		if (SumForce(force, TargetVelocity(state, target_velocity), max)) {
+			return force;
+		}
+	}
+	if (AnyEnabled(OBSTACLE_AVOIDANCE)) {
+		if (SumForce(force, ObstacleAvoidance(state), max)) {
+			return force;
+		}
+	}
+	if (AnyEnabled(EVADE_TARGET)) {
+		if (HasTargetEntity()) {
+			if (SumForce(force, Evade(state, GetTargetEntity()), max)) {
+				return force;
+			}
+		} else {
+			std::cout << "Steering: evade enabled, but target entity not set" << std::endl;
+		}
+	}
+	if (AnyEnabled(PURSUE_TARGET)) {
+		if (HasTargetEntity()) {
+			if (SumForce(force, Pursuit(state, GetTargetEntity()), max)) {
+				return force;
+			}
+		} else {
+			std::cout << "Steering: pursuit enabled, but target entity not set" << std::endl;
+		}
+	}
+	if (AnyEnabled(WANDER)) {
+		if (SumForce(force, Wander(state), max)) {
+			return force;
+		}
+	}
+	return force;
+}
+
+bool Steering::SumForce(glm::vec3 &out, const glm::vec3 &in, float max) noexcept {
+	if (iszero(in) || any(isnan(in))) {
+		return false;
+	}
+	float current = iszero(out) ? 0.0f : length(out);
+	float remain = max - current;
+	if (remain <= 0.0f) {
+		return true;
+	}
+	float additional = length(in);
+	if (additional > remain) {
+		out += normalize(in) * remain;
+		return true;
+	} else {
+		out += in;
+		return false;
+	}
+}
+
+glm::vec3 Steering::Halt(const EntityState &state) const noexcept {
+	return state.velocity * -accel;
+}
+
+glm::vec3 Steering::TargetVelocity(const EntityState &state, const glm::vec3 &vel) const noexcept {
+	return (vel - state.velocity) * accel;
+}
+
+glm::vec3 Steering::Seek(const EntityState &state, const ExactLocation &loc) const noexcept {
+	const glm::vec3 diff(loc.Difference(state.pos).Absolute());
+	if (iszero(diff)) {
+		return glm::vec3(0.0f);
+	} else {
+		return TargetVelocity(state, normalize(diff) * speed);
+	}
+}
+
+glm::vec3 Steering::Flee(const EntityState &state, const ExactLocation &loc) const noexcept {
+	const glm::vec3 diff(state.pos.Difference(loc).Absolute());
+	if (iszero(diff)) {
+		return glm::vec3(0.0f);
+	} else {
+		return TargetVelocity(state, normalize(diff) * speed);
+	}
+}
+
+glm::vec3 Steering::Arrive(const EntityState &state, const ExactLocation &loc) const noexcept {
+	const glm::vec3 diff(loc.Difference(state.pos).Absolute());
+	const float dist = length(diff);
+	if (dist < std::numeric_limits<float>::epsilon()) {
+		return glm::vec3(0.0f);
+	} else {
+		const float att_speed = std::min(dist * accel, speed);
+		return TargetVelocity(state, diff * att_speed / dist);
+	}
+}
+
+glm::vec3 Steering::Pursuit(const EntityState &state, const Entity &other) const noexcept {
+	const glm::vec3 diff(state.Diff(other.GetState()));
+	if (iszero(diff)) {
+		return TargetVelocity(state, other.Velocity());
+	} else {
+		const float time_estimate = length(diff) / speed;
+		ExactLocation prediction(other.ChunkCoords(), other.Position() + (other.Velocity() * time_estimate));
+		return Seek(state, prediction);
+	}
+}
+
+glm::vec3 Steering::Evade(const EntityState &state, const Entity &other) const noexcept {
+	const glm::vec3 diff(state.Diff(other.GetState()));
+	if (iszero(diff)) {
+		return TargetVelocity(state, -other.Velocity());
+	} else {
+		const float time_estimate = length(diff) / speed;
+		ExactLocation prediction(other.ChunkCoords(), other.Position() + (other.Velocity() * time_estimate));
+		return Flee(state, prediction);
+	}
+}
+
+glm::vec3 Steering::Wander(const EntityState &state) const noexcept {
+	return TargetVelocity(state, normalize(entity.Heading() * wander_dist + wander_pos) * speed);
+}
+
+glm::vec3 Steering::ObstacleAvoidance(const EntityState &state) const noexcept {
+	return obstacle_dir;
+}
+
+
 World::World(const BlockTypeRegistry &types, const Config &config)
 : config(config)
 , block_type(types)
 , chunks(types)
 , players()
 , entities()
+, rng(
+#ifdef BLANK_PROFILING
+0
+#else
+std::time(nullptr)
+#endif
+)
 , light_direction(config.light_direction)
 , fog_density(config.fog_density) {
-
+	for (int i = 0; i < 4; ++i) {
+		rng.Next<int>();
+	}
 }
 
 World::~World() {
@@ -671,12 +890,6 @@ void World::Update(int dt) {
 			++iter;
 		}
 	}
-}
-
-namespace {
-
-std::vector<WorldCollision> col;
-
 }
 
 void World::ResolveWorldCollision(
