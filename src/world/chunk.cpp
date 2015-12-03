@@ -368,7 +368,7 @@ float Chunk::GetVertexLight(const RoughLocation::Fine &pos, const BlockMesh::Pos
 
 
 glm::vec3 Chunk::GravityAt(const ExactLocation &coords) const noexcept {
-	glm::vec3 grav;
+	glm::vec3 grav(0.0f);
 	for (int index : gravity) {
 		RoughLocation::Fine block_pos(ToPos(index));
 		ExactLocation block_coords(position, ToCoords(block_pos));

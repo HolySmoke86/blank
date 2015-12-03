@@ -83,6 +83,15 @@ gravity
 	maybe players should be given the option to switch between
 	walk and fly mode
 
+	I had a NaN position while experimenting with (directional) gravity
+	blocks recently. I checked the gravity code and it seems solid, so
+	might be something I overlooked or, what more probable, it triggered
+	some NaN condition in the collision code. Needs investigating
+
+	This may be related to the HUD locking on an entity. If the entity is
+	teleported to a NaN position, the ray intersection test could give a
+	false positive.
+
 block attributes
 
 	when blocks are not just a solid rock of color, attributes may
@@ -105,6 +114,10 @@ world generator that is not boring
 	there's a little more diversity between them
 	chunk generation takes too long, it's incredibly annoying
 	should look into speeding it up and executing on a different thread
+	compute shaders might be another approach, though that would require
+	opengl 4.3, block the gpu, and generally doesn't lend itself well to
+	threading (cpu wise). It also requires servers to load GL. maybe not
+	such a great idea after all
 
 spawning
 

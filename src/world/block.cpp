@@ -148,9 +148,11 @@ void BlockType::Read(
 		if (name == "visible") {
 			visible = in.GetBool();
 		} else if (name == "texture") {
+			textures.clear();
 			in.ReadString(name);
 			textures.push_back(tex_index.GetID(name));
 		} else if (name == "textures") {
+			textures.clear();
 			in.Skip(Token::BRACKET_OPEN);
 			while (in.Peek().type != Token::BRACKET_CLOSE) {
 				in.ReadString(name);
