@@ -8,4 +8,5 @@ build
 cachegrind.out.*
 callgrind.out.*
 client-saves
+generate.profile
 saves

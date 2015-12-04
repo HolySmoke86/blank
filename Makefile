@@ -36,8 +36,11 @@ BIN_SRC := $(wildcard $(SOURCE_DIR)/*.cpp)
 SRC := $(LIB_SRC) $(BIN_SRC)
 TEST_SRC := $(wildcard $(TEST_SRC_DIR)/*.cpp) $(wildcard $(TEST_SRC_DIR)/*/*.cpp)
 RELEASE_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(RELEASE_DIR)/%.o, $(SRC))
+RELEASE_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(RELEASE_DIR)/%.o, $(LIB_SRC))
 DEBUG_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(SRC))
+DEBUG_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(LIB_SRC))
 PROFILE_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(PROFILE_DIR)/%.o, $(SRC))
+PROFILE_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(PROFILE_DIR)/%.o, $(LIB_SRC))
 TEST_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_DIR)/%.o, $(TEST_SRC)) $(patsubst $(SOURCE_DIR)/%.cpp, $(TEST_DIR)/src/%.o, $(LIB_SRC))
 RELEASE_DEP := $(RELEASE_OBJ:.o=.d)
 DEBUG_DEP := $(DEBUG_OBJ:.o=.d)
@@ -45,7 +48,7 @@ PROFILE_DEP := $(PROFILE_OBJ:.o=.d)
 TEST_DEP := $(TEST_OBJ:.o=.d)
 RELEASE_BIN := blank
 DEBUG_BIN := blank.debug
-PROFILE_BIN := blank.profile
+PROFILE_BIN := blank.profile generate.profile
 TEST_BIN := blank.test
 OBJ := $(RELEASE_OBJ) $(DEBUG_OBJ) $(PROFILE_OBJ) $(TEST_OBJ)
 DEP := $(RELEASE_DEP) $(DEBUG_DEP) $(PROFILE_DEP) $(TEST_DEP)
@@ -98,15 +101,15 @@ distclean: clean
 
 -include $(DEP)
 
-$(RELEASE_BIN): $(RELEASE_OBJ)
+$(RELEASE_BIN): %: $(RELEASE_DIR)/%.o $(RELEASE_LIB_OBJ)
 	@echo link: $@
 	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(RELEASE_FLAGS) $^
 
-$(DEBUG_BIN): $(DEBUG_OBJ)
+$(DEBUG_BIN): %.debug: $(DEBUG_DIR)/%.o $(DEBUG_LIB_OBJ)
 	@echo link: $@
 	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(DEBUG_FLAGS) $^
 
-$(PROFILE_BIN): $(PROFILE_OBJ)
+$(PROFILE_BIN): %.profile: $(PROFILE_DIR)/%.o $(PROFILE_LIB_OBJ)
 	@echo link: $@
 	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(PROFILE_FLAGS) $^
 
