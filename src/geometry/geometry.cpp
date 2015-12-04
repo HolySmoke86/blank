@@ -152,6 +152,7 @@ bool Intersection(
 	for (const glm::vec3 &axis : axes) {
 		if (any(isnan(axis))) {
 			// can result from the cross products if A and B have parallel axes
+			++cur_axis;
 			continue;
 		}
 		float a_min = std::numeric_limits<float>::infinity();
