@@ -49,28 +49,113 @@ void Generator::LoadTypes(const BlockTypeRegistry &reg) {
 	candidates.reserve(types.size());
 }
 
+namespace {
+
+struct Interpolation {
+	/// sample points for interpolation
+	/// given coordinates should be the absoloute position of the chunk's (0,0,0) block
+	Interpolation(
+		const SimplexNoise &noise,
+		const glm::vec3 &base,
+		const Generator::Config::NoiseParam &conf
+	) noexcept {
+		for (int z = 0; z < 5; ++z) {
+			for (int y = 0; y < 5; ++y) {
+				for (int x = 0; x < 5; ++x) {
+					samples[z][y][x] = OctaveNoise(
+						noise,
+						base + (glm::vec3(x, y, z) * 4.0f),
+						conf.octaves,
+						conf.persistence,
+						conf.frequency,
+						conf.amplitude,
+						conf.growth
+					);
+				}
+			}
+		}
+	}
+	float samples[5][5][5];
+};
+
+struct Parameters {
+	glm::ivec3 a;
+	glm::ivec3 b;
+	glm::ivec3 d;
+};
+
+struct Detail {
+	float humidity;
+	float temperature;
+	float richness;
+	float randomness;
+};
+
+}
+
+struct Generator::ValueField {
+
+	Interpolation solidity;
+	Interpolation humidity;
+	Interpolation temperature;
+	Interpolation richness;
+	Interpolation randomness;
+
+	static Parameters GetParams(const glm::ivec3 &pos) noexcept {
+		Parameters p;
+		p.a = pos / 4;
+		p.b = p.a + 1;
+		p.d = pos % 4;
+		return p;
+	}
+
+	static float Interpolate(const Interpolation &i, const Parameters &p) noexcept {
+		constexpr float A[4] = { 1.0f, 0.75f, 0.5f, 0.25f };
+		constexpr float B[4] = { 0.0f, 0.25f, 0.5f, 0.75f };
+		const float l1[4] = {
+			i.samples[p.a.z][p.a.y][p.a.x] * A[p.d.x] + i.samples[p.a.z][p.a.y][p.b.x] * B[p.d.x],
+			i.samples[p.a.z][p.b.y][p.a.x] * A[p.d.x] + i.samples[p.a.z][p.b.y][p.b.x] * B[p.d.x],
+			i.samples[p.b.z][p.a.y][p.a.x] * A[p.d.x] + i.samples[p.b.z][p.a.y][p.b.x] * B[p.d.x],
+			i.samples[p.b.z][p.b.y][p.a.x] * A[p.d.x] + i.samples[p.b.z][p.b.y][p.b.x] * B[p.d.x],
+		};
+		const float l2[2] = {
+			l1[0] * A[p.d.y] + l1[1] * B[p.d.y],
+			l1[2] * A[p.d.y] + l1[3] * B[p.d.y],
+		};
+		return l2[0] * A[p.d.z] + l2[1] * B[p.d.z];
+	}
+
+};
+
 void Generator::operator ()(Chunk &chunk) const noexcept {
-	ExactLocation::Coarse pos(chunk.Position());
-	ExactLocation::Fine coords(pos * ExactLocation::Extent());
+	ExactLocation::Fine coords(chunk.Position() * ExactLocation::Extent());
+	coords += 0.5f;
+	ValueField field {
+		{ solidity_noise, coords, config.solidity },
+		{ humidity_noise, coords, config.humidity },
+		{ temperature_noise, coords, config.temperature },
+		{ richness_noise, coords, config.richness },
+		{ random_noise, coords, config.randomness },
+	};
 	for (int z = 0; z < Chunk::side; ++z) {
 		for (int y = 0; y < Chunk::side; ++y) {
 			for (int x = 0; x < Chunk::side; ++x) {
-				ExactLocation::Fine block_pos(x, y, z);
-				chunk.SetBlock(RoughLocation::Fine(x, y, z), Generate(coords + ExactLocation::Fine(x, y, z)));
+				chunk.SetBlock(RoughLocation::Fine(x, y, z), Generate(field, RoughLocation::Fine(x, y, z)));
 			}
 		}
 	}
 	chunk.SetGenerated();
 }
 
-Block Generator::Generate(const glm::vec3 &pos) const noexcept {
-	float solidity = GetValue(solidity_noise, pos, config.solidity);
+Block Generator::Generate(const ValueField &field, const glm::ivec3 &pos) const noexcept {
+	Parameters params(ValueField::GetParams(pos));
+	float solidity = ValueField::Interpolate(field.solidity, params);
 	if (solidity < min_solidity) {
 		return Block(0);
 	}
-	float humidity = GetValue(humidity_noise, pos, config.humidity);
-	float temperature = GetValue(temperature_noise, pos, config.temperature);
-	float richness = GetValue(richness_noise, pos, config.richness);
+	float humidity = ValueField::Interpolate(field.humidity, params);
+	float temperature = ValueField::Interpolate(field.temperature, params);
+	float richness = ValueField::Interpolate(field.richness, params);
 
 	candidates.clear();
 	float total = 0.0f;
@@ -90,7 +175,7 @@ Block Generator::Generate(const glm::vec3 &pos) const noexcept {
 	if (candidates.empty()) {
 		return Block(0);
 	}
-	float random = GetValue(random_noise, pos, config.randomness);
+	float random = ValueField::Interpolate(field.randomness, params);
 	// as weird as it sounds, but this is faster tham glm::fract and generates a
 	// better distribution than (transformed variants of) erf, erfc, atan, and smoothstep
 	if (random < 0.0f) random += 1.0f;
@@ -103,22 +188,6 @@ Block Generator::Generate(const glm::vec3 &pos) const noexcept {
 	}
 	// theoretically, this should never happen
 	return Block(candidates.back().type->id);
-}
-
-float Generator::GetValue(
-	const SimplexNoise &noise,
-	const glm::vec3 &pos,
-	const Config::NoiseParam &conf
-) noexcept {
-	return OctaveNoise(
-		noise,
-		pos,
-		conf.octaves,
-		conf.persistence,
-		conf.frequency,
-		conf.amplitude,
-		conf.growth
-	);
 }
 
 }

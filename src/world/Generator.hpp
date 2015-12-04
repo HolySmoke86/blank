@@ -42,11 +42,8 @@ public:
 	void operator ()(Chunk &) const noexcept;
 
 private:
-	Block Generate(const glm::vec3 &position) const noexcept;
-	static float GetValue(
-		const SimplexNoise &,
-		const glm::vec3 &,
-		const Config::NoiseParam &) noexcept;
+	struct ValueField;
+	Block Generate(const ValueField &, const glm::ivec3 &position) const noexcept;
 
 private:
 	const Config &config;

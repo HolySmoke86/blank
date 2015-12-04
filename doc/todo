@@ -103,12 +103,15 @@ world generator that is not boring
 	exploration
 	biomes seem too small, maybe that will become easier to tune when
 	there's a little more diversity between them
+
 	chunk generation takes too long, it's incredibly annoying
 	should look into speeding it up and executing on a different thread
 	compute shaders might be another approach, though that would require
 	opengl 4.3, block the gpu, and generally doesn't lend itself well to
 	threading (cpu wise). It also requires servers to load GL. maybe not
 	such a great idea after all
+	using interpolation between samples of simplex noise now (big thanks
+	to notch ;) ), I'll see how that fares or can be tweaked
 
 spawning
 
