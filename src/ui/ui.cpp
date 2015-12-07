@@ -98,7 +98,6 @@ void PlayerController::UpdatePlayer() noexcept {
 		if (aim_world && aim_entity) {
 			// got both, pick the closest one
 			if (aim_world.depth < aim_entity.depth) {
-				// FIXME: somehow this can get stuck on an entity?
 				aim_entity = EntityCollision();
 			} else {
 				aim_world = WorldCollision();
