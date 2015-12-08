@@ -36,6 +36,8 @@ public:
 
 	bool Changed() const noexcept { return changed; }
 
+	void Print(std::ostream &) const;
+
 private:
 	int Tick() noexcept;
 

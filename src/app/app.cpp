@@ -28,8 +28,7 @@
 #include <stdexcept>
 #include <SDL_image.h>
 
-using std::runtime_error;
-using std::string;
+using namespace std;
 
 
 namespace blank {
@@ -80,11 +79,11 @@ void HeadlessApplication::RunT(size_t t) {
 void HeadlessApplication::RunS(size_t n, size_t t) {
 	for (size_t i = 0; HasState() && i < n; ++i) {
 		Loop(t);
-		std::cout << '.';
+		cout << '.';
 		if (i % 32 == 31) {
-			std::cout << std::setfill(' ') << std::setw(5) << std::right << (i + 1) << std::endl;
+			cout << setfill(' ') << setw(5) << right << (i + 1) << endl;
 		} else {
-			std::cout << std::flush;
+			cout << flush;
 		}
 	}
 }
@@ -316,9 +315,9 @@ void AssetLoader::LoadBlockTypes(
 	const ShapeRegistry &shapes
 ) const {
 	string full = data + set_name + ".types";
-	std::ifstream file(full);
+	ifstream file(full);
 	if (!file) {
-		throw std::runtime_error("failed to open block type file " + full);
+		throw runtime_error("failed to open block type file " + full);
 	}
 	TokenStreamReader in(file);
 	string proto;
@@ -333,7 +332,7 @@ void AssetLoader::LoadBlockTypes(
 		}
 		type.Read(in, snd_index, tex_index, shapes);
 		in.Skip(Token::SEMICOLON);
-		reg.Add(std::move(type));
+		reg.Add(move(type));
 	}
 }
 
@@ -422,9 +421,9 @@ void AssetLoader::LoadModels(
 	const ShapeRegistry &shapes
 ) const {
 	string full = data + set_name + ".models";
-	std::ifstream file(full);
+	ifstream file(full);
 	if (!file) {
-		throw std::runtime_error("failed to open model file " + full);
+		throw runtime_error("failed to open model file " + full);
 	}
 	TokenStreamReader in(file);
 	string model_name;
@@ -458,9 +457,9 @@ void AssetLoader::LoadModels(
 
 void AssetLoader::LoadShapes(const string &set_name, ShapeRegistry &shapes) const {
 	string full = data + set_name + ".shapes";
-	std::ifstream file(full);
+	ifstream file(full);
 	if (!file) {
-		throw std::runtime_error("failed to open shape file " + full);
+		throw runtime_error("failed to open shape file " + full);
 	}
 	TokenStreamReader in(file);
 	string shape_name;
@@ -596,8 +595,28 @@ void FrameCounter::Push() noexcept {
 	avg.waiting = sum.waiting * factor;
 	avg.total = sum.total * factor;
 
+	//Print(cout);
+
 	sum = Frame<int>();
 	max = Frame<int>();
+}
+
+void FrameCounter::Print(ostream &out) const {
+	out << fixed << right << setprecision(2) << setfill(' ')
+		<< "PEAK handle: " << setw(2) << peak.handle
+		<< ".00ms, update: " << setw(2) << peak.update
+		<< ".00ms, render: " << setw(2) << peak.render
+		<< ".00ms, running: " << setw(2) << peak.running
+		<< ".00ms, waiting: " << setw(2) << peak.waiting
+		<< ".00ms, total: " << setw(2) << peak.total
+		<< ".00ms" << endl
+		<< " AVG handle: " << setw(5) << avg.handle
+		<< "ms, update: " << setw(5) << avg.update
+		<< "ms, render: " << setw(5) << avg.render
+		<< "ms, running: " << setw(5) << avg.running
+		<< "ms, waiting: " << setw(5) << avg.waiting
+		<< "ms, total: " << setw(5) << avg.total
+		<< "ms" << endl;
 }
 
 }
