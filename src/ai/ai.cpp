@@ -147,7 +147,7 @@ unsigned int AIController::Decide(unsigned int num_choices) noexcept {
 
 void ChaseState::Enter(AIController &ctrl, Entity &e) const {
 	e.GetSteering()
-		.SetAcceleration(1.0f)
+		.SetAcceleration(5.0f)
 		.SetSpeed(4.0f)
 		.Enable(Steering::PURSUE_TARGET)
 	;
@@ -184,7 +184,7 @@ void ChaseState::Exit(AIController &ctrl, Entity &e) const {
 
 void FleeState::Enter(AIController &ctrl, Entity &e) const {
 	e.GetSteering()
-		.SetAcceleration(1.0f)
+		.SetAcceleration(5.0f)
 		.SetSpeed(4.0f)
 		.Enable(Steering::EVADE_TARGET)
 	;
