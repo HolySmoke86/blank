@@ -179,7 +179,6 @@ EntityDerivative Entity::CalculateStep(
 	next.pos.block += delta.position * dt;
 	next.velocity += delta.velocity * dt;
 	limit(next.velocity, max_vel);
-	world.ResolveWorldCollision(*this, next);
 	next.AdjustPosition();
 
 	EntityDerivative out;
