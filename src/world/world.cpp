@@ -779,12 +779,22 @@ bool World::Intersection(
 	const ExactLocation::Coarse &reference,
 	WorldCollision &coll
 ) {
+	// only consider chunks of the idex closest to reference
+	// this makes the ray not be infinite anymore (which means it's
+	// actually a line segment), but oh well
+	ChunkIndex *index = chunks.ClosestIndex(reference);
+	if (!index) {
+		return false;
+	}
+
 	candidates.clear();
 
-	for (Chunk &cur_chunk : chunks) {
+	// TODO: convert to coords based iteration and trim based
+	//       on ray direction
+	for (Chunk *cur_chunk : *index) {
 		float cur_dist;
-		if (cur_chunk.Intersection(ray, reference, cur_dist)) {
-			candidates.push_back({ &cur_chunk, cur_dist });
+		if (cur_chunk && cur_chunk->Intersection(ray, reference, cur_dist)) {
+			candidates.push_back({ cur_chunk, cur_dist });
 		}
 	}
 
@@ -859,16 +869,19 @@ bool World::Intersection(
 	const glm::ivec3 &reference,
 	std::vector<WorldCollision> &col
 ) {
+	// this only works if box's diameter is < than 16
+	ExactLocation::Coarse begin(reference - 1);
+	ExactLocation::Coarse end(reference + 2);
+
 	bool any = false;
-	for (Chunk &cur_chunk : chunks) {
-		if (manhattan_radius(cur_chunk.Position() - reference) > 1) {
-			// chunk is not one of the 3x3x3 surrounding the entity
-			// since there's no entity which can extent over 16 blocks, they can be skipped
-			// TODO: change to indexed (like with entity)
-			continue;
-		}
-		if (cur_chunk.Intersection(box, M, cur_chunk.Transform(reference), col)) {
-			any = true;
+	for (ExactLocation::Coarse pos(begin); pos.z < end.z; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				Chunk *chunk = chunks.Get(pos);
+				if (chunk && chunk->Intersection(box, M, chunk->Transform(reference), col)) {
+					any = true;
+				}
+			}
 		}
 	}
 	return any;

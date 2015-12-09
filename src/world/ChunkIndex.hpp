@@ -47,6 +47,10 @@ public:
 
 	int Extent() const noexcept { return extent; }
 
+	// raw iteration access, may contain nullptrs
+	std::vector<Chunk *>::const_iterator begin() const noexcept { return chunks.begin(); }
+	std::vector<Chunk *>::const_iterator end() const noexcept { return chunks.end(); }
+
 	ExactLocation::Coarse CoordsBegin() const noexcept { return base - ExactLocation::Coarse(extent); }
 	ExactLocation::Coarse CoordsEnd() const noexcept { return base + ExactLocation::Coarse(extent + 1); }
 
