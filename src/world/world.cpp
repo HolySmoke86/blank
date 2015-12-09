@@ -840,7 +840,7 @@ bool World::Intersection(const Entity &e, const EntityState &s, std::vector<Worl
 	ExactLocation::Coarse end(reference + 2);
 
 	bool any = false;
-	for (ExactLocation::Coarse pos(begin); pos.z < end.y; ++pos.z) {
+	for (ExactLocation::Coarse pos(begin); pos.z < end.z; ++pos.z) {
 		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
 			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
 				Chunk *chunk = chunks.Get(pos);
