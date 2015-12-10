@@ -199,21 +199,19 @@ bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept {
 		{ box.max.x, box.max.y, box.min.z, 1.0f },
 		{ box.max.x, box.max.y, box.max.z, 1.0f },
 	};
-	for (glm::vec4 &corner : corners) {
-		corner = MVP * corner;
-		corner /= corner.w;
-	}
-
-	int hits[6] = { 0, 0, 0, 0, 0, 0 };
 
 	// check how many corners lie outside
-	for (const glm::vec4 &corner : corners) {
-		if (corner.x >  1.0f) ++hits[0];
-		if (corner.x < -1.0f) ++hits[1];
-		if (corner.y >  1.0f) ++hits[2];
-		if (corner.y < -1.0f) ++hits[3];
-		if (corner.z >  1.0f) ++hits[4];
-		if (corner.z < -1.0f) ++hits[5];
+	int hits[6] = { 0, 0, 0, 0, 0, 0 };
+	for (glm::vec4 &corner : corners) {
+		corner = MVP * corner;
+		// replacing this with *= 1/w is effectively more expensive
+		corner /= corner.w;
+		hits[0] += (corner.x >  1.0f);
+		hits[1] += (corner.x < -1.0f);
+		hits[2] += (corner.y >  1.0f);
+		hits[3] += (corner.y < -1.0f);
+		hits[4] += (corner.z >  1.0f);
+		hits[5] += (corner.z < -1.0f);
 	}
 
 	// if all corners are outside any given clip plane, the test is true
