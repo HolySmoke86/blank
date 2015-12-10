@@ -144,6 +144,7 @@ void WorldSave::Read(Player &player) const {
 		}
 	}
 	player.GetEntity().SetState(state);
+	player.Update(0);
 }
 
 void WorldSave::Write(const Player &player) const {
