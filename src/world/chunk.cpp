@@ -19,6 +19,9 @@
 #include <ostream>
 #include <queue>
 
+#include <iostream>
+#include <glm/gtx/io.hpp>
+
 
 namespace blank {
 
@@ -809,19 +812,36 @@ void ChunkRenderer::Render(Viewport &viewport) {
 	chunk_prog.SetTexture(block_tex);
 	chunk_prog.SetFogDensity(fog_density);
 
+	Frustum frustum(transpose(chunk_prog.GetVP()));
+	AABB box;
+
+	//std::cout << "V = " << chunk_prog.View() << std::endl;
+	//std::cout << "P = " << chunk_prog.Projection() << std::endl;
+	//std::cout << "VP = " << chunk_prog.GetVP() << std::endl;
+	//std::cout << "frustum = " << frustum << std::endl;
+
 	for (int i = 0; i < index.TotalChunks(); ++i) {
 		if (!index[i]) continue;
-		// TODO: optimize chunk culling, shoudn't be that hard
-		glm::mat4 m(index[i]->Transform(index.Base()));
-		glm::mat4 mvp(chunk_prog.GetVP() * m);
-		if (!CullTest(Chunk::Bounds(), mvp)) {
+		box.min = (index[i]->Position() - index.Base()) * ExactLocation::Extent();
+		box.max = box.min + ExactLocation::FExtent();
+
+		if (!CullTest(box, frustum)) {
+
+			//glm::mat4 m(index[i]->Transform(index.Base()));
+			//if (CullTest(Chunk::Bounds(), chunk_prog.GetVP() * m)) {
+			//	std::cout << "M = " << m << std::endl;
+			//	std::cout << "box = " << box.min << ", " << box.max << std::endl;
+			//	std::cout << "should've been culled" << std::endl;
+			//}
+
 			if (index[i]->ShouldUpdateMesh()) {
 				index[i]->Update(models[i]);
 			}
-			chunk_prog.SetM(m);
+			chunk_prog.SetM(index[i]->Transform(index.Base()));
 			models[i].Draw();
 		}
 	}
+	//std::cout << std::endl;
 }
 
 

@@ -4,6 +4,8 @@
 #include "rotation.hpp"
 
 #include <limits>
+#include <ostream>
+#include <glm/gtx/io.hpp>
 #include <glm/gtx/matrix_cross_product.hpp>
 #include <glm/gtx/optimum_pow.hpp>
 #include <glm/gtx/transform.hpp>
@@ -37,6 +39,14 @@ glm::mat3 find_rotation(const glm::vec3 &a, const glm::vec3 &b) noexcept {
 	float f = (1 - c) / mv;
 	glm::mat3 vx(matrixCross3(v));
 	return glm::mat3(1.0f) + vx + (pow2(vx) * f);
+}
+
+std::ostream &operator <<(std::ostream &out, const AABB &box) {
+	return out << "AABB(" << box.min << ", " << box.max << ')';
+}
+
+std::ostream &operator <<(std::ostream &out, const Ray &ray) {
+	return out << "Ray(" << ray.orig << ", " << ray.dir << ')';
 }
 
 bool Intersection(
@@ -187,6 +197,21 @@ bool Intersection(
 }
 
 
+std::ostream &operator <<(std::ostream &out, const Plane &plane) {
+	return out << "Plane(" << plane.normal << ", " << plane.dist << ')';
+}
+
+std::ostream &operator <<(std::ostream &out, const Frustum &frustum) {
+	return out << "Frustum(" << std::endl
+		<< "\tleft:   " << frustum.plane[0] << std::endl
+		<< "\tright:  " << frustum.plane[1] << std::endl
+		<< "\tbottom: " << frustum.plane[2] << std::endl
+		<< "\ttop:    " << frustum.plane[3] << std::endl
+		<< "\tnear:   " << frustum.plane[4] << std::endl
+		<< "\tfar:    " << frustum.plane[5] << std::endl
+		<< ')';
+}
+
 bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept {
 	// transform corners into clip space
 	glm::vec4 corners[8] = {
@@ -220,6 +245,20 @@ bool CullTest(const AABB &box, const glm::mat4 &MVP) noexcept {
 	}
 
 	// otherwise the box might still get culled completely, but can't say for sure ;)
+	return false;
+}
+
+bool CullTest(const AABB &box, const Frustum &frustum) noexcept {
+	for (const Plane &plane : frustum.plane) {
+		const glm::vec3 np(
+			((plane.normal.x > 0.0f) ? box.max.x : box.min.x),
+			((plane.normal.y > 0.0f) ? box.max.y : box.min.y),
+			((plane.normal.z > 0.0f) ? box.max.z : box.min.z)
+		);
+		const float dp = dot(plane.normal, np);
+		// cull if nearest point is on the "outside" side of the plane
+		if (dp < -plane.dist) return true;
+	}
 	return false;
 }
 
