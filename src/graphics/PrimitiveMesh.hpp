@@ -16,7 +16,7 @@ class PrimitiveMesh {
 
 public:
 	using Position = glm::vec3;
-	using Color = glm::vec4;
+	using Color = glm::tvec4<unsigned char>;
 	using Index = unsigned short;
 
 	using Positions = std::vector<Position>;
@@ -50,13 +50,13 @@ public:
 
 		void FillRect(
 			float w, float h,
-			const glm::vec4 &color = glm::vec4(0.0f),
+			const Color &color = Color(0),
 			const glm::vec2 &pivot = glm::vec2(0.0f)
 		);
 
 		void OutlineBox(
 			const AABB &,
-			const glm::vec4 &color = glm::vec4(0.0f)
+			const Color &color = Color(0)
 		);
 
 	};

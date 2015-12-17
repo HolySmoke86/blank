@@ -109,8 +109,8 @@ Part::Part()
 , tex_map()
 , mesh()
 , initial()
-, hsl_mod(0.0f, 1.0f, 1.0f)
-, rgb_mod(1.0f, 1.0f, 1.0f)
+, hsl_mod(0, 255, 255)
+, rgb_mod(255, 255, 255)
 , id(0) {
 
 }
@@ -123,6 +123,7 @@ void Part::Read(TokenStreamReader &in, ResourceIndex &tex_index, const ShapeRegi
 	std::string name;
 	std::string shape_name;
 	std::string tex_name;
+	glm::vec3 color_conv;
 	in.Skip(Token::ANGLE_BRACKET_OPEN);
 	while (in.HasMore() && in.Peek().type != Token::ANGLE_BRACKET_CLOSE) {
 		in.ReadIdentifier(name);
@@ -135,9 +136,11 @@ void Part::Read(TokenStreamReader &in, ResourceIndex &tex_index, const ShapeRegi
 		} else if (name == "orientation") {
 			in.ReadQuat(initial.orientation);
 		} else if (name == "hsl_mod") {
-			in.ReadVec(hsl_mod);
+			in.ReadVec(color_conv);
+			hsl_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
 		} else if (name == "rgb_mod") {
-			in.ReadVec(rgb_mod);
+			in.ReadVec(color_conv);
+			rgb_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
 		} else if (name == "textures") {
 			in.Skip(Token::BRACKET_OPEN);
 			while (in.HasMore() && in.Peek().type != Token::BRACKET_CLOSE) {

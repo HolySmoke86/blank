@@ -56,8 +56,8 @@ private:
 	std::vector<float> tex_map;
 	mutable std::unique_ptr<EntityMesh> mesh;
 	State initial;
-	glm::vec3 hsl_mod;
-	glm::vec3 rgb_mod;
+	glm::tvec3<unsigned char> hsl_mod;
+	glm::tvec3<unsigned char> rgb_mod;
 	std::uint16_t id;
 
 };

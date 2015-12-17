@@ -15,7 +15,7 @@ class EntityMesh {
 public:
 	using Position = glm::vec3;
 	using TexCoord = glm::vec3;
-	using ColorMod = glm::vec3;
+	using ColorMod = glm::tvec3<unsigned char>;
 	using Normal = glm::vec3;
 	using Index = unsigned int;
 

@@ -295,7 +295,7 @@ HUD::HUD(Environment &env, Config &config, const Player &player)
 	buf.indices = std::vector<PrimitiveMesh::Index>({
 		0, 1, 2, 3
 	});
-	buf.colors.resize(4, { 10.0f, 10.0f, 10.0f, 1.0f });
+	buf.colors.resize(4, { 255, 255, 255, 255 });
 	crosshair.Update(buf);
 }
 

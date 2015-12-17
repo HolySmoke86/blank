@@ -27,7 +27,7 @@ public:
 	void Bind() const noexcept;
 
 	template <class T>
-	void PushAttribute(std::size_t which, const std::vector<T> &data) noexcept;
+	void PushAttribute(std::size_t which, const std::vector<T> &data, bool normalized = false) noexcept;
 
 	template<class T>
 	void PushIndices(std::size_t which, const std::vector<T> &indices) noexcept;
@@ -41,7 +41,7 @@ private:
 	template <class T>
 	void AttributeData(const std::vector<T> &) noexcept;
 	template <class T>
-	void AttributePointer(std::size_t which) noexcept;
+	void AttributePointer(std::size_t which, bool normalized = false) noexcept;
 
 	void BindIndex(std::size_t which) const noexcept;
 	template <class T>

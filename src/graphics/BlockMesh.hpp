@@ -15,7 +15,7 @@ class BlockMesh {
 public:
 	using Position = glm::vec3;
 	using TexCoord = glm::vec3;
-	using ColorMod = glm::vec3;
+	using ColorMod = glm::tvec3<unsigned char>;
 	using Light = float;
 	using Index = unsigned int;
 

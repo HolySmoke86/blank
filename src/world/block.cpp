@@ -74,8 +74,8 @@ std::ostream &operator <<(std::ostream &out, const Block::Turn &turn) {
 BlockType::BlockType() noexcept
 : shape(nullptr)
 , textures()
-, hsl_mod(0.0f, 1.0f, 1.0f)
-, rgb_mod(1.0f, 1.0f, 1.0f)
+, hsl_mod(0, 255, 255)
+, rgb_mod(255, 255, 255)
 , outline_color(-1, -1, -1)
 , gravity()
 , name("anonymous")
@@ -142,6 +142,7 @@ void BlockType::Read(
 ) {
 	std::string name;
 	in.Skip(Token::ANGLE_BRACKET_OPEN);
+	glm::vec3 color_conv;
 	while (in.Peek().type != Token::ANGLE_BRACKET_CLOSE) {
 		in.ReadIdentifier(name);
 		in.Skip(Token::EQUALS);
@@ -163,11 +164,14 @@ void BlockType::Read(
 			}
 			in.Skip(Token::BRACKET_CLOSE);
 		} else if (name == "rgb_mod") {
-			in.ReadVec(rgb_mod);
+			in.ReadVec(color_conv);
+			rgb_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
 		} else if (name == "hsl_mod") {
-			in.ReadVec(hsl_mod);
+			in.ReadVec(color_conv);
+			hsl_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
 		} else if (name == "outline") {
-			in.ReadVec(outline_color);
+			in.ReadVec(color_conv);
+			outline_color = glm::tvec3<unsigned char>(color_conv * 255.0f);
 		} else if (name == "gravity") {
 			gravity = BlockGravity::Read(in);
 		} else if (name == "label") {
@@ -252,7 +256,7 @@ void BlockType::FillBlockMesh(
 void BlockType::OutlinePrimitiveMesh(PrimitiveMesh::Buffer &buf) const noexcept {
 	if (!shape) return;
 	shape->Outline(buf);
-	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), glm::vec4(outline_color, 1.0f));
+	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), glm::tvec4<unsigned char>(outline_color, 255));
 }
 
 

@@ -48,11 +48,11 @@ void VertexArray<N>::Bind() const noexcept {
 
 template<std::size_t N>
 template <class T>
-void VertexArray<N>::PushAttribute(std::size_t which, const std::vector<T> &data) noexcept {
+void VertexArray<N>::PushAttribute(std::size_t which, const std::vector<T> &data, bool normalized) noexcept {
 	BindAttribute(which);
 	AttributeData(data);
 	EnableAttribute(which);
-	AttributePointer<T>(which);
+	AttributePointer<T>(which, normalized);
 }
 
 template<std::size_t N>
@@ -75,12 +75,12 @@ void VertexArray<N>::AttributeData(const std::vector<T> &buf) noexcept {
 
 template<std::size_t N>
 template <class T>
-void VertexArray<N>::AttributePointer(std::size_t which) noexcept {
+void VertexArray<N>::AttributePointer(std::size_t which, bool normalized) noexcept {
 	glVertexAttribPointer(
 		which,              // program location
 		gl_traits<T>::size, // element size
 		gl_traits<T>::type, // element type
-		GL_FALSE,           // normalize to [-1,1] or [0,1] for unsigned types
+		normalized,         // normalize to [-1,1] or [0,1] for unsigned types
 		0,                  // stride
 		nullptr             // offset
 	);

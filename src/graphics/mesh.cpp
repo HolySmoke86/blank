@@ -31,8 +31,8 @@ void EntityMesh::Update(const Buffer &buf) noexcept {
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
 	vao.PushAttribute(ATTRIB_TEXCOORD, buf.tex_coords);
-	vao.PushAttribute(ATTRIB_HSL, buf.hsl_mods);
-	vao.PushAttribute(ATTRIB_RGB, buf.rgb_mods);
+	vao.PushAttribute(ATTRIB_HSL, buf.hsl_mods, true);
+	vao.PushAttribute(ATTRIB_RGB, buf.rgb_mods, true);
 	vao.PushAttribute(ATTRIB_NORMAL, buf.normals);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
 }
@@ -62,8 +62,8 @@ void BlockMesh::Update(const Buffer &buf) noexcept {
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
 	vao.PushAttribute(ATTRIB_TEXCOORD, buf.tex_coords);
-	vao.PushAttribute(ATTRIB_HSL, buf.hsl_mods);
-	vao.PushAttribute(ATTRIB_RGB, buf.rgb_mods);
+	vao.PushAttribute(ATTRIB_HSL, buf.hsl_mods, true);
+	vao.PushAttribute(ATTRIB_RGB, buf.rgb_mods, true);
 	vao.PushAttribute(ATTRIB_LIGHT, buf.lights);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
 }
@@ -76,7 +76,7 @@ void BlockMesh::Draw() const noexcept {
 
 void PrimitiveMesh::Buffer::FillRect(
 	float w, float h,
-	const glm::vec4 &color,
+	const Color &color,
 	const glm::vec2 &pivot
 ) {
 	Clear();
@@ -92,7 +92,7 @@ void PrimitiveMesh::Buffer::FillRect(
 	indices.assign({ 0, 2, 1, 1, 2, 3 });
 }
 
-void PrimitiveMesh::Buffer::OutlineBox(const AABB &box, const glm::vec4 &color) {
+void PrimitiveMesh::Buffer::OutlineBox(const AABB &box, const Color &color) {
 	Clear();
 	Reserve(8, 24);
 
@@ -124,7 +124,7 @@ void PrimitiveMesh::Update(const Buffer &buf) noexcept {
 
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
-	vao.PushAttribute(ATTRIB_COLOR, buf.colors);
+	vao.PushAttribute(ATTRIB_COLOR, buf.colors, true);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
 }
 

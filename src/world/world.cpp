@@ -1072,7 +1072,7 @@ void World::RenderDebug(Viewport &viewport) {
 	PrimitiveMesh debug_mesh;
 	PlainColor &prog = viewport.WorldColorProgram();
 	for (const Entity &entity : entities) {
-		debug_buf.OutlineBox(entity.Bounds(), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f));
+		debug_buf.OutlineBox(entity.Bounds(), glm::tvec4<unsigned char>(255, 0, 0, 255));
 		debug_mesh.Update(debug_buf);
 		prog.SetM(entity.Transform(players.front().GetEntity().ChunkCoords()));
 		debug_mesh.DrawLines();
