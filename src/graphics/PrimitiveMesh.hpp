@@ -66,8 +66,14 @@ public:
 public:
 	void Update(const Buffer &) noexcept;
 
-	void DrawLines() noexcept;
-	void DrawTriangles() noexcept;
+	bool Empty() const noexcept {
+		return vao.Empty();
+	}
+
+	void DrawLines() const noexcept;
+	void DrawTriangles() const noexcept {
+		vao.DrawTriangleElements();
+	}
 
 private:
 	VAO vao;

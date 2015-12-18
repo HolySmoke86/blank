@@ -24,6 +24,8 @@ public:
 	VertexArray<N> &operator =(VertexArray<N> &&) noexcept;
 
 public:
+	bool Empty() const noexcept { return idx_count == 0; }
+
 	void Bind() const noexcept;
 
 	template <class T>

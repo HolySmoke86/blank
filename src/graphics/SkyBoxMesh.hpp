@@ -47,7 +47,13 @@ public:
 	void LoadUnitBox();
 	void Update(const Buffer &) noexcept;
 
-	void Draw() const noexcept;
+	bool Empty() const noexcept {
+		return vao.Empty();
+	}
+
+	void Draw() const noexcept {
+		vao.DrawTriangleElements();
+	}
 
 private:
 	VAO vao;

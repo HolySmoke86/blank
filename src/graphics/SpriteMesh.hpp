@@ -60,7 +60,13 @@ public:
 public:
 	void Update(const Buffer &) noexcept;
 
-	void Draw() noexcept;
+	bool Empty() const noexcept {
+		return vao.Empty();
+	}
+
+	void Draw() const noexcept {
+		vao.DrawTriangleElements();
+	}
 
 private:
 	VAO vao;

@@ -18,10 +18,10 @@ void EntityMesh::Update(const Buffer &buf) noexcept {
 		std::cerr << "EntityMesh: not enough tex coords!" << std::endl;
 	}
 	if (buf.hsl_mods.size() < buf.vertices.size()) {
-		std::cerr << "BlockMesh: not enough HSL modifiers!" << std::endl;
+		std::cerr << "EntityMesh: not enough HSL modifiers!" << std::endl;
 	}
 	if (buf.rgb_mods.size() < buf.vertices.size()) {
-		std::cerr << "BlockMesh: not enough RGB modifiers!" << std::endl;
+		std::cerr << "EntityMesh: not enough RGB modifiers!" << std::endl;
 	}
 	if (buf.normals.size() < buf.vertices.size()) {
 		std::cerr << "EntityMesh: not enough normals!" << std::endl;
@@ -35,11 +35,6 @@ void EntityMesh::Update(const Buffer &buf) noexcept {
 	vao.PushAttribute(ATTRIB_RGB, buf.rgb_mods, true);
 	vao.PushAttribute(ATTRIB_NORMAL, buf.normals);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
-}
-
-
-void EntityMesh::Draw() const noexcept {
-	vao.DrawTriangleElements();
 }
 
 
@@ -66,11 +61,6 @@ void BlockMesh::Update(const Buffer &buf) noexcept {
 	vao.PushAttribute(ATTRIB_RGB, buf.rgb_mods, true);
 	vao.PushAttribute(ATTRIB_LIGHT, buf.lights);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
-}
-
-
-void BlockMesh::Draw() const noexcept {
-	vao.DrawTriangleElements();
 }
 
 
@@ -129,14 +119,10 @@ void PrimitiveMesh::Update(const Buffer &buf) noexcept {
 }
 
 
-void PrimitiveMesh::DrawLines() noexcept {
+void PrimitiveMesh::DrawLines() const noexcept {
 	glEnable(GL_LINE_SMOOTH);
 	glLineWidth(2.0f);
 	vao.DrawLineElements();
-}
-
-void PrimitiveMesh::DrawTriangles() noexcept {
-	vao.DrawTriangleElements();
 }
 
 
@@ -167,10 +153,6 @@ void SkyBoxMesh::Update(const Buffer &buf) noexcept {
 	vao.Bind();
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
-}
-
-void SkyBoxMesh::Draw() const noexcept {
-	vao.DrawTriangleElements();
 }
 
 
@@ -208,11 +190,6 @@ void SpriteMesh::Update(const Buffer &buf) noexcept {
 	vao.PushAttribute(ATTRIB_VERTEX, buf.vertices);
 	vao.PushAttribute(ATTRIB_TEXCOORD, buf.coords);
 	vao.PushIndices(ATTRIB_INDEX, buf.indices);
-}
-
-
-void SpriteMesh::Draw() noexcept {
-	vao.DrawTriangleElements();
 }
 
 }
