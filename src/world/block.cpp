@@ -76,7 +76,7 @@ BlockType::BlockType() noexcept
 , textures()
 , hsl_mod(0, 255, 255)
 , rgb_mod(255, 255, 255)
-, outline_color(-1, -1, -1)
+, outline_color(0, 0, 0)
 , gravity()
 , name("anonymous")
 , label("some block")
