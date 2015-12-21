@@ -118,7 +118,7 @@ spawning
 	need a way to find a suitable location to spawn new players in
 	I imagine a "random block" function of ChunkIndex could be nice
 	(also for use with the AI spawner)
-	also, finding a spawn position for a player must no fail. after a
+	also, finding a spawn position for a player must not fail. after a
 	certain number of tries, the world must change to safely accomodate
 	the player.
 	chunk generation could be adjusted to make a little more room near the
