@@ -51,6 +51,23 @@ std::ostream &operator <<(std::ostream &out, const Ray &ray) {
 
 bool Intersection(
 	const Ray &ray,
+	const AABB &box,
+	float &dist
+) noexcept {
+	float t_min = 0.0f;
+	float t_max = std::numeric_limits<float>::infinity();
+	for (int i = 0; i < 3; ++i) {
+		float t1 = (box.min[i] - ray.orig[i]) * ray.inv_dir[i];
+		float t2 = (box.max[i] - ray.orig[i]) * ray.inv_dir[i];
+		t_min = std::max(t_min, std::min(t1, t2));
+		t_max = std::min(t_max, std::max(t1, t2));
+	}
+	dist = t_min;
+	return t_max >= t_min;
+}
+
+bool Intersection(
+	const Ray &ray,
 	const AABB &aabb,
 	const glm::mat4 &M,
 	float *dist,
@@ -85,12 +102,11 @@ bool Intersection(
 		}
 	}
 
-	glm::vec3 min_all(min(t1, t2));
-
 	if (dist) {
 		*dist = t_min;
 	}
 	if (normal) {
+		glm::vec3 min_all(min(t1, t2));
 		if (min_all.x > min_all.y) {
 			if (min_all.x > min_all.z) {
 				normal->x = t2.x < t1.x ? 1 : -1;
@@ -105,7 +121,6 @@ bool Intersection(
 	}
 	return true;
 }
-
 
 bool Intersection(
 	const AABB &a_box,

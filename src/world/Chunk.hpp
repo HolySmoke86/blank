@@ -35,6 +35,14 @@ public:
 	static glm::vec3 Center() noexcept { return glm::vec3(8.0f); }
 	static float Radius() noexcept { return 27.71281292110203669632f; /* 16 * √3 */ }
 
+	/// get bounding box relative to given reference chunk
+	AABB RelativeBounds(const ExactLocation::Coarse &ref) const noexcept {
+		AABB bounds;
+		bounds.min = (position - ref) * ExactLocation::Extent();
+		bounds.max = bounds.min + ExactLocation::FExtent();
+		return bounds;
+	}
+
 	static constexpr bool InBounds(const ExactLocation::Fine &pos) noexcept {
 		return
 			pos.x >= 0.0f && pos.x < fside &&
@@ -141,7 +149,7 @@ public:
 		const ExactLocation::Coarse &reference,
 		float &dist
 	) const noexcept {
-		return blank::Intersection(ray, Bounds(), Transform(reference), &dist);
+		return blank::Intersection(ray, RelativeBounds(reference), dist);
 	}
 
 	/// check if given ray intersects any block of this chunk

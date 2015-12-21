@@ -20,6 +20,53 @@ void IntersectionTest::tearDown() {
 }
 
 
+void IntersectionTest::testSimpleRayBoxIntersection() {
+	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 } }; // at origin, pointing right
+	ray.Update();
+	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
+
+	const float delta = std::numeric_limits<float>::epsilon();
+
+	float distance = 0;
+
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray at origin not intersecting box at origin",
+		Intersection(ray, box, distance)
+	);
+
+	// move ray outside the box, but have it still point at it
+	// should be 4 units to the left now
+	ray.orig.x = -5;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box doesn't intersect",
+		Intersection(ray, box, distance)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		4.0f, distance, delta
+	);
+
+	// move ray to the other side, so it's pointing away now
+	ray.orig.x = 5;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing away from box still intersects",
+		!Intersection(ray, box, distance)
+	);
+
+	// 45 deg down from 4 units away, so should be about 4 * sqrt(2)
+	ray.orig = { -5.0f, 4.5f, 0.0f };
+	ray.dir = { 0.70710678118654752440f, -0.70710678118654752440f, 0.0f };
+	ray.Update();
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box doesn't intersect",
+		Intersection(ray, box, distance)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		5.65685424949238019520f, distance, delta
+	);
+}
+
 void IntersectionTest::testRayBoxIntersection() {
 	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 } }; // at origin, pointing right
 	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
@@ -33,10 +80,6 @@ void IntersectionTest::testRayBoxIntersection() {
 	CPPUNIT_ASSERT_MESSAGE(
 		"ray at origin not intersecting box at origin",
 		Intersection(ray, box, M, &distance)
-	);
-	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
-		"intersection distance way off",
-		0.0f, distance, delta
 	);
 	// normal undefined, so can't test
 
@@ -61,6 +104,22 @@ void IntersectionTest::testRayBoxIntersection() {
 	CPPUNIT_ASSERT_MESSAGE(
 		"ray pointing away from box still intersects",
 		!Intersection(ray, box, M)
+	);
+
+	// 45 deg down from 4 units away, so should be about 4 * sqrt(2)
+	ray.orig = { -5.0f, 4.5f, 0.0f };
+	ray.dir = { 0.70710678118654752440f, -0.70710678118654752440f, 0.0f };
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box doesn't intersect",
+		Intersection(ray, box, M, &distance, &normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		5.65685424949238019520f, distance, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong surface normal at intersection point",
+		glm::vec3(-1, 0, 0), normal
 	);
 }
 

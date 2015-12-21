@@ -31,13 +31,29 @@ struct AABB {
 
 std::ostream &operator <<(std::ostream &, const AABB &);
 
+// TODO: this should really use setters/getters for dir and inv_dir so
+//       manipulating code doesn't "forget" to call Update()
 struct Ray {
 	glm::vec3 orig;
 	glm::vec3 dir;
+
+	glm::vec3 inv_dir;
+
+	void Update() noexcept {
+		inv_dir = 1.0f / dir;
+	}
 };
 
 std::ostream &operator <<(std::ostream &, const Ray &);
 
+/// axis aligned boolean ray/box intersection test
+/// if true, dist constains distance from ray's origin to intersection point
+bool Intersection(
+	const Ray &,
+	const AABB &,
+	float &dist) noexcept;
+
+/// detailed oriented ray/box intersection test
 bool Intersection(
 	const Ray &,
 	const AABB &,

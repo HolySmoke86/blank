@@ -12,6 +12,7 @@ class IntersectionTest
 
 CPPUNIT_TEST_SUITE(IntersectionTest);
 
+CPPUNIT_TEST(testSimpleRayBoxIntersection);
 CPPUNIT_TEST(testRayBoxIntersection);
 CPPUNIT_TEST(testBoxBoxIntersection);
 
@@ -21,6 +22,7 @@ public:
 	void setUp();
 	void tearDown();
 
+	void testSimpleRayBoxIntersection();
 	void testRayBoxIntersection();
 	void testBoxBoxIntersection();
 

@@ -133,7 +133,9 @@ glm::mat4 Entity::ViewTransform(const glm::ivec3 &reference) const noexcept {
 
 Ray Entity::Aim(const ExactLocation::Coarse &chunk_offset) const noexcept {
 	glm::mat4 transform = ViewTransform(chunk_offset);
-	return Ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
+	Ray ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
+	ray.Update();
+	return ray;
 }
 
 void Entity::Update(World &world, float dt) {
@@ -789,8 +791,11 @@ bool World::Intersection(
 
 	candidates.clear();
 
-	// TODO: convert to coords based iteration and trim based
-	//       on ray direction
+	// TODO: change this so the test starts at the chunk of the ray's
+	//       origin and "walks" forward until it hits (actually casting
+	//       the ray, so to say). if this performs well (at least, better
+	//       than now), this could also qualify for the chunk test itself
+	//       see Bresenham's line algo or something similar
 	for (Chunk *cur_chunk : *index) {
 		float cur_dist;
 		if (cur_chunk && cur_chunk->Intersection(ray, reference, cur_dist)) {
