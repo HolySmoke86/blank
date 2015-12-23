@@ -41,8 +41,8 @@ void Generator::LoadTypes(const BlockTypeRegistry &reg) {
 	for (const BlockType &type : reg) {
 		if (type.generate) {
 			types.push_back(&type);
-			if (type.min_solidity < min_solidity) {
-				min_solidity = type.min_solidity;
+			if (type.solidity.Min() < min_solidity) {
+				min_solidity = type.solidity.Min();
 			}
 		}
 	}
@@ -160,14 +160,14 @@ Block Generator::Generate(const ValueField &field, const glm::ivec3 &pos) const 
 	candidates.clear();
 	float total = 0.0f;
 	for (const BlockType *type : types) {
-		if (solidity < type->min_solidity || solidity > type->max_solidity) continue;
-		if (humidity < type->min_humidity || humidity > type->max_humidity) continue;
-		if (temperature < type->min_temperature || temperature > type->max_temperature) continue;
-		if (richness < type->min_richness || richness > type->max_richness) continue;
-		float solidity_match = 4.0f - ((solidity - type->mid_solidity) * (solidity - type->mid_solidity));
-		float humidity_match = 4.0f - ((humidity - type->mid_humidity) * (humidity - type->mid_humidity));
-		float temperature_match = 4.0f - ((temperature - type->mid_temperature) * (temperature - type->mid_temperature));
-		float richness_match = 4.0f - ((richness - type->mid_richness) * (richness - type->mid_richness));
+		if (!type->solidity.Valid(solidity)) continue;
+		if (!type->humidity.Valid(humidity)) continue;
+		if (!type->temperature.Valid(temperature)) continue;
+		if (!type->richness.Valid(richness)) continue;
+		float solidity_match = type->solidity.Map(solidity);
+		float humidity_match = type->humidity.Map(humidity);
+		float temperature_match = type->temperature.Map(temperature);
+		float richness_match = type->richness.Map(richness);
 		float chance = (solidity_match + humidity_match + temperature_match + richness_match) * type->commonness;
 		total += chance;
 		candidates.emplace_back(type, total);

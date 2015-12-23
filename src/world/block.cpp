@@ -89,18 +89,10 @@ BlockType::BlockType() noexcept
 , collision(true)
 , collide_block(true)
 , generate(false)
-, min_solidity(0.5f)
-, mid_solidity(0.75f)
-, max_solidity(1.0f)
-, min_humidity(-1.0f)
-, mid_humidity(0.0f)
-, max_humidity(1.0f)
-, min_temperature(-1.0f)
-, mid_temperature(0.0f)
-, max_temperature(1.0f)
-, min_richness(-1.0f)
-, mid_richness(0.0f)
-, max_richness(1.0f)
+, solidity(0.5f, 0.75f, 1.0f)
+, humidity(-1.0f, 0.0f, 1.0f)
+, temperature(-1.0f, 0.0f, 1.0f)
+, richness(-1.0f, 0.0f, 1.0f)
 , commonness(1.0f) {
 
 }
@@ -119,18 +111,10 @@ void BlockType::Copy(const BlockType &other) noexcept {
 	collision = other.collision;
 	collide_block = collide_block;
 	generate = other.generate;
-	min_solidity = other.min_solidity;
-	mid_solidity = other.mid_solidity;
-	max_solidity = other.max_solidity;
-	min_humidity = other.min_humidity;
-	mid_humidity = other.mid_humidity;
-	max_humidity = other.max_humidity;
-	min_temperature = other.min_temperature;
-	mid_temperature = other.mid_temperature;
-	max_temperature = other.max_temperature;
-	min_richness = other.min_richness;
-	mid_richness = other.mid_richness;
-	max_richness = other.max_richness;
+	solidity = other.solidity;
+	humidity = other.humidity;
+	temperature = other.temperature;
+	richness = other.richness;
 	commonness = other.commonness;
 }
 
@@ -193,29 +177,29 @@ void BlockType::Read(
 		} else if (name == "generate") {
 			generate = in.GetBool();
 		} else if (name == "min_solidity") {
-			min_solidity = in.GetFloat();
+			solidity.Min(in.GetFloat());
 		} else if (name == "mid_solidity") {
-			mid_solidity = in.GetFloat();
+			solidity.Mid(in.GetFloat());
 		} else if (name == "max_solidity") {
-			max_solidity = in.GetFloat();
+			solidity.Max(in.GetFloat());
 		} else if (name == "min_humidity") {
-			min_humidity = in.GetFloat();
+			humidity.Min(in.GetFloat());
 		} else if (name == "mid_humidity") {
-			mid_humidity = in.GetFloat();
+			humidity.Mid(in.GetFloat());
 		} else if (name == "max_humidity") {
-			max_humidity = in.GetFloat();
+			humidity.Max(in.GetFloat());
 		} else if (name == "min_temperature") {
-			min_temperature = in.GetFloat();
+			temperature.Min(in.GetFloat());
 		} else if (name == "mid_temperature") {
-			mid_temperature = in.GetFloat();
+			temperature.Mid(in.GetFloat());
 		} else if (name == "max_temperature") {
-			max_temperature = in.GetFloat();
+			temperature.Max(in.GetFloat());
 		} else if (name == "min_richness") {
-			min_richness = in.GetFloat();
+			richness.Min(in.GetFloat());
 		} else if (name == "mid_richness") {
-			mid_richness = in.GetFloat();
+			richness.Mid(in.GetFloat());
 		} else if (name == "max_richness") {
-			max_richness = in.GetFloat();
+			richness.Max(in.GetFloat());
 		} else if (name == "commonness") {
 			commonness = in.GetFloat();
 		} else if (name == "shape") {
