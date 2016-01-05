@@ -784,7 +784,7 @@ bool World::Intersection(
 	const ExactLocation::Coarse &reference,
 	WorldCollision &coll
 ) {
-	// only consider chunks of the idex closest to reference
+	// only consider chunks of the index closest to reference
 	// this makes the ray not be infinite anymore (which means it's
 	// actually a line segment), but oh well
 	ChunkIndex *index = chunks.ClosestIndex(reference);
@@ -794,15 +794,38 @@ bool World::Intersection(
 
 	candidates.clear();
 
-	// TODO: change this so the test starts at the chunk of the ray's
-	//       origin and "walks" forward until it hits (actually casting
-	//       the ray, so to say). if this performs well (at least, better
-	//       than now), this could also qualify for the chunk test itself
-	//       see Bresenham's line algo or something similar
-	for (Chunk *cur_chunk : *index) {
-		float cur_dist;
-		if (cur_chunk && cur_chunk->Intersection(ray, reference, cur_dist)) {
-			candidates.push_back({ cur_chunk, cur_dist });
+	// maybe worht to try:
+	//  change this so the test starts at the chunk of the ray's
+	//  origin and "walks" forward until it hits (actually casting
+	//  the ray, so to say). if this performs well (at least, better
+	//  than now), this could also qualify for the chunk test itself
+	//  see Bresenham's line algo or something similar
+
+	ExactLocation ray_loc(reference, ray.orig);
+	ray_loc.Correct();
+
+	ExactLocation::Coarse begin(index->CoordsBegin());
+	ExactLocation::Coarse end(index->CoordsEnd());
+
+	// ignore chunks that are bind the ray's origin
+	for (int i = 0; i < 3; ++i) {
+		if (ray.dir[i] >= 0.0f) {
+			begin[i] = ray_loc.chunk[i];
+		}
+		if (ray.dir[i] <= 0.0f) {
+			end[i] = ray_loc.chunk[i] + 1;
+		}
+	}
+
+	for (ExactLocation::Coarse pos(begin); pos.z < end.z; ++pos.z) {
+		for (pos.y = begin.y; pos.y < end.y; ++pos.y) {
+			for (pos.x = begin.x; pos.x < end.x; ++pos.x) {
+				Chunk *cur_chunk = index->Get(pos);
+				float cur_dist;
+				if (cur_chunk && cur_chunk->Intersection(ray, reference, cur_dist)) {
+					candidates.push_back({ cur_chunk, cur_dist });
+				}
+			}
 		}
 	}
 

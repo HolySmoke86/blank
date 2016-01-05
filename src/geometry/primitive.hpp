@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iosfwd>
 #include <glm/glm.hpp>
+#include <glm/gtx/norm.hpp>
 
 
 namespace blank {
@@ -41,6 +42,19 @@ struct Ray {
 
 	void Update() noexcept {
 		inv_dir = 1.0f / dir;
+	}
+
+	/// get shortest distance of this ray's line to given point
+	float Distance(const glm::vec3 &point) const noexcept {
+		// d = |(x2-x1)×(x1-x0)|/|x2-x1|
+		// where x0 is point, and x1 and x2 are points on the line
+		// for derivation, see http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
+		// x1 = orig
+		// x2-x1 = dir, which means |x2-x1| is 1.0
+		return length(cross(dir, orig - point));
+	}
+	float DistanceSquared(const glm::vec3 &point) const noexcept {
+		return length2(cross(dir, orig - point));
 	}
 };
 

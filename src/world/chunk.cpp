@@ -415,9 +415,17 @@ bool Chunk::Intersection(
 				if (!type.collision || !type.shape) {
 					continue;
 				}
+				RoughLocation::Fine pos(x, y, z);
+
+				// center of the blok relative to the ray
+				glm::vec3 relative_center(glm::vec3((position - reference) * ExactLocation::Extent() + pos) + 0.5f);
+				if (ray.DistanceSquared(relative_center) > 3.0f) {
+					continue;
+				}
+
 				float cur_dist;
 				glm::vec3 cur_norm;
-				if (type.shape->Intersects(ray, ToTransform(reference, RoughLocation::Fine(x, y, z), idx), cur_dist, cur_norm)) {
+				if (type.shape->Intersects(ray, ToTransform(reference, pos, idx), cur_dist, cur_norm)) {
 					if (cur_dist < coll.depth) {
 						coll.block = idx;
 						coll.depth = cur_dist;

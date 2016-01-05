@@ -144,6 +144,8 @@ public:
 	/// get gravity for one unit mass at given point
 	glm::vec3 GravityAt(const ExactLocation &) const noexcept;
 
+	/// check if given ray passes this chunk at all
+	/// given reference indicates the chunk offset of the ray in world space
 	bool Intersection(
 		const Ray &ray,
 		const ExactLocation::Coarse &reference,
@@ -153,12 +155,13 @@ public:
 	}
 
 	/// check if given ray intersects any block of this chunk
-	/// given reference indicated the chunk offset of the ray in world space
+	/// given reference indicates the chunk offset of the ray in world space
 	bool Intersection(
 		const Ray &,
 		const ExactLocation::Coarse &reference,
 		WorldCollision &) noexcept;
 
+	/// get all blocks intersecting given box
 	bool Intersection(
 		const AABB &box,
 		const glm::mat4 &Mbox,
