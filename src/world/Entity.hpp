@@ -96,6 +96,8 @@ public:
 
 	/// get a transform for this entity's coordinate space
 	const glm::mat4 &Transform() const noexcept { return model_transform; }
+	/// get the entity's local up vector
+	const glm::vec4 &Up() const noexcept { return model_transform[1]; }
 	/// get a transform for this entity's coordinate space relative to reference chunk
 	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept;
 	/// get a transform for this entity's view space relative to reference chunk

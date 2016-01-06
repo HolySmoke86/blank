@@ -29,6 +29,7 @@
 #include <map>
 #include <sstream>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/projection.hpp>
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtx/io.hpp>
 
@@ -182,14 +183,59 @@ void DirectInput::PickBlock() {
 }
 
 void DirectInput::PlaceBlock() {
+	// update block focus
 	UpdatePlayer();
+	// do nothing if not looking at any block
 	if (!BlockFocus()) return;
 
+	// determine block adjacent to the face the player is looking at
 	BlockLookup next_block(BlockFocus().chunk, BlockFocus().BlockPos(), Block::NormalFace(BlockFocus().normal));
+	// abort if it's unavailable
 	if (!next_block) {
 		return;
 	}
-	manip.SetBlock(next_block.GetChunk(), next_block.GetBlockIndex(), Block(InventorySlot() + 1));
+
+	// "can replace" check
+	// this prevents players from replacing solid blocks e.g. by looking through slabs
+	// simple for now, should be expanded to include things like
+	// entities in the way or replacable blocks like water and stuff
+	if (next_block.GetBlock().type != 0) {
+		return;
+	}
+
+	Block new_block(InventorySlot() + 1);
+
+	// block's up vector
+	// align with player's up
+	const glm::vec3 player_up(GetPlayer().GetEntity().Up());
+	new_block.SetFace(Block::NormalFace(player_up));
+	// to align with player's local up/down look (like stairs in minecraft), just invert
+	// it if pitch is positive
+	// or, align with focus normal (like logs in minecraft)
+
+	// determine block's turn (local rotation about up axis)
+	// when aligned with player's up (first mode, and currently the only one implemented)
+	// project the player's view forward onto his entity's XZ plane and
+	// use the closest cardinal direction it's pointing in
+	const glm::vec3 view_forward(-GetPlayer().GetEntity().ViewTransform(GetPlayer().GetEntity().ChunkCoords())[3]);
+	// if view is straight up or down, this will be a null vector (NaN after normalization)
+	// in that case maybe the model forward should be used?
+	// the current implementation implicitly falls back to TURN_NONE which is -Z
+	const glm::vec3 local_forward(normalize(view_forward - proj(view_forward, player_up)));
+	// FIXME: I suspect this only works when player_up is positive Y
+	if (local_forward.x > 0.707f) {
+		new_block.SetTurn(Block::TURN_RIGHT);
+	} else if (local_forward.z > 0.707f) {
+		new_block.SetTurn(Block::TURN_AROUND);
+	} else if (local_forward.x < -0.707f) {
+		new_block.SetTurn(Block::TURN_LEFT);
+	}
+	// for mode two ("minecraft stairs") it should work the same, but I haven't properly
+	// thought that through (well, that's also true about the whole face/turn thing, but oh well)
+	// mode three I have absoloutely no clue. that placement would be appropriate for pipe-like
+	// blocks, where turn shouldn't make a difference, but what if it does?
+
+	manip.SetBlock(next_block.GetChunk(), next_block.GetBlockIndex(), new_block);
 	Invalidate();
 }
 
