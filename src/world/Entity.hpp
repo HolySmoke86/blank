@@ -95,7 +95,7 @@ public:
 	void SetHead(float pitch, float yaw) noexcept;
 
 	/// get a transform for this entity's coordinate space
-	const glm::mat4 Transform() const noexcept { return model_transform; }
+	const glm::mat4 &Transform() const noexcept { return model_transform; }
 	/// get a transform for this entity's coordinate space relative to reference chunk
 	glm::mat4 Transform(const glm::ivec3 &reference) const noexcept;
 	/// get a transform for this entity's view space relative to reference chunk
