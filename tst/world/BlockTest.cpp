@@ -17,6 +17,38 @@ void BlockTest::tearDown() {
 }
 
 
+void BlockTest::testOrientation() {
+	Block block(0, Block::FACE_DOWN, Block::TURN_LEFT);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong block face after initialization",
+		block.GetFace(), Block::FACE_DOWN
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong block turn after initialization",
+		block.GetTurn(), Block::TURN_LEFT
+	);
+
+	block.SetFace(Block::FACE_BACK);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"changing block face has unexpected effect",
+		block.GetFace(), Block::FACE_BACK
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"changing block face affected turn",
+		block.GetTurn(), Block::TURN_LEFT
+	);
+
+	block.SetTurn(Block::TURN_AROUND);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"changing block turn has unexpected effect",
+		block.GetTurn(), Block::TURN_AROUND
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"changing block turn affected face",
+		block.GetFace(), Block::FACE_BACK
+	);
+}
+
 void BlockTest::testFaceOpposite() {
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"DOWN not opposite of UP",

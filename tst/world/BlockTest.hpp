@@ -12,6 +12,7 @@ class BlockTest
 
 CPPUNIT_TEST_SUITE(BlockTest);
 
+CPPUNIT_TEST(testOrientation);
 CPPUNIT_TEST(testFaceOpposite);
 CPPUNIT_TEST(testFaceAxis);
 CPPUNIT_TEST(testFaceNormal);
@@ -26,6 +27,8 @@ CPPUNIT_TEST_SUITE_END();
 public:
 	void setUp();
 	void tearDown();
+
+	void testOrientation();
 
 	void testFaceOpposite();
 	void testFaceAxis();
