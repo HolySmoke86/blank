@@ -217,7 +217,7 @@ void DirectInput::PlaceBlock() {
 	// when aligned with player's up (first mode, and currently the only one implemented)
 	// project the player's view forward onto his entity's XZ plane and
 	// use the closest cardinal direction it's pointing in
-	const glm::vec3 view_forward(-GetPlayer().GetEntity().ViewTransform(GetPlayer().GetEntity().ChunkCoords())[3]);
+	const glm::vec3 view_forward(-GetPlayer().GetEntity().ViewTransform(GetPlayer().GetEntity().ChunkCoords())[2]);
 	// if view is straight up or down, this will be a null vector (NaN after normalization)
 	// in that case maybe the model forward should be used?
 	// the current implementation implicitly falls back to TURN_NONE which is -Z
