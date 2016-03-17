@@ -157,9 +157,9 @@ InitGL::InitGL(bool double_buffer, int sample_size) {
 		throw SDLError("SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)");
 	}
 
-	if (double_buffer) {
-		if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1) != 0) {
-			throw SDLError("SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)");
+	if (!double_buffer) {
+		if (SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0) != 0) {
+			throw SDLError("SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0)");
 		}
 	}
 
