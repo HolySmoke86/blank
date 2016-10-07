@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -261,8 +262,11 @@ void Texture::Data(const SDL_Surface &srf, bool pad2) noexcept {
 
 		UnpackRowLength(0);
 	} else if (srf.w > (1 << 30) || srf.h > (1 << 30)) {
+		// That's at least one gigapixel in either or both dimensions.
+		// If this is not an error, that's an insanely large or high
+		// resolution texture.
 #ifndef NDEBUG
-		throw std::runtime_error("texture too large");
+		std::cerr << "texture size exceeds 2^30, aborting data import" << std::endl;
 #endif
 	} else {
 		GLsizei width = 1, height = 1;

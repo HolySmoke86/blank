@@ -139,7 +139,7 @@ InitAL::InitAL() {
 	}
 }
 
-InitAL::~InitAL() {
+InitAL::~InitAL() throw(AlutError) {
 	if (!alutExit()) {
 		throw AlutError(alutGetError(), "alutExit");
 	}

@@ -103,7 +103,7 @@ Viewport::Viewport()
 	glClearColor(0.0, 0.0, 0.0, 1.0);
 }
 
-void Viewport::VSync(bool b) noexcept {
+void Viewport::VSync(bool b) {
 	if (SDL_GL_SetSwapInterval(b) != 0) {
 		throw SDLError("SDL_GL_SetSwapInterval");
 	}

@@ -23,7 +23,7 @@ public:
 	Viewport(const Viewport &) = delete;
 	Viewport &operator =(const Viewport &) = delete;
 
-	void VSync(bool b) noexcept;
+	void VSync(bool b);
 
 	void EnableDepthTest() noexcept;
 	void EqualDepthTest() noexcept;

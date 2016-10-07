@@ -33,7 +33,6 @@ Chunk::Chunk(const BlockTypeRegistry &types) noexcept
 : types(&types)
 , neighbor{0}
 , gravity()
-, blocks{}
 , light{0}
 , generated(false)
 , lighted(false)

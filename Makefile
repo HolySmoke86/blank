@@ -92,7 +92,9 @@ test: blank.test
 	./blank.test
 
 clean:
-	rm -df $(OBJ) $(DEP) $(DIR)
+	rm -f $(OBJ)
+	rm -f $(DEP)
+	find build -type d -empty -delete
 
 distclean: clean
 	rm -f $(BIN) cachegrind.out.* callgrind.out.*

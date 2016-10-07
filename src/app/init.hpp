@@ -101,7 +101,7 @@ class InitAL {
 
 public:
 	InitAL();
-	~InitAL();
+	~InitAL() throw(AlutError);
 
 	InitAL(const InitAL &) = delete;
 	InitAL &operator =(const InitAL &) = delete;
