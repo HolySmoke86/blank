@@ -1,3 +1,14 @@
+Dependencies
+============
+
+	GLEW, GLM, SDL2, SDL2_image, SDL2_net, SDL2_ttf, OpenAL, freealut, zlib
+
+archlinux:
+	pacman -S glew glm sdl2 sdl2_image sdl2_net sdl2_ttf openal freealut zlib
+
+debian (jessie):
+	apt install --no-install-recommends libglew1.10 libglu1-mesa libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libsdl2-ttf-2.0-0 libopenal1 libalut0 zlib1g
+
 Arguments
 =========
 
