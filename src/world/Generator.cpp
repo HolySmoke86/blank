@@ -3,9 +3,8 @@
 #include "BlockType.hpp"
 #include "BlockTypeRegistry.hpp"
 #include "Chunk.hpp"
+#include "../graphics/glm.hpp"
 #include "../rand/OctaveNoise.hpp"
-
-#include <glm/glm.hpp>
 
 
 namespace blank {

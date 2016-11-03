@@ -3,11 +3,11 @@
 
 #include "Text.hpp"
 #include "../graphics/align.hpp"
+#include "../graphics/glm.hpp"
 #include "../graphics/PrimitiveMesh.hpp"
 
 #include <deque>
 #include <string>
-#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -44,8 +44,8 @@ private:
 	glm::vec3 adv;
 	glm::vec2 size;
 
-	glm::vec4 bg;
-	glm::vec4 fg;
+	PrimitiveMesh::Color bg;
+	PrimitiveMesh::Color fg;
 
 	PrimitiveMesh bg_mesh;
 

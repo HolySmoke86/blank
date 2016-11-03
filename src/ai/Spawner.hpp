@@ -2,9 +2,9 @@
 #define BLANK_AI_SPAWNER_HPP_
 
 #include "../app/IntervalTimer.hpp"
+#include "../graphics/glm.hpp"
 
 #include <vector>
-#include <glm/glm.hpp>
 
 
 namespace blank {

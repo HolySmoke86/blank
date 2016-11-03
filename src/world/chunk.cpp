@@ -465,13 +465,13 @@ bool Chunk::Intersection(
 	constexpr float block_rad = 2.0f;
 	const float bb_radius = box_rad + block_rad;
 
-	const RoughLocation::Fine begin(max(
+	const RoughLocation::Fine begin(glm::max(
 		RoughLocation::Fine(0),
-		RoughLocation::Fine(floor(box_coords - bb_radius))
+		RoughLocation::Fine(glm::floor(box_coords - bb_radius))
 	));
-	const RoughLocation::Fine end(min(
+	const RoughLocation::Fine end(glm::min(
 		RoughLocation::Fine(side - 1),
-		RoughLocation::Fine(ceil(box_coords + bb_radius))
+		RoughLocation::Fine(glm::ceil(box_coords + bb_radius))
 	) - 1);
 
 	for (RoughLocation::Fine pos(begin); pos.z < end.y; ++pos.z) {
@@ -502,7 +502,7 @@ bool Chunk::Intersection(
 	const glm::vec3 entity_coords(Mentity[3] - Mchunk[3]);
 	const float ec_radius = entity.Radius() + Radius();
 
-	if (distance2(entity_coords, Center()) > ec_radius * ec_radius) {
+	if (glm::distance2(entity_coords, Center()) > ec_radius * ec_radius) {
 		return false;
 	}
 
@@ -514,13 +514,13 @@ bool Chunk::Intersection(
 	constexpr float block_rad = 2.0f;
 	const float eb_radius = entity.Radius() + block_rad;
 
-	const RoughLocation::Fine begin(max(
+	const RoughLocation::Fine begin(glm::max(
 		RoughLocation::Fine(0),
-		RoughLocation::Fine(floor(entity_coords - eb_radius))
+		RoughLocation::Fine(glm::floor(entity_coords - eb_radius))
 	));
-	const RoughLocation::Fine end(min(
+	const RoughLocation::Fine end(glm::min(
 		RoughLocation::Fine(side),
-		RoughLocation::Fine(ceil(entity_coords + eb_radius))
+		RoughLocation::Fine(glm::ceil(entity_coords + eb_radius))
 	));
 
 	for (RoughLocation::Fine pos(begin); pos.z < end.z; ++pos.z) {
@@ -819,7 +819,7 @@ void ChunkRenderer::Render(Viewport &viewport) {
 	chunk_prog.SetTexture(block_tex);
 	chunk_prog.SetFogDensity(fog_density);
 
-	Frustum frustum(transpose(chunk_prog.GetVP()));
+	Frustum frustum(glm::transpose(chunk_prog.GetVP()));
 	AABB box;
 
 	for (int i = 0; i < index.TotalChunks(); ++i) {

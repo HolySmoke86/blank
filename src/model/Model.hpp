@@ -2,11 +2,11 @@
 #define BLANK_MODEL_MODEL_HPP_
 
 #include "Part.hpp"
+#include "../graphics/glm.hpp"
 
 #include <cstdint>
 #include <list>
 #include <vector>
-#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 

@@ -5,10 +5,10 @@
 #include "BlockGravity.hpp"
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
+#include "../graphics/glm.hpp"
 #include "../graphics/PrimitiveMesh.hpp"
 #include "../model/Shape.hpp"
 
-#include <glm/glm.hpp>
 #include <limits>
 #include <vector>
 
@@ -25,9 +25,9 @@ struct BlockType {
 
 	const Shape *shape;
 	std::vector<float> textures;
-	glm::tvec3<unsigned char> hsl_mod;
-	glm::tvec3<unsigned char> rgb_mod;
-	glm::tvec3<unsigned char> outline_color;
+	TVEC3<unsigned char, glm::precision(0)> hsl_mod;
+	TVEC3<unsigned char, glm::precision(0)> rgb_mod;
+	TVEC3<unsigned char, glm::precision(0)> outline_color;
 
 	/// gravity configuration or null if not emitting gravity
 	std::unique_ptr<BlockGravity> gravity;

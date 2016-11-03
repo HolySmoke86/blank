@@ -7,10 +7,9 @@
 #include "Camera.hpp"
 #include "Canvas.hpp"
 #include "DirectionalLighting.hpp"
+#include "glm.hpp"
 #include "PlainColor.hpp"
 #include "SkyBoxShader.hpp"
-
-#include <glm/glm.hpp>
 
 
 namespace blank {

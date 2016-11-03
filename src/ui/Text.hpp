@@ -2,11 +2,11 @@
 #define BLANK_UI_TEXT_HPP_
 
 #include "../graphics/align.hpp"
+#include "../graphics/glm.hpp"
 #include "../graphics/Texture.hpp"
 #include "../graphics/SpriteMesh.hpp"
 
 #include <string>
-#include <glm/glm.hpp>
 
 
 namespace blank {

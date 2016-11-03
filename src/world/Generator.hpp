@@ -1,11 +1,11 @@
 #ifndef BLANK_WORLD_GENERATOR_HPP_
 #define BLANK_WORLD_GENERATOR_HPP_
 
+#include "../graphics/glm.hpp"
 #include "../rand/SimplexNoise.hpp"
 
 #include <cstdint>
 #include <vector>
-#include <glm/glm.hpp>
 
 
 namespace blank {

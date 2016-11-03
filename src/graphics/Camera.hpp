@@ -1,7 +1,7 @@
 #ifndef BLANK_GRAPHICS_CAMERA_HPP_
 #define BLANK_GRAPHICS_CAMERA_HPP_
 
-#include <glm/glm.hpp>
+#include "glm.hpp"
 
 
 namespace blank {

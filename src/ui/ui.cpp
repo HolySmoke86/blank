@@ -54,8 +54,8 @@ PlayerController::~PlayerController() {
 }
 
 void PlayerController::SetMovement(const glm::vec3 &m) noexcept {
-	if (dot(m, m) > 1.0f) {
-		move_dir = normalize(m);
+	if (glm::dot(m, m) > 1.0f) {
+		move_dir = glm::normalize(m);
 	} else {
 		move_dir = m;
 	}
@@ -108,8 +108,8 @@ void PlayerController::UpdatePlayer() noexcept {
 		if (!iszero(move_dir)) {
 			// scale input by max velocity, apply yaw, and transform to world space
 			steering.SetTargetVelocity(glm::vec3(
-				glm::vec4(rotateY(move_dir * entity.MaxVelocity(), entity.Yaw()), 0.0f)
-				* transpose(entity.Transform())
+				glm::vec4(glm::rotateY(move_dir * entity.MaxVelocity(), entity.Yaw()), 0.0f)
+				* glm::transpose(entity.Transform())
 			));
 			steering.Enable(Steering::TARGET_VELOCITY);
 			steering.Disable(Steering::HALT);
@@ -221,7 +221,7 @@ void DirectInput::PlaceBlock() {
 	// if view is straight up or down, this will be a null vector (NaN after normalization)
 	// in that case maybe the model forward should be used?
 	// the current implementation implicitly falls back to TURN_NONE which is -Z
-	const glm::vec3 local_forward(normalize(view_forward - proj(view_forward, player_up)));
+	const glm::vec3 local_forward(glm::normalize(view_forward - glm::proj(view_forward, player_up)));
 	// FIXME: I suspect this only works when player_up is positive Y
 	if (local_forward.x > 0.707f) {
 		new_block.SetTurn(Block::TURN_RIGHT);

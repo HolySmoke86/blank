@@ -5,11 +5,11 @@
 #include "../geometry/primitive.hpp"
 #include "../graphics/BlockMesh.hpp"
 #include "../graphics/EntityMesh.hpp"
+#include "../graphics/glm.hpp"
 #include "../world/Block.hpp"
 
 #include <memory>
 #include <vector>
-#include <glm/glm.hpp>
 
 
 namespace blank {

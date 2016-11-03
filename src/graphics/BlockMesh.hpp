@@ -1,11 +1,11 @@
 #ifndef BLANK_GRAPHICS_BLOCKMESH_HPP_
 #define BLANK_GRAPHICS_BLOCKMESH_HPP_
 
+#include "glm.hpp"
 #include "VertexArray.hpp"
 
 #include <vector>
 #include <GL/glew.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -15,7 +15,7 @@ class BlockMesh {
 public:
 	using Position = glm::vec3;
 	using TexCoord = glm::vec3;
-	using ColorMod = glm::tvec3<unsigned char>;
+	using ColorMod = TVEC3<unsigned char, glm::precision(0)>;
 	using Light = float;
 	using Index = unsigned int;
 

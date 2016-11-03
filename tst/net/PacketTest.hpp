@@ -2,6 +2,7 @@
 #define BLANK_TEST_NET_PACKETTEST_HPP_
 
 #include "geometry/primitive.hpp"
+#include "graphics/glm.hpp"
 #include "net/Packet.hpp"
 #include "world/EntityState.hpp"
 
@@ -9,7 +10,6 @@
 #include <limits>
 #include <string>
 #include <SDL_net.h>
-#include <glm/glm.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
 

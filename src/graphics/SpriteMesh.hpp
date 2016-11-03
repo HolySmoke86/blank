@@ -1,11 +1,11 @@
 #ifndef BLANK_GRPAHICS_SPRITEMESH_HPP_
 #define BLANK_GRPAHICS_SPRITEMESH_HPP_
 
+#include "glm.hpp"
 #include "VertexArray.hpp"
 
 #include <vector>
 #include <GL/glew.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {

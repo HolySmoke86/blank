@@ -2,9 +2,9 @@
 #define BLANK_TEST_GEOMETRY_LOCATIONTEST_HPP_
 
 #include "geometry/Location.hpp"
+#include "graphics/glm.hpp"
 
 #include <string>
-#include <glm/glm.hpp>
 #include <cppunit/extensions/HelperMacros.h>
 
 

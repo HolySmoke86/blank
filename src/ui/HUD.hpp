@@ -4,9 +4,8 @@
 #include "FixedText.hpp"
 #include "MessageBox.hpp"
 #include "../graphics/EntityMesh.hpp"
+#include "../graphics/glm.hpp"
 #include "../graphics/PrimitiveMesh.hpp"
-
-#include <glm/glm.hpp>
 
 
 namespace blank {

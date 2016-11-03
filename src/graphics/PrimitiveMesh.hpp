@@ -1,11 +1,11 @@
 #ifndef BLANK_GRAPHICS_PRIMITIVEMESH_HPP_
 #define BLANK_GRAPHICS_PRIMITIVEMESH_HPP_
 
+#include "glm.hpp"
 #include "VertexArray.hpp"
 
 #include <vector>
 #include <GL/glew.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -16,7 +16,7 @@ class PrimitiveMesh {
 
 public:
 	using Position = glm::vec3;
-	using Color = glm::tvec4<unsigned char>;
+	using Color = TVEC4<unsigned char, glm::precision(0)>;
 	using Index = unsigned short;
 
 	using Positions = std::vector<Position>;

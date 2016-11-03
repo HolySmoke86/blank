@@ -1,10 +1,10 @@
 #ifndef BLANK_CLIENT_CHUNKTRANSMISSION_HPP_
 #define BLANK_CLIENT_CHUNKTRANSMISSION_HPP_
 
+#include "../graphics/glm.hpp"
 #include "../world/Chunk.hpp"
 
 #include <cstdint>
-#include <glm/glm.hpp>
 
 
 namespace blank {

@@ -2,9 +2,9 @@
 #define BLANK_MODEL_INSTANCE_HPP_
 
 #include "Part.hpp"
+#include "../graphics/glm.hpp"
 
 #include <vector>
-#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 

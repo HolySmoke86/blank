@@ -1,10 +1,10 @@
 #ifndef BLANK_GRAPHICS_SKYBOXMESH_HPP_
 #define BLANK_GRAPHICS_SKYBOXMESH_HPP_
 
+#include "glm.hpp"
 #include "VertexArray.hpp"
 
 #include <vector>
-#include <glm/glm.hpp>
 
 
 namespace blank {

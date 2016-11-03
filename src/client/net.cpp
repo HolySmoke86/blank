@@ -432,7 +432,7 @@ void NetworkedInput::MergePlayerCorrection(uint16_t seq, const EntityState &corr
 	}
 
 	glm::vec3 displacement(replay.GetState().Diff(player_state));
-	const float disp_squared = dot(displacement, displacement);
+	const float disp_squared = glm::dot(displacement, displacement);
 
 	if (disp_squared < 16.0f * numeric_limits<float>::epsilon()) {
 		SetMovement(restore_movement);

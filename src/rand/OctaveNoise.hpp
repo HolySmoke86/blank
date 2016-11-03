@@ -1,7 +1,7 @@
 #ifndef BLANK_RAND_OCTAVENOISE_HPP_
 #define BLANK_RAND_OCTAVENOISE_HPP_
 
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

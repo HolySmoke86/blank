@@ -1,8 +1,9 @@
 #ifndef BLANK_WORLD_BLOCK_HPP_
 #define BLANK_WORLD_BLOCK_HPP_
 
+#include "../graphics/glm.hpp"
+
 #include <iosfwd>
-#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -86,7 +87,7 @@ struct Block {
 	}
 
 	static Face NormalFace(const glm::vec3 &norm) noexcept {
-		const glm::vec3 anorm(abs(norm));
+		const glm::vec3 anorm(glm::abs(norm));
 		if (anorm.x > anorm.y) {
 			if (anorm.x > anorm.z) {
 				return norm.x > 0.0f ? FACE_RIGHT : FACE_LEFT;

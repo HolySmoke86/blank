@@ -1,7 +1,7 @@
 #ifndef BLANK_WORLD_ENTITYDERIVATIVE_HPP_
 #define BLANK_WORLD_ENTITYDERIVATIVE_HPP_
 
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

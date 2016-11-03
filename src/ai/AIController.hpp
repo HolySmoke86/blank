@@ -3,9 +3,8 @@
 
 #include "../app/IntervalTimer.hpp"
 #include "../geometry/primitive.hpp"
+#include "../graphics/glm.hpp"
 #include "../world/EntityController.hpp"
-
-#include <glm/glm.hpp>
 
 
 namespace blank {

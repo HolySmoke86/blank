@@ -1,11 +1,12 @@
 #ifndef BLANK_NET_PACKET_HPP_
 #define BLANK_NET_PACKET_HPP_
 
+#include "../graphics/glm.hpp"
+
 #include <cstdint>
 #include <ostream>
 #include <string>
 #include <SDL_net.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {

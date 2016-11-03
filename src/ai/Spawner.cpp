@@ -70,7 +70,7 @@ void Spawner::CheckDespawn() noexcept {
 		bool safe = false;
 		for (const Player &ref : refs) {
 			glm::vec3 diff(ref.GetEntity().AbsoluteDifference(e));
-			if (dot(diff, diff) < despawn_range) {
+			if (glm::length2(diff) < despawn_range) {
 				safe = true;
 				break;
 			}

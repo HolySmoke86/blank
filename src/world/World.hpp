@@ -5,13 +5,13 @@
 #include "Entity.hpp"
 #include "Generator.hpp"
 #include "Player.hpp"
+#include "../graphics/glm.hpp"
 #include "../rand/GaloisLFSR.hpp"
 
 #include <cstdint>
 #include <list>
 #include <string>
 #include <vector>
-#include <glm/glm.hpp>
 
 
 namespace blank {

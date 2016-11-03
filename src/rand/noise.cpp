@@ -3,6 +3,7 @@
 #include "WorleyNoise.hpp"
 
 #include <cmath>
+#include <glm/gtx/norm.hpp>
 
 
 namespace {
@@ -122,28 +123,28 @@ float SimplexNoise::operator ()(const glm::vec3 &in) const noexcept {
 	// I know 0.6 is wrong, but for some reason it looks better than 0.5
 
 	// 0
-	float t = glm::clamp(0.6f - dot(offset[0], offset[0]), 0.0f, 1.0f);
+	float t = glm::clamp(0.6f - glm::length2(offset[0]), 0.0f, 1.0f);
 	t *= t;
 	int corner = Perm12(index[0] + Perm(index[1] + Perm(index[2])));
-	n += t * t * dot(Grad(corner), offset[0]);
+	n += t * t * glm::dot(Grad(corner), offset[0]);
 
 	// 1
-	t = glm::clamp(0.6f - dot(offset[1], offset[1]), 0.0f, 1.0f);
+	t = glm::clamp(0.6f - glm::length2(offset[1]), 0.0f, 1.0f);
 	t *= t;
 	corner = Perm12(index[0] + second_int.x + Perm(index[1] + second_int.y + Perm(index[2] + second_int.z)));
-	n += t * t * dot(Grad(corner), offset[1]);
+	n += t * t * glm::dot(Grad(corner), offset[1]);
 
 	// 2
-	t = glm::clamp(0.6f - dot(offset[2], offset[2]), 0.0f, 1.0f);
+	t = glm::clamp(0.6f - glm::length2(offset[2]), 0.0f, 1.0f);
 	t *= t;
 	corner = Perm12(index[0] + third_int.x + Perm(index[1] + third_int.y + Perm(index[2] + third_int.z)));
-	n += t * t * dot(Grad(corner), offset[2]);
+	n += t * t * glm::dot(Grad(corner), offset[2]);
 
 	// 3
-	t = glm::clamp(0.6f - dot(offset[3], offset[3]), 0.0f, 1.0f);
+	t = glm::clamp(0.6f - glm::length2(offset[3]), 0.0f, 1.0f);
 	t *= t;
 	corner = Perm12(index[0] + 1 + Perm(index[1] + 1 + Perm(index[2] + 1)));
-	n += t * t * dot(Grad(corner), offset[3]);
+	n += t * t * glm::dot(Grad(corner), offset[3]);
 
 	return 32.0f * n;
 }
@@ -169,7 +170,7 @@ WorleyNoise::WorleyNoise(unsigned int seed) noexcept
 }
 
 float WorleyNoise::operator ()(const glm::vec3 &in) const noexcept {
-	glm::vec3 center = floor(in);
+	glm::vec3 center = glm::floor(in);
 
 	float closest = 1.0f;  // cannot be farther away than 1.0
 
@@ -192,8 +193,7 @@ float WorleyNoise::operator ()(const glm::vec3 &in) const noexcept {
 					cube_rand = 159739 * cube_rand + 112139;
 					point.z += float(cube_rand % 262144) / 262144.0f;
 
-					glm::vec3 diff(in - point);
-					float distance = sqrt(dot(diff, diff));
+					float distance = glm::distance(in, point);
 					if (distance < closest) {
 						closest = distance;
 					}

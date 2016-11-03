@@ -1,8 +1,9 @@
 #ifndef BLANK_GRAPHICS_FONT_HPP_
 #define BLANK_GRAPHICS_FONT_HPP_
 
+#include "glm.hpp"
+
 #include <SDL_ttf.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {

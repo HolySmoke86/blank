@@ -127,15 +127,15 @@ void GLTraitsTest::testType() {
 
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad component type for vec2i",
-		GLenum(GL_INT), gl_traits<glm::tvec2<int>>::type
+		GLenum(GL_INT), gl_traits<glm::ivec2>::type
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad component type for vec3i",
-		GLenum(GL_INT), gl_traits<glm::tvec3<int>>::type
+		GLenum(GL_INT), gl_traits<glm::ivec3>::type
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad component type for vec4i",
-		GLenum(GL_INT), gl_traits<glm::tvec4<int>>::type
+		GLenum(GL_INT), gl_traits<glm::ivec4>::type
 	);
 }
 

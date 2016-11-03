@@ -3,9 +3,9 @@
 
 #include "CollisionBounds.hpp"
 #include "../geometry/primitive.hpp"
+#include "../graphics/glm.hpp"
 
 #include <vector>
-#include <glm/glm.hpp>
 
 
 namespace blank {

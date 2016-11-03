@@ -1,8 +1,7 @@
 #ifndef BLANK_UI_PLAYERCONTROLLER_HPP_
 #define BLANK_UI_PLAYERCONTROLLER_HPP_
 
-#include <glm/glm.hpp>
-
+#include "../graphics/glm.hpp"
 #include "../world/EntityCollision.hpp"
 #include "../world/EntityController.hpp"
 #include "../world/WorldCollision.hpp"

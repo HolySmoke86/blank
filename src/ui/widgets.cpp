@@ -86,7 +86,7 @@ void MessageBox::Render(Viewport &viewport) noexcept {
 	}
 	BlendedSprite &prog = viewport.SpriteProgram();
 	prog.SetBG(glm::vec4(0.0f));
-	prog.SetFG(fg);
+	prog.SetFG(glm::vec4(fg) * (1.0f / 255.0f));
 	for (Text &txt : lines) {
 		prog.SetM(viewport.Cursor());
 		txt.Render(viewport);
@@ -329,7 +329,7 @@ void TextInput::Render(Viewport &viewport) {
 	if (!input.empty()) {
 		BlendedSprite &prog = viewport.SpriteProgram();
 		prog.SetBG(glm::vec4(0.0f));
-		prog.SetFG(fg);
+		prog.SetFG(glm::vec4(fg) * (1.0f / 255.0f));
 		prog.SetM(viewport.Cursor());
 		text.Render(viewport);
 	}

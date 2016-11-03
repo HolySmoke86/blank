@@ -5,10 +5,10 @@
 #include "BlockTypeRegistry.hpp"
 #include "../geometry/Location.hpp"
 #include "../geometry/primitive.hpp"
+#include "../graphics/glm.hpp"
 
 #include <set>
 #include <vector>
-#include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 
 
@@ -54,6 +54,9 @@ public:
 			pos.x >= 0 && pos.x < side &&
 			pos.y >= 0 && pos.y < side &&
 			pos.z >= 0 && pos.z < side;
+	}
+	static int ToIndex(const ExactLocation::Fine &pos) noexcept {
+		return ToIndex(RoughLocation::Fine(pos));
 	}
 	static constexpr int ToIndex(const RoughLocation::Fine &pos) noexcept {
 		return pos.x + pos.y * side + pos.z * side * side;
@@ -178,7 +181,7 @@ public:
 	const ExactLocation::Coarse &Position() const noexcept { return position; }
 
 	glm::mat4 Transform(const ExactLocation::Coarse &offset) const noexcept {
-		return glm::translate((position - offset) * ExactLocation::Extent());
+		return glm::translate(ExactLocation::Fine((position - offset) * ExactLocation::Extent()));
 	}
 
 	void *BlockData() noexcept { return &blocks[0]; }

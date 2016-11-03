@@ -1,7 +1,7 @@
 #ifndef BLANK_GEOMETRY_ROTATION_HPP_
 #define BLANK_GEOMETRY_ROTATION_HPP_
 
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

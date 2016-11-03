@@ -3,8 +3,7 @@
 
 #include "BlockType.hpp"
 #include "Chunk.hpp"
-
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

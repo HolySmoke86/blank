@@ -1,7 +1,7 @@
 #ifndef BLANK_GEOMETRY_LOCATION_HPP_
 #define BLANK_GEOMETRY_LOCATION_HPP_
 
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {
@@ -11,7 +11,7 @@ struct Location {
 
 	using Coarse = glm::ivec3;
 	using CoarseScalar = int;
-	using Fine = glm::tvec3<T>;
+	using Fine = TVEC3<T, glm::precision(0)>;
 	using FineScalar = T;
 	using Self = Location<T>;
 

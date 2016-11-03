@@ -39,8 +39,8 @@ public:
 	void Position(const glm::vec3 &p, Gravity g, Gravity pv) noexcept;
 	void Width(float) noexcept;
 
-	void Foreground(const glm::vec4 &col) noexcept { fg = col; dirty_cursor = true; }
-	void Background(const glm::vec4 &col) noexcept { bg = col; dirty_box = true; }
+	void Foreground(const PrimitiveMesh::Color &col) noexcept { fg = col; dirty_cursor = true; }
+	void Background(const PrimitiveMesh::Color &col) noexcept { bg = col; dirty_box = true; }
 
 	void Handle(const SDL_TextInputEvent &);
 	void Handle(const SDL_TextEditingEvent &);
@@ -59,8 +59,8 @@ private:
 	PrimitiveMesh bg_mesh;
 	PrimitiveMesh cursor_mesh;
 
-	glm::vec4 bg;
-	glm::vec4 fg;
+	PrimitiveMesh::Color bg;
+	PrimitiveMesh::Color fg;
 
 	glm::vec3 position;
 	glm::vec2 size;

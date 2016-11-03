@@ -3,8 +3,7 @@
 
 #include "../geometry/Location.hpp"
 #include "../geometry/primitive.hpp"
-
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

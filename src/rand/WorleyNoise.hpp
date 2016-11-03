@@ -1,7 +1,7 @@
 #ifndef BLANK_RAND_WORLEYNOISE_HPP_
 #define BLANK_RAND_WORLEYNOISE_HPP_
 
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

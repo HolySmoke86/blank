@@ -3,10 +3,10 @@
 
 #include "Token.hpp"
 #include "Tokenizer.hpp"
+#include "../graphics/glm.hpp"
 
 #include <iosfwd>
 #include <string>
-#include <glm/glm.hpp>
 
 
 namespace blank {

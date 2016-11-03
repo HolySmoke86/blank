@@ -6,6 +6,7 @@
 
 #include "../geometry/distance.hpp"
 #include "../geometry/rotation.hpp"
+#include "../graphics/glm.hpp"
 #include "../rand/GaloisLFSR.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
@@ -13,7 +14,6 @@
 
 #include <cmath>
 #include <limits>
-#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -58,7 +58,7 @@ void AIController::Update(Entity &e, float dt) {
 		// orient head towards heading
 		glm::vec3 heading(e.Heading());
 		// only half pitch, so we don't crane our neck
-		float tgt_pitch = std::atan(heading.y / length(glm::vec2(heading.x, heading.z))) * 0.5f;
+		float tgt_pitch = std::atan(heading.y / glm::length(glm::vec2(heading.x, heading.z))) * 0.5f;
 		// always look straight ahead
 		// maybe look at the pursuit target if there is one
 		float tgt_yaw = 0.0f;
@@ -77,11 +77,11 @@ Player *AIController::ClosestVisiblePlayer(const Entity &e) noexcept {
 
 		// distance test
 		const glm::vec3 diff(pe.AbsoluteDifference(e));
-		float dist = length(diff);
+		float dist = glm::length(diff);
 		if (dist > distance) continue;
 
 		// FOV test, 45° in each direction
-		if (dot(diff / dist, aim.dir) < sight_angle) {
+		if (glm::dot(diff / dist, aim.dir) < sight_angle) {
 			continue;
 		}
 
@@ -102,8 +102,8 @@ bool AIController::LineOfSight(const Entity &from, const Entity &to) const noexc
 	const glm::ivec3 &reference(from.ChunkCoords());
 	Ray aim(from.Aim(reference));
 	const glm::vec3 diff(to.AbsoluteDifference(from));
-	float dist = length(diff);
-	if (dist > sight_dist || dot(diff / dist, aim.dir) < sight_angle) {
+	float dist = glm::length(diff);
+	if (dist > sight_dist || glm::dot(diff / dist, aim.dir) < sight_angle) {
 		return false;
 	}
 	WorldCollision col;
@@ -166,7 +166,7 @@ void ChaseState::Update(AIController &ctrl, Entity &e, float dt) const {
 		return;
 	}
 	// halt if we're close enough, flee if we're too close
-	float dist_sq = length2(e.AbsoluteDifference(steering.GetTargetEntity()));
+	float dist_sq = glm::length2(e.AbsoluteDifference(steering.GetTargetEntity()));
 	if (dist_sq < 8.0f) {
 		ctrl.SetState(flee, e);
 	} else if (dist_sq < 25.0f) {

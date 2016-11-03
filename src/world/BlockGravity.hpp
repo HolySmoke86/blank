@@ -1,8 +1,9 @@
 #ifndef BLANK_WORLD_BLOCKGRAVITY_HPP_
 #define BLANK_WORLD_BLOCKGRAVITY_HPP_
 
+#include "../graphics/glm.hpp"
+
 #include <memory>
-#include <glm/glm.hpp>
 
 
 namespace blank {

@@ -137,10 +137,10 @@ void Part::Read(TokenStreamReader &in, ResourceIndex &tex_index, const ShapeRegi
 			in.ReadQuat(initial.orientation);
 		} else if (name == "hsl_mod") {
 			in.ReadVec(color_conv);
-			hsl_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
+			hsl_mod = EntityMesh::ColorMod(color_conv * 255.0f);
 		} else if (name == "rgb_mod") {
 			in.ReadVec(color_conv);
-			rgb_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
+			rgb_mod = EntityMesh::ColorMod(color_conv * 255.0f);
 		} else if (name == "textures") {
 			in.Skip(Token::BRACKET_OPEN);
 			while (in.HasMore() && in.Peek().type != Token::BRACKET_CLOSE) {
@@ -193,7 +193,7 @@ void Part::Index(std::vector<Part *> &index) noexcept {
 }
 
 glm::mat4 Part::LocalTransform(const Instance &inst) const noexcept {
-	glm::mat4 transform(toMat4(initial.orientation * inst.state[id].orientation));
+	glm::mat4 transform(glm::toMat4(initial.orientation * inst.state[id].orientation));
 	transform[3] = glm::vec4(initial.position + inst.state[id].position, 1.0f);
 	return transform;
 }

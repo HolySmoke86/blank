@@ -1,8 +1,9 @@
 #ifndef BLANK_GRAPHICS_GL_TRAITS_HPP_
 #define BLANK_GRAPHICS_GL_TRAITS_HPP_
 
+#include "glm.hpp"
+
 #include <GL/glew.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {
@@ -72,47 +73,47 @@ template<> struct gl_traits<double> {
 
 template<>
 template<class T, glm::precision P>
-struct gl_traits<glm::tvec1<T, P>> {
+struct gl_traits<TVEC1<T, P>> {
 	static constexpr GLint size = 1;
 	static constexpr GLenum type = gl_traits<T>::type;
 };
 template<class T, glm::precision P>
-constexpr GLint gl_traits<glm::tvec1<T, P>>::size;
+constexpr GLint gl_traits<TVEC1<T, P>>::size;
 template<class T, glm::precision P>
-constexpr GLenum gl_traits<glm::tvec1<T, P>>::type;
+constexpr GLenum gl_traits<TVEC1<T, P>>::type;
 
 template<>
 template<class T, glm::precision P>
-struct gl_traits<glm::tvec2<T, P>> {
+struct gl_traits<TVEC2<T, P>> {
 	static constexpr GLint size = 2;
 	static constexpr GLenum type = gl_traits<T>::type;
 };
 template<class T, glm::precision P>
-constexpr GLint gl_traits<glm::tvec2<T, P>>::size;
+constexpr GLint gl_traits<TVEC2<T, P>>::size;
 template<class T, glm::precision P>
-constexpr GLenum gl_traits<glm::tvec2<T, P>>::type;
+constexpr GLenum gl_traits<TVEC2<T, P>>::type;
 
 template<>
 template<class T, glm::precision P>
-struct gl_traits<glm::tvec3<T, P>> {
+struct gl_traits<TVEC3<T, P>> {
 	static constexpr GLint size = 3;
 	static constexpr GLenum type = gl_traits<T>::type;
 };
 template<class T, glm::precision P>
-constexpr GLint gl_traits<glm::tvec3<T, P>>::size;
+constexpr GLint gl_traits<TVEC3<T, P>>::size;
 template<class T, glm::precision P>
-constexpr GLenum gl_traits<glm::tvec3<T, P>>::type;
+constexpr GLenum gl_traits<TVEC3<T, P>>::type;
 
 template<>
 template<class T, glm::precision P>
-struct gl_traits<glm::tvec4<T, P>> {
+struct gl_traits<TVEC4<T, P>> {
 	static constexpr GLint size = 4;
 	static constexpr GLenum type = gl_traits<T>::type;
 };
 template<class T, glm::precision P>
-constexpr GLint gl_traits<glm::tvec4<T, P>>::size;
+constexpr GLint gl_traits<TVEC4<T, P>>::size;
 template<class T, glm::precision P>
-constexpr GLenum gl_traits<glm::tvec4<T, P>>::type;
+constexpr GLenum gl_traits<TVEC4<T, P>>::type;
 
 }
 

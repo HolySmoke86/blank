@@ -1,10 +1,11 @@
 #ifndef BLANK_GRAPHICS_PROGRAM_HPP_
 #define BLANK_GRAPHICS_PROGRAM_HPP_
 
+#include "glm.hpp"
+
 #include <iosfwd>
 #include <list>
 #include <GL/glew.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {

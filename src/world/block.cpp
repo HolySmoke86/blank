@@ -149,13 +149,13 @@ void BlockType::Read(
 			in.Skip(Token::BRACKET_CLOSE);
 		} else if (name == "rgb_mod") {
 			in.ReadVec(color_conv);
-			rgb_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
+			rgb_mod = BlockMesh::ColorMod(color_conv * 255.0f);
 		} else if (name == "hsl_mod") {
 			in.ReadVec(color_conv);
-			hsl_mod = glm::tvec3<unsigned char>(color_conv * 255.0f);
+			hsl_mod = BlockMesh::ColorMod(color_conv * 255.0f);
 		} else if (name == "outline") {
 			in.ReadVec(color_conv);
-			outline_color = glm::tvec3<unsigned char>(color_conv * 255.0f);
+			outline_color = BlockMesh::ColorMod(color_conv * 255.0f);
 		} else if (name == "gravity") {
 			gravity = BlockGravity::Read(in);
 		} else if (name == "label") {
@@ -240,7 +240,7 @@ void BlockType::FillBlockMesh(
 void BlockType::OutlinePrimitiveMesh(PrimitiveMesh::Buffer &buf) const noexcept {
 	if (!shape) return;
 	shape->Outline(buf);
-	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), glm::tvec4<unsigned char>(outline_color, 255));
+	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), PrimitiveMesh::Color(outline_color, 255));
 }
 
 
@@ -297,8 +297,8 @@ struct RadialGravity
 	: strength(strength) { }
 
 	glm::vec3 GetGravity(const glm::vec3 &diff, const glm::mat4 &) const noexcept override {
-		float dist2 = length2(diff);
-		glm::vec3 dir = -normalize(diff);
+		float dist2 = glm::length2(diff);
+		glm::vec3 dir = -glm::normalize(diff);
 		return dir * (strength / dist2);
 	}
 

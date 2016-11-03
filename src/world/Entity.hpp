@@ -6,11 +6,11 @@
 #include "EntityState.hpp"
 #include "Steering.hpp"
 #include "../geometry/primitive.hpp"
+#include "../graphics/glm.hpp"
 #include "../model/Instance.hpp"
 
 #include <cstdint>
 #include <string>
-#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 

@@ -1,7 +1,8 @@
 #ifndef BLANK_TEST_RAND_STABILITYTEST_HPP
 #define BLANK_TEST_RAND_STABILITYTEST_HPP
 
-#include <glm/glm.hpp>
+#include "graphics/glm.hpp"
+
 #include <cppunit/extensions/HelperMacros.h>
 
 

@@ -165,7 +165,7 @@ void IntersectionTest::testBoxBoxIntersection() {
 	);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"bad intersection normal (with rotation)",
-		glm::vec3(1, 0, 0), abs(normal) // normal can be in + or - x, therefore abs()
+		glm::vec3(1, 0, 0), glm::abs(normal) // normal can be in + or - x, therefore abs()
 	);
 
 	Mb = glm::translate(glm::vec3(3, 0, 0)); // 3 to the right

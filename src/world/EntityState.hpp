@@ -2,8 +2,8 @@
 #define BLANK_WORLD_ENTITYSTATE_HPP_
 
 #include "../geometry/Location.hpp"
+#include "../graphics/glm.hpp"
 
-#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 

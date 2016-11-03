@@ -1,9 +1,10 @@
 #ifndef BLANK_GEOMETRY_PRIMITIVE_HPP_
 #define BLANK_GEOMETRY_PRIMITIVE_HPP_
 
+#include "../graphics/glm.hpp"
+
 #include <algorithm>
 #include <iosfwd>
-#include <glm/glm.hpp>
 #include <glm/gtx/norm.hpp>
 
 
@@ -25,8 +26,8 @@ struct AABB {
 
 	/// return distance between origin and farthest vertex
 	float OriginRadius() const noexcept {
-		glm::vec3 high(glm::max(abs(min), abs(max)));
-		return length(high);
+		glm::vec3 high(glm::max(glm::abs(min), glm::abs(max)));
+		return glm::length(high);
 	}
 };
 
@@ -51,10 +52,10 @@ struct Ray {
 		// for derivation, see http://mathworld.wolfram.com/Point-LineDistance3-Dimensional.html
 		// x1 = orig
 		// x2-x1 = dir, which means |x2-x1| is 1.0
-		return length(cross(dir, orig - point));
+		return glm::length(glm::cross(dir, orig - point));
 	}
 	float DistanceSquared(const glm::vec3 &point) const noexcept {
-		return length2(cross(dir, orig - point));
+		return glm::length2(glm::cross(dir, orig - point));
 	}
 };
 
@@ -105,7 +106,7 @@ struct Plane {
 	: normal(abcd), dist(abcd.w) { }
 
 	void Normalize() noexcept {
-		const float l = length(normal);
+		const float l = glm::length(normal);
 		normal /= l;
 		dist /= l;
 	}

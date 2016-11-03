@@ -202,12 +202,12 @@ void Entity::UpdateTransforms() noexcept {
 	if (model) {
 		view_transform = model.EyesTransform();
 	} else {
-		view_transform = toMat4(glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f)));
+		view_transform = glm::toMat4(glm::quat(glm::vec3(state.pitch, state.yaw, 0.0f)));
 	}
 }
 
 void Entity::UpdateHeading() noexcept {
-	speed = length(Velocity());
+	speed = glm::length(Velocity());
 	if (speed > std::numeric_limits<float>::epsilon()) {
 		heading = Velocity() / speed;
 	} else {
@@ -238,21 +238,21 @@ void Entity::OrientBody(float dt) noexcept {
 		// check if our orientation and velocity are aligned
 		const glm::vec3 forward(-model_transform[2]);
 		// facing is local -Z rotated about local Y by yaw and transformed into world space
-		const glm::vec3 facing(normalize(glm::vec3(glm::vec4(rotateY(glm::vec3(0.0f, 0.0f, -1.0f), state.yaw), 0.0f) * transpose(model_transform))));
+		const glm::vec3 facing(glm::normalize(glm::vec3(glm::vec4(glm::rotateY(glm::vec3(0.0f, 0.0f, -1.0f), state.yaw), 0.0f) * glm::transpose(model_transform))));
 		// only adjust if velocity isn't almost parallel to up
-		float vel_dot_up = dot(Velocity(), up);
+		float vel_dot_up = glm::dot(Velocity(), up);
 		if (std::abs(1.0f - std::abs(vel_dot_up)) > std::numeric_limits<float>::epsilon()) {
 			// get direction of velocity projected onto model plane
-			glm::vec3 direction(normalize(Velocity() - (Velocity() * vel_dot_up)));
+			glm::vec3 direction(glm::normalize(Velocity() - (Velocity() * vel_dot_up)));
 			// if velocity points away from our facing (with a little bias), flip it around
 			// (the entity is "walking backwards")
-			if (dot(facing, direction) < -0.1f) {
+			if (glm::dot(facing, direction) < -0.1f) {
 				direction = -direction;
 			}
 			// calculate the difference between forward and direction
-			const float absolute_difference = std::acos(dot(forward, direction));
+			const float absolute_difference = std::acos(glm::dot(forward, direction));
 			// if direction is clockwise with respect to up vector, invert the angle
-			const float relative_difference = dot(cross(forward, direction), up) < 0.0f
+			const float relative_difference = glm::dot(glm::cross(forward, direction), up) < 0.0f
 				? -absolute_difference
 				: absolute_difference;
 			// only correct by half the difference max
@@ -268,7 +268,7 @@ void Entity::OrientBody(float dt) noexcept {
 				std::cout << std::endl;
 			}
 			// now rotate body by correction and head by -correction
-			state.orient = rotate(state.orient, correction, up);
+			state.orient = glm::rotate(state.orient, correction, up);
 			state.yaw -= correction;
 		}
 	}
@@ -283,7 +283,7 @@ void Entity::OrientHead(float dt) noexcept {
 	if (std::abs(state.yaw) > max_head_yaw) {
 		float deviation = state.yaw < 0.0f ? state.yaw + max_head_yaw : state.yaw - max_head_yaw;
 		// rotate the entity by deviation about local Y
-		state.orient = rotate(state.orient, deviation, up);
+		state.orient = glm::rotate(state.orient, deviation, up);
 		// and remove from head yaw
 		state.yaw -= deviation;
 		// shouldn't be necessary if max_head_yaw is < PI, but just to be sure :p
@@ -364,7 +364,7 @@ void EntityState::AdjustHeading() noexcept {
 
 glm::mat4 EntityState::Transform(const glm::ivec3 &reference) const noexcept {
 	const glm::vec3 translation = RelativePosition(reference);
-	glm::mat4 transform(toMat4(orient));
+	glm::mat4 transform(glm::toMat4(orient));
 	transform[3] = glm::vec4(translation, 1.0f);
 	return transform;
 }
@@ -449,7 +449,7 @@ void Steering::UpdateWander(World &world, float dt) {
 		world.Random().SNorm() * wander_disp
 	);
 	if (!iszero(displacement)) {
-		wander_pos = normalize(wander_pos + displacement * dt) * wander_radius;
+		wander_pos = glm::normalize(wander_pos + displacement * dt) * wander_radius;
 	}
 }
 
@@ -476,7 +476,7 @@ void Steering::UpdateObstacle(World &world) {
 	for (const WorldCollision &c : col) {
 		// diff points from block to state
 		glm::vec3 diff = entity.GetState().RelativePosition(c.ChunkPos()) - c.BlockCoords();
-		float dist = length2(diff);
+		float dist = glm::length2(diff);
 		if (dist < distance) {
 			nearest = &c;
 			difference = diff;
@@ -489,9 +489,9 @@ void Steering::UpdateObstacle(World &world) {
 		return;
 	}
 	// and try to avoid it
-	float to_go = dot(difference, entity.Heading());
+	float to_go = glm::dot(difference, entity.Heading());
 	glm::vec3 point(entity.Position() + entity.Heading() * to_go);
-	obstacle_dir = normalize(point - nearest->BlockCoords()) * (entity.Speed() / std::sqrt(distance));
+	obstacle_dir = glm::normalize(point - nearest->BlockCoords()) * (entity.Speed() / std::sqrt(distance));
 }
 
 glm::vec3 Steering::Force(const EntityState &state) const noexcept {
@@ -542,17 +542,17 @@ glm::vec3 Steering::Force(const EntityState &state) const noexcept {
 }
 
 bool Steering::SumForce(glm::vec3 &out, const glm::vec3 &in, float max) noexcept {
-	if (iszero(in) || any(isnan(in))) {
+	if (iszero(in) || glm::any(glm::isnan(in))) {
 		return false;
 	}
-	float current = iszero(out) ? 0.0f : length(out);
+	float current = iszero(out) ? 0.0f : glm::length(out);
 	float remain = max - current;
 	if (remain <= 0.0f) {
 		return true;
 	}
-	float additional = length(in);
+	float additional = glm::length(in);
 	if (additional > remain) {
-		out += normalize(in) * remain;
+		out += glm::normalize(in) * remain;
 		return true;
 	} else {
 		out += in;
@@ -573,7 +573,7 @@ glm::vec3 Steering::Seek(const EntityState &state, const ExactLocation &loc) con
 	if (iszero(diff)) {
 		return glm::vec3(0.0f);
 	} else {
-		return TargetVelocity(state, normalize(diff) * speed);
+		return TargetVelocity(state, glm::normalize(diff) * speed);
 	}
 }
 
@@ -582,13 +582,13 @@ glm::vec3 Steering::Flee(const EntityState &state, const ExactLocation &loc) con
 	if (iszero(diff)) {
 		return glm::vec3(0.0f);
 	} else {
-		return TargetVelocity(state, normalize(diff) * speed);
+		return TargetVelocity(state, glm::normalize(diff) * speed);
 	}
 }
 
 glm::vec3 Steering::Arrive(const EntityState &state, const ExactLocation &loc) const noexcept {
 	const glm::vec3 diff(loc.Difference(state.pos).Absolute());
-	const float dist = length(diff);
+	const float dist = glm::length(diff);
 	if (dist < std::numeric_limits<float>::epsilon()) {
 		return glm::vec3(0.0f);
 	} else {
@@ -602,7 +602,7 @@ glm::vec3 Steering::Pursuit(const EntityState &state, const Entity &other) const
 	if (iszero(diff)) {
 		return TargetVelocity(state, other.Velocity());
 	} else {
-		const float time_estimate = length(diff) / speed;
+		const float time_estimate = glm::length(diff) / speed;
 		ExactLocation prediction(other.ChunkCoords(), other.Position() + (other.Velocity() * time_estimate));
 		return Seek(state, prediction);
 	}
@@ -613,14 +613,14 @@ glm::vec3 Steering::Evade(const EntityState &state, const Entity &other) const n
 	if (iszero(diff)) {
 		return TargetVelocity(state, -other.Velocity());
 	} else {
-		const float time_estimate = length(diff) / speed;
+		const float time_estimate = glm::length(diff) / speed;
 		ExactLocation prediction(other.ChunkCoords(), other.Position() + (other.Velocity() * time_estimate));
 		return Flee(state, prediction);
 	}
 }
 
 glm::vec3 Steering::Wander(const EntityState &state) const noexcept {
-	return TargetVelocity(state, normalize(entity.Heading() * wander_dist + wander_pos) * speed);
+	return TargetVelocity(state, glm::normalize(entity.Heading() * wander_dist + wander_pos) * speed);
 }
 
 glm::vec3 Steering::ObstacleAvoidance(const EntityState &state) const noexcept {
@@ -951,13 +951,13 @@ void World::ResolveWorldCollision(
 	}
 	// if entity is already going in the direction of correction,
 	// let the problem resolve itself
-	if (dot(state.velocity, correction) >= 0.0f) {
+	if (glm::dot(state.velocity, correction) >= 0.0f) {
 		return;
 	}
 	// apply correction, maybe could use some damping, gotta test
 	state.pos.block += correction;
 	// kill velocity?
-	glm::vec3 normal_velocity(proj(state.velocity, correction));
+	glm::vec3 normal_velocity(glm::proj(state.velocity, correction));
 	state.velocity -= normal_velocity;
 }
 
@@ -972,7 +972,7 @@ glm::vec3 World::CombinedInterpenetration(
 		if (!c.Blocks()) continue;
 		glm::vec3 normal(c.normal);
 		// swap if neccessary (normal may point away from the entity)
-		if (dot(normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) < 0) {
+		if (glm::dot(normal, state.RelativePosition(c.ChunkPos()) - c.BlockCoords()) < 0) {
 			normal = -normal;
 		}
 		// check if block surface is "inside"
@@ -983,8 +983,8 @@ glm::vec3 World::CombinedInterpenetration(
 			continue;
 		}
 		glm::vec3 local_pen(normal * c.depth);
-		min_pen = min(min_pen, local_pen);
-		max_pen = max(max_pen, local_pen);
+		min_pen = glm::min(min_pen, local_pen);
+		max_pen = glm::max(max_pen, local_pen);
 	}
 	glm::vec3 pen(0.0f);
 	// only apply correction for axes where penetration is only in one direction
@@ -1060,7 +1060,7 @@ void World::GetLight(
 	glm::vec3 &col,
 	glm::vec3 &amb
 ) {
-	BlockLookup center(chunks.Get(e.ChunkCoords()), e.Position());
+	BlockLookup center(chunks.Get(e.ChunkCoords()), RoughLocation::Fine(e.Position()));
 	if (!center) {
 		// chunk unavailable, so make it really dark and from
 		// some arbitrary direction
@@ -1103,7 +1103,7 @@ void World::RenderDebug(Viewport &viewport) {
 	PrimitiveMesh debug_mesh;
 	PlainColor &prog = viewport.WorldColorProgram();
 	for (const Entity &entity : entities) {
-		debug_buf.OutlineBox(entity.Bounds(), glm::tvec4<unsigned char>(255, 0, 0, 255));
+		debug_buf.OutlineBox(entity.Bounds(), TVEC4<unsigned char, glm::precision(0)>(255, 0, 0, 255));
 		debug_mesh.Update(debug_buf);
 		prog.SetM(entity.Transform(players.front().GetEntity().ChunkCoords()));
 		debug_mesh.DrawLines();

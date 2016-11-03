@@ -2,8 +2,7 @@
 #define BLANK_MODEL_COLLISIONBOUNDS_HPP_
 
 #include "../graphics/PrimitiveMesh.hpp"
-
-#include <glm/glm.hpp>
+#include "../graphics/glm.hpp"
 
 
 namespace blank {

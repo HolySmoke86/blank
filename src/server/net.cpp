@@ -355,7 +355,7 @@ void ClientConnection::SendUpdates() {
 void ClientConnection::CheckPlayerFix() {
 	// player_update_state's position holds the client's most recent prediction
 	glm::vec3 diff = player_update_state.Diff(PlayerEntity().GetState());
-	float dist_squared = dot(diff, diff);
+	float dist_squared = glm::length2(diff);
 
 	// if client's prediction is off by more than 1cm, send
 	// our (authoritative) state back so it can fix it

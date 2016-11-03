@@ -2,9 +2,9 @@
 #define BLANK_AUDIO_AUDIO_HPP_
 
 #include "../app/IntervalTimer.hpp"
+#include "../graphics/glm.hpp"
 
 #include <al.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {

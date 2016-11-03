@@ -1,8 +1,9 @@
 #ifndef BLANK_RAND_SIMPLEXNOISE_HPP_
 #define BLANK_RAND_SIMPLEXNOISE_HPP_
 
+#include "../graphics/glm.hpp"
+
 #include <cstdint>
-#include <glm/glm.hpp>
 
 
 namespace blank {

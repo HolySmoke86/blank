@@ -1,10 +1,10 @@
 #ifndef BLANK_GRAPHICS_BLOCKLIGHTING_HPP_
 #define BLANK_GRAPHICS_BLOCKLIGHTING_HPP_
 
+#include "glm.hpp"
 #include "Program.hpp"
 
 #include <GL/glew.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {

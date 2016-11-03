@@ -18,8 +18,8 @@ ChatState::ChatState(Environment &env, State &parent, Responder &responder)
 , input(env.assets.small_ui_font) {
 	input.Position(glm::vec3(25.0f, -25.0f, -1.0f), Gravity::SOUTH_WEST, Gravity::SOUTH_WEST);
 	input.Width(env.viewport.Width() - 50.0f);
-	input.Foreground(glm::vec4(1.0f));
-	input.Background(glm::vec4(0.5f));
+	input.Foreground(PrimitiveMesh::Color(255));
+	input.Background(PrimitiveMesh::Color(127));
 }
 
 void ChatState::Preset(const std::string &text) {

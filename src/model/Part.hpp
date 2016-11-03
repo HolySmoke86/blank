@@ -1,18 +1,19 @@
 #ifndef BLAMK_MODEL_PART_HPP_
 #define BLAMK_MODEL_PART_HPP_
 
+#include "../graphics/EntityMesh.hpp"
+#include "../graphics/glm.hpp"
+
 #include <cstdint>
 #include <list>
 #include <memory>
 #include <vector>
-#include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
 
 namespace blank {
 
 class DirectionalLighting;
-class EntityMesh;
 class Instance;
 class Model;
 class ResourceIndex;
@@ -56,8 +57,8 @@ private:
 	std::vector<float> tex_map;
 	mutable std::unique_ptr<EntityMesh> mesh;
 	State initial;
-	glm::tvec3<unsigned char> hsl_mod;
-	glm::tvec3<unsigned char> rgb_mod;
+	EntityMesh::ColorMod hsl_mod;
+	EntityMesh::ColorMod rgb_mod;
 	std::uint16_t id;
 
 };

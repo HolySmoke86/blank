@@ -14,7 +14,7 @@
 namespace blank {
 
 glm::mat3 find_rotation(const glm::vec3 &a, const glm::vec3 &b) noexcept {
-	glm::vec3 v(cross(a, b));
+	glm::vec3 v(glm::cross(a, b));
 	if (iszero(v)) {
 		// a and b are parallel
 		if (iszero(a - b)) {
@@ -30,15 +30,15 @@ glm::mat3 find_rotation(const glm::vec3 &a, const glm::vec3 &b) noexcept {
 			} else {
 				arb.y += 1.0f;
 			}
-			glm::vec3 axis(normalize(cross(a, arb)));
+			glm::vec3 axis(glm::normalize(glm::cross(a, arb)));
 			return glm::mat3(glm::rotate(PI, axis));
 		}
 	}
-	float mv = length2(v);
-	float c = dot(a, b);
+	float mv = glm::length2(v);
+	float c = glm::dot(a, b);
 	float f = (1 - c) / mv;
-	glm::mat3 vx(matrixCross3(v));
-	return glm::mat3(1.0f) + vx + (pow2(vx) * f);
+	glm::mat3 vx(glm::matrixCross3(v));
+	return glm::mat3(1.0f) + vx + (glm::pow2(vx) * f);
 }
 
 std::ostream &operator <<(std::ostream &out, const AABB &box) {
@@ -106,7 +106,7 @@ bool Intersection(
 		*dist = t_min;
 	}
 	if (normal) {
-		glm::vec3 min_all(min(t1, t2));
+		glm::vec3 min_all(glm::min(t1, t2));
 		if (min_all.x > min_all.y) {
 			if (min_all.x > min_all.z) {
 				normal->x = t2.x < t1.x ? 1 : -1;
@@ -159,15 +159,15 @@ bool Intersection(
 		glm::vec3(b_m[0]),
 		glm::vec3(b_m[1]),
 		glm::vec3(b_m[2]),
-		normalize(cross(glm::vec3(a_m[0]), glm::vec3(b_m[0]))),
-		normalize(cross(glm::vec3(a_m[0]), glm::vec3(b_m[1]))),
-		normalize(cross(glm::vec3(a_m[0]), glm::vec3(b_m[2]))),
-		normalize(cross(glm::vec3(a_m[1]), glm::vec3(b_m[0]))),
-		normalize(cross(glm::vec3(a_m[1]), glm::vec3(b_m[1]))),
-		normalize(cross(glm::vec3(a_m[1]), glm::vec3(b_m[2]))),
-		normalize(cross(glm::vec3(a_m[2]), glm::vec3(b_m[0]))),
-		normalize(cross(glm::vec3(a_m[2]), glm::vec3(b_m[1]))),
-		normalize(cross(glm::vec3(a_m[2]), glm::vec3(b_m[2]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[0]), glm::vec3(b_m[0]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[0]), glm::vec3(b_m[1]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[0]), glm::vec3(b_m[2]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[1]), glm::vec3(b_m[0]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[1]), glm::vec3(b_m[1]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[1]), glm::vec3(b_m[2]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[2]), glm::vec3(b_m[0]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[2]), glm::vec3(b_m[1]))),
+		glm::normalize(glm::cross(glm::vec3(a_m[2]), glm::vec3(b_m[2]))),
 	};
 
 	depth = std::numeric_limits<float>::infinity();
@@ -175,7 +175,7 @@ bool Intersection(
 
 	int cur_axis = 0;
 	for (const glm::vec3 &axis : axes) {
-		if (any(isnan(axis))) {
+		if (glm::any(glm::isnan(axis))) {
 			// can result from the cross products if A and B have parallel axes
 			++cur_axis;
 			continue;
@@ -270,7 +270,7 @@ bool CullTest(const AABB &box, const Frustum &frustum) noexcept {
 			((plane.normal.y > 0.0f) ? box.max.y : box.min.y),
 			((plane.normal.z > 0.0f) ? box.max.z : box.min.z)
 		);
-		const float dp = dot(plane.normal, np);
+		const float dp = glm::dot(plane.normal, np);
 		// cull if nearest point is on the "outside" side of the plane
 		if (dp < -plane.dist) return true;
 	}

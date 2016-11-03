@@ -493,7 +493,7 @@ void Packet::Payload::Read(glm::quat &val, size_t off) const noexcept {
 		}
 	}
 	// omitted component squared is 1 - length squared of others
-	val[largest_index] = sqrt(1.0f - dot(val, val));
+	val[largest_index] = sqrt(1.0f - glm::length2(val));
 	// and already normalized
 }
 

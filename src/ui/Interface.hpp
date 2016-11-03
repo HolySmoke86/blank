@@ -2,9 +2,9 @@
 #define BLANK_UI_INTERFACE_HPP_
 
 #include "../app/Config.hpp"
+#include "../graphics/glm.hpp"
 
 #include <SDL.h>
-#include <glm/glm.hpp>
 
 
 namespace blank {
