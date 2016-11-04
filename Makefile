@@ -57,6 +57,22 @@ BIN := $(RELEASE_BIN) $(DEBUG_BIN) $(PROFILE_BIN) $(TEST_BIN)
 
 release: $(RELEASE_BIN)
 
+info:
+	@echo "CXX:  $(CXX)"
+	@echo "LDXX: $(LDXX)"
+	@echo
+	@echo "LIBS: $(LIBS)"
+	@echo
+	@echo "CPPFLAGS:  $(CPPFLAGS)"
+	@echo "CXXFLAGS:  $(CXXFLAGS)"
+	@echo "LDXXFLAGS: $(LDXXFLAGS)"
+	@echo "TESTFLAGS: $(TESTFLAGS)"
+	@echo "TESTLIBS:  $(TESTLIBS)"
+	@echo
+	@-lsb_release -a
+	@git --version
+	@g++ --version
+
 all: $(BIN)
 
 debug: $(DEBUG_BIN)
@@ -120,7 +136,8 @@ $(TEST_BIN): $(TEST_OBJ)
 	@echo link: $@
 	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(TESTLIBS) $(TEST_FLAGS) $^
 
-$(ASSET_DEP): .git/$(shell git symbolic-ref HEAD)
+$(ASSET_DEP): .git/$(shell git symbolic-ref HEAD 2>/dev/null || echo .git/HEAD)
+	@echo fetch: assets
 	@git submodule update --init >/dev/null
 	@touch $@
 
