@@ -2,6 +2,7 @@
 *.swo
 *.trace
 blank
+blank.cover
 blank.debug
 blank.profile
 blank.test
