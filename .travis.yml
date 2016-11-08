@@ -1,0 +1,18 @@
+# vim: sts=2 sw=2 et:
+
+os: linux
+dist: trusty
+group: stable
+
+language: cpp
+services:
+- docker
+
+matrix:
+  include:
+    - env: IMAGE=archlinux-build TARGETS=codecov
+    - env: IMAGE=debian-latest-build TARGETS=test
+    - env: IMAGE=debian-testing-build TARGETS=test
+
+script:
+    - bash scripts/docker/exec.bash
