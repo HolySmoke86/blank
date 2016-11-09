@@ -15,6 +15,7 @@ matrix:
     - env: IMAGE=debian-build-testing TARGETS=test
     - env: IMAGE=ubuntu-build-latest TARGETS=test
     - env: IMAGE=ubuntu-build-testing TARGETS=test
+    - env: IMAGE=centos-build-latest TARGETS=test
 
 script:
     - bash scripts/docker/exec.bash

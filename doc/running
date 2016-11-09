@@ -9,6 +9,9 @@ archlinux:
 debian (jessie):
 	apt install --no-install-recommends libglew1.10 libglu1-mesa libsdl2-2.0-0 libsdl2-image-2.0-0 libsdl2-net-2.0-0 libsdl2-ttf-2.0-0 libopenal1 libalut0 zlib1g
 
+centos (7):
+	yum install glew SDL2 SDL2_image SDL2_net SDL2_ttf openal-soft freealut zlib
+
 Arguments
 =========
 

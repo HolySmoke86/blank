@@ -11,6 +11,9 @@ debian: apt-get install libglew-dev libglm-dev libsdl2-dev libsdl2-image-dev lib
 debian (jessie): apt-get install libglew-dev libglm-dev libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-ttf-dev libopenal-dev libalut-dev zlib1g-dev libcppunit-dev
 	(!) you may have to build the tests with CPPFLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
 
+centos (7): yum install glew-devel glm-devel SDL2-devel SDL2_image-devel SDL2_net-devel SDL2_ttf-devel openal-soft-devel freealut-devel zlib-devel cppunit-devel
+	(!) you need the "epel" repository for SDL2 et al. `yum install epel-release`
+
 manual:
 	CppUnit http://sourceforge.net/projects/cppunit/
 	GLEW    http://glew.sourceforge.net/
