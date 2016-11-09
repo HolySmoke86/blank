@@ -225,7 +225,7 @@ $(TEST_DIR)/src/%.o: $(SOURCE_DIR)/%.cpp | $(TEST_DIR)
 	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(TEST_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
 
 
-$(ASSET_DEP): .git/$(shell git symbolic-ref HEAD 2>/dev/null || echo .git/HEAD)
+$(ASSET_DEP): .git/$(shell git symbolic-ref HEAD 2>/dev/null || echo HEAD)
 	@echo fetch: assets
 	@git submodule update --init >/dev/null
 	@touch $@
