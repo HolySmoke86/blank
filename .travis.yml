@@ -11,10 +11,10 @@ services:
 matrix:
   include:
     - env: IMAGE=archlinux-build TARGETS=codecov
-    - env: IMAGE=debian-latest-build TARGETS=test
-    - env: IMAGE=debian-testing-build TARGETS=test
-    - env: IMAGE=ubuntu-latest-build TARGETS=test
-    - env: IMAGE=ubuntu-devel-build TARGETS=test
+    - env: IMAGE=debian-build-latest TARGETS=test
+    - env: IMAGE=debian-build-testing TARGETS=test
+    - env: IMAGE=ubuntu-build-latest TARGETS=test
+    - env: IMAGE=ubuntu-build-testing TARGETS=test
 
 script:
     - bash scripts/docker/exec.bash
