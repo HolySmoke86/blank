@@ -9,15 +9,20 @@
 
 IMAGE="${IMAGE:-archlinux-build}"
 
+image_name="localhorsttv/${IMAGE}"
+image_path="scripts/docker/${IMAGE}"
+
+build_cmd="cd /repo && make -j\$(nproc) $TARGETS"
+
 local_conf=""
 
 if [[ "$TARGETS" == *codecov* ]]; then
 	local_conf="$local_conf $(bash <(curl -s https://codecov.io/env))"
 fi
 
-if [ -e scripts/docker/"${IMAGE}"/env ]; then
-	local_conf="$local_conf --env-file scripts/docker/${IMAGE}/env"
+if [ -e "${image_path}/env" ]; then
+	local_conf="$local_conf --env-file ${image_path}/env"
 fi
 
-docker build -t "blank/${IMAGE}" scripts/docker/"${IMAGE}"
-docker run -v "$PWD":/repo ${local_conf} "blank/${IMAGE}" /bin/bash -c "cd /repo && make -j\$(nproc) $TARGETS"
+docker build -t "${image_name}" --pull=true "${image_path}"
+docker run -v "$PWD":/repo ${local_conf} "${image_name}" /bin/bash -c "${build_cmd}"
