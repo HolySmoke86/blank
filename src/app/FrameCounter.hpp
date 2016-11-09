@@ -12,12 +12,13 @@ class FrameCounter {
 public:
 	template<class T>
 	struct Frame {
-		T handle = T(0);
-		T update = T(0);
-		T render = T(0);
-		T running = T(0);
-		T waiting = T(0);
-		T total = T(0);
+		T handle;
+		T update;
+		T render;
+		T running;
+		T waiting;
+		T total;
+		Frame();
 	};
 
 
@@ -62,6 +63,18 @@ private:
 	bool changed = false;
 
 };
+
+
+template<class T>
+FrameCounter::Frame<T>::Frame()
+: handle(0)
+, update(0)
+, render(0)
+, running(0)
+, waiting(0)
+, total(0) {
+
+}
 
 }
 
