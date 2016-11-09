@@ -167,7 +167,7 @@ distclean: clean
 
 $(COVER_BIN): $(COVER_OBJ)
 	@echo link: $@
-	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(TESTLIBS) $(COVER_FLAGS) $^
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(TESTLIBS) $(COVER_FLAGS)
 
 $(COVER_DIR)/%.o: $(TEST_SRC_DIR)/%.cpp | $(COVER_DIR)
 	@mkdir -p "$(@D)"
@@ -182,7 +182,7 @@ $(COVER_DIR)/src/%.o: $(SOURCE_DIR)/%.cpp | $(COVER_DIR)
 
 $(DEBUG_BIN): %.debug: $(DEBUG_DIR)/%.o $(DEBUG_LIB_OBJ)
 	@echo link: $@
-	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(DEBUG_FLAGS) $^
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(DEBUG_FLAGS)
 
 $(DEBUG_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(DEBUG_DIR)
 	@mkdir -p "$(@D)"
@@ -192,7 +192,7 @@ $(DEBUG_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(DEBUG_DIR)
 
 $(PROFILE_BIN): %.profile: $(PROFILE_DIR)/%.o $(PROFILE_LIB_OBJ)
 	@echo link: $@
-	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(PROFILE_FLAGS) $^
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(PROFILE_FLAGS)
 
 $(PROFILE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(PROFILE_DIR)
 	@mkdir -p "$(@D)"
@@ -202,7 +202,7 @@ $(PROFILE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(PROFILE_DIR)
 
 $(RELEASE_BIN): %: $(RELEASE_DIR)/%.o $(RELEASE_LIB_OBJ)
 	@echo link: $@
-	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(RELEASE_FLAGS) $^
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(RELEASE_FLAGS)
 
 $(RELEASE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(RELEASE_DIR)
 	@mkdir -p "$(@D)"
@@ -212,7 +212,7 @@ $(RELEASE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(RELEASE_DIR)
 
 $(TEST_BIN): $(TEST_OBJ)
 	@echo link: $@
-	@$(LDXX) -o $@ $(CXXFLAGS) $(LDXXFLAGS) $(TESTLIBS) $(TEST_FLAGS) $^
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(TESTLIBS) $(TEST_FLAGS)
 
 $(TEST_DIR)/%.o: $(TEST_SRC_DIR)/%.cpp | $(TEST_DIR)
 	@mkdir -p "$(@D)"
