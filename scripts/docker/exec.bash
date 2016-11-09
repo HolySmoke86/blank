@@ -10,7 +10,7 @@
 IMAGE="${IMAGE:-archlinux-build}"
 
 image_name="localhorsttv/${IMAGE}"
-image_path="scripts/docker/${IMAGE}"
+image_path="scripts/docker/${IMAGE//:/-}"
 
 build_cmd="cd /repo && make -j\$(nproc) $TARGETS"
 

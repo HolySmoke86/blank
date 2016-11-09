@@ -1,9 +1,7 @@
-FROM rafaelsoares/archlinux-devel
+FROM rafaelsoares/archlinux
 
 RUN sudo pacman -S --noconfirm \
-	cppunit \
 	freealut \
-	git \
 	glew \
 	glm \
 	openal \
