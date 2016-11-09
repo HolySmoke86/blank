@@ -9,9 +9,15 @@
 
 IMAGE="${IMAGE:-archlinux-build}"
 
+local_conf=""
+
 if [[ "$TARGETS" == *codecov* ]]; then
-	ci_env=`bash <(curl -s https://codecov.io/env)`
+	local_conf="$local_conf $(bash <(curl -s https://codecov.io/env))"
+fi
+
+if [ -e scripts/docker/"${IMAGE}"/env ]; then
+	local_conf="$local_conf --env-file scripts/docker/${IMAGE}/env"
 fi
 
 docker build -t "blank/${IMAGE}" scripts/docker/"${IMAGE}"
-docker run -v "$PWD":/repo ${ci_env} "blank/${IMAGE}" /bin/bash -c "cd /repo && make -j\$(nproc) $TARGETS"
+docker run -v "$PWD":/repo ${local_conf} "blank/${IMAGE}" /bin/bash -c "cd /repo && make -j\$(nproc) $TARGETS"

@@ -13,6 +13,8 @@ matrix:
     - env: IMAGE=archlinux-build TARGETS=codecov
     - env: IMAGE=debian-latest-build TARGETS=test
     - env: IMAGE=debian-testing-build TARGETS=test
+    - env: IMAGE=ubuntu-latest-build TARGETS=test
+    - env: IMAGE=ubuntu-devel-build TARGETS=test
 
 script:
     - bash scripts/docker/exec.bash
