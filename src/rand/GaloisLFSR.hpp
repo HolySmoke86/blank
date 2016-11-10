@@ -1,6 +1,7 @@
 #ifndef BLANK_RAND_GALOISLFSR_HPP_
 #define BLANK_RAND_GALOISLFSR_HPP_
 
+#include <cassert>
 #include <cstdint>
 #include <limits>
 
