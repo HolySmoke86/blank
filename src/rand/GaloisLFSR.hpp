@@ -63,10 +63,12 @@ public:
 
 	template<class Container>
 	typename Container::reference From(Container &c) {
+		assert(c.size() > 0);
 		return c[Next<typename Container::size_type>() % c.size()];
 	}
 	template<class Container>
 	typename Container::const_reference From(const Container &c) {
+		assert(c.size() > 0);
 		return c[Next<typename Container::size_type>() % c.size()];
 	}
 
