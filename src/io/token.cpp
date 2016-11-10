@@ -163,7 +163,7 @@ void Tokenizer::ReadString() {
 					current.value += '\n';
 					break;
 				case 'r':
-					current.value += '\t';
+					current.value += '\r';
 					break;
 				case 't':
 					current.value += '\t';
