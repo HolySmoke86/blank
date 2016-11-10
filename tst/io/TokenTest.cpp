@@ -1,6 +1,7 @@
 #include "TokenTest.hpp"
 
 #include <sstream>
+#include <stdexcept>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::TokenTest);
 
@@ -83,6 +84,89 @@ void TokenTest::testTokenIO() {
 	AssertStreamOutput(t, "COMMENT(WITHOUT ANY WARRANTY)");
 }
 
+void TokenTest::testTokenizer() {
+	stringstream stream;
+	stream << "[{0},<.5>+3=/**\n * test\n */ (-1.5); foo_bar.baz:\"hello\\r\\n\\t\\\"world\\\"\" ] // this line\n#that line";
+	Tokenizer in(stream);
+
+	AssertHasMore(in);
+	Token token(in.Next());
+	AssertToken(token.type, token.value, in.Current());
+	AssertToken(Token::BRACKET_OPEN, token);
+
+	AssertHasMore(in);
+	AssertToken(Token::ANGLE_BRACKET_OPEN, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::NUMBER, "0", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::ANGLE_BRACKET_CLOSE, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::COMMA, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::CHEVRON_OPEN, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::NUMBER, ".5", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::CHEVRON_CLOSE, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::NUMBER, "+3", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::EQUALS, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::COMMENT, "*\n * test\n ", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::PARENTHESIS_OPEN, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::NUMBER, "-1.5", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::PARENTHESIS_CLOSE, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::SEMICOLON, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::IDENTIFIER, "foo_bar.baz", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::COLON, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::STRING, "hello\r\n\t\"world\"", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::BRACKET_CLOSE, in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::COMMENT, " this line", in.Next());
+	AssertHasMore(in);
+	AssertToken(Token::COMMENT, "that line", in.Next());
+	CPPUNIT_ASSERT_MESSAGE("expected end of stream", !in.HasMore());
+}
+
+void TokenTest::testTokenizerBrokenComment() {
+	{
+		stringstream stream;
+		stream << "/* just one more thing…*";
+		Tokenizer in(stream);
+		AssertHasMore(in);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"half-closed comment should throw",
+			in.Next(), std::runtime_error);
+	}
+	{
+		stringstream stream;
+		stream << "  /";
+		Tokenizer in(stream);
+		AssertHasMore(in);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"sole '/' at end of stream should throw",
+			in.Next(), std::runtime_error);
+	}
+	{
+		stringstream stream;
+		stream << "/.";
+		Tokenizer in(stream);
+		AssertHasMore(in);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"'/' followed by garbage should throw",
+			in.Next(), std::runtime_error);
+	}
+}
+
 
 void TokenTest::AssertStreamOutput(
 	Token::Type t,
@@ -104,6 +188,30 @@ void TokenTest::AssertStreamOutput(
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"unexpected std::ostream << Token result",
 		expected, conv.str());
+}
+
+void TokenTest::AssertHasMore(Tokenizer &in) {
+	CPPUNIT_ASSERT_MESSAGE("unexpected end of stream", in.HasMore());
+}
+
+void TokenTest::AssertToken(
+	Token::Type expected_type,
+	const Token &actual_token
+) {
+	AssertToken(expected_type, "", actual_token);
+}
+
+void TokenTest::AssertToken(
+	Token::Type expected_type,
+	string expected_value,
+	const Token &actual_token
+) {
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected token type",
+		expected_type, actual_token.type);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected token value",
+		expected_value, actual_token.value);
 }
 
 }
