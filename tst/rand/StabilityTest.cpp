@@ -2,6 +2,7 @@
 
 #include "rand/GaloisLFSR.hpp"
 #include "rand/SimplexNoise.hpp"
+#include "rand/WorleyNoise.hpp"
 
 #include <cstdint>
 #include <string>
@@ -251,6 +252,27 @@ void StabilityTest::testSimplex() {
 	Assert(noise, glm::vec3(-1.0f, -1.0f, -1.0f),  0.0f);
 }
 
+void StabilityTest::testWorley() {
+	WorleyNoise noise(0);
+
+	Assert(noise, glm::vec3(0.0f, 0.0f, 0.0f), -0.117765009403229f);
+	Assert(noise, glm::vec3(0.0f, 0.0f, 1.0f), -0.209876894950867f);
+	Assert(noise, glm::vec3(0.0f, 1.0f, 0.0f), -0.290086328983307f);
+	Assert(noise, glm::vec3(0.0f, 1.0f, 1.0f), -0.332393705844879f);
+	Assert(noise, glm::vec3(1.0f, 0.0f, 0.0f), -0.621925830841064f);
+	Assert(noise, glm::vec3(1.0f, 0.0f, 1.0f), -0.338455379009247f);
+	Assert(noise, glm::vec3(1.0f, 1.0f, 0.0f), -0.386664032936096f);
+	Assert(noise, glm::vec3(1.0f, 1.0f, 1.0f), -0.533940434455872f);
+
+	Assert(noise, glm::vec3( 0.0f,  0.0f, -1.0f), -0.425480604171753f);
+	Assert(noise, glm::vec3( 0.0f, -1.0f,  0.0f), -0.189745843410492f);
+	Assert(noise, glm::vec3( 0.0f, -1.0f, -1.0f), -0.30408102273941f);
+	Assert(noise, glm::vec3(-1.0f,  0.0f,  0.0f), -0.618566155433655f);
+	Assert(noise, glm::vec3(-1.0f,  0.0f, -1.0f), -0.060045599937439f);
+	Assert(noise, glm::vec3(-1.0f, -1.0f,  0.0f), -0.366827547550201f);
+	Assert(noise, glm::vec3(-1.0f, -1.0f, -1.0f), -0.575981974601746f);
+}
+
 void StabilityTest::Assert(
 	const SimplexNoise &noise,
 	const glm::vec3 &position,
@@ -258,6 +280,19 @@ void StabilityTest::Assert(
 ) {
 	stringstream msg;
 	msg << "unexpected simplex noise value at " << position;
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		msg.str(),
+		expected, noise(position), numeric_limits<float>::epsilon()
+	);
+}
+
+void StabilityTest::Assert(
+	const WorleyNoise &noise,
+	const glm::vec3 &position,
+	float expected
+) {
+	stringstream msg;
+	msg << "unexpected worley noise value at " << position;
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
 		msg.str(),
 		expected, noise(position), numeric_limits<float>::epsilon()

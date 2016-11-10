@@ -10,6 +10,7 @@
 namespace blank {
 
 class SimplexNoise;
+class WorleyNoise;
 
 namespace test {
 
@@ -20,6 +21,7 @@ CPPUNIT_TEST_SUITE(StabilityTest);
 
 CPPUNIT_TEST(testRNG);
 CPPUNIT_TEST(testSimplex);
+CPPUNIT_TEST(testWorley);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -29,9 +31,15 @@ public:
 
 	void testRNG();
 	void testSimplex();
+	void testWorley();
 
 	static void Assert(
 		const SimplexNoise &noise,
+		const glm::vec3 &position,
+		float expected);
+
+	static void Assert(
+		const WorleyNoise &noise,
 		const glm::vec3 &position,
 		float expected);
 
