@@ -42,6 +42,11 @@ public:
 		return out = static_cast<T>(state);
 	}
 
+	/// special case for randrom(boolean), since static_cast<bool>(0b10) == true
+	bool operator ()(bool &out) noexcept {
+		return out = operator ()();
+	}
+
 	template<class T>
 	T Next() noexcept {
 		T next;

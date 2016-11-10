@@ -118,9 +118,9 @@ void StabilityTest::testRNG() {
 		"unexpected value #18 from RNG",
 		uint16_t(0xB000), value
 	);
-	random(value);
+	value = random.Next<uint16_t>();
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"unexpected value #19 from RNG",
+		"unexpected value #19 from RNG (using Next())",
 		uint16_t(0x0B0B), value
 	);
 	random(value);
@@ -153,9 +153,9 @@ void StabilityTest::testRNG() {
 		"unexpected value #25 from RNG",
 		uint16_t(0x0000), value
 	);
-	random(value);
+	value = random.Next<uint16_t>();
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"unexpected value #26 from RNG",
+		"unexpected value #26 from RNG (using Next())",
 		uint16_t(0xC970), value
 	);
 	random(value);
@@ -197,6 +197,36 @@ void StabilityTest::testRNG() {
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"RNG with seeds 0 and 1 differ",
 		value, value1
+	);
+
+	GaloisLFSR random_bool(0);
+	bool value_bool;
+	for (int i = 0; i < (16 * 32); ++i) {
+		random_bool(value_bool);
+	}
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected result for bool",
+		false, value_bool
+	);
+
+	GaloisLFSR random8(0);
+	uint8_t value8;
+	for (int i = 0; i < 31; ++i) {
+		random8(value8);
+	}
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected result for uint8",
+		uint8_t(0x10), value8
+	);
+
+	GaloisLFSR random32(0);
+	uint32_t value32;
+	for (int i = 0; i < 16; ++i) {
+		random32(value32);
+	}
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"unexpected result for uint32",
+		uint32_t(0xB0000000), value32
 	);
 }
 
