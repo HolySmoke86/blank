@@ -21,6 +21,9 @@ CPPUNIT_TEST(testTypeIO);
 CPPUNIT_TEST(testTokenIO);
 CPPUNIT_TEST(testTokenizer);
 CPPUNIT_TEST(testTokenizerBrokenComment);
+CPPUNIT_TEST(testReader);
+CPPUNIT_TEST(testReaderEmpty);
+CPPUNIT_TEST(testReaderMalformed);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -32,6 +35,10 @@ public:
 	void testTokenIO();
 	void testTokenizer();
 	void testTokenizerBrokenComment();
+
+	void testReader();
+	void testReaderEmpty();
+	void testReaderMalformed();
 
 	static void AssertStreamOutput(
 		Token::Type, std::string expected);

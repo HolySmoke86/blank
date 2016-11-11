@@ -1,7 +1,10 @@
 #include "TokenTest.hpp"
 
+#include "io/TokenStreamReader.hpp"
+
 #include <sstream>
 #include <stdexcept>
+#include <glm/gtx/io.hpp>
 
 CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::TokenTest);
 
@@ -135,6 +138,9 @@ void TokenTest::testTokenizer() {
 	AssertHasMore(in);
 	AssertToken(Token::COMMENT, "that line", in.Next());
 	CPPUNIT_ASSERT_MESSAGE("expected end of stream", !in.HasMore());
+	CPPUNIT_ASSERT_THROW_MESSAGE(
+		"extracting token after EOS",
+		in.Next(), std::runtime_error);
 }
 
 void TokenTest::testTokenizerBrokenComment() {
@@ -165,6 +171,227 @@ void TokenTest::testTokenizerBrokenComment() {
 			"'/' followed by garbage should throw",
 			in.Next(), std::runtime_error);
 	}
+}
+
+
+namespace {
+
+template<class T>
+void assert_read(std::string message, T expected, T actual, TokenStreamReader &in) {
+	stringstream msg;
+	msg << message << ", current token: " << in.Peek();
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		msg.str(),
+		expected, actual);
+}
+
+}
+
+void TokenTest::testReader() {
+	stringstream ss;
+	ss <<
+		"/* booleans */\n"
+		"true false yes no on off\n"
+		"\"true\" \"false\" \"yes\" \"no\" \"on\" \"off\"\n"
+		"1 0 -1\n"
+		"# identifiers\n"
+		"foo foo_bar vec.y\n"
+		"// numbers\n"
+		"0 1 +2 -3 4.5\n"
+		".5 1.5 0.25 -1.75 0.625\n"
+		"0 1 -1 2.5\n"
+		// strings
+		"\"hello\" \"\" \"\\r\\n\\t\\\"\"\n"
+		// vectors
+		"[1,0] [ 0.707, 0.707 ] // vec2\n"
+		"[.577,.577 ,0.577] [ 1,-2,3] // vec3\n"
+		"[ 0, 0, 0, 1 ] [1,0,0,-1.0] // vec4\n"
+		"[640, 480] [3, 4, 5] [0, -10, 100, -1000] # ivecs\n"
+		"[ -0.945, 0, -0.326, 0] # quat\n"
+		;
+	TokenStreamReader in(ss);
+
+	// booleans
+
+	bool value_bool;
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean true", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean false", false, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean yes", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean no", false, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean on", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean off", false, value_bool, in);
+
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean \"true\"", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean \"false\"", false, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean \"yes\"", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean \"no\"", false, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean \"on\"", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean \"off\"", false, value_bool, in);
+
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean 1", true, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean 0", false, value_bool, in);
+	in.ReadBoolean(value_bool);
+	assert_read("reading boolean -1", true, value_bool, in);
+
+	// identifiers
+
+	string value_ident;
+	in.ReadIdentifier(value_ident);
+	assert_read<string>("reading identifier foo", "foo", value_ident, in);
+	in.ReadIdentifier(value_ident);
+	assert_read<string>("reading identifier foo_bar", "foo_bar", value_ident, in);
+	in.ReadIdentifier(value_ident);
+	assert_read<string>("reading identifier vec.y", "vec.y", value_ident, in);
+
+	// numbers
+	int value_int;
+	in.ReadNumber(value_int);
+	assert_read("reading integer 0", 0, value_int, in);
+	in.ReadNumber(value_int);
+	assert_read("reading integer 1", 1, value_int, in);
+	in.ReadNumber(value_int);
+	assert_read("reading integer +2", 2, value_int, in);
+	in.ReadNumber(value_int);
+	assert_read("reading integer -3", -3, value_int, in);
+	in.ReadNumber(value_int);
+	assert_read("reading integer 4.5", 4, value_int, in);
+
+	float value_float;
+	in.ReadNumber(value_float);
+	assert_read("reading float .5", .5f, value_float, in);
+	in.ReadNumber(value_float);
+	assert_read("reading float 1.5", 1.5f, value_float, in);
+	in.ReadNumber(value_float);
+	assert_read("reading float 0.25", .25f, value_float, in);
+	in.ReadNumber(value_float);
+	assert_read("reading float -1.75", -1.75f, value_float, in);
+	in.ReadNumber(value_float);
+	assert_read("reading float 0.625", 0.625f, value_float, in);
+
+	unsigned long value_uint;
+	in.ReadNumber(value_uint);
+	assert_read("reading unsigned integer 0", 0ul, value_uint, in);
+	in.ReadNumber(value_uint);
+	assert_read("reading unsigned integer 1", 1ul, value_uint, in);
+	in.ReadNumber(value_uint);
+	assert_read("reading unsigned integer -1", -1ul, value_uint, in);
+	in.ReadNumber(value_uint);
+	assert_read("reading unsigned integer 2.5", 2ul, value_uint, in);
+
+	// strings
+
+	string value_string;
+	in.ReadString(value_string);
+	assert_read<string>(
+		"reading string \"hello\"",
+		"hello", value_string, in);
+	in.ReadString(value_string);
+	assert_read<string>(
+		"reading string \"\"",
+		"", value_string, in);
+	in.ReadString(value_string);
+	assert_read<string>(
+		"reading string \"\\r\\n\\t\\\"\"",
+		"\r\n\t\"", value_string, in);
+
+	// vectors
+
+	glm::vec2 value_vec2;
+	in.ReadVec(value_vec2);
+	assert_read(
+		"reading vector [1,0]",
+		glm::vec2(1, 0), value_vec2, in);
+	in.ReadVec(value_vec2);
+	assert_read(
+		"reading vector [ 0.707, 0.707 ]",
+		glm::vec2(.707, .707), value_vec2, in);
+
+	glm::vec3 value_vec3;
+	in.ReadVec(value_vec3);
+	assert_read(
+		"reading vector [.577,.577 ,0.577]",
+		glm::vec3(.577, .577, .577), value_vec3, in);
+	in.ReadVec(value_vec3);
+	assert_read(
+		"reading vector [ 1,-2,3]",
+		glm::vec3(1, -2, 3), value_vec3, in);
+
+	glm::vec4 value_vec4;
+	in.ReadVec(value_vec4);
+	assert_read(
+		"reading vector [ 0, 0, 0, 1 ]",
+		glm::vec4(0, 0, 0, 1), value_vec4, in);
+	in.ReadVec(value_vec4);
+	assert_read(
+		"reading vector [1,0,0,-1.0]",
+		glm::vec4(1, 0, 0, -1), value_vec4, in);
+
+	glm::ivec2 value_ivec2;
+	in.ReadVec(value_ivec2);
+	assert_read(
+		"reading integer vector [640, 480]",
+		glm::ivec2(640, 480), value_ivec2, in);
+	glm::ivec3 value_ivec3;
+	in.ReadVec(value_ivec3);
+	assert_read(
+		"reading integer vector [3, 4, 5]",
+		glm::ivec3(3, 4, 5), value_ivec3, in);
+	glm::ivec4 value_ivec4;
+	in.ReadVec(value_ivec4);
+	assert_read(
+		"reading integer vector [0, -10, 100, -1000]",
+		glm::ivec4(0, -10, 100, -1000), value_ivec4, in);
+
+	glm::quat value_quat;
+	in.ReadQuat(value_quat);
+	assert_read(
+		"reading quaternion [ -0.945, 0, -0.326, 0]",
+		glm::quat(-0.945, 0, -0.326, 0), value_quat, in);
+}
+
+void TokenTest::testReaderEmpty() {
+	{ // zero length stream
+		stringstream ss;
+		ss << "";
+		TokenStreamReader in(ss);
+		CPPUNIT_ASSERT_MESSAGE(
+			"empty stream shouldn't have tokens",
+			!in.HasMore());
+	}
+	{ // stream consisting solely of comments
+		stringstream ss;
+		ss <<
+			"/*\n"
+			" * hello\n"
+			" */\n"
+			"#hello\n"
+			"// is there anybody out there\n"
+			;
+		TokenStreamReader in(ss);
+		CPPUNIT_ASSERT_MESSAGE(
+			"comment stream shouldn't have tokens",
+			!in.HasMore());
+	}
+}
+
+void TokenTest::testReaderMalformed() {
+	stringstream ss;
+	ss << "";
+	TokenStreamReader in(ss);
 }
 
 
