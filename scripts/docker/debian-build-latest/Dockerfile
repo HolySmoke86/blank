@@ -3,6 +3,7 @@ FROM debian:latest
 RUN apt update \
 	&& apt -y install build-essential
 RUN apt -y install --no-install-recommends \
+	cppcheck \
 	libalut-dev \
 	libcppunit-dev \
 	libglew-dev \

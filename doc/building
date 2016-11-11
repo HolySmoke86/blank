@@ -4,17 +4,28 @@ Dependencies
 	GLEW, GLM, SDL2, SDL2_image, SDL2_net, SDL2_ttf, OpenAL, freealut, zlib
 
 	CppUnit for tests
+	Cppcheck for linting
 
-archlinux: pacman -S glew glm sdl2 sdl2_image sdl2_net sdl2_ttf openal freealut zlib cppunit
-debian: apt-get install libglew-dev libglm-dev libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-ttf-dev libopenal-dev libalut-dev zlib1g-dev libcppunit-dev
+archlinux: pacman -S \
+	glew glm sdl2 sdl2_image sdl2_net sdl2_ttf openal freealut zlib \
+	cppunit cppcheck
 
-debian (jessie): apt-get install libglew-dev libglm-dev libsdl2-dev libsdl2-image-dev libsdl2-net-dev libsdl2-ttf-dev libopenal-dev libalut-dev zlib1g-dev libcppunit-dev
+debian: apt install \
+	libglew-dev libglm-dev libsdl2-dev libsdl2-image-dev libsdl2-net-dev \
+	libsdl2-ttf-dev libopenal-dev libalut-dev zlib1g-dev \
+	libcppunit-dev cppcheck
+
 	(!) you may have to build the tests with CPPFLAGS=-D_GLIBCXX_USE_CXX11_ABI=0
 
-centos (7): yum install glew-devel glm-devel SDL2-devel SDL2_image-devel SDL2_net-devel SDL2_ttf-devel openal-soft-devel freealut-devel zlib-devel cppunit-devel
+centos: yum install \
+	glew-devel glm-devel SDL2-devel SDL2_image-devel SDL2_net-devel \
+	SDL2_ttf-devel openal-soft-devel freealut-devel zlib-devel \
+	cppunit-devel cppcheck
+
 	(!) you need the "epel" repository for SDL2 et al. `yum install epel-release`
 
 manual:
+	Cppcheck: http://cppcheck.sourceforge.net/
 	CppUnit http://sourceforge.net/projects/cppunit/
 	GLEW    http://glew.sourceforge.net/
 	GLM     http://glm.g-truc.net/0.9.6/index.html

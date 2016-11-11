@@ -1,6 +1,7 @@
 FROM rafaelsoares/archlinux-devel
 
 RUN sudo pacman -S --noconfirm \
+	cppcheck \
 	cppunit \
 	freealut \
 	git \

@@ -1,5 +1,8 @@
 CXX = g++ --std=c++11
 LDXX = g++
+CPPCHECK = cppcheck -q --std=c++11 \
+	--enable=warning,style,performance,portability,unusedFunction,missingInclude \
+	--error-exitcode=1
 
 LIBS = sdl2 SDL2_image SDL2_net SDL2_ttf glew openal freealut zlib
 
@@ -151,6 +154,12 @@ codecov: coverage
 	@echo run: codecov.io
 	@bash -c 'bash <(curl -s https://codecov.io/bash) -Z'
 
+lint:
+	@echo lint: source
+	@$(CPPCHECK) $(SOURCE_DIR)
+	@echo lint: tests
+	@$(CPPCHECK) -I $(SOURCE_DIR) $(TEST_SRC_DIR)
+
 clean:
 	rm -f $(OBJ)
 	rm -f $(DEP)
@@ -160,7 +169,7 @@ distclean: clean
 	rm -f $(BIN) cachegrind.out.* callgrind.out.*
 	rm -Rf build client-saves saves
 
-.PHONY: all release cover debug profile tests run gdb cachegrind callgrind test coverage codecov clean distclean
+.PHONY: all release cover debug profile tests run gdb cachegrind callgrind test coverage codecov lint clean distclean
 
 -include $(DEP)
 

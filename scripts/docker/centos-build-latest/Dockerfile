@@ -5,6 +5,7 @@ RUN yum -y update \
 	&& yum -y update \
 	&& yum -y group install "Development Tools"
 RUN yum -y install \
+	cppcheck \
 	cppunit-devel \
 	freealut-devel \
 	glew-devel \
