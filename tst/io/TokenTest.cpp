@@ -361,6 +361,12 @@ void TokenTest::testReader() {
 	assert_read(
 		"reading quaternion [ -0.945, 0, -0.326, 0]",
 		glm::quat(-0.945, 0, -0.326, 0), value_quat, in);
+	// TODO: comment at end of stream makes it think there's more?
+	//CPPUNIT_ASSERT_MESSAGE("expected end of stream", !in.HasMore());
+	// TODO: and it even works??
+	//CPPUNIT_ASSERT_THROW_MESSAGE(
+	//	"extracting token after EOS",
+	//	in.Next(), std::runtime_error);
 }
 
 void TokenTest::testReaderEmpty() {
@@ -389,9 +395,30 @@ void TokenTest::testReaderEmpty() {
 }
 
 void TokenTest::testReaderMalformed() {
-	stringstream ss;
-	ss << "";
-	TokenStreamReader in(ss);
+	{
+		stringstream ss;
+		ss << "a";
+		TokenStreamReader in(ss);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"unexpected token type should throw",
+			in.GetInt(), std::runtime_error);
+	}
+	{
+		stringstream ss;
+		ss << ":";
+		TokenStreamReader in(ss);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"casting ':' to bool should throw",
+			in.GetBool(), std::runtime_error);
+	}
+	{
+		stringstream ss;
+		ss << "hello";
+		TokenStreamReader in(ss);
+		CPPUNIT_ASSERT_THROW_MESSAGE(
+			"casting \"hello\" to bool should throw",
+			in.GetBool(), std::runtime_error);
+	}
 }
 
 
