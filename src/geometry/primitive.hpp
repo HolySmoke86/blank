@@ -102,7 +102,7 @@ struct Plane {
 
 	Plane(const glm::vec3 &n, float d)
 	: normal(n), dist(d) { }
-	Plane(const glm::vec4 &abcd)
+	explicit Plane(const glm::vec4 &abcd)
 	: normal(abcd), dist(abcd.w) { }
 
 	void Normalize() noexcept {
@@ -130,14 +130,14 @@ struct Frustum {
 	const Plane &Far() const noexcept { return plane[5]; }
 
 	/// create frustum from transposed MVP
-	Frustum(const glm::mat4 &mat)
+	explicit Frustum(const glm::mat4 &mat)
 	: plane{
-		{ mat[3] + mat[0] },
-		{ mat[3] - mat[0] },
-		{ mat[3] + mat[1] },
-		{ mat[3] - mat[1] },
-		{ mat[3] + mat[2] },
-		{ mat[3] - mat[2] },
+		Plane{ mat[3] + mat[0] },
+		Plane{ mat[3] - mat[0] },
+		Plane{ mat[3] + mat[1] },
+		Plane{ mat[3] - mat[1] },
+		Plane{ mat[3] + mat[2] },
+		Plane{ mat[3] - mat[2] },
 	} { }
 
 	void Normalize() noexcept {

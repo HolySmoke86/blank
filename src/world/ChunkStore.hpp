@@ -13,7 +13,7 @@ class ChunkIndex;
 class ChunkStore {
 
 public:
-	ChunkStore(const BlockTypeRegistry &);
+	explicit ChunkStore(const BlockTypeRegistry &);
 	~ChunkStore();
 
 	ChunkStore(const ChunkStore &) = delete;

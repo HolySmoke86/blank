@@ -54,7 +54,7 @@ struct Assets {
 	Font large_ui_font;
 	Font small_ui_font;
 
-	Assets(const AssetLoader &);
+	explicit Assets(const AssetLoader &);
 
 };
 

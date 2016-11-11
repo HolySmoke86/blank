@@ -113,7 +113,7 @@ struct UnsetNode
 	UnsetNode(Chunk *chunk, RoughLocation::Fine pos)
 	: SetNode(chunk, pos), level(Get()) { }
 
-	UnsetNode(const SetNode &set)
+	explicit UnsetNode(const SetNode &set)
 	: SetNode(set), level(Get()) { }
 
 

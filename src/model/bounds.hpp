@@ -14,7 +14,7 @@ class CuboidBounds
 : public CollisionBounds {
 
 public:
-	CuboidBounds(const AABB &bounds);
+	explicit CuboidBounds(const AABB &bounds);
 
 	bool Intersects(const Ray &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;
 	bool Intersects(const glm::mat4 &, const AABB &, const glm::mat4 &, float &, glm::vec3 &) const noexcept override;

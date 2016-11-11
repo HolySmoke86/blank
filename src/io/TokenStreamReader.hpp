@@ -14,7 +14,7 @@ namespace blank {
 class TokenStreamReader {
 
 public:
-	TokenStreamReader(std::istream &);
+	explicit TokenStreamReader(std::istream &);
 
 	bool HasMore();
 	const Token &Next();
