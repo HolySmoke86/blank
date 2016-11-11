@@ -286,7 +286,7 @@ const Token &TokenStreamReader::Peek() {
 }
 
 
-void TokenStreamReader::Assert(Token::Type t) {
+void TokenStreamReader::Assert(Token::Type t) const {
 	if (GetType() != t) {
 		stringstream s;
 		s << "unexpected token in input stream: expected " << t << ", but got " << in.Current();
@@ -412,9 +412,13 @@ void TokenStreamReader::ReadQuat(glm::quat &q) {
 
 bool TokenStreamReader::GetBool() {
 	Next();
+	return AsBool();
+}
+
+bool TokenStreamReader::AsBool() const {
 	switch (GetType()) {
 		case Token::NUMBER:
-			return GetInt() != 0;
+			return AsInt() != 0;
 		case Token::IDENTIFIER:
 		case Token::STRING:
 			if (GetValue() == "true" || GetValue() == "yes" || GetValue() == "on") {
@@ -435,18 +439,30 @@ bool TokenStreamReader::GetBool() {
 
 float TokenStreamReader::GetFloat() {
 	Next();
+	return AsFloat();
+}
+
+float TokenStreamReader::AsFloat() const {
 	Assert(Token::NUMBER);
 	return stof(GetValue());
 }
 
 int TokenStreamReader::GetInt() {
 	Next();
+	return AsInt();
+}
+
+int TokenStreamReader::AsInt() const {
 	Assert(Token::NUMBER);
 	return stoi(GetValue());
 }
 
 unsigned long TokenStreamReader::GetULong() {
 	Next();
+	return AsULong();
+}
+
+unsigned long TokenStreamReader::AsULong() const {
 	Assert(Token::NUMBER);
 	return stoul(GetValue());
 }

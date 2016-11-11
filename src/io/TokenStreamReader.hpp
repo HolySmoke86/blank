@@ -39,15 +39,23 @@ public:
 
 	void ReadQuat(glm::quat &);
 
+	// the Get* functions advance to the next token
+	// the As* functions try to cast the current token
+	// if the value could not be converted, a std::runtime_error is thrown
+
 	bool GetBool();
+	bool AsBool() const;
 	float GetFloat();
+	float AsFloat() const;
 	int GetInt();
+	int AsInt() const;
 	unsigned long GetULong();
+	unsigned long AsULong() const;
 
 private:
 	void SkipComments();
 
-	void Assert(Token::Type);
+	void Assert(Token::Type) const;
 	Token::Type GetType() const noexcept;
 	const std::string &GetValue() const noexcept;
 
