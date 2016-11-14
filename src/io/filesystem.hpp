@@ -34,6 +34,14 @@ inline bool make_dir(const std::string &s) {
 /// @return true if the directory was created or already exists
 bool make_dirs(const std::string &);
 
+/// remove given file
+/// @return true on success
+bool remove_file(const std::string &);
+/// recursively remove given directory
+/// may leave the directory partially removed on failure
+/// @return true if the directory was completely removed
+bool remove_dir(const std::string &);
+
 }
 
 #endif

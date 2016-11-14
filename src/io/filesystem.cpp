@@ -1,8 +1,15 @@
 #include "filesystem.hpp"
 
 #include <cerrno>
+#include <cstdio>
+#include <cstring>
 #ifdef _WIN32
+#  include <conio.h>
 #  include <direct.h>
+#  include <windows.h>
+#else
+#  include <dirent.h>
+#  include <sys/types.h>
 #endif
 #include <sys/stat.h>
 
@@ -122,6 +129,83 @@ bool make_dirs(const std::string &path) {
 			return false;
 
 	}
+}
+
+
+bool remove_file(const std::string &path) {
+	return remove(path.c_str()) == 0;
+}
+
+
+bool remove_dir(const std::string &path) {
+#ifdef _WIN32
+
+	// shamelessly stolen from http://www.codeguru.com/forum/showthread.php?t=239271
+	const std::string pattern = path + "\\*.*";
+	WIN32_FIND_DATA info;
+	HANDLE file = FindFirstFile(pattern.c_str(), &info);
+	if (file == INVALID_HANDLE_VALUE) {
+		// already non-existing
+		return true;
+	}
+
+	do {
+		if (
+			strncmp(info.cFileName, ".", 2) == 0 ||
+			strncmp(info.cFileName, "..", 3) == 0
+		) {
+			continue;
+		}
+		const std::string sub_path = path + '\\' + info.cFileName;
+		if ((info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
+			if (!remove_dir(sub_path)) {
+				return false;
+			}
+		} else {
+			if (!SetFileAttributes(sub_path.c_str(), FILE_ATTRIBUTE_NORMAL)) {
+				return false;
+			}
+			if (!remove_file(sub_path)) {
+				return false;
+			}
+		}
+	} while (FindNextFile(file, &info));
+	FindClose(file);
+
+	DWORD error = GetLastError();
+	if (error != ERROR_NO_MORE_FILES) {
+		return false;
+	}
+	// is this (NORMAL vs DIRECTORY) really correct?
+	if (!SetFileAttributes(path.c_str(), FILE_ATTRIBUTE_NORMAL)) {
+		return false;
+	}
+	return RemoveDirectory(path.c_str());
+
+#else
+
+	DIR *dir = opendir(path.c_str());
+	for (dirent *entry = readdir(dir); entry != nullptr; entry = readdir(dir)) {
+		if (
+			strncmp(entry->d_name, ".", 2) == 0 ||
+			strncmp(entry->d_name, "..", 3) == 0
+		) {
+			continue;
+		}
+		const std::string sub_path = path + '/' + entry->d_name;
+		if (is_dir(sub_path)) {
+			if (!remove_dir(sub_path)) {
+				return false;
+			}
+		} else {
+			if (!remove_file(sub_path)) {
+				return false;
+			}
+		}
+	}
+	return remove(path.c_str()) == 0;
+
+#endif
 }
 
 }
