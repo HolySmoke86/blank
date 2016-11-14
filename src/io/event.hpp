@@ -3,6 +3,7 @@
 
 #include <iosfwd>
 #include <SDL.h>
+#include <SDL_version.h>
 
 
 namespace blank {

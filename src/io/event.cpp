@@ -134,7 +134,7 @@ ostream &operator <<(ostream &out, const SDL_WindowEvent &evt) {
 			break;
 		case SDL_WINDOWEVENT_MOVED:
 			out << "moved, window ID: " << evt.windowID
-				<< ", position: " << evt.data1 << '+' << evt.data2;
+				<< ", position: " << evt.data1 << ' ' << evt.data2;
 			break;
 		case SDL_WINDOWEVENT_RESIZED:
 			out << "resized, window ID: " << evt.windowID
@@ -185,12 +185,10 @@ ostream &operator <<(ostream &out, const SDL_KeyboardEvent &evt) {
 
 ostream &operator <<(ostream &out, const SDL_Keysym &keysym) {
 	out << "scancode: " << int(keysym.scancode)
-		<< ", sym: " << int(keysym.sym);
-	if (std::isprint(keysym.sym)) {
-		out << " (\"" << char(keysym.sym) << "\")";
-	}
+		<< ", sym: " << int(keysym.sym)
+		<< " (\"" << SDL_GetKeyName(keysym.sym) << "\")";
 	if (keysym.mod) {
-		out << "mod:";
+		out << ", mod:";
 		if (keysym.mod & KMOD_LSHIFT) {
 			out << " LSHIFT";
 		}
@@ -245,10 +243,10 @@ ostream &operator <<(ostream &out, const SDL_TextInputEvent &evt) {
 ostream &operator <<(ostream &out, const SDL_MouseMotionEvent &evt) {
 	out << "window ID: " << evt.windowID
 		<< ", mouse ID: " << evt.which
-		<< ", position: " << evt.x << '+' << evt.y
-		<< ", delta: " << evt.xrel << '+' << evt.yrel;
+		<< ", position: " << evt.x << ' ' << evt.y
+		<< ", delta: " << evt.xrel << ' ' << evt.yrel;
 	if (evt.state) {
-		out << "buttons:";
+		out << ", buttons:";
 		if (evt.state & SDL_BUTTON_LMASK) {
 			out << " left";
 		}
@@ -294,14 +292,14 @@ ostream &operator <<(ostream &out, const SDL_MouseButtonEvent &evt) {
 	}
 	out << ", state: " << (evt.state == SDL_PRESSED ? "pressed" : "released")
 		<< ", clicks: " << int(evt.clicks)
-		<< ", position: " << evt.x << '+' << evt.y;
+		<< ", position: " << evt.x << ' ' << evt.y;
 	return out;
 }
 
 ostream &operator <<(ostream &out, const SDL_MouseWheelEvent &evt) {
 	out << "window ID: " << evt.windowID
 		<< ", mouse ID: " << evt.which
-		<< ", delta: " << evt.x << '+' << evt.y
+		<< ", delta: " << evt.x << ' ' << evt.y
 #if SDL_VERSION_ATLEAST(2, 0, 4)
 		<< ", direction: " << (evt.direction == SDL_MOUSEWHEEL_NORMAL ? "normal" : "flipped")
 #endif
@@ -319,7 +317,7 @@ ostream &operator <<(ostream &out, const SDL_JoyAxisEvent &evt) {
 ostream &operator <<(ostream &out, const SDL_JoyBallEvent &evt) {
 	out << "joystick ID: " << evt.which
 		<< ", ball ID: " << int(evt.ball)
-		<< ", delta: " << evt.xrel << '+' << evt.yrel;
+		<< ", delta: " << evt.xrel << ' ' << evt.yrel;
 	return out;
 }
 
@@ -370,7 +368,7 @@ ostream &operator <<(ostream &out, const SDL_JoyButtonEvent &evt) {
 }
 
 ostream &operator <<(ostream &out, const SDL_JoyDeviceEvent &evt) {
-	out << "joystick ID: \"" << evt.which;
+	out << "joystick ID: " << evt.which;
 	return out;
 }
 
