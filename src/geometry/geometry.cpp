@@ -109,14 +109,14 @@ bool Intersection(
 		glm::vec3 min_all(glm::min(t1, t2));
 		if (min_all.x > min_all.y) {
 			if (min_all.x > min_all.z) {
-				normal->x = t2.x < t1.x ? 1 : -1;
+				*normal = glm::vec3(t2.x < t1.x ? 1 : -1, 0, 0);
 			} else {
-				normal->z = t2.z < t1.z ? 1 : -1;
+				*normal = glm::vec3(0, 0, t2.z < t1.z ? 1 : -1);
 			}
 		} else if (min_all.y > min_all.z) {
-			normal->y = t2.y < t1.y ? 1 : -1;
+			*normal = glm::vec3(0, t2.y < t1.y ? 1 : -1, 0);
 		} else {
-			normal->z = t2.z < t1.z ? 1 : -1;
+			*normal = glm::vec3(0, 0, t2.z < t1.z ? 1 : -1);
 		}
 	}
 	return true;

@@ -87,7 +87,7 @@ void IntersectionTest::testRayBoxIntersection() {
 	// should be 4 units to the left now
 	ray.orig.x = -5;
 	CPPUNIT_ASSERT_MESSAGE(
-		"ray pointing at box doesn't intersect",
+		"ray pointing at box to the right doesn't intersect",
 		Intersection(ray, box, M, &distance, &normal)
 	);
 	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
@@ -102,8 +102,99 @@ void IntersectionTest::testRayBoxIntersection() {
 	// move ray to the other side, so it's pointing away now
 	ray.orig.x = 5;
 	CPPUNIT_ASSERT_MESSAGE(
-		"ray pointing away from box still intersects",
+		"ray pointing away from box to the left still intersects",
 		!Intersection(ray, box, M)
+	);
+
+	// turn ray around
+	ray.dir.x = -1;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box to the left does not intersect",
+		Intersection(ray, box, M, &distance, &normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		4.0f, distance, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong surface normal at intersection point",
+		glm::vec3(1, 0, 0), normal
+	);
+
+	// ray below
+	ray.orig = { 0, -5, 0 };
+	ray.dir = { 0, 1, 0 };
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box above does not intersect",
+		Intersection(ray, box, M, &distance, &normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		4.0f, distance, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong surface normal at intersection point",
+		glm::vec3(0, -1, 0), normal
+	);
+
+	// turn ray around
+	ray.dir.y = -1;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing away from box above still intersects",
+		!Intersection(ray, box, M)
+	);
+
+	// move ray above
+	ray.orig.y = 5;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box below does not intersect",
+		Intersection(ray, box, M, &distance, &normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		4.0f, distance, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong surface normal at intersection point",
+		glm::vec3(0, 1, 0), normal
+	);
+
+	// ray behind
+	ray.orig = { 0, 0, -5 };
+	ray.dir = { 0, 0, 1 };
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box in front does not intersect",
+		Intersection(ray, box, M, &distance, &normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		4.0f, distance, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong surface normal at intersection point",
+		glm::vec3(0, 0, -1), normal
+	);
+
+	// turn ray around
+	ray.dir.z = -1;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing away from box in front still intersects",
+		!Intersection(ray, box, M)
+	);
+
+	// move ray in front
+	ray.orig.z = 5;
+	CPPUNIT_ASSERT_MESSAGE(
+		"ray pointing at box behind does not intersect",
+		Intersection(ray, box, M, &distance, &normal)
+	);
+	CPPUNIT_ASSERT_DOUBLES_EQUAL_MESSAGE(
+		"intersection distance way off",
+		4.0f, distance, delta
+	);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"wrong surface normal at intersection point",
+		glm::vec3(0, 0, 1), normal
 	);
 
 	// 45 deg down from 4 units away, so should be about 4 * sqrt(2)
