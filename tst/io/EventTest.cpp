@@ -221,12 +221,12 @@ void EventTest::testKey() {
 	event.key.repeat = 1;
 	event.key.keysym.scancode = SDL_SCANCODE_L;
 	event.key.keysym.sym = SDLK_l;
-	event.key.keysym.mod = KMOD_RSHIFT | KMOD_LGUI;
+	event.key.keysym.mod = KMOD_RSHIFT | KMOD_RCTRL | KMOD_LGUI;
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"output format of SDL key up event",
 		string("key up: window ID: 3, state: released, repeat: yes, keysym: "
 			"scancode: ") + to_string(int(SDL_SCANCODE_L)) + ", sym: "
-			+ to_string(int(SDLK_l)) +" (\"L\"), mod: RSHIFT LSUPER", string_cast(event));
+			+ to_string(int(SDLK_l)) +" (\"L\"), mod: RSHIFT RCTRL LSUPER", string_cast(event));
 	event.key.windowID = 4;
 	event.key.repeat = 2;
 	event.key.keysym.scancode = SDL_SCANCODE_VOLUMEUP;
@@ -390,6 +390,10 @@ void EventTest::testMouse() {
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
 		"output format of SDL mouse button up event",
 		string("mouse button up: window ID: 5, mouse ID: 6, button: X2, state: pressed, clicks: 7, position: 8 9"), string_cast(event));
+	event.button.button = SDL_BUTTON_X2 + 1;
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"output format of SDL mouse button up event",
+		string("mouse button up: window ID: 5, mouse ID: 6, button: ") + to_string(int(SDL_BUTTON_X2 + 1)) + ", state: pressed, clicks: 7, position: 8 9", string_cast(event));
 
 	event.type = SDL_MOUSEWHEEL;
 	event.wheel.windowID = 0;
