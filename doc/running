@@ -87,6 +87,10 @@ Network
 --port <number>
 	port number to connection to (client) or listen on (server)
 
+--cmd-port <number>
+	port number to listen on for command connections
+	the default of 0 disables this feature
+
 --player-name <name>
 	use given name to identify with the server (client mode)
 	default player name is "default"

@@ -7,6 +7,7 @@
 #include "../world/WorldManipulator.hpp"
 
 #include <cstdint>
+#include <memory>
 #include <list>
 #include <SDL_net.h>
 
@@ -15,6 +16,7 @@ namespace blank {
 
 class ChunkIndex;
 class CLIContext;
+class CommandService;
 class Model;
 class Player;
 class WorldSave;
@@ -77,6 +79,7 @@ private:
 	const Model *player_model;
 
 	CLI cli;
+	std::unique_ptr<CommandService> cmd_srv;
 
 };
 

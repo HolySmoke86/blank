@@ -6,6 +6,7 @@
 #include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Model.hpp"
+#include "../shared/CommandService.hpp"
 #include "../world/ChunkIndex.hpp"
 #include "../world/Entity.hpp"
 #include "../world/World.hpp"
@@ -647,7 +648,7 @@ uint16_t ClientConnection::SendMessage(uint8_t type, uint32_t from, const string
 
 
 NetworkCLIFeedback::NetworkCLIFeedback(Player &p, ClientConnection &c)
-: CLIContext(p)
+: CLIContext(&p)
 , conn(c) {
 
 }
@@ -682,7 +683,8 @@ Server::Server(
 , spawn_index(world.Chunks().MakeIndex(wc.spawn, 3))
 , save(save)
 , player_model(nullptr)
-, cli(world) {
+, cli(world)
+, cmd_srv() {
 #pragma GCC diagnostic pop
 	if (!serv_set) {
 		throw NetError("SDLNet_AllocSocketSet");
@@ -702,6 +704,10 @@ Server::Server(
 
 	serv_pack.data = new Uint8[sizeof(Packet)];
 	serv_pack.maxlen = sizeof(Packet);
+
+	if (conf.cmd_port) {
+		cmd_srv.reset(new CommandService(cli, conf.cmd_port));
+	}
 }
 
 Server::~Server() {
@@ -719,10 +725,16 @@ Server::~Server() {
 
 void Server::Wait(int dt) noexcept {
 	SDLNet_CheckSockets(serv_set, dt);
+	if (cmd_srv) {
+		cmd_srv->Wait(0);
+	}
 }
 
 bool Server::Ready() noexcept {
-	return SDLNet_CheckSockets(serv_set, 0) > 0;
+	if (SDLNet_CheckSockets(serv_set, 0) > 0) {
+		return true;
+	}
+	return cmd_srv && cmd_srv->Ready();
 }
 
 void Server::Handle() {
@@ -734,6 +746,9 @@ void Server::Handle() {
 	if (result == -1) {
 		// a boo boo happened
 		throw NetError("SDLNet_UDP_Recv");
+	}
+	if (cmd_srv) {
+		cmd_srv->Handle();
 	}
 }
 
@@ -773,6 +788,9 @@ void Server::Update(int dt) {
 		} else {
 			++client;
 		}
+	}
+	if (cmd_srv) {
+		cmd_srv->Send();
 	}
 }
 

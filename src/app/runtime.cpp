@@ -75,6 +75,10 @@ void Config::Load(std::istream &is) {
 			int port;
 			in.ReadNumber(port);
 			net.port = port;
+		} else if (name == "net.cmd_port") {
+			int port;
+			in.ReadNumber(port);
+			net.cmd_port = port;
 		} else if (name == "player.name") {
 			in.ReadString(player.name);
 		} else if (name == "video.dblbuf") {
@@ -104,6 +108,7 @@ void Config::Save(std::ostream &out) {
 	out << "input.yaw_sensitivity = " << input.yaw_sensitivity << ';' << std::endl;
 	out << "net.host = \"" << net.host << "\";" << std::endl;
 	out << "net.port = " << net.port << ';' << std::endl;
+	out << "net.cmd_port = " << net.cmd_port << ';' << std::endl;
 	out << "player.name = \"" << player.name << "\";" << std::endl;
 	out << "video.dblbuf = " << (video.dblbuf ? "on" : "off") << ';' << std::endl;
 	out << "video.vsync = " << (video.vsync ? "on" : "off") << ';' << std::endl;
@@ -239,6 +244,14 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 							error = true;
 						} else {
 							config.game.net.port = strtoul(argv[i], nullptr, 10);
+						}
+					} else if (strcmp(param, "cmd-port") == 0) {
+						++i;
+						if (i >= argc || argv[i] == nullptr || argv[i][0] == '\0') {
+							cerr << "missing argument to --cmd-port" << endl;
+							error = true;
+						} else {
+							config.game.net.cmd_port = strtoul(argv[i], nullptr, 10);
 						}
 					} else if (strcmp(param, "player-name") == 0) {
 						++i;

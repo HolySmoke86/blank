@@ -11,11 +11,14 @@ class Player;
 class CLIContext {
 
 public:
-	explicit CLIContext(Player &p)
+	explicit CLIContext(Player *p = nullptr)
 	: player(p) { }
 
+	/// check if this context associates a player
+	bool HasPlayer() { return player; }
 	/// get the player responsible for all this
-	Player &GetPlayer() { return player; }
+	/// only valid if HasPlayer() returns true
+	Player &GetPlayer() { return *player; }
 
 	/// an error has happened and the player should be notified
 	virtual void Error(const std::string &) = 0;
@@ -29,7 +32,7 @@ public:
 	virtual void Broadcast(const std::string &) = 0;
 
 private:
-	Player &player;
+	Player *player;
 
 };
 

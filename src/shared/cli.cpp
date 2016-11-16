@@ -64,6 +64,11 @@ CLI::Command::~Command() {
 
 
 void TeleportCommand::Execute(CLI &, CLIContext &ctx, TokenStreamReader &args) {
+	if (!ctx.HasPlayer()) {
+		ctx.Error("teleport needs player to operate on");
+		return;
+	}
+
 	glm::vec3 pos(args.GetFloat(), args.GetFloat(), args.GetFloat());
 	EntityState state = ctx.GetPlayer().GetEntity().GetState();
 	state.pos = ExactLocation(pos).Sanitize();

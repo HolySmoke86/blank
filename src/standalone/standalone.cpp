@@ -18,7 +18,7 @@ namespace blank {
 namespace standalone {
 
 DirectCLIFeedback::DirectCLIFeedback(Player &p, HUD &h)
-: CLIContext(p)
+: CLIContext(&p)
 , hud(h) {
 
 }

@@ -30,6 +30,7 @@ struct Config {
 
 		std::string host = "localhost";
 		std::uint16_t port = 12354;
+		std::uint16_t cmd_port = 0;
 
 	} net;
 
