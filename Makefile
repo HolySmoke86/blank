@@ -14,7 +14,7 @@ TESTLIBS := $(shell pkg-config --libs cppunit)
 CPPFLAGS ?=
 CPPFLAGS += $(PKGFLAGS)
 CXXFLAGS ?=
-CXXFLAGS += -Wall
+CXXFLAGS += -Wall -Wextra -Werror
 #CXXFLAGS += -march=native
 LDXXFLAGS ?=
 LDXXFLAGS += $(PKGLIBS)

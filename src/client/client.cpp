@@ -396,7 +396,7 @@ void MasterState::OnEnter() {
 }
 
 
-void MasterState::Handle(const SDL_Event &event) {
+void MasterState::Handle(const SDL_Event &) {
 
 }
 
@@ -450,7 +450,7 @@ void MasterState::On(const Packet::Join &pack) {
 	env.state.Push(state.get());
 }
 
-void MasterState::On(const Packet::Part &pack) {
+void MasterState::On(const Packet::Part &) {
 	Quit();
 	if (state) {
 		// kicked

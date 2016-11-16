@@ -693,7 +693,7 @@ ChunkLoader::ChunkLoader(
 
 }
 
-void ChunkLoader::Update(int dt) {
+void ChunkLoader::Update(int) {
 	// check if there's chunks waiting to be loaded
 	// load until one of load or generation limits was hit
 	constexpr int max_load = 10;

@@ -287,7 +287,8 @@ void TextInput::Handle(const SDL_TextInputEvent &e) {
 	Insert(e.text);
 }
 
-void TextInput::Handle(const SDL_TextEditingEvent &e) {
+void TextInput::Handle(const SDL_TextEditingEvent &) {
+
 }
 
 void TextInput::Refresh() {

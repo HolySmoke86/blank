@@ -85,7 +85,7 @@ void ServerState::Update(int dt) {
 }
 
 
-void ServerState::Render(Viewport &viewport) {
+void ServerState::Render(Viewport &) {
 
 }
 

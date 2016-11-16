@@ -145,7 +145,7 @@ unsigned int AIController::Decide(unsigned int num_choices) noexcept {
 
 // chase
 
-void ChaseState::Enter(AIController &ctrl, Entity &e) const {
+void ChaseState::Enter(AIController &, Entity &e) const {
 	e.GetSteering()
 		.SetAcceleration(5.0f)
 		.SetSpeed(4.0f)
@@ -153,7 +153,7 @@ void ChaseState::Enter(AIController &ctrl, Entity &e) const {
 	;
 }
 
-void ChaseState::Update(AIController &ctrl, Entity &e, float dt) const {
+void ChaseState::Update(AIController &ctrl, Entity &e, float) const {
 	Steering &steering = e.GetSteering();
 	// check if target still alive and in sight
 	if (
@@ -176,7 +176,7 @@ void ChaseState::Update(AIController &ctrl, Entity &e, float dt) const {
 	}
 }
 
-void ChaseState::Exit(AIController &ctrl, Entity &e) const {
+void ChaseState::Exit(AIController &, Entity &e) const {
 	e.GetSteering().Disable(Steering::HALT | Steering::PURSUE_TARGET);
 }
 
@@ -191,12 +191,12 @@ void FleeState::Enter(AIController &ctrl, Entity &e) const {
 	ctrl.CueDecision(6.0f, 3.0f);
 }
 
-void FleeState::Update(AIController &ctrl, Entity &e, float dt) const {
+void FleeState::Update(AIController &ctrl, Entity &e, float) const {
 	if (!ctrl.DecisionDue()) return;
 	ctrl.SetState(idle, e);
 }
 
-void FleeState::Exit(AIController &ctrl, Entity &e) const {
+void FleeState::Exit(AIController &, Entity &e) const {
 	e.GetSteering().Disable(Steering::EVADE_TARGET);
 }
 
@@ -212,7 +212,7 @@ void IdleState::Enter(AIController &ctrl, Entity &e) const {
 	ctrl.CueDecision(10.0f, 5.0f);
 }
 
-void IdleState::Update(AIController &ctrl, Entity &e, float dt) const {
+void IdleState::Update(AIController &ctrl, Entity &e, float) const {
 	if (ctrl.MayThink()) {
 		const Player *player = ctrl.ClosestVisiblePlayer(e);
 		if (player) {
@@ -238,7 +238,7 @@ void IdleState::Update(AIController &ctrl, Entity &e, float dt) const {
 	ctrl.CueDecision(10.0f, 5.0f);
 }
 
-void IdleState::Exit(AIController &ctrl, Entity &e) const {
+void IdleState::Exit(AIController &, Entity &e) const {
 	e.GetSteering().Disable(Steering::HALT | Steering::WANDER);
 }
 
@@ -254,7 +254,7 @@ void RoamState::Enter(AIController &ctrl, Entity &e) const {
 	ctrl.CueDecision(10.0f, 5.0f);
 }
 
-void RoamState::Update(AIController &ctrl, Entity &e, float dt) const {
+void RoamState::Update(AIController &ctrl, Entity &e, float) const {
 	if (ctrl.MayThink()) {
 		const Player *player = ctrl.ClosestVisiblePlayer(e);
 		if (player) {
@@ -274,7 +274,7 @@ void RoamState::Update(AIController &ctrl, Entity &e, float dt) const {
 	ctrl.CueDecision(10.0f, 5.0f);
 }
 
-void RoamState::Exit(AIController &ctrl, Entity &e) const {
+void RoamState::Exit(AIController &, Entity &e) const {
 	e.GetSteering().Disable(Steering::WANDER);
 }
 

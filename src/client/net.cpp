@@ -244,10 +244,15 @@ IPaddress client_resolve(const char *host, Uint16 port) {
 
 }
 
+// relying on {} zero intitialization for UDPpacket, because
+// the type and number of fields is not well defined
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 Client::Client(const Config::Network &conf)
 : conn(client_resolve(conf.host.c_str(), conf.port))
 , client_sock(client_bind(0))
 , client_pack{ -1, nullptr, 0 } {
+#pragma GCC diagnostic pop
 	client_pack.data = new Uint8[sizeof(Packet)];
 	client_pack.maxlen = sizeof(Packet);
 	// establish connection
@@ -306,8 +311,8 @@ uint16_t Client::SendLogin(const string &name) {
 uint16_t Client::SendPlayerUpdate(
 	const EntityState &prediction,
 	const glm::vec3 &movement,
-	float pitch,
-	float yaw,
+	float,
+	float,
 	uint8_t actions,
 	uint8_t slot
 ) {
@@ -359,7 +364,7 @@ bool NetworkedInput::UpdateImportant() const noexcept {
 	return old_actions != actions || !iszero(old_movement - GetMovement());
 }
 
-void NetworkedInput::Update(Entity &, float dt) {
+void NetworkedInput::Update(Entity &, float) {
 	Invalidate();
 	UpdatePlayer();
 }

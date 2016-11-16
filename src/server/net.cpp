@@ -665,6 +665,10 @@ void NetworkCLIFeedback::Broadcast(const string &msg) {
 }
 
 
+// relying on {} zero intitialization for UDPpacket, because
+// the type and number of fields is not well defined
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
 Server::Server(
 	const Config::Network &conf,
 	World &world,
@@ -679,6 +683,7 @@ Server::Server(
 , save(save)
 , player_model(nullptr)
 , cli(world) {
+#pragma GCC diagnostic pop
 	if (!serv_set) {
 		throw NetError("SDLNet_AllocSocketSet");
 	}

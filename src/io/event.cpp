@@ -399,7 +399,7 @@ ostream &operator <<(ostream &out, const SDL_AudioDeviceEvent &evt) {
 }
 #endif
 
-ostream &operator <<(ostream &out, const SDL_QuitEvent &evt) {
+ostream &operator <<(ostream &out, const SDL_QuitEvent &) {
 	out << "quit";
 	return out;
 }

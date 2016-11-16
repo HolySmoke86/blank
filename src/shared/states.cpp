@@ -143,7 +143,7 @@ void MessageState::Handle(const SDL_Event &e) {
 	}
 }
 
-void MessageState::Update(int dt) {
+void MessageState::Update(int) {
 
 }
 

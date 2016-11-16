@@ -63,7 +63,7 @@ CLI::Command::~Command() {
 }
 
 
-void TeleportCommand::Execute(CLI &cli, CLIContext &ctx, TokenStreamReader &args) {
+void TeleportCommand::Execute(CLI &, CLIContext &ctx, TokenStreamReader &args) {
 	glm::vec3 pos(args.GetFloat(), args.GetFloat(), args.GetFloat());
 	EntityState state = ctx.GetPlayer().GetEntity().GetState();
 	state.pos = ExactLocation(pos).Sanitize();

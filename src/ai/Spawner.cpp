@@ -120,7 +120,7 @@ void Spawner::TrySpawn() {
 	Spawn(player.GetEntity(), spawn_block.GetChunk().Position(), spawn_block.GetBlockCoords());
 }
 
-void Spawner::Spawn(Entity &reference, const glm::ivec3 &chunk, const glm::vec3 &pos) {
+void Spawner::Spawn(Entity &, const glm::ivec3 &chunk, const glm::vec3 &pos) {
 	Entity &e = world.AddEntity();
 	e.Position(chunk, pos);
 	e.Bounds({ { -0.5f, -0.5f, -0.5f }, { 0.5f, 0.5f, 0.5f } });

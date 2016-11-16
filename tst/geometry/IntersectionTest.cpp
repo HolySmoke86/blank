@@ -21,7 +21,7 @@ void IntersectionTest::tearDown() {
 
 
 void IntersectionTest::testSimpleRayBoxIntersection() {
-	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 } }; // at origin, pointing right
+	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 }, { } }; // at origin, pointing right
 	ray.Update();
 	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
 
@@ -68,7 +68,7 @@ void IntersectionTest::testSimpleRayBoxIntersection() {
 }
 
 void IntersectionTest::testRayBoxIntersection() {
-	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 } }; // at origin, pointing right
+	Ray ray{ { 0, 0, 0 }, { 1, 0, 0 }, { } }; // at origin, pointing right
 	AABB box{ { -1, -1, -1 }, { 1, 1, 1 } }; // 2x2x2 cube centered around origin
 	glm::mat4 M(1); // no transformation
 

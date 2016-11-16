@@ -136,7 +136,7 @@ glm::mat4 Entity::ViewTransform(const glm::ivec3 &reference) const noexcept {
 
 Ray Entity::Aim(const ExactLocation::Coarse &chunk_offset) const noexcept {
 	glm::mat4 transform = ViewTransform(chunk_offset);
-	Ray ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]) };
+	Ray ray{ glm::vec3(transform[3]), -glm::vec3(transform[2]), { } };
 	ray.Update();
 	return ray;
 }
@@ -274,7 +274,7 @@ void Entity::OrientBody(float dt) noexcept {
 	}
 }
 
-void Entity::OrientHead(float dt) noexcept {
+void Entity::OrientHead(float) noexcept {
 	// maximum yaw of head (60°)
 	constexpr float max_head_yaw = PI / 3.0f;
 	// use local Y as up
@@ -394,7 +394,7 @@ bool Player::SuitableSpawn(BlockLookup &spawn_block) const noexcept {
 	return true;
 }
 
-void Player::Update(int dt) {
+void Player::Update(int) {
 	chunks.Rebase(entity.ChunkCoords());
 }
 
@@ -623,7 +623,7 @@ glm::vec3 Steering::Wander(const EntityState &state) const noexcept {
 	return TargetVelocity(state, glm::normalize(entity.Heading() * wander_dist + wander_pos) * speed);
 }
 
-glm::vec3 Steering::ObstacleAvoidance(const EntityState &state) const noexcept {
+glm::vec3 Steering::ObstacleAvoidance(const EntityState &) const noexcept {
 	return obstacle_dir;
 }
 

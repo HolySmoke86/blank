@@ -31,10 +31,10 @@ WorldResources::WorldResources()
 
 }
 
-void WorldResources::Load(const AssetLoader &loader, const std::string &set) {
-	loader.LoadShapes("default", shapes);
-	loader.LoadBlockTypes("default", block_types, snd_index, tex_index, shapes);
-	loader.LoadModels("default", models, tex_index, shapes);
+void WorldResources::Load(const AssetLoader &loader, const std::string &set_name) {
+	loader.LoadShapes(set_name, shapes);
+	loader.LoadBlockTypes(set_name, block_types, snd_index, tex_index, shapes);
+	loader.LoadModels(set_name, models, tex_index, shapes);
 }
 
 }

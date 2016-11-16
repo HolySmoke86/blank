@@ -266,7 +266,7 @@ PreloadState::PreloadState(Environment &env, ChunkLoader &loader, ChunkRenderer 
 
 }
 
-void PreloadState::Update(int dt) {
+void PreloadState::Update(int) {
 	loader.LoadN(per_update);
 	if (loader.ToLoad() <= 0) {
 		env.state.Pop();
@@ -306,7 +306,7 @@ void UnloadState::Handle(const SDL_Event &) {
 	// ignore everything
 }
 
-void UnloadState::Update(int dt) {
+void UnloadState::Update(int) {
 	for (std::size_t i = 0; i < per_update && cur != end; ++i, ++cur, ++done) {
 		if (cur->ShouldUpdateSave()) {
 			save.Write(*cur);
