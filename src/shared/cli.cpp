@@ -63,19 +63,30 @@ CLI::Command::~Command() {
 }
 
 
+CLIContext::CLIContext(Player *p, Entity *e)
+: original_player(p)
+, effective_player(p)
+, original_entity(e)
+, effective_entity(e) {
+	if (!e && p) {
+		original_entity = effective_entity = &p->GetEntity();
+	}
+}
+
+
 void TeleportCommand::Execute(CLI &, CLIContext &ctx, TokenStreamReader &args) {
-	if (!ctx.HasPlayer()) {
-		ctx.Error("teleport needs player to operate on");
+	if (!ctx.HasEntity()) {
+		ctx.Error("teleport needs entity to operate on");
 		return;
 	}
 
 	glm::vec3 pos(args.GetFloat(), args.GetFloat(), args.GetFloat());
-	EntityState state = ctx.GetPlayer().GetEntity().GetState();
+	EntityState state = ctx.GetEntity().GetState();
 	state.pos = ExactLocation(pos).Sanitize();
-	ctx.GetPlayer().GetEntity().SetState(state);
+	ctx.GetEntity().SetState(state);
 
 	stringstream msg;
-	msg << ctx.GetPlayer().Name() << " teleported to " << pos;
+	msg << ctx.GetEntity().Name() << " teleported to " << pos;
 	ctx.Broadcast(msg.str());
 }
 
