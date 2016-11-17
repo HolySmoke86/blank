@@ -336,6 +336,10 @@ void TokenStreamReader::ReadString(string &out) {
 	out = GetValue();
 }
 
+void TokenStreamReader::ReadRelaxedString(string &out) {
+	out = GetString();
+}
+
 
 void TokenStreamReader::ReadVec(glm::vec2 &v) {
 	Skip(Token::BRACKET_OPEN);
@@ -465,6 +469,15 @@ unsigned long TokenStreamReader::GetULong() {
 unsigned long TokenStreamReader::AsULong() const {
 	Assert(Token::NUMBER);
 	return stoul(GetValue());
+}
+
+const string &TokenStreamReader::GetString() {
+	Next();
+	return AsString();
+}
+
+const string &TokenStreamReader::AsString() const {
+	return GetValue();
 }
 
 }

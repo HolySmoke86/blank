@@ -6,6 +6,13 @@
 
 namespace blank {
 
+class ImpersonateCommand
+: public CLI::Command {
+
+	void Execute(CLI &, CLIContext &, TokenStreamReader &) override;
+
+};
+
 class TeleportCommand
 : public CLI::Command {
 

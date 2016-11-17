@@ -19,25 +19,30 @@ public:
 	/// values when reset.
 	explicit CLIContext(Player *p = nullptr, Entity *e = nullptr);
 
+	/// get a best name for this context
+	std::string Name() const;
+
 	/// check if this context associates a player
-	bool HasPlayer() { return effective_player; }
+	bool HasPlayer() const noexcept { return effective_player; }
 	/// get the player responsible for all this
 	/// only valid if HasPlayer() returns true
-	Player &GetPlayer() { return *effective_player; }
+	Player &GetPlayer() noexcept { return *effective_player; }
+	const Player &GetPlayer() const noexcept { return *effective_player; }
 	/// change the effective player of this context
 	/// note that this will *not* change the effective entity
-	void SetPlayer(Player &p) { effective_player = &p; }
+	void SetPlayer(Player &p) noexcept { effective_player = &p; }
 
 	/// check if this context associates an entity
-	bool HasEntity() { return effective_entity; }
+	bool HasEntity() const noexcept { return effective_entity; }
 	/// get the entity on which operations should be performed
 	/// only valid if HasPlayer() returns true
-	Entity &GetEntity() { return *effective_entity; }
+	Entity &GetEntity() noexcept { return *effective_entity; }
+	const Entity &GetEntity() const noexcept { return *effective_entity; }
 	/// change the effective player of this context
-	void SetEntity(Entity &e) { effective_entity = &e; }
+	void SetEntity(Entity &e) noexcept { effective_entity = &e; }
 
 	/// reset effective player and entity to their original values
-	void Reset() {
+	void Reset() noexcept {
 		effective_player = original_player;
 		effective_player = original_player;
 	}

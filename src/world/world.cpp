@@ -764,6 +764,26 @@ Entity &World::ForceAddEntity(std::uint32_t id) {
 }
 
 
+Player *World::FindPlayer(const std::string &name) {
+	for (Player &p : players) {
+		if (p.Name() == name) {
+			return &p;
+		}
+	}
+	return nullptr;
+}
+
+Entity *World::FindEntity(const std::string &name) {
+	// TODO: this may get inefficient
+	for (Entity &e : entities) {
+		if (e.Name() == name) {
+			return &e;
+		}
+	}
+	return nullptr;
+}
+
+
 namespace {
 
 struct Candidate {

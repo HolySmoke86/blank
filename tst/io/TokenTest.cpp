@@ -202,6 +202,7 @@ void TokenTest::testReader() {
 		"0 1 -1 2.5\n"
 		// strings
 		"\"hello\" \"\" \"\\r\\n\\t\\\"\"\n"
+		"\"world\" foo 12\n"
 		// vectors
 		"[1,0] [ 0.707, 0.707 ] // vec2\n"
 		"[.577,.577 ,0.577] [ 1,-2,3] // vec3\n"
@@ -307,6 +308,21 @@ void TokenTest::testReader() {
 	assert_read<string>(
 		"reading string \"\\r\\n\\t\\\"\"",
 		"\r\n\t\"", value_string, in);
+
+	in.ReadRelaxedString(value_string);
+	assert_read<string>(
+		"reading relaxed string \"world\"",
+		"world", value_string, in);
+
+	in.ReadRelaxedString(value_string);
+	assert_read<string>(
+		"reading relaxed string foo",
+		"foo", value_string, in);
+
+	in.ReadRelaxedString(value_string);
+	assert_read<string>(
+		"reading relaxed string 12",
+		"12", value_string, in);
 
 	// vectors
 

@@ -27,6 +27,8 @@ public:
 
 	void Execute(CLIContext &, const std::string &);
 
+	World &GetWorld() noexcept { return world; }
+
 private:
 	World &world;
 	std::map<std::string, Command *> commands;

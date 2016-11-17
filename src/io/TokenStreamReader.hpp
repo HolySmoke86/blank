@@ -28,6 +28,9 @@ public:
 	void ReadNumber(int &);
 	void ReadNumber(unsigned long &);
 	void ReadString(std::string &);
+	// like ReadString, but does not require the value to be
+	// written as a string literal in source
+	void ReadRelaxedString(std::string &);
 
 	void ReadVec(glm::vec2 &);
 	void ReadVec(glm::vec3 &);
@@ -42,6 +45,7 @@ public:
 	// the Get* functions advance to the next token
 	// the As* functions try to cast the current token
 	// if the value could not be converted, a std::runtime_error is thrown
+	// conversion to string is always possible
 
 	bool GetBool();
 	bool AsBool() const;
@@ -51,6 +55,8 @@ public:
 	int AsInt() const;
 	unsigned long GetULong();
 	unsigned long AsULong() const;
+	const std::string &GetString();
+	const std::string &AsString() const;
 
 private:
 	void SkipComments();

@@ -96,6 +96,14 @@ public:
 	/// returs an existing entity if ID is already taken
 	Entity &ForceAddEntity(std::uint32_t id);
 
+	/// get the player with given name
+	/// returns nullptr if no player bears this name
+	Player *FindPlayer(const std::string &name);
+	/// get an entity with given name
+	/// returns nullptr if name doesn't refer to any entity
+	/// note that unlike players, entity names are not unique
+	Entity *FindEntity(const std::string &name);
+
 	std::list<Player> &Players() noexcept { return players; }
 	const std::list<Player> &Players() const noexcept { return players; }
 	std::list<Entity> &Entities() noexcept { return entities; }

@@ -5,6 +5,7 @@
 #include "../io/TokenStreamReader.hpp"
 #include "../world/Entity.hpp"
 #include "../world/Player.hpp"
+#include "../world/World.hpp"
 
 #include <iostream>
 #include <sstream>
@@ -18,6 +19,7 @@ namespace blank {
 CLI::CLI(World &world)
 : world(world)
 , commands() {
+	AddCommand("as", new ImpersonateCommand);
 	AddCommand("tp", new TeleportCommand);
 }
 
@@ -71,6 +73,43 @@ CLIContext::CLIContext(Player *p, Entity *e)
 	if (!e && p) {
 		original_entity = effective_entity = &p->GetEntity();
 	}
+}
+
+std::string CLIContext::Name() const {
+	if (HasPlayer()) return GetPlayer().Name();
+	if (HasEntity()) return GetEntity().Name();
+	return "anonymous";
+}
+
+
+void ImpersonateCommand::Execute(CLI &cli, CLIContext &ctx, TokenStreamReader &args) {
+	if (!args.HasMore()) {
+		// no argument => reset
+		ctx.Reset();
+		ctx.Broadcast(ctx.Name() + " returned to their own self");
+		return;
+	}
+	// TODO: broadcast who (real player name) impersonates who
+	string old_name = ctx.Name();
+	string name(args.GetString());
+
+	Player *p = cli.GetWorld().FindPlayer(name);
+	if (p) {
+		ctx.SetPlayer(*p);
+		ctx.SetEntity(p->GetEntity());
+		ctx.Broadcast(old_name + " now impersonating " + p->Name());
+		return;
+	}
+
+	// not a player, try an entity
+	Entity *e = cli.GetWorld().FindEntity(name);
+	if (e) {
+		ctx.SetEntity(*e);
+		ctx.Broadcast(old_name + " now impersonating " + e->Name());
+		return;
+	}
+
+	ctx.Error("no player or entity with name " + name);
 }
 
 
