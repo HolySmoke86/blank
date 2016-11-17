@@ -25,9 +25,9 @@ struct BlockType {
 
 	const Shape *shape;
 	std::vector<float> textures;
-	TVEC3<unsigned char, glm::precision(0)> hsl_mod;
-	TVEC3<unsigned char, glm::precision(0)> rgb_mod;
-	TVEC3<unsigned char, glm::precision(0)> outline_color;
+	BlockMesh::ColorMod hsl_mod;
+	BlockMesh::ColorMod rgb_mod;
+	PrimitiveMesh::Color outline_color;
 
 	/// gravity configuration or null if not emitting gravity
 	std::unique_ptr<BlockGravity> gravity;

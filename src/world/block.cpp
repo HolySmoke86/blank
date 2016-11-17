@@ -76,7 +76,7 @@ BlockType::BlockType() noexcept
 , textures()
 , hsl_mod(0, 255, 255)
 , rgb_mod(255, 255, 255)
-, outline_color(0, 0, 0)
+, outline_color(0, 0, 0, 255)
 , gravity()
 , name("anonymous")
 , label("some block")
@@ -155,7 +155,7 @@ void BlockType::Read(
 			hsl_mod = BlockMesh::ColorMod(color_conv * 255.0f);
 		} else if (name == "outline") {
 			in.ReadVec(color_conv);
-			outline_color = BlockMesh::ColorMod(color_conv * 255.0f);
+			outline_color = PrimitiveMesh::Color(color_conv * 255.0f, 255);
 		} else if (name == "gravity") {
 			gravity = BlockGravity::Read(in);
 		} else if (name == "label") {
@@ -240,7 +240,7 @@ void BlockType::FillBlockMesh(
 void BlockType::OutlinePrimitiveMesh(PrimitiveMesh::Buffer &buf) const noexcept {
 	if (!shape) return;
 	shape->Outline(buf);
-	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), PrimitiveMesh::Color(outline_color, 255));
+	buf.colors.insert(buf.colors.end(), shape->OutlineCount(), outline_color);
 }
 
 
