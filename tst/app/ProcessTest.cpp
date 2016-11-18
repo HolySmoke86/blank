@@ -21,7 +21,7 @@ void ProcessTest::tearDown() {
 
 void ProcessTest::testExit() {
 #ifdef __WIN32
-#  error "TODO: implemente Process tests for windows"
+#  error "TODO: implement Process tests for windows"
 #else
 
 	{

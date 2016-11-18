@@ -60,6 +60,7 @@ CommandBuffer::~CommandBuffer() {
 
 
 void CommandBuffer::Error(const string &msg) {
+	// TODO: prefix each line in message/error/broadcast
 	write_buffer += " ! ";
 	write_buffer += msg;
 	write_buffer += '\n';

@@ -33,6 +33,9 @@ public:
 	/// @return the number of bytes read
 	std::size_t ReadErr(void *buffer, std::size_t max_len);
 
+	/// ask the process nicely to terminate
+	/// (except on win32)
+	void Terminate();
 	/// wait until the process exits and fetch its exit status
 	int Join();
 

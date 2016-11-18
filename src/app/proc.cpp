@@ -1,14 +1,16 @@
 #include "Process.hpp"
 
 #ifdef _WIN32
-#  error "TODO: windows implementation of Process"
+#  include <tchar.h>
+#  include <windows.h>
 #else
-#  include <cstdio>
 #  include <fcntl.h>
+#  include <signal.h>
 #  include <unistd.h>
 #  include <sys/wait.h>
 #endif
 
+#include <cstdio>
 #include <stdexcept>
 
 using namespace std;
@@ -28,6 +30,7 @@ struct Process::Impl {
 	size_t ReadOut(void *buffer, size_t max_len);
 	size_t ReadErr(void *buffer, size_t max_len);
 
+	void Terminate();
 	int Join();
 
 #ifdef _WIN32
@@ -70,6 +73,12 @@ size_t Process::ReadOut(void *buffer, size_t max_len) {
 
 size_t Process::ReadErr(void *buffer, size_t max_len) {
 	return impl->ReadErr(buffer, max_len);
+}
+
+void Process::Terminate() {
+	if (!joined) {
+		impl->Terminate();
+	}
 }
 
 int Process::Join() {
@@ -264,6 +273,16 @@ size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
 	}
 	return ret;
 #endif
+}
+
+void Process::Impl::Terminate() {
+#ifdef _WIN32
+	if (!TerminateProcess(pi.hProcess, -1)) {
+#else
+	if (kill(pid, SIGTERM) == -1) {
+#endif
+		throw runtime_error("failed to terminate child process");
+	}
 }
 
 int Process::Impl::Join() {
