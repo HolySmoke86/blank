@@ -27,6 +27,18 @@ Socket::Socket(unsigned short port)
 	}
 }
 
+Socket::Socket(const string &host, unsigned short port)
+: sock(nullptr) {
+	IPaddress ip;
+	if (SDLNet_ResolveHost(&ip, host.c_str(), port) == -1) {
+		throw NetError("failed to resolve host " + host);
+	}
+	sock = SDLNet_TCP_Open(&ip);
+	if (!sock) {
+		throw NetError("failed to connect to " + host + ':' + to_string(port));
+	}
+}
+
 Socket::Socket(TCPsocket sock)
 : sock(sock) {
 
@@ -86,7 +98,6 @@ int Socket::RemoveFrom(SDLNet_SocketSet set) {
 
 Pool::Pool(int max_conn, size_t buf_siz)
 : set(SDLNet_AllocSocketSet(max_conn))
-, buffer(buf_siz, '\0')
 , connections()
 , use_conn(0)
 , max_conn(max_conn)

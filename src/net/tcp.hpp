@@ -18,6 +18,8 @@ public:
 	Socket();
 	/// create TCP socket bound to given port
 	explicit Socket(unsigned short port);
+	/// connect to given host:port
+	Socket(const std::string &host, unsigned short port);
 private:
 	/// wrap given SDLNet TCP socket
 	/// for use with Accept()
@@ -112,7 +114,6 @@ public:
 
 private:
 	SDLNet_SocketSet set;
-	std::string buffer;
 	ConnectionSet connections;
 	int use_conn;
 	int max_conn;

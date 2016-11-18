@@ -1,11 +1,14 @@
 #ifndef BLANK_TEST_IO_FILESYSTEMTEST_HPP
 #define BLANK_TEST_IO_FILESYSTEMTEST_HPP
 
+#include "io/filesystem.hpp"
+
+#include <memory>
 #include <string>
 #include <cppunit/extensions/HelperMacros.h>
 
-namespace blank {
 
+namespace blank {
 namespace test {
 
 class FilesystemTest
@@ -26,7 +29,7 @@ public:
 	void testDirectory();
 
 private:
-	std::string test_dir;
+	std::unique_ptr<TempDir> test_dir;
 
 };
 

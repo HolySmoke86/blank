@@ -2,7 +2,10 @@
 
 #include <cerrno>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <iostream>
+#include <stdexcept>
 #ifdef _WIN32
 #  include <conio.h>
 #  include <direct.h>
@@ -12,6 +15,8 @@
 #  include <sys/types.h>
 #endif
 #include <sys/stat.h>
+
+using namespace std;
 
 
 namespace blank {
@@ -40,7 +45,7 @@ namespace {
 		return S_ISREG(info.st_mode);
 	}
 #endif
-	std::time_t get_mtime(const Stat &info) {
+	time_t get_mtime(const Stat &info) {
 #ifdef __APPLE__
 		return info.st_mtimespec.tv_sec;
 #else
@@ -65,7 +70,7 @@ bool is_file(const char *path) {
 	return is_file(info);
 }
 
-std::time_t file_mtime(const char *path) {
+time_t file_mtime(const char *path) {
 	Stat info;
 	if (do_stat(path, info) != 0) {
 		return 0;
@@ -84,7 +89,7 @@ bool make_dir(const char *path) {
 }
 
 
-bool make_dirs(const std::string &path) {
+bool make_dirs(const string &path) {
 	if (make_dir(path)) {
 		return true;
 	}
@@ -99,7 +104,7 @@ bool make_dirs(const std::string &path) {
 #else
 				auto pos = path.find_last_of('/');
 #endif
-				if (pos == std::string::npos) {
+				if (pos == string::npos) {
 					return false;
 				}
 				if (pos == path.length() - 1) {
@@ -109,7 +114,7 @@ bool make_dirs(const std::string &path) {
 #else
 					 pos = path.find_last_of('/', pos - 1);
 #endif
-					if (pos == std::string::npos) {
+					if (pos == string::npos) {
 						return false;
 					}
 				}
@@ -132,16 +137,16 @@ bool make_dirs(const std::string &path) {
 }
 
 
-bool remove_file(const std::string &path) {
+bool remove_file(const string &path) {
 	return remove(path.c_str()) == 0;
 }
 
 
-bool remove_dir(const std::string &path) {
+bool remove_dir(const string &path) {
 #ifdef _WIN32
 
 	// shamelessly stolen from http://www.codeguru.com/forum/showthread.php?t=239271
-	const std::string pattern = path + "\\*.*";
+	const string pattern = path + "\\*.*";
 	WIN32_FIND_DATA info;
 	HANDLE file = FindFirstFile(pattern.c_str(), &info);
 	if (file == INVALID_HANDLE_VALUE) {
@@ -156,7 +161,7 @@ bool remove_dir(const std::string &path) {
 		) {
 			continue;
 		}
-		const std::string sub_path = path + '\\' + info.cFileName;
+		const string sub_path = path + '\\' + info.cFileName;
 		if ((info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0) {
 			if (!remove_dir(sub_path)) {
 				return false;
@@ -192,7 +197,7 @@ bool remove_dir(const std::string &path) {
 		) {
 			continue;
 		}
-		const std::string sub_path = path + '/' + entry->d_name;
+		const string sub_path = path + '/' + entry->d_name;
 		if (is_dir(sub_path)) {
 			if (!remove_dir(sub_path)) {
 				return false;
@@ -206,6 +211,39 @@ bool remove_dir(const std::string &path) {
 	return remove(path.c_str()) == 0;
 
 #endif
+}
+
+
+TempDir::TempDir() {
+#if _DEFAULT_SOURCE || _BSD_SOURCE || _POSIX_C_SOURCE >= 200809L
+	char tmpl[] = "blank.XXXXXX";
+	const char *name = mkdtemp(tmpl);
+	if (!name) {
+		throw runtime_error("unable to create temporary directory");
+	}
+	path = name;
+#else
+	char name[L_tmpnam];
+	tmpnam(name);
+	constexpr int max_tries = 10;
+	int tries = 0;
+	while (!make_dirs(name) && tries < max_tries) {
+		tmpnam(name);
+		++tries;
+	}
+	if (tries == max_tries) {
+		throw runtime_error("unable to create temporary directory");
+	}
+#endif
+	path = name;
+}
+
+TempDir::~TempDir() {
+	try {
+		remove_dir(path);
+	} catch (...) {
+		cerr << "warning: could not remove temp dir " << path << endl;
+	}
 }
 
 }

@@ -42,6 +42,27 @@ bool remove_file(const std::string &);
 /// @return true if the directory was completely removed
 bool remove_dir(const std::string &);
 
+
+/// Create a temporary directory with lifetime tie to the instance's.
+/// Note that the directory may survive its object if removal fails
+/// for any reason, e.g. another process changing permissions.
+class TempDir {
+
+public:
+	TempDir();
+	~TempDir();
+
+	TempDir(const TempDir &) = delete;
+	TempDir &operator =(const TempDir &) = delete;
+
+public:
+	const std::string &Path() const noexcept { return path; }
+
+private:
+	std::string path;
+
+};
+
 }
 
 #endif

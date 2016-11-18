@@ -13,24 +13,19 @@ namespace blank {
 namespace test {
 
 void FilesystemTest::setUp() {
-	test_dir = "test-dir";
-	CPPUNIT_ASSERT_MESSAGE(
-		"failed to create test dir",
-		make_dir(test_dir));
+	test_dir.reset(new TempDir());
 }
 
 void FilesystemTest::tearDown() {
-	CPPUNIT_ASSERT_MESSAGE(
-		"failed to remove test dir",
-		remove_dir(test_dir));
+	test_dir.reset();
 }
 
 
 void FilesystemTest::testFile() {
 #ifdef _WIN32
-	const string test_file = test_dir + "\\test-file.txt";
+	const string test_file = test_dir->Path() + "\\test-file.txt";
 #else
-	const string test_file = test_dir + "/test-file";
+	const string test_file = test_dir->Path() + "/test-file";
 #endif
 
 	CPPUNIT_ASSERT_MESSAGE(
@@ -76,11 +71,11 @@ void FilesystemTest::testFile() {
 
 void FilesystemTest::testDirectory() {
 #ifdef _WIN32
-	const string test_subdir = test_dir + "\\a";
+	const string test_subdir = test_dir->Path() + "\\a";
 	const string test_subsubdir = test_subdir + "\\b";
 	const string test_file = test_subsubdir + "\\c.txt";
 #else
-	const string test_subdir = test_dir + "/a";
+	const string test_subdir = test_dir->Path() + "/a";
 	const string test_subsubdir = test_subdir + "/b";
 	const string test_file = test_subsubdir + "/c";
 #endif
