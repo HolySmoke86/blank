@@ -11,12 +11,16 @@ namespace blank {
 class Process {
 
 public:
+	using Arguments = std::vector<std::string>;
+	using Environment = std::vector<std::string>;
+
+public:
 	/// launch process executing the file at given path with
 	/// given arguments and environment
 	Process(
 		const std::string &path,
-		const std::vector<std::string> &args,
-		const std::vector<std::string> &env);
+		const Arguments &args,
+		const Environment &env);
 	~Process();
 
 public:

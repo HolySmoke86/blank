@@ -22,8 +22,8 @@ struct Process::Impl {
 
 	Impl(
 		const string &path_in,
-		const vector<string> &args,
-		const vector<string> &env);
+		const Arguments &args,
+		const Environment &env);
 	~Impl();
 
 	size_t WriteIn(const void *buffer, size_t max_len);
@@ -50,8 +50,8 @@ struct Process::Impl {
 
 Process::Process(
 	const string &path,
-	const vector<string> &args,
-	const vector<string> &env)
+	const Arguments &args,
+	const Environment &env)
 : impl(new Impl(path, args, env))
 , joined(false)
 , status(0) {
@@ -94,8 +94,8 @@ int Process::Join() {
 
 Process::Impl::Impl(
 	const string &path_in,
-	const vector<string> &args,
-	const vector<string> &env
+	const Arguments &args,
+	const Environment &env
 ) {
 	const char *path = path_in.c_str();
 	char *envp[env.size() + 1];

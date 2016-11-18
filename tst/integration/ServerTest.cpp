@@ -1,6 +1,6 @@
 #include "ServerTest.hpp"
 
-#include "TestServer.hpp"
+#include "TestInstance.hpp"
 
 CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::ServerTest);
 
@@ -18,7 +18,7 @@ void ServerTest::tearDown() {
 
 
 void ServerTest::testStartup() {
-	TestServer server;
+	TestInstance server({ "--server" }, true);
 }
 
 }
