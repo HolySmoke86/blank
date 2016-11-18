@@ -41,11 +41,11 @@ TEST_SRC_DIR := tst
 #   same flags as release, but with main replaced by cppunit
 #   test runner and tests (from tst dir) built in
 
-COVER_FLAGS = -g -O0 --coverage -I$(SOURCE_DIR) $(TESTFLAGS) -DBLANK_SUFFIX=.cover
+COVER_FLAGS = -g -O0 --coverage -I$(SOURCE_DIR) $(TESTFLAGS) -DBLANK_SUFFIX=\".cover\"
 DEBUG_FLAGS = -g3 -O0
 PROFILE_FLAGS = -DNDEBUG -O1 -g3 -DBLANK_PROFILING
 RELEASE_FLAGS = -DNDEBUG -O2 -g1
-TEST_FLAGS = -g -O2 -I$(SOURCE_DIR) $(TESTFLAGS) -DBLANK_SUFFIX=.test
+TEST_FLAGS = -g -O2 -I$(SOURCE_DIR) $(TESTFLAGS) -DBLANK_SUFFIX=\".test\"
 
 # destination
 COVER_DIR := build/cover
@@ -66,9 +66,12 @@ TEST_BIN_SRC := $(wildcard $(TEST_SRC_DIR)/*.cpp)
 TEST_LIB_SRC := $(wildcard $(TEST_SRC_DIR)/*/*.cpp)
 TEST_SRC := $(TEST_LIB_SRC) $(TEST_BIN_SRC)
 
+COVER_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(COVER_DIR)/src/%.o, $(LIB_SRC))
+COVER_TEST_LIB_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(COVER_DIR)/%.o, $(TEST_LIB_SRC))
 COVER_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(COVER_DIR)/%.o, $(TEST_SRC)) $(patsubst $(SOURCE_DIR)/%.cpp, $(COVER_DIR)/src/%.o, $(LIB_SRC))
 COVER_DEP := $(COVER_OBJ:.o=.d)
-COVER_BIN := blank.cover test.cover
+COVER_BIN := blank.cover
+COVER_TEST_BIN := test.cover
 
 DEBUG_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(SRC))
 DEBUG_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(LIB_SRC))
@@ -85,13 +88,16 @@ RELEASE_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(RELEASE_DIR)/%.o, $(LIB_SRC
 RELEASE_DEP := $(RELEASE_OBJ:.o=.d)
 RELEASE_BIN := blank
 
+TEST_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(TEST_DIR)/src/%.o, $(LIB_SRC))
+TEST_TEST_LIB_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_DIR)/%.o, $(TEST_LIB_SRC))
 TEST_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_DIR)/%.o, $(TEST_SRC)) $(patsubst $(SOURCE_DIR)/%.cpp, $(TEST_DIR)/src/%.o, $(LIB_SRC))
 TEST_DEP := $(TEST_OBJ:.o=.d)
-TEST_BIN := blank.test test.test
+TEST_BIN := blank.test
+TEST_TEST_BIN := test.test
 
 OBJ := $(COVER_OBJ) $(DEBUG_OBJ) $(PROFILE_OBJ) $(RELEASE_OBJ) $(TEST_OBJ)
 DEP := $(COVER_DEP) $(DEBUG_DEP) $(PROFILE_DEP) $(RELEASE_DEP) $(TEST_DEP)
-BIN := $(COVER_BIN) $(DEBUG_BIN) $(PROFILE_BIN) $(RELEASE_BIN) $(TEST_BIN)
+BIN := $(COVER_BIN) $(DEBUG_BIN) $(PROFILE_BIN) $(RELEASE_BIN) $(TEST_BIN) $(COVER_TEST_BIN) $(TEST_TEST_BIN)
 
 release: $(RELEASE_BIN)
 
@@ -113,13 +119,13 @@ info:
 
 all: $(BIN)
 
-cover: $(COVER_BIN)
+cover: $(COVER_BIN) $(COVER_TEST_BIN)
 
 debug: $(DEBUG_BIN)
 
 profile: $(PROFILE_BIN)
 
-tests: $(TEST_BIN)
+tests: $(TEST_BIN) $(TEST_TEST_BIN)
 
 run: $(ASSET_DEP) blank
 	./blank --save-path saves/
@@ -144,11 +150,11 @@ callgrind: $(ASSET_DEP) blank.profile
 		--dump-instr=yes --simulate-hwpref=yes --simulate-wb=yes \
 		./blank.profile -n 256 -t 16 --no-keyboard --no-mouse -d --no-vsync --save-path saves/
 
-test: $(TEST_BIN)
+test: $(TEST_BIN) $(TEST_TEST_BIN)
 	@echo run: test.test
 	@./test.test
 
-coverage: $(COVER_BIN)
+coverage: $(COVER_BIN) $(COVER_TEST_BIN)
 	@echo run: test.cover
 	@./test.cover
 
@@ -176,7 +182,11 @@ distclean: clean
 -include $(DEP)
 
 
-$(COVER_BIN): $(COVER_OBJ)
+$(COVER_BIN): %.cover: $(COVER_DIR)/src/%.o $(COVER_LIB_OBJ)
+	@echo link: $@
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(COVER_FLAGS)
+
+$(COVER_TEST_BIN): %.cover: $(COVER_DIR)/%.o $(COVER_LIB_OBJ) $(COVER_TEST_LIB_OBJ)
 	@echo link: $@
 	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(TESTLIBS) $(COVER_FLAGS)
 
@@ -221,7 +231,11 @@ $(RELEASE_DIR)/%.o: $(SOURCE_DIR)/%.cpp | $(RELEASE_DIR)
 	@$(CXX) -c $(CPPFLAGS) $(CXXFLAGS) $(RELEASE_FLAGS) -o $@ -MMD -MP -MF"$(@:.o=.d)" -MT"$@" $<
 
 
-$(TEST_BIN): $(TEST_OBJ)
+$(TEST_BIN): %.test: $(TEST_DIR)/src/%.o $(TEST_LIB_OBJ)
+	@echo link: $@
+	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(TEST_FLAGS)
+
+$(TEST_TEST_BIN): %.test: $(TEST_DIR)/%.o $(TEST_LIB_OBJ) $(TEST_TEST_LIB_OBJ)
 	@echo link: $@
 	@$(LDXX) $(CXXFLAGS) $^ -o $@ $(LDXXFLAGS) $(TESTLIBS) $(TEST_FLAGS)
 
