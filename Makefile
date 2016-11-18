@@ -41,11 +41,11 @@ TEST_SRC_DIR := tst
 #   same flags as release, but with main replaced by cppunit
 #   test runner and tests (from tst dir) built in
 
-COVER_FLAGS = -g -O0 --coverage -I$(SOURCE_DIR) $(TESTFLAGS)
+COVER_FLAGS = -g -O0 --coverage -I$(SOURCE_DIR) $(TESTFLAGS) -DBLANK_SUFFIX=.cover
 DEBUG_FLAGS = -g3 -O0
 PROFILE_FLAGS = -DNDEBUG -O1 -g3 -DBLANK_PROFILING
 RELEASE_FLAGS = -DNDEBUG -O2 -g1
-TEST_FLAGS = -g -O2 -I$(SOURCE_DIR) $(TESTFLAGS)
+TEST_FLAGS = -g -O2 -I$(SOURCE_DIR) $(TESTFLAGS) -DBLANK_SUFFIX=.test
 
 # destination
 COVER_DIR := build/cover
@@ -62,11 +62,13 @@ ASSET_DEP := $(ASSET_DIR)/.git
 LIB_SRC := $(wildcard $(SOURCE_DIR)/*/*.cpp)
 BIN_SRC := $(wildcard $(SOURCE_DIR)/*.cpp)
 SRC := $(LIB_SRC) $(BIN_SRC)
-TEST_SRC := $(wildcard $(TEST_SRC_DIR)/*.cpp) $(wildcard $(TEST_SRC_DIR)/*/*.cpp)
+TEST_BIN_SRC := $(wildcard $(TEST_SRC_DIR)/*.cpp)
+TEST_LIB_SRC := $(wildcard $(TEST_SRC_DIR)/*/*.cpp)
+TEST_SRC := $(TEST_LIB_SRC) $(TEST_BIN_SRC)
 
 COVER_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(COVER_DIR)/%.o, $(TEST_SRC)) $(patsubst $(SOURCE_DIR)/%.cpp, $(COVER_DIR)/src/%.o, $(LIB_SRC))
 COVER_DEP := $(COVER_OBJ:.o=.d)
-COVER_BIN := blank.cover
+COVER_BIN := blank.cover test.cover
 
 DEBUG_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(SRC))
 DEBUG_LIB_OBJ := $(patsubst $(SOURCE_DIR)/%.cpp, $(DEBUG_DIR)/%.o, $(LIB_SRC))
@@ -85,7 +87,7 @@ RELEASE_BIN := blank
 
 TEST_OBJ := $(patsubst $(TEST_SRC_DIR)/%.cpp, $(TEST_DIR)/%.o, $(TEST_SRC)) $(patsubst $(SOURCE_DIR)/%.cpp, $(TEST_DIR)/src/%.o, $(LIB_SRC))
 TEST_DEP := $(TEST_OBJ:.o=.d)
-TEST_BIN := blank.test
+TEST_BIN := blank.test test.test
 
 OBJ := $(COVER_OBJ) $(DEBUG_OBJ) $(PROFILE_OBJ) $(RELEASE_OBJ) $(TEST_OBJ)
 DEP := $(COVER_DEP) $(DEBUG_DEP) $(PROFILE_DEP) $(RELEASE_DEP) $(TEST_DEP)
@@ -142,13 +144,13 @@ callgrind: $(ASSET_DEP) blank.profile
 		--dump-instr=yes --simulate-hwpref=yes --simulate-wb=yes \
 		./blank.profile -n 256 -t 16 --no-keyboard --no-mouse -d --no-vsync --save-path saves/
 
-test: blank.test
-	@echo run: blank.test
-	@./blank.test
+test: $(TEST_BIN)
+	@echo run: test.test
+	@./test.test
 
-coverage: blank.cover
-	@echo run: blank.cover
-	@./blank.cover
+coverage: $(COVER_BIN)
+	@echo run: test.cover
+	@./test.cover
 
 codecov: coverage
 	@echo run: codecov.io

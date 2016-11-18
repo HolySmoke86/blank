@@ -2,13 +2,11 @@
 *.swo
 *.trace
 blank
-blank.cover
-blank.debug
-blank.profile
-blank.test
+blank.*
 build
 cachegrind.out.*
 callgrind.out.*
 client-saves
 generate.profile
 saves
+test.*
