@@ -356,26 +356,26 @@ void Runtime::ReadArgs(int argc, const char *const *argv) {
 	} else {
 		mode = NORMAL;
 	}
-}
 
-void Runtime::ReadPreferences() {
 	if (config.env.asset_path.empty()) {
 		config.env.asset_path = default_asset_path();
 	} else if (
-		config.env.asset_path[config.env.asset_path.size() - 1] != '/' &&
-		config.env.asset_path[config.env.asset_path.size() - 1] != '\\'
+		config.env.asset_path.back() != '/' &&
+		config.env.asset_path.back() != '\\'
 	) {
 		config.env.asset_path += '/';
 	}
 	if (config.env.save_path.empty()) {
 		config.env.save_path = default_save_path();
 	} else if (
-		config.env.save_path[config.env.save_path.size() - 1] != '/' &&
-		config.env.save_path[config.env.save_path.size() - 1] != '\\'
+		config.env.save_path.back() != '/' &&
+		config.env.save_path.back() != '\\'
 	) {
 		config.env.save_path += '/';
 	}
+}
 
+void Runtime::ReadPreferences() {
 	string prefs_path = config.env.save_path + "prefs.conf";
 	if (is_file(prefs_path)) {
 		ifstream file(prefs_path);
