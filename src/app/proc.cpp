@@ -1,6 +1,6 @@
 #include "Process.hpp"
 
-#ifdef __WIN32
+#ifdef _WIN32
 #  error "TODO: windows implementation of Process"
 #else
 #  include <cstdio>
@@ -30,7 +30,7 @@ struct Process::Impl {
 
 	int Join();
 
-#ifdef __WIN32
+#ifdef _WIN32
 	PROCESS_INFORMATION pi;
 	HANDLE fd_in[2];
 	HANDLE fd_out[2];
@@ -94,7 +94,7 @@ Process::Impl::Impl(
 		envp[i] = const_cast<char *>(env[i].c_str());
 	}
 	envp[env.size()] = nullptr;
-#ifdef __WIN32
+#ifdef _WIN32
 	string cmdline;
 	for (const auto &arg : args) {
 		cmdline += '"';
@@ -207,7 +207,7 @@ Process::Impl::~Impl() {
 }
 
 size_t Process::Impl::WriteIn(const void *buffer, size_t max_len) {
-#ifdef __WIN32
+#ifdef _WIN32
 	DWORD written;
 	if (!WriteFile(fd_in[1], buffer, max_len, &written, nullptr)) {
 		throw runtime_error("failed to write to child process' input stream");
@@ -227,7 +227,7 @@ size_t Process::Impl::WriteIn(const void *buffer, size_t max_len) {
 }
 
 size_t Process::Impl::ReadOut(void *buffer, size_t max_len) {
-#ifdef __WIN32
+#ifdef _WIN32
 	DWORD ret;
 	if (!ReadFile(fd_out[0], buffer, max_len, &ret, nullptr)) {
 		throw runtime_error("failed to read from child process' output stream");
@@ -247,7 +247,7 @@ size_t Process::Impl::ReadOut(void *buffer, size_t max_len) {
 }
 
 size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
-#ifdef __WIN32
+#ifdef _WIN32
 	DWORD ret;
 	if (!ReadFile(fd_err[0], buffer, max_len, &ret, nullptr)) {
 		throw runtime_error("failed to read from child process' error stream");
@@ -267,7 +267,7 @@ size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
 }
 
 int Process::Impl::Join() {
-#ifdef __WIN32
+#ifdef _WIN32
 	CloseHandle(fd_in[1]);
 	CloseHandle(fd_out[0]);
 	CloseHandle(fd_err[0]);
