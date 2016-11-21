@@ -9,8 +9,9 @@ int main(int, char **) {
 	TestRunner runner;
 	TestFactoryRegistry &registry = TestFactoryRegistry::getRegistry();
 	runner.addTest(registry.makeTest());
-	runner.run();
-
-	return 0;
-
+	if (runner.run()) {
+		return 0;
+	} else {
+		return 1;
+	}
 }
