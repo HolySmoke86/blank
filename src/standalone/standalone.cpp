@@ -12,6 +12,7 @@
 #include "../world/ChunkRenderer.hpp"
 
 #include <SDL.h>
+#include <iostream>
 
 
 namespace blank {
@@ -94,6 +95,7 @@ void MasterState::OnResume() {
 		env.state.Push(&preload);
 		return;
 	}
+	std::cout << "chunk preloading complete" << std::endl;
 	if (spawn_player) {
 		// TODO: spawn
 		spawn_player = false;
