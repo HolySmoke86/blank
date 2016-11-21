@@ -104,7 +104,7 @@ void TestInstance::AssertNoOutput() {
 	string output;
 	ExhaustOutput(output);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"test instanced produced unexpected output",
+		"test instance produced unexpected output",
 		string(""), output);
 }
 
@@ -153,7 +153,7 @@ void TestInstance::AssertNoError() {
 	string error;
 	ExhaustError(error);
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"test instanced produced unexpected error output",
+		"test instance produced unexpected error output",
 		string(""), error);
 }
 
