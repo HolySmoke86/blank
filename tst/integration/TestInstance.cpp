@@ -51,10 +51,14 @@ TestInstance::~TestInstance() {
 
 
 void TestInstance::WriteInput(const string &data) {
+	AssertRunning();
 	const char *i = data.c_str();
 	const char *end = i + data.length();
 	while (i != end) {
 		size_t len = proc.WriteIn(i, end - i);
+		if (len == 0) {
+			throw runtime_error("failed write to child process' stdin");
+		}
 		i += len;
 	}
 }
@@ -62,7 +66,11 @@ void TestInstance::WriteInput(const string &data) {
 void TestInstance::ReadOutputLine(string &line) {
 	while (!out_buf.Extract(line)) {
 		// buffer exhausted, fetch more data
-		out_buf.Update(proc.ReadOut(out_buf.WriteHead(), out_buf.Remain()));
+		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain());
+		if (len == 0) {
+			throw runtime_error("failed read from child process' stdout");
+		}
+		out_buf.Update(len);
 	}
 }
 
@@ -84,10 +92,34 @@ void TestInstance::WaitOutputLine(const string &expected) {
 	}
 }
 
+void TestInstance::ExhaustOutput(string &output) {
+	while (!out_buf.Extract(output)) {
+		// buffer exhausted, fetch more data
+		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain());
+		if (len == 0) {
+			return;
+		}
+		out_buf.Update(len);
+	}
+}
+
+void TestInstance::AssertNoOutput() {
+	string output;
+	ExhaustOutput(output);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"test instanced produced unexpected output",
+		string(""), output);
+}
+
+
 void TestInstance::ReadErrorLine(string &line) {
 	while (!err_buf.Extract(line)) {
 		// buffer exhausted, fetch more data
-		err_buf.Update(proc.ReadErr(err_buf.WriteHead(), err_buf.Remain()));
+		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain());
+		if (len == 0) {
+			throw runtime_error("failed read from child process' stderr");
+		}
+		err_buf.Update(len);
 	}
 }
 
@@ -109,10 +141,45 @@ void TestInstance::WaitErrorLine(const string &expected) {
 	}
 }
 
+void TestInstance::ExhaustError(string &error) {
+	while (!err_buf.Extract(error)) {
+		// buffer exhausted, fetch more data
+		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain());
+		if (len == 0) {
+			return;
+		}
+		err_buf.Update(len);
+	}
+}
+
+void TestInstance::AssertNoError() {
+	string error;
+	ExhaustError(error);
+	CPPUNIT_ASSERT_EQUAL_MESSAGE(
+		"test instanced produced unexpected error output",
+		string(""), error);
+}
+
+
+void TestInstance::Terminate() {
+	proc.Terminate();
+}
+
+void TestInstance::AssertRunning() {
+	CPPUNIT_ASSERT_MESSAGE(
+		"test instance terminated unexpectedly",
+		!proc.Terminated());
+}
+
+void TestInstance::AssertTerminated() {
+	CPPUNIT_ASSERT_MESSAGE(
+		"test instance did not terminate as expected",
+		proc.Terminated());
+}
 
 void TestInstance::AssertExitStatus(int expected) {
 	CPPUNIT_ASSERT_EQUAL_MESSAGE(
-		"unexpected line in stderr",
+		"unexpected exit status from child program",
 		expected, proc.Join());
 }
 

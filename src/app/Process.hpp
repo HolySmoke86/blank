@@ -28,27 +28,34 @@ public:
 	/// data is taken from given buffer, at most max_len bytes
 	/// @return the number of bytes written
 	std::size_t WriteIn(const void *buffer, std::size_t max_len);
+	/// close program's input stream
+	void CloseIn();
+
 	/// read from the process' output stream
 	/// data is stored in the given buffer, at most max_len bytes
 	/// @return the number of bytes read
 	std::size_t ReadOut(void *buffer, std::size_t max_len);
+	/// close program's output stream
+	void CloseOut();
+
 	/// read from the process' error stream
 	/// data is stored in the given buffer, at most max_len bytes
 	/// @return the number of bytes read
 	std::size_t ReadErr(void *buffer, std::size_t max_len);
+	/// close program's output stream
+	void CloseErr();
 
 	/// ask the process nicely to terminate
 	/// (except on win32)
 	void Terminate();
+	/// check if the process has terminated
+	bool Terminated();
 	/// wait until the process exits and fetch its exit status
 	int Join();
 
 private:
 	struct Impl;
 	std::unique_ptr<Impl> impl;
-
-	bool joined;
-	int status;
 
 };
 

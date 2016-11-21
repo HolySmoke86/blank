@@ -29,11 +29,24 @@ struct Process::Impl {
 	~Impl();
 
 	size_t WriteIn(const void *buffer, size_t max_len);
+	void CloseIn();
+
 	size_t ReadOut(void *buffer, size_t max_len);
+	void CloseOut();
+
 	size_t ReadErr(void *buffer, size_t max_len);
+	void CloseErr();
 
 	void Terminate();
+	bool Terminated();
 	int Join();
+
+	bool joined;
+	int status;
+
+	bool in_closed;
+	bool out_closed;
+	bool err_closed;
 
 #ifdef _WIN32
 	PROCESS_INFORMATION pi;
@@ -54,9 +67,7 @@ Process::Process(
 	const string &path,
 	const Arguments &args,
 	const Environment &env)
-: impl(new Impl(path, args, env))
-, joined(false)
-, status(0) {
+: impl(new Impl(path, args, env)) {
 
 }
 
@@ -69,36 +80,48 @@ size_t Process::WriteIn(const void *buffer, size_t max_len) {
 	return impl->WriteIn(buffer, max_len);
 }
 
+void Process::CloseIn() {
+	impl->CloseIn();
+}
+
 size_t Process::ReadOut(void *buffer, size_t max_len) {
 	return impl->ReadOut(buffer, max_len);
+}
+
+void Process::CloseOut() {
+	impl->CloseOut();
 }
 
 size_t Process::ReadErr(void *buffer, size_t max_len) {
 	return impl->ReadErr(buffer, max_len);
 }
 
+void Process::CloseErr() {
+	impl->CloseErr();
+}
+
 void Process::Terminate() {
-	if (!joined) {
-		impl->Terminate();
-	}
+	impl->Terminate();
+}
+
+bool Process::Terminated() {
+	return impl->Terminated();
 }
 
 int Process::Join() {
-	if (joined) {
-		return status;
-	} else {
-		status = impl->Join();
-		joined = true;
-		return status;
-	}
+	return impl->Join();
 }
 
 
 Process::Impl::Impl(
 	const string &path_in,
 	const Arguments &args,
-	const Environment &env
-) {
+	const Environment &env)
+: joined(false)
+, status(0)
+, in_closed(false)
+, out_closed(false)
+, err_closed(false) {
 	const char *path = path_in.c_str();
 	char *envp[env.size() + 1];
 	for (size_t i = 0; i < env.size(); ++i) {
@@ -214,7 +237,9 @@ Process::Impl::Impl(
 #endif
 
 Process::Impl::~Impl() {
-
+	CloseIn();
+	CloseOut();
+	CloseErr();
 }
 
 size_t Process::Impl::WriteIn(const void *buffer, size_t max_len) {
@@ -237,6 +262,18 @@ size_t Process::Impl::WriteIn(const void *buffer, size_t max_len) {
 #endif
 }
 
+void Process::Impl::CloseIn() {
+	if (in_closed) {
+		return;
+	}
+#ifdef _WIN32
+	CloseHandle(fd_in[1]);
+#else
+	close(fd_in[1]);
+#endif
+	in_closed = true;
+}
+
 size_t Process::Impl::ReadOut(void *buffer, size_t max_len) {
 #ifdef _WIN32
 	DWORD ret;
@@ -255,6 +292,18 @@ size_t Process::Impl::ReadOut(void *buffer, size_t max_len) {
 	}
 	return ret;
 #endif
+}
+
+void Process::Impl::CloseOut() {
+	if (out_closed) {
+		return;
+	}
+#ifdef _WIN32
+	CloseHandle(fd_out[0]);
+#else
+	close(fd_out[0]);
+#endif
+	out_closed = true;
 }
 
 size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
@@ -277,7 +326,23 @@ size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
 #endif
 }
 
+void Process::Impl::CloseErr() {
+	if (err_closed) {
+		return;
+	}
+#ifdef _WIN32
+	CloseHandle(fd_err[0]);
+#else
+	close(fd_err[0]);
+#endif
+	err_closed = true;
+}
+
 void Process::Impl::Terminate() {
+	if (joined) {
+		// can only terminate once
+		return;
+	}
 #ifdef _WIN32
 	if (!TerminateProcess(pi.hProcess, -1)) {
 #else
@@ -287,27 +352,64 @@ void Process::Impl::Terminate() {
 	}
 }
 
-int Process::Impl::Join() {
+bool Process::Impl::Terminated() {
+	if (joined) {
+		return true;
+	}
 #ifdef _WIN32
-	CloseHandle(fd_in[1]);
-	CloseHandle(fd_out[0]);
-	CloseHandle(fd_err[0]);
+	DWORD exit_code;
+	GetExitCodeProcess(pi.hProcess, &exit_code);
+	if (exit_code == STILL_ACTIVE) {
+		return false;
+	} else {
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+		status = exit_code;
+		joined = true;
+		return true;
+	}
+#else
+	int stat;
+	int result = waitpid(pid, &stat, WNOHANG);
+	if (result == -1) {
+		throw SysError("error polling child process");
+	} else if (result == 0) {
+		return false;
+	} else if (result == pid) {
+		// child just exited, reap
+		if (WIFEXITED(stat)) {
+			// autonomous termination
+			status = WEXITSTATUS(stat);
+		} else if (WIFSIGNALED(stat)) {
+			// signalled termination
+			status = WTERMSIG(stat);
+		}
+		joined = true;
+		return true;
+	} else {
+		throw runtime_error("bogus return value of waitpid");
+	}
+#endif
+}
 
+int Process::Impl::Join() {
+	if (joined) {
+		// can only join once
+		return status;
+	}
+#ifdef _WIN32
 	DWORD exit_code;
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	GetExitCodeProcess(pi.hProcess, &exit_code);
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-	return exit_code;
+	status = exit_code;
+	joined = true;
+	return status;
 #else
-	// close streams before waiting on child termination
-	close(fd_in[1]);
-	close(fd_out[0]);
-	close(fd_err[0]);
-
 	while (true) {
-		int status;
-		int result = waitpid(pid, &status, 0);
+		int stat;
+		int result = waitpid(pid, &stat, 0);
 		if (result == -1) {
 			throw SysError("error waiting on child process");
 		}
@@ -315,13 +417,17 @@ int Process::Impl::Join() {
 			// should in theory only happen with WNOHANG set
 			continue;
 		}
-		if (WIFEXITED(status)) {
+		if (WIFEXITED(stat)) {
 			// autonomous termination
-			return WEXITSTATUS(status);
+			status = WEXITSTATUS(stat);
+			joined = true;
+			return status;
 		}
-		if (WIFSIGNALED(status)) {
+		if (WIFSIGNALED(stat)) {
 			// signalled termination
-			return WTERMSIG(status);
+			status = WTERMSIG(stat);
+			joined = true;
+			return status;
 		}
 		// otherwise, child probably signalled stop/continue, which we
 		// don't care about (please don't tell youth welfare), so try again

@@ -95,6 +95,8 @@ void ProcessTest::testStream() {
 		CPPUNIT_ASSERT_EQUAL_MESSAGE(
 			"unexpected length of input to cat",
 			test_input.size(), len);
+		// close input stream so cat knows we're done
+		proc.CloseIn();
 
 		char buffer[expected_output.length() + 1];
 		len = proc.ReadOut(buffer, sizeof(buffer));

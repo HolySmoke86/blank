@@ -19,6 +19,10 @@ void ServerTest::tearDown() {
 
 void ServerTest::testStartup() {
 	TestInstance server({ "--server" }, true);
+	server.AssertRunning();
+	server.Terminate();
+	server.AssertExitStatus(0);
+	server.AssertNoError();
 }
 
 }

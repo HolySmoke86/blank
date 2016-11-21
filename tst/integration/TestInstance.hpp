@@ -26,22 +26,36 @@ public:
 	/// sure to include a newline character.
 	void WriteInput(const std::string &data);
 
-	/// read next line from programs stdout
+	/// read next line from program's stdout
 	void ReadOutputLine(std::string &line);
 	/// assert that the next line the program writes to stdout will
 	/// be the given one (without a trailing newline character)
 	void AssertOutputLine(const std::string &line);
 	/// wait until program writes given line to stdout
 	void WaitOutputLine(const std::string &line);
+	/// read from program's stdout until EOF
+	void ExhaustOutput(std::string &output);
+	/// assert that the program produces no more output
+	void AssertNoOutput();
 
-	/// read next line from programs stderr
+	/// read next line from program's stderr
 	void ReadErrorLine(std::string &line);
 	/// assert that the next line the program writes to stderr will
 	/// be the given one (without a trailing newline character)
 	void AssertErrorLine(const std::string &line);
 	/// wait until program writes given line to stderr
 	void WaitErrorLine(const std::string &line);
+	/// read from program's stdout until EOF
+	void ExhaustError(std::string &error);
+	/// assert that the program produces no more output on stderr
+	void AssertNoError();
 
+	/// send termination signal
+	void Terminate();
+	/// assert that the program has not exited
+	void AssertRunning();
+	/// assert that the program has exited
+	void AssertTerminated();
 	/// make sure the process terminated with given status
 	void AssertExitStatus(int expected);
 
