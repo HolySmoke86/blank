@@ -28,10 +28,7 @@ Process::Arguments combine_args(const TempDir &dir, const Process::Arguments &in
 
 TestInstance::TestInstance(const Process::Arguments &args, bool cmd)
 : dir()
-, proc(
-	"./blank" BLANK_SUFFIX,
-	combine_args(dir, args, cmd),
-	{ })
+, proc("./blank" BLANK_SUFFIX, combine_args(dir, args, cmd))
 , conn()
 , out_buf()
 , err_buf()

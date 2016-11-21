@@ -16,7 +16,12 @@ public:
 
 public:
 	/// launch process executing the file at given path with
-	/// given arguments and environment
+	/// given arguments and environment of parent process
+	Process(
+		const std::string &path,
+		const Arguments &args);
+	/// launch process executing the file at given path with
+	/// given arguments and given environment
 	Process(
 		const std::string &path,
 		const Arguments &args,

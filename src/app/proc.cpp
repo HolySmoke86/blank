@@ -23,10 +23,15 @@ namespace blank {
 struct Process::Impl {
 
 	Impl(
-		const string &path_in,
+		const string &path,
+		const Arguments &args,
+		char *const env[]);
+	~Impl();
+
+	static Impl *EnvHelper(
+		const string &path,
 		const Arguments &args,
 		const Environment &env);
-	~Impl();
 
 	size_t WriteIn(const void *buffer, size_t max_len);
 	void CloseIn();
@@ -65,9 +70,16 @@ struct Process::Impl {
 
 Process::Process(
 	const string &path,
+	const Arguments &args)
+: impl(new Impl(path, args, nullptr)) {
+
+}
+
+Process::Process(
+	const string &path,
 	const Arguments &args,
 	const Environment &env)
-: impl(new Impl(path, args, env)) {
+: impl(Impl::EnvHelper(path, args, env)) {
 
 }
 
@@ -112,22 +124,29 @@ int Process::Join() {
 	return impl->Join();
 }
 
+Process::Impl *Process::Impl::EnvHelper(
+	const string &path,
+	const Arguments &args,
+	const Environment &env
+) {
+	char *envp[env.size() + 1];
+	for (size_t i = 0; i < env.size(); ++i) {
+		envp[i] = const_cast<char *>(env[i].c_str());
+	}
+	envp[env.size()] = nullptr;
+	return new Impl(path, args, envp);
+}
 
 Process::Impl::Impl(
 	const string &path_in,
 	const Arguments &args,
-	const Environment &env)
+	char *const envp[])
 : joined(false)
 , status(0)
 , in_closed(false)
 , out_closed(false)
 , err_closed(false) {
 	const char *path = path_in.c_str();
-	char *envp[env.size() + 1];
-	for (size_t i = 0; i < env.size(); ++i) {
-		envp[i] = const_cast<char *>(env[i].c_str());
-	}
-	envp[env.size()] = nullptr;
 #ifdef _WIN32
 	string cmdline;
 	for (const auto &arg : args) {
@@ -222,7 +241,11 @@ Process::Impl::Impl(
 		close(fd_err[0]);
 		close(fd_err[1]);
 
-		execve(path, argv, envp);
+		if (envp) {
+			execve(path, argv, envp);
+		} else {
+			execv(path, argv);
+		}
 		// if execve returns, something bad happened
 		exit(EXIT_FAILURE);
 
