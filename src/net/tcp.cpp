@@ -1,6 +1,6 @@
 #include "tcp.hpp"
 
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 
 #include <stdexcept>
 

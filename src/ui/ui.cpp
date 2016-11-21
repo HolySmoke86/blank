@@ -10,7 +10,6 @@
 #include "../app/Config.hpp"
 #include "../app/Environment.hpp"
 #include "../app/FrameCounter.hpp"
-#include "../app/init.hpp"
 #include "../audio/Audio.hpp"
 #include "../audio/SoundBank.hpp"
 #include "../geometry/distance.hpp"

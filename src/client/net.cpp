@@ -3,7 +3,7 @@
 #include "Client.hpp"
 #include "NetworkedInput.hpp"
 
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 #include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
 #include "../net/Packet.hpp"

@@ -4,7 +4,7 @@
 #include "io.hpp"
 #include "Packet.hpp"
 
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 #include "../geometry/const.hpp"
 #include "../model/Model.hpp"
 #include "../world/Entity.hpp"

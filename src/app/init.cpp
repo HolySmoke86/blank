@@ -6,75 +6,11 @@
 #include <SDL_image.h>
 #include <SDL_net.h>
 #include <SDL_ttf.h>
+#include <string>
 #include <GL/glew.h>
 
 
-namespace {
-
-std::string sdl_error_append(std::string msg) {
-	const char *error = SDL_GetError();
-	if (*error != '\0') {
-		msg += ": ";
-		msg += error;
-		SDL_ClearError();
-	}
-	return msg;
-}
-
-std::string net_error_append(std::string msg) {
-	const char *error = SDLNet_GetError();
-	if (*error != '\0') {
-		msg += ": ";
-		msg += error;
-	}
-	return msg;
-}
-
-std::string alut_error_append(ALenum num, std::string msg) {
-	const char *error = alutGetErrorString(num);
-	if (*error != '\0') {
-		msg += ": ";
-		msg += error;
-	}
-	return msg;
-}
-
-}
-
 namespace blank {
-
-AlutError::AlutError(ALenum num)
-: std::runtime_error(alutGetErrorString(num)) {
-
-}
-
-AlutError::AlutError(ALenum num, const std::string &msg)
-: std::runtime_error(alut_error_append(num, msg)) {
-
-}
-
-
-NetError::NetError()
-: std::runtime_error(SDLNet_GetError()) {
-
-}
-
-NetError::NetError(const std::string &msg)
-: std::runtime_error(net_error_append(msg)) {
-
-}
-
-
-SDLError::SDLError()
-: std::runtime_error(SDL_GetError()) {
-
-}
-
-SDLError::SDLError(const std::string &msg)
-: std::runtime_error(sdl_error_append(msg)) {
-
-}
-
 
 InitSDL::InitSDL() {
 	if (SDL_Init(SDL_INIT_EVENTS) != 0) {

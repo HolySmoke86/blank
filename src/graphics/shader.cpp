@@ -9,7 +9,7 @@
 #include "ArrayTexture.hpp"
 #include "CubeMap.hpp"
 #include "Texture.hpp"
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -20,29 +20,12 @@
 #include <glm/gtc/type_ptr.hpp>
 
 
-namespace {
-
-void gl_error(std::string msg) {
-	const GLubyte *errBegin = gluErrorString(glGetError());
-	if (errBegin && *errBegin != '\0') {
-		const GLubyte *errEnd = errBegin;
-		while (*errEnd != '\0') {
-			++errEnd;
-		}
-		msg += ": ";
-		msg.append(errBegin, errEnd);
-	}
-	throw std::runtime_error(msg);
-}
-
-}
-
 namespace blank {
 
 Shader::Shader(GLenum type)
 : handle(glCreateShader(type)) {
 	if (handle == 0) {
-		gl_error("glCreateShader");
+		throw GLError("glCreateShader");
 	}
 }
 
@@ -95,7 +78,7 @@ void Shader::AttachToProgram(GLuint id) const noexcept {
 Program::Program()
 : handle(glCreateProgram()) {
 	if (handle == 0) {
-		gl_error("glCreateProgram");
+		throw GLError("glCreateProgram");
 	}
 }
 

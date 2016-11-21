@@ -1,5 +1,7 @@
 #include "Process.hpp"
 
+#include "error.hpp"
+
 #ifdef _WIN32
 #  include <tchar.h>
 #  include <windows.h>
@@ -166,18 +168,18 @@ Process::Impl::Impl(
 	argv[args.size()] = nullptr;
 
 	if (pipe(fd_in) != 0) {
-		throw runtime_error("failed to open pipe for child process' stdin");
+		throw SysError("failed to open pipe for child process' stdin");
 	}
 	if (pipe(fd_out) != 0) {
-		throw runtime_error("failed to open pipe for child process' stdout");
+		throw SysError("failed to open pipe for child process' stdout");
 	}
 	if (pipe(fd_err) != 0) {
-		throw runtime_error("failed to open pipe for child process' stderr");
+		throw SysError("failed to open pipe for child process' stderr");
 	}
 
 	pid = fork();
 	if (pid == -1) {
-		throw runtime_error("fork");
+		throw SysError("fork");
 	} else if (pid == 0) {
 
 		if (dup2(fd_in[0], STDIN_FILENO) == -1) {
@@ -228,7 +230,7 @@ size_t Process::Impl::WriteIn(const void *buffer, size_t max_len) {
 		if (errno == EAGAIN) {
 			return 0;
 		} else {
-			throw runtime_error("failed to write to child process' input stream");
+			throw SysError("failed to write to child process' input stream");
 		}
 	}
 	return written;
@@ -248,7 +250,7 @@ size_t Process::Impl::ReadOut(void *buffer, size_t max_len) {
 		if (errno == EAGAIN) {
 			return 0;
 		} else {
-			throw runtime_error("failed to read from child process' output stream");
+			throw SysError("failed to read from child process' output stream");
 		}
 	}
 	return ret;
@@ -268,7 +270,7 @@ size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
 		if (errno == EAGAIN) {
 			return 0;
 		} else {
-			throw runtime_error("failed to read from child process' error stream");
+			throw SysError("failed to read from child process' error stream");
 		}
 	}
 	return ret;
@@ -281,7 +283,7 @@ void Process::Impl::Terminate() {
 #else
 	if (kill(pid, SIGTERM) == -1) {
 #endif
-		throw runtime_error("failed to terminate child process");
+		throw SysError("failed to terminate child process");
 	}
 }
 
@@ -307,7 +309,7 @@ int Process::Impl::Join() {
 		int status;
 		int result = waitpid(pid, &status, 0);
 		if (result == -1) {
-			throw runtime_error("error waiting on child process");
+			throw SysError("error waiting on child process");
 		}
 		if (result == pid && WIFEXITED(status)) {
 			return WEXITSTATUS(status);

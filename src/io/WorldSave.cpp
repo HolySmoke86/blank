@@ -2,6 +2,7 @@
 
 #include "filesystem.hpp"
 #include "TokenStreamReader.hpp"
+#include "../app/error.hpp"
 
 #include <cctype>
 #include <cstring>
@@ -196,7 +197,7 @@ void WorldSave::Write(Chunk &chunk) const {
 		// check if it's because of a missing path component
 		if (errno != ENOENT) {
 			// nope, fatal
-			throw runtime_error(strerror(errno));
+			throw SysError();
 		}
 		string dir_path(path);
 		dir_path.erase(dir_path.find_last_of("\\/"));

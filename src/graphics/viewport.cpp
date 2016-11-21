@@ -3,7 +3,7 @@
 #include "SkyBox.hpp"
 #include "Viewport.hpp"
 
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 #include "../geometry/const.hpp"
 
 #include <GL/glew.h>

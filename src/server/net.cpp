@@ -2,7 +2,7 @@
 #include "ChunkTransmitter.hpp"
 #include "Server.hpp"
 
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 #include "../geometry/distance.hpp"
 #include "../io/WorldSave.hpp"
 #include "../model/Model.hpp"

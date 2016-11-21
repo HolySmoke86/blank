@@ -6,7 +6,7 @@
 #include "TextureBase.hpp"
 #include "Viewport.hpp"
 
-#include "../app/init.hpp"
+#include "../app/error.hpp"
 
 #include <algorithm>
 #include <cstring>
@@ -20,7 +20,7 @@ namespace blank {
 Font::Font(const char *src, int size, long index)
 : handle(TTF_OpenFontIndex(src, size, index)) {
 	if (!handle) {
-		throw std::runtime_error(TTF_GetError());
+		throw TTFError("TTF_OpenFontIndex");
 	}
 }
 
@@ -109,7 +109,7 @@ bool Font::HasGlyph(Uint16 c) const noexcept {
 glm::ivec2 Font::TextSize(const char *text) const {
 	glm::ivec2 size;
 	if (TTF_SizeUTF8(handle, text, &size.x, &size.y) != 0) {
-		throw std::runtime_error(TTF_GetError());
+		throw TTFError("TTF_SizeUTF8");
 	}
 	return size;
 }
@@ -123,7 +123,7 @@ Texture Font::Render(const char *text) const {
 void Font::Render(const char *text, Texture &tex) const {
 	SDL_Surface *srf = TTF_RenderUTF8_Blended(handle, text, { 0xFF, 0xFF, 0xFF, 0xFF });
 	if (!srf) {
-		throw std::runtime_error(TTF_GetError());
+		throw TTFError("TTF_RenderUTF8_Blended");
 	}
 	tex.Bind();
 	tex.Data(*srf, false);

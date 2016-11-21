@@ -1,41 +1,13 @@
 #ifndef BLANK_APP_INIT_HPP_
 #define BLANK_APP_INIT_HPP_
 
+#include "error.hpp"
+
 #include <al.h>
 #include <SDL.h>
-#include <stdexcept>
-#include <string>
 
 
 namespace blank {
-
-class AlutError
-: public std::runtime_error {
-
-public:
-	explicit AlutError(ALenum);
-	AlutError(ALenum, const std::string &);
-
-};
-
-class SDLError
-: public std::runtime_error {
-
-public:
-	SDLError();
-	explicit SDLError(const std::string &);
-
-};
-
-class NetError
-: public std::runtime_error {
-
-public:
-	NetError();
-	explicit NetError(const std::string &);
-
-};
-
 
 class InitSDL {
 

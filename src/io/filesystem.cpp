@@ -1,5 +1,7 @@
 #include "filesystem.hpp"
 
+#include "../app/error.hpp"
+
 #include <cerrno>
 #include <cstdio>
 #include <cstdlib>
@@ -219,7 +221,7 @@ TempDir::TempDir() {
 	char tmpl[] = "blank.XXXXXX";
 	const char *name = mkdtemp(tmpl);
 	if (!name) {
-		throw runtime_error("unable to create temporary directory");
+		throw SysError("unable to create temporary directory");
 	}
 	path = name;
 #else
