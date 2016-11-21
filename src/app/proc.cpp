@@ -311,11 +311,20 @@ int Process::Impl::Join() {
 		if (result == -1) {
 			throw SysError("error waiting on child process");
 		}
-		if (result == pid && WIFEXITED(status)) {
+		if (result != pid) {
+			// should in theory only happen with WNOHANG set
+			continue;
+		}
+		if (WIFEXITED(status)) {
+			// autonomous termination
 			return WEXITSTATUS(status);
 		}
-		// otherwise, child probably signalled, which we don't care
-		// about (please don't tell youth welfare), so try again
+		if (WIFSIGNALED(status)) {
+			// signalled termination
+			return WTERMSIG(status);
+		}
+		// otherwise, child probably signalled stop/continue, which we
+		// don't care about (please don't tell youth welfare), so try again
 	}
 #endif
 }
