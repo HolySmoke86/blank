@@ -24,5 +24,15 @@ if [ -e "${image_path}/env" ]; then
 	local_conf="$local_conf --env-file ${image_path}/env"
 fi
 
+# copy DISPLAY if set
+if [ "$DISPLAY" != "" ]; then
+	local_conf="$local_conf -e DISPLAY=$DISPLAY"
+fi
+
+# copy XDG_RUNTIME_DIR if set
+if [ "$XDG_RUNTIME_DIR" != "" ]; then
+	local_conf="$local_conf -e XDG_RUNTIME_DIR='$XDG_RUNTIME_DIR'"
+fi
+
 docker build -t "${image_name}" --pull=true "${image_path}"
-docker run -v "$PWD":/repo ${local_conf} "${image_name}" /bin/bash -c "${build_cmd}"
+docker run -v "$PWD":/repo ${local_conf} "${image_name}" /bin/bash -c "env && ${build_cmd}"
