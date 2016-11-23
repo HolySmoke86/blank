@@ -105,7 +105,12 @@ Viewport::Viewport()
 
 void Viewport::VSync(bool b) {
 	if (SDL_GL_SetSwapInterval(b) != 0) {
-		throw SDLError("SDL_GL_SetSwapInterval");
+		if (b) {
+			throw SDLError("SDL_GL_SetSwapInterval(1)");
+		} else {
+			// allow failure, because this usually means there's no vsync
+			// support at all, i.e. "it's off"
+		}
 	}
 }
 
