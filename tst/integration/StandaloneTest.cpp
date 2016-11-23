@@ -18,7 +18,7 @@ void StandaloneTest::tearDown() {
 
 
 void StandaloneTest::testStartup() {
-	TestInstance standalone({ });
+	TestInstance standalone({ "--no-vsync" });
 	standalone.AssertRunning();
 	standalone.AssertOutputLine("chunk preloading complete");
 	standalone.Terminate();
