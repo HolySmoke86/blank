@@ -150,11 +150,11 @@ callgrind: $(ASSET_DEP) blank.profile
 		--dump-instr=yes --simulate-hwpref=yes --simulate-wb=yes \
 		./blank.profile -n 256 -t 16 --no-keyboard --no-mouse -d --no-vsync --save-path saves/
 
-test: $(TEST_BIN) $(TEST_TEST_BIN)
+test: $(TEST_BIN) $(TEST_TEST_BIN) $(ASSET_DEP)
 	@echo run: test.test
 	@./test.test
 
-coverage: $(COVER_BIN) $(COVER_TEST_BIN)
+coverage: $(COVER_BIN) $(COVER_TEST_BIN) $(ASSET_DEP)
 	@echo run: test.cover
 	@./test.cover
 
