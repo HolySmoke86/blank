@@ -15,3 +15,5 @@ RUN apt -y install --no-install-recommends \
 	libsdl2-ttf-dev \
 	zlib1g-dev \
 	;
+
+ENV LDXXFLAGS=-L/usr/lib/x86_64-linux-gnu LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu

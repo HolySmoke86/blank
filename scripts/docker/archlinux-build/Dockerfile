@@ -1,16 +1,10 @@
-FROM rafaelsoares/archlinux-devel
+FROM localhorsttv/archlinux-run:latest
 
-RUN sudo pacman -S --noconfirm \
+RUN pacman -S --needed --noconfirm \
+	base-devel \
 	cppcheck \
 	cppunit \
-	freealut \
 	git \
-	glew \
 	glm \
-	openal \
-	sdl2 \
-	sdl2_image \
-	sdl2_net \
-	sdl2_ttf \
-	zlib \
-	;
+	&& \
+	paccache -rk 0
