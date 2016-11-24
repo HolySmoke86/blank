@@ -57,7 +57,10 @@ server:
 	./client-saved to prevent clashes with a running `make server`
 
 test:
-	build and run unittests
+	build and run tests
+
+unittest:
+	build and run tests that require no X server
 
 gdb, cachegrind, callgrind:
 	build the binary suited for given tool and launch
