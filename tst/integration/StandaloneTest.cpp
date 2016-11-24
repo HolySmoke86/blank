@@ -20,11 +20,22 @@ void StandaloneTest::tearDown() {
 void StandaloneTest::testStartup() {
 	TestInstance standalone({ "--no-vsync" });
 	standalone.AssertRunning();
-	standalone.AssertOutputLine("chunk preloading complete");
-	standalone.Terminate();
+	try {
+		standalone.AssertOutputLine("chunk preloading complete");
+		standalone.Terminate();
+	} catch (...) {
+		try {
+			standalone.Terminate();
+		} catch (...) { }
+		std::string output;
+		standalone.ExhaustError(output);
+		CPPUNIT_ASSERT_EQUAL_MESSAGE(
+			"process stderr",
+			std::string(""), output);
+		CPPUNIT_FAIL("exception in runtime");
+	}
 	standalone.AssertExitStatus(0);
-	// can't do that because AL blurts out nonsense
-	//standalone.AssertNoError();
+	standalone.AssertNoError();
 }
 
 }
