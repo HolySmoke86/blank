@@ -21,5 +21,5 @@ RUN apt -y install --no-install-recommends \
 		libsdl2-ttf-2.0-0 \
 		zlib1g \
 	&& apt-get -y clean \
-	&& echo -e '[general]\ndrivers = null' > /etc/openal/alsoft.conf \
+	&& printf '[general]\ndrivers = null\n' > /etc/openal/alsoft.conf \
 	;

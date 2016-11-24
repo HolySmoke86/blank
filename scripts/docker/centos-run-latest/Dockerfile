@@ -22,5 +22,5 @@ RUN yum -y install \
 	SDL2_ttf \
 	zlib \
 	&& yum -y clean packages \
-	&& echo -e '[general]\ndrivers = null' > /etc/openal/alsoft.conf \
+	&& printf '[general]\ndrivers = null\n' > /etc/openal/alsoft.conf \
 	;

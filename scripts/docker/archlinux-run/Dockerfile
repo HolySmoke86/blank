@@ -26,5 +26,5 @@ RUN pacman -S --needed --noconfirm \
 		zlib \
 	&& paccache -rk 0 \
 	&& mkdir -p /etc/openal \
-	&& echo -e '[general]\ndrivers = null' > /etc/openal/alsoft.conf \
+	&& printf '[general]\ndrivers = null\n' > /etc/openal/alsoft.conf \
 	;
