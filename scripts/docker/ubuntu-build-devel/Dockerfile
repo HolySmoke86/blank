@@ -1,7 +1,9 @@
-FROM ubuntu:devel
+FROM localhorsttv/ubuntu-run:devel
 
-RUN apt update \
-	&& apt -y install build-essential
+RUN apt -y install build-essential \
+	&& apt-get -y clean \
+	;
+
 RUN apt -y install --no-install-recommends \
 	cppcheck \
 	libalut-dev \
@@ -14,4 +16,5 @@ RUN apt -y install --no-install-recommends \
 	libsdl2-net-dev \
 	libsdl2-ttf-dev \
 	zlib1g-dev \
+	&& apt-get -y clean \
 	;
