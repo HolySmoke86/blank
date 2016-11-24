@@ -154,6 +154,10 @@ test: $(TEST_BIN) $(TEST_TEST_BIN) $(ASSET_DEP)
 	@echo run: test.test
 	@./test.test
 
+unittest: $(TEST_BIN) $(TEST_TEST_BIN) $(ASSET_DEP)
+	@echo run: test.test --headless
+	@./test.test --headless
+
 coverage: $(COVER_BIN) $(COVER_TEST_BIN) $(ASSET_DEP)
 	@echo run: test.cover
 	@./test.cover
@@ -177,7 +181,7 @@ distclean: clean
 	rm -f $(BIN) cachegrind.out.* callgrind.out.*
 	rm -Rf build client-saves saves
 
-.PHONY: all release cover debug profile tests run gdb cachegrind callgrind test coverage codecov lint clean distclean
+.PHONY: all release cover debug profile tests run gdb cachegrind callgrind test unittest coverage codecov lint clean distclean
 
 -include $(DEP)
 

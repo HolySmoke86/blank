@@ -13,7 +13,7 @@ image_path="scripts/docker/${IMAGE//:/-}"
 
 xvfb_cmd="xvfb-run -a --server-args='-screen 0 1024x768x24 +extension RANDR +extension GLX'"
 
-build_cmd="git clone /repo /workdir && cd /workdir && make -j\$(nproc) $TARGETS"
+build_cmd="cp -R /repo /workdir && cd /workdir && make -j\$(nproc) $TARGETS"
 
 if [[ "$KEEP" != "" ]]; then
 	build_cmd="${build_cmd} && cp -Rv $KEEP /repo"

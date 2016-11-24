@@ -2,7 +2,7 @@
 
 #include "TestInstance.hpp"
 
-CPPUNIT_TEST_SUITE_REGISTRATION(blank::test::StandaloneTest);
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(blank::test::StandaloneTest, "integration");
 
 
 namespace blank {
