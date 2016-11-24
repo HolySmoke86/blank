@@ -27,4 +27,4 @@ if [[ "$TARGETS" == *codecov* ]]; then
 fi
 
 docker build -t "${image_name}" --pull=true "${image_path}"
-docker run -v "$PWD":/repo ${local_conf} "${image_name}" sh -c "$xvfb_cmd sh -c 'env ; glewinfo | head ; ${build_cmd}'"
+docker run -v "$PWD":/repo ${local_conf} "${image_name}" sh -c "$xvfb_cmd sh -c '${build_cmd}'"

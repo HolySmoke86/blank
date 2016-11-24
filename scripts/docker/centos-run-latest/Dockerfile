@@ -4,6 +4,7 @@ RUN yum -y update \
 	&& yum -y install epel-release \
 	&& yum -y update \
 	&& yum -y install \
+		git \
 		make \
 		which \
 		xorg-x11-server-utils \

@@ -3,6 +3,7 @@ FROM debian:latest
 RUN apt -y update \
 	&& apt -y upgrade \
 	&& apt -y install --no-install-recommends \
+		git \
 		make \
 		xauth \
 		xvfb \

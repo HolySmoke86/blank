@@ -3,6 +3,7 @@ FROM ubuntu:latest
 RUN apt update \
 	&& apt -y upgrade \
 	&& apt -y install --no-install-recommends \
+		git \
 		make \
 		xauth \
 		xvfb \
