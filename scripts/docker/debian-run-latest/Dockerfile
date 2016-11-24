@@ -23,3 +23,5 @@ RUN apt -y install --no-install-recommends \
 	&& apt-get -y clean \
 	&& printf '[general]\ndrivers = null\n' > /etc/openal/alsoft.conf \
 	;
+
+ENV LD_LIBRARY_PATH /usr/lib/x86_64-linux-gnu
