@@ -3,6 +3,7 @@ FROM debian:testing
 RUN apt -y update \
 	&& apt -y upgrade \
 	&& apt -y install --no-install-recommends \
+		dbus \
 		git \
 		make \
 		xauth \

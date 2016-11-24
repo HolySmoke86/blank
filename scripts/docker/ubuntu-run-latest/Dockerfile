@@ -3,6 +3,7 @@ FROM ubuntu:latest
 RUN apt update \
 	&& apt -y upgrade \
 	&& apt -y install --no-install-recommends \
+		dbus \
 		git \
 		make \
 		xauth \
