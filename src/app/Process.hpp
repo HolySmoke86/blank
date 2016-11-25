@@ -38,15 +38,19 @@ public:
 
 	/// read from the process' output stream
 	/// data is stored in the given buffer, at most max_len bytes
+	/// timeout is the number of milliseconds to wait for the process
+	/// to produce output, -1 for indefinite
 	/// @return the number of bytes read
-	std::size_t ReadOut(void *buffer, std::size_t max_len);
+	std::size_t ReadOut(void *buffer, std::size_t max_len, int timeout);
 	/// close program's output stream
 	void CloseOut();
 
 	/// read from the process' error stream
 	/// data is stored in the given buffer, at most max_len bytes
+	/// timeout is the number of milliseconds to wait for the process
+	/// to produce output, -1 for indefinite
 	/// @return the number of bytes read
-	std::size_t ReadErr(void *buffer, std::size_t max_len);
+	std::size_t ReadErr(void *buffer, std::size_t max_len, int timeout);
 	/// close program's output stream
 	void CloseErr();
 

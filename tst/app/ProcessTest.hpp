@@ -15,6 +15,7 @@ CPPUNIT_TEST_SUITE(ProcessTest);
 CPPUNIT_TEST(testExit);
 CPPUNIT_TEST(testStream);
 CPPUNIT_TEST(testEnv);
+CPPUNIT_TEST(testTimeout);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -25,6 +26,7 @@ public:
 	void testExit();
 	void testStream();
 	void testEnv();
+	void testTimeout();
 
 };
 

@@ -35,7 +35,6 @@ TestInstance::TestInstance(const Process::Arguments &args, bool cmd)
 , cmd_buf() {
 	if (cmd) {
 		// wait for command service startup
-		// TODO: timeouts for reading from process
 		WaitOutputLine("listening on TCP port 12354");
 		// connect to command service
 		conn = tcp::Socket("localhost", 12354);
@@ -63,7 +62,7 @@ void TestInstance::WriteInput(const string &data) {
 void TestInstance::ReadOutputLine(string &line) {
 	while (!out_buf.Extract(line)) {
 		// buffer exhausted, fetch more data
-		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain());
+		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain(), 5000);
 		if (len == 0) {
 			throw runtime_error("failed read from child process' stdout");
 		}
@@ -92,7 +91,7 @@ void TestInstance::WaitOutputLine(const string &expected) {
 void TestInstance::ExhaustOutput(string &output) {
 	while (!out_buf.Extract(output)) {
 		// buffer exhausted, fetch more data
-		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain());
+		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain(), 5000);
 		if (len == 0) {
 			return;
 		}
@@ -112,7 +111,7 @@ void TestInstance::AssertNoOutput() {
 void TestInstance::ReadErrorLine(string &line) {
 	while (!err_buf.Extract(line)) {
 		// buffer exhausted, fetch more data
-		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain());
+		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain(), 5000);
 		if (len == 0) {
 			throw runtime_error("failed read from child process' stderr");
 		}
@@ -141,7 +140,7 @@ void TestInstance::WaitErrorLine(const string &expected) {
 void TestInstance::ExhaustError(string &error) {
 	while (!err_buf.Extract(error)) {
 		// buffer exhausted, fetch more data
-		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain());
+		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain(), 5000);
 		if (len == 0) {
 			return;
 		}

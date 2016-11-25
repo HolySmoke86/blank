@@ -1,11 +1,14 @@
 #ifndef BLANK_TEST_INTEGRATION_SERVERTEST_HPP_
 #define BLANK_TEST_INTEGRATION_SERVERTEST_HPP_
 
+#include <memory>
 #include <cppunit/extensions/HelperMacros.h>
 
 
 namespace blank {
 namespace test {
+
+class TestInstance;
 
 class ServerTest
 : public CppUnit::TestFixture {
@@ -21,6 +24,9 @@ public:
 	void tearDown();
 
 	void testStartup();
+
+private:
+	std::unique_ptr<TestInstance> instance;
 
 };
 

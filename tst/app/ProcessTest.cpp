@@ -53,7 +53,7 @@ void ProcessTest::testStream() {
 		const string expected_output("hello, world\n");
 		Process proc("/usr/bin/env", { "env", "echo", test_input.c_str() });
 		char buffer[expected_output.length() + 1];
-		size_t len = proc.ReadOut(buffer, sizeof(buffer));
+		size_t len = proc.ReadOut(buffer, sizeof(buffer), 1000);
 		const string output(buffer, len);
 		int status = proc.Join();
 		CPPUNIT_ASSERT_EQUAL_MESSAGE(
@@ -72,7 +72,7 @@ void ProcessTest::testStream() {
 		const string expected_output("hello, error\n");
 		Process proc("/usr/bin/env", { "env", "sh", "-c", "echo $1 >&2", "echo", test_input.c_str() }, { });
 		char buffer[expected_output.length() + 1];
-		size_t len = proc.ReadErr(buffer, sizeof(buffer));
+		size_t len = proc.ReadErr(buffer, sizeof(buffer), 1000);
 		const string output(buffer, len);
 		int status = proc.Join();
 		CPPUNIT_ASSERT_EQUAL_MESSAGE(
@@ -99,7 +99,7 @@ void ProcessTest::testStream() {
 		proc.CloseIn();
 
 		char buffer[expected_output.length() + 1];
-		len = proc.ReadOut(buffer, sizeof(buffer));
+		len = proc.ReadOut(buffer, sizeof(buffer), 1000);
 		const string output(buffer, len);
 		int status = proc.Join();
 		CPPUNIT_ASSERT_EQUAL_MESSAGE(
@@ -126,7 +126,7 @@ void ProcessTest::testEnv() {
 		const string expected_output("Hello, environment\n");
 		Process proc("/usr/bin/env", { "env", "sh", "-c", "echo $BLANK_ENV_TEST" }, { "BLANK_ENV_TEST=" + test_input });
 		char buffer[expected_output.length() + 1];
-		size_t len = proc.ReadOut(buffer, sizeof(buffer));
+		size_t len = proc.ReadOut(buffer, sizeof(buffer), 1000);
 		const string output(buffer, len);
 		int status = proc.Join();
 		CPPUNIT_ASSERT_EQUAL_MESSAGE(
@@ -140,6 +140,22 @@ void ProcessTest::testEnv() {
 			expected_output, output);
 	}
 
+#endif
+}
+
+void ProcessTest::testTimeout() {
+#ifdef __WIN32
+#  error "TODO: implement Process tests for windows"
+#else
+	Process proc("/usr/bin/env", { "env", "cat" });
+	char buffer;
+	CPPUNIT_ASSERT_THROW_MESSAGE(
+		"read timeout on child process' stdout should throw",
+		proc.ReadOut(&buffer, 1, 1), std::runtime_error);
+	CPPUNIT_ASSERT_THROW_MESSAGE(
+		"read timeout on child process' stderr should throw",
+		proc.ReadErr(&buffer, 1, 1), std::runtime_error);
+	proc.Terminate();
 #endif
 }
 

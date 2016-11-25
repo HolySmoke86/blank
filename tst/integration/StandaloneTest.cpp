@@ -2,6 +2,7 @@
 
 #include "TestInstance.hpp"
 
+
 CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(blank::test::StandaloneTest, "integration");
 
 
@@ -9,33 +10,20 @@ namespace blank {
 namespace test {
 
 void StandaloneTest::setUp() {
-
+	instance.reset(new TestInstance({ "--no-vsync" }));
+	instance->AssertRunning();
 }
 
 void StandaloneTest::tearDown() {
-
+	std::unique_ptr<TestInstance> inst(std::move(instance));
+	inst->Terminate();
+	inst->AssertExitStatus(0);
+	inst->AssertNoError();
 }
 
 
 void StandaloneTest::testStartup() {
-	TestInstance standalone({ "--no-vsync" });
-	standalone.AssertRunning();
-	try {
-		standalone.AssertOutputLine("chunk preloading complete");
-		standalone.Terminate();
-	} catch (...) {
-		try {
-			standalone.Terminate();
-		} catch (...) { }
-		std::string output;
-		standalone.ExhaustError(output);
-		CPPUNIT_ASSERT_EQUAL_MESSAGE(
-			"process stderr",
-			std::string(""), output);
-		CPPUNIT_FAIL("exception in runtime");
-	}
-	standalone.AssertExitStatus(0);
-	standalone.AssertNoError();
+	instance->AssertOutputLine("chunk preloading complete");
 }
 
 }

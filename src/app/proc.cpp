@@ -9,6 +9,7 @@
 #  include <fcntl.h>
 #  include <signal.h>
 #  include <unistd.h>
+#  include <sys/select.h>
 #  include <sys/wait.h>
 #endif
 
@@ -36,10 +37,10 @@ struct Process::Impl {
 	size_t WriteIn(const void *buffer, size_t max_len);
 	void CloseIn();
 
-	size_t ReadOut(void *buffer, size_t max_len);
+	size_t ReadOut(void *buffer, size_t max_len, int timeout);
 	void CloseOut();
 
-	size_t ReadErr(void *buffer, size_t max_len);
+	size_t ReadErr(void *buffer, size_t max_len, int timeout);
 	void CloseErr();
 
 	void Terminate();
@@ -96,16 +97,16 @@ void Process::CloseIn() {
 	impl->CloseIn();
 }
 
-size_t Process::ReadOut(void *buffer, size_t max_len) {
-	return impl->ReadOut(buffer, max_len);
+size_t Process::ReadOut(void *buffer, size_t max_len, int timeout) {
+	return impl->ReadOut(buffer, max_len, timeout);
 }
 
 void Process::CloseOut() {
 	impl->CloseOut();
 }
 
-size_t Process::ReadErr(void *buffer, size_t max_len) {
-	return impl->ReadErr(buffer, max_len);
+size_t Process::ReadErr(void *buffer, size_t max_len, int timeout) {
+	return impl->ReadErr(buffer, max_len, timeout);
 }
 
 void Process::CloseErr() {
@@ -297,14 +298,35 @@ void Process::Impl::CloseIn() {
 	in_closed = true;
 }
 
-size_t Process::Impl::ReadOut(void *buffer, size_t max_len) {
+size_t Process::Impl::ReadOut(void *buffer, size_t max_len, int timeout) {
 #ifdef _WIN32
+	// TODO: timeout implementation for windows child process I/O
 	DWORD ret;
 	if (!ReadFile(fd_out[0], buffer, max_len, &ret, nullptr)) {
 		throw runtime_error("failed to read from child process' output stream");
 	}
 	return ret;
 #else
+	if (timeout >= 0) {
+		fd_set read_set;
+		fd_set error_set;
+		FD_ZERO(&read_set);
+		FD_ZERO(&error_set);
+		FD_SET(fd_out[0], &read_set);
+		FD_SET(fd_out[0], &error_set);
+		timeval timer;
+		timer.tv_sec = timeout / 1000;
+		timer.tv_usec = (timeout % 1000) * 1000;
+		if (select(fd_out[0] + 1, &read_set, nullptr, &error_set, &timer) == -1) {
+			throw SysError("error waiting on child process' output stream");
+		}
+		if (FD_ISSET(fd_out[0], &error_set)) {
+			throw runtime_error("error condition on child process' output stream");
+		}
+		if (!FD_ISSET(fd_out[0], &read_set)) {
+			throw runtime_error("timeout while waiting on child process' output stream");
+		}
+	}
 	int ret = read(fd_out[0], buffer, max_len);
 	if (ret < 0) {
 		if (errno == EAGAIN) {
@@ -329,14 +351,35 @@ void Process::Impl::CloseOut() {
 	out_closed = true;
 }
 
-size_t Process::Impl::ReadErr(void *buffer, size_t max_len) {
+size_t Process::Impl::ReadErr(void *buffer, size_t max_len, int timeout) {
 #ifdef _WIN32
+	// TODO: timeout implementation for windows child process I/O
 	DWORD ret;
 	if (!ReadFile(fd_err[0], buffer, max_len, &ret, nullptr)) {
 		throw runtime_error("failed to read from child process' error stream");
 	}
 	return ret;
 #else
+	if (timeout >= 0) {
+		fd_set read_set;
+		fd_set error_set;
+		FD_ZERO(&read_set);
+		FD_ZERO(&error_set);
+		FD_SET(fd_err[0], &read_set);
+		FD_SET(fd_err[0], &error_set);
+		timeval timer;
+		timer.tv_sec = timeout / 1000;
+		timer.tv_usec = (timeout % 1000) * 1000;
+		if (select(fd_err[0] + 1, &read_set, nullptr, &error_set, &timer) == -1) {
+			throw SysError("error waiting on child process' error stream");
+		}
+		if (FD_ISSET(fd_err[0], &error_set)) {
+			throw runtime_error("error condition on child process' error stream");
+		}
+		if (!FD_ISSET(fd_err[0], &read_set)) {
+			throw runtime_error("timeout while waiting on child process' error stream");
+		}
+	}
 	int ret = read(fd_err[0], buffer, max_len);
 	if (ret < 0) {
 		if (errno == EAGAIN) {
