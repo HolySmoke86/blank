@@ -10,7 +10,7 @@ namespace blank {
 namespace test {
 
 void StandaloneTest::setUp() {
-	instance.reset(new TestInstance({ "--standalone", "--no-vsync" }));
+	instance.reset(new TestInstance({ "--standalone", "--no-vsync", "-d", "-s", "43576325" }));
 	instance->AssertRunning();
 }
 

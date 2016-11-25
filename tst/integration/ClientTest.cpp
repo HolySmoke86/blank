@@ -11,16 +11,16 @@ namespace blank {
 namespace test {
 
 void ClientTest::setUp() {
-	server.reset(new TestInstance({ "--server" }, true));
+	server.reset(new TestInstance({ "--server", "--port", "12354", "--world-name", "brave-new-world" }, true));
 	server->AssertRunning();
 	server->AssertOutputLine("loading spawn chunks");
 	server->AssertOutputLine("listening on UDP port 12354");
-	client.reset(new TestInstance({ "--client", "--no-vsync" }));
+	client.reset(new TestInstance({ "--client", "--no-vsync", "--host", "localhost", "--port", "12354", "--player-name", "aldous" }));
 	client->AssertRunning();
-	client->AssertOutputLine("got message before interface was created: player \"default\" joined");
-	client->AssertOutputLine("joined game \"default\"");
-	server->AssertOutputLine("player \"default\" joined");
-	server->AssertOutputLine("accepted login from player \"default\"");
+	client->AssertOutputLine("got message before interface was created: player \"aldous\" joined");
+	client->AssertOutputLine("joined game \"brave-new-world\"");
+	server->AssertOutputLine("player \"aldous\" joined");
+	server->AssertOutputLine("accepted login from player \"aldous\"");
 }
 
 void ClientTest::tearDown() {
@@ -34,7 +34,7 @@ void ClientTest::tearDown() {
 	}
 	if (srv) {
 		srv->Terminate();
-		srv->AssertOutputLine("player \"default\" left");
+		srv->AssertOutputLine("player \"aldous\" left");
 		srv->AssertOutputLine("saving remaining chunks");
 		srv->AssertNoOutput();
 		srv->AssertNoError();
