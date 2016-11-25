@@ -15,7 +15,7 @@ void ClientTest::setUp() {
 	server->AssertRunning();
 	server->AssertOutputLine("loading spawn chunks");
 	server->AssertOutputLine("listening on UDP port 12354");
-	client.reset(new TestInstance({ "--client" }));
+	client.reset(new TestInstance({ "--client", "--no-vsync" }));
 	client->AssertRunning();
 	client->AssertOutputLine("got message before interface was created: player \"default\" joined");
 	client->AssertOutputLine("joined game \"default\"");

@@ -67,7 +67,7 @@ void TestInstance::WriteInput(const string &data) {
 void TestInstance::ReadOutputLine(string &line) {
 	while (!out_buf.Extract(line)) {
 		// buffer exhausted, fetch more data
-		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain(), 5000);
+		int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain(), 10000);
 		if (len == 0) {
 			throw runtime_error("failed read from stdout of " + name);
 		}
@@ -120,7 +120,7 @@ void TestInstance::ExhaustOutput(string &output) {
 			output += '\n';
 		} else {
 			// buffer exhausted, fetch more data
-			int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain(), 5000);
+			int len = proc.ReadOut(out_buf.WriteHead(), out_buf.Remain(), 10000);
 			if (len == 0) {
 				// eof
 				return;
@@ -142,7 +142,7 @@ void TestInstance::AssertNoOutput() {
 void TestInstance::ReadErrorLine(string &line) {
 	while (!err_buf.Extract(line)) {
 		// buffer exhausted, fetch more data
-		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain(), 5000);
+		int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain(), 10000);
 		if (len == 0) {
 			throw runtime_error("failed read from stderr of " + name);
 		}
@@ -195,7 +195,7 @@ void TestInstance::ExhaustError(string &error) {
 			error += '\n';
 		} else {
 			// buffer exhausted, fetch more data
-			int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain(), 5000);
+			int len = proc.ReadErr(err_buf.WriteHead(), err_buf.Remain(), 10000);
 			if (len == 0) {
 				// eof
 				return;
