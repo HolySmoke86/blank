@@ -40,6 +40,7 @@ public:
 		line.assign(begin(), line_end);
 		++line_end;
 		std::move(line_end, end(), begin());
+		head -= std::distance(begin(), line_end);
 		return true;
 	}
 
