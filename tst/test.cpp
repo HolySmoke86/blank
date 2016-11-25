@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
 		runner.addTest(registry.makeTest());
 	}
 	if (!headless) {
-		TestFactoryRegistry &registry = TestFactoryRegistry::getRegistry("integration");
+		TestFactoryRegistry &registry = TestFactoryRegistry::getRegistry("headed");
 		runner.addTest(registry.makeTest());
 	}
 

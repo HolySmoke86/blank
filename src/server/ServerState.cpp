@@ -33,6 +33,9 @@ ServerState::ServerState(
 	spawner.LimitModels(1, res.models.size());
 	server.SetPlayerModel(res.models[0]);
 
+	std::cout << "loading spawn chunks" << std::endl;
+	chunk_loader.LoadN(chunk_loader.ToLoad());
+
 	loop_timer.Start();
 
 	std::cout << "listening on UDP port " << config.net.port << std::endl;

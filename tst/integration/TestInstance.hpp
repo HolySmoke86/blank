@@ -6,6 +6,9 @@
 #include "io/LineBuffer.hpp"
 #include "net/tcp.hpp"
 
+#include <list>
+#include <string>
+
 
 namespace blank {
 namespace test {
@@ -81,6 +84,10 @@ private:
 	LineBuffer<BUFSIZ> out_buf;
 	LineBuffer<BUFSIZ> err_buf;
 	LineBuffer<BUFSIZ> cmd_buf;
+	std::string name;
+	std::list<std::string> past_out;
+	std::list<std::string> past_err;
+	std::list<std::string> past_cmd;
 
 };
 

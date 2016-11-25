@@ -3,7 +3,7 @@
 #include "TestInstance.hpp"
 
 
-CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(blank::test::StandaloneTest, "integration");
+CPPUNIT_TEST_SUITE_NAMED_REGISTRATION(blank::test::StandaloneTest, "headed");
 
 
 namespace blank {
@@ -16,9 +16,12 @@ void StandaloneTest::setUp() {
 
 void StandaloneTest::tearDown() {
 	std::unique_ptr<TestInstance> inst(std::move(instance));
-	inst->Terminate();
-	inst->AssertExitStatus(0);
-	inst->AssertNoError();
+	if (inst) {
+		inst->Terminate();
+		inst->AssertNoOutput();
+		inst->AssertNoError();
+		inst->AssertExitStatus(0);
+	}
 }
 
 
