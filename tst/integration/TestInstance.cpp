@@ -10,13 +10,20 @@ namespace test {
 
 namespace {
 
-Process::Arguments combine_args(const TempDir &dir, const Process::Arguments &in, bool cmd) {
+Process::Arguments combine_args(
+	const TempDir &dir,
+	const Process::Arguments &in,
+	bool cmd,
+	bool temp_save
+) {
 	Process::Arguments out;
 	out.reserve(in.size() + (cmd ? 5 : 3));
 	out.emplace_back("blank");
 	out.insert(out.end(), in.begin(), in.end());
-	out.emplace_back("--save-path");
-	out.emplace_back(dir.Path());
+	if (temp_save) {
+		out.emplace_back("--save-path");
+		out.emplace_back(dir.Path());
+	}
 	if (cmd) {
 		out.emplace_back("--cmd-port");
 		out.emplace_back("12354");
@@ -26,9 +33,9 @@ Process::Arguments combine_args(const TempDir &dir, const Process::Arguments &in
 
 }
 
-TestInstance::TestInstance(const Process::Arguments &args, bool cmd)
+TestInstance::TestInstance(const Process::Arguments &args, bool cmd, bool temp_save)
 : dir()
-, proc("./blank" BLANK_SUFFIX, combine_args(dir, args, cmd))
+, proc("./blank" BLANK_SUFFIX, combine_args(dir, args, cmd, temp_save))
 , conn()
 , out_buf()
 , err_buf()

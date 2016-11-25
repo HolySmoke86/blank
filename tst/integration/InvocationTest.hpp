@@ -13,6 +13,8 @@ class InvocationTest
 CPPUNIT_TEST_SUITE(InvocationTest);
 
 CPPUNIT_TEST(testUnknownArg);
+CPPUNIT_TEST(testIncompleteOption);
+CPPUNIT_TEST(testMissingArgs);
 
 CPPUNIT_TEST_SUITE_END();
 
@@ -21,6 +23,8 @@ public:
 	void tearDown();
 
 	void testUnknownArg();
+	void testIncompleteOption();
+	void testMissingArgs();
 
 };
 

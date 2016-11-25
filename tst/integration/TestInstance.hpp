@@ -20,7 +20,7 @@ public:
 	/// will be prepended by the constructor).
 	/// If connect is true, a command service connection will be
 	/// established during construction.
-	explicit TestInstance(const Process::Arguments &args, bool connect = false);
+	explicit TestInstance(const Process::Arguments &args, bool connect = false, bool temp_save = true);
 	~TestInstance();
 
 public:
