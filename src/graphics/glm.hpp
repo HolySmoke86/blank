@@ -5,6 +5,8 @@
 #  define GLM_FORCE_RADIANS 1
 #endif
 
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/glm.hpp>
 
 // GLM moved tvec[1234] from glm::detail to glm in 0.9.6
